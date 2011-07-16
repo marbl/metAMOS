@@ -1,0 +1,15 @@
+#maximal read length
+max_rd_len=150
+[LIB]
+avg_ins=500
+reverse_seq=0
+asm_flags=3
+rd_len_cutoff=100
+#in which order the reads are used while scaffolding
+rank=1
+# cutoff of pair number for a reliable connection (default 3)
+pair_num_cutoff=3
+#minimum aligned length to contigs for a reliable read location (default 32)
+map_len=32
+q1=
+q2=

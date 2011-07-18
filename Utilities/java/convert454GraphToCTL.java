@@ -42,7 +42,6 @@ class convert454GraphToCTL {
       String line = null;
       while ((line = bf.readLine()) != null) {
          String[] splitLine = line.trim().split("\\s+");
-          System.err.println("STORING ID " + splitLine[0] + " TO " + splitLine[1]);
          eidTOiid.put(splitLine[0], splitLine[1]);
       }
       bf.close();
@@ -78,9 +77,6 @@ class convert454GraphToCTL {
            }
 
            cte.append("adj:" + orient + "\n");
-System.err.println("LOOKING UP IDS " + splitLine[1] + " AND " + splitLine[3]); 
-System.err.println("FOUND " + idToUID.get(splitLine[1]) + " AND " + idToUID.get(splitLine[3]));
-System.err.println("FINAL MAP " + eidTOiid.get(idToUID.get(splitLine[1])) + " AND " + eidTOiid.get(idToUID.get(splitLine[3])));
            if (eidTOiid.get(idToUID.get(splitLine[1])) == null || eidTOiid.get(idToUID.get(splitLine[3])) == null) {
               // skip mappings for which one of the contigs isn't in the ace file
               continue;
@@ -108,7 +104,6 @@ System.err.println("FINAL MAP " + eidTOiid.get(idToUID.get(splitLine[1])) + " AN
          } else if (line.startsWith("S")) {
          } else {
            idToUID.put(splitLine[0], splitLine[1]);
-System.err.println("STORING MAPPING " + splitLine[0] + " TO " + splitLine[1]);
          }
       }
       bf.close();

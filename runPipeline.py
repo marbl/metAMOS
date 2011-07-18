@@ -1,7 +1,5 @@
 import os, sys, string, time, BaseHTTPServer, getopt, subprocess#
-from ruffus import *
 from operator import itemgetter
-
 
 PREFIX = "proba"
 
@@ -9,7 +7,7 @@ OSTYPE        = "Linux"
 OSVERSION     = "0.0"
 MACHINETYPE   = "x86_64"
 
-METAMOSDIR    = "%s"%(os.curdir)
+METAMOSDIR    = sys.path[0]
 METAMOS_UTILS = "%s%sUtilities"%(METAMOSDIR, os.sep) 
 METAMOS_JAVA  = "%s%sjava:%s"%(METAMOS_UTILS,os.sep,os.curdir)
 AMOS          = "%s%sAMOS%sbin"%(METAMOSDIR, os.sep, os.sep)
@@ -17,6 +15,9 @@ SOAP          = "%s%scpp"%(METAMOS_UTILS, os.sep)
 CA            = "%s%sCA%s%s-%s%sbin"%(METAMOSDIR, os.sep, os.sep, OSTYPE, MACHINETYPE.replace("x86_64", "amd64"), os.sep)
 NEWBLER       = "%s%snewbler"%(METAMOSDIR, os.sep)
 BOWTIE        = "%s%scpp"%(METAMOS_UTILS, os.sep)
+
+sys.path.append(METAMOS_UTILS)
+from ruffus import *
 
 def str2bool(v):
   return v.lower() in ("yes", "true", "t", "1")
@@ -102,6 +103,7 @@ def guessPaths():
     if not os.path.exists(BOWTIE + os.sep + "bowtie"):
        BOWTIE = getFromPath("bowtie", "Bowtie")
 
+    # finally add the utilities to our path
     print "Configuration summary:"
     print "OS:\t\t\t%s\nOS Version:\t\t%s\nMachine:\t\t%s\n"%(OSTYPE, OSVERSION, MACHINETYPE)
     print "metAMOS main dir:\t%s\nmetAMOS Utilities:\t%s\nmetAMOS Java:\t\t%s\n"%(METAMOSDIR, METAMOS_UTILS, METAMOS_JAVA)
@@ -1071,6 +1073,7 @@ if __name__ == "__main__":
     #pid = start_http()
     print "Starting metAMOS pipeline"
     guessPaths()
+
     t1 = time.clock()
     
     files = os.listdir(".")

@@ -11,7 +11,7 @@ MACHINETYPE   = "x86_64"
 
 METAMOSDIR    = "%s"%(os.curdir)
 METAMOS_UTILS = "%s%sUtilities"%(METAMOSDIR, os.sep) 
-METAMOS_JAVA  = "%s"%(os.curdir)
+METAMOS_JAVA  = "%s%sjava:%s"%(METAMOS_UTILS,os.sep,os.curdir)
 AMOS          = "%s%sAMOS%sbin"%(METAMOSDIR, os.sep, os.sep)
 SOAP          = "%s%scpp"%(METAMOS_UTILS, os.sep)
 CA            = "%s%sCA%s%s-%s%sbin"%(METAMOSDIR, os.sep, os.sep, OSTYPE, MACHINETYPE.replace("x86_64", "amd64"), os.sep)
@@ -78,30 +78,29 @@ def guessPaths():
           sys.exit(1);   
 
        METAMOS_JAVA  = "%s%sjava:%s"%(METAMOS_UTILS, os.sep, os.curdir)
-       # now check for assemblers
-       # 1. AMOS
-       AMOS = "%s%sAMOS%sbin"%(METAMOSDIR, os.sep, os.sep)
-       if not os.path.exists(AMOS + os.sep + "bank-transact"):
-          AMOS = getFromPath("bank-transact", "AMOS") 
-       # 2. Soap
-       SOAP = "%s%scpp"%(METAMOS_UTILS, os.sep) 
-       if not os.path.exists(SOAP + os.sep + "SOAPdenovo-63mer"):
-          SOAP = getFromPath("SOAPdenovo-63mer", "SOAP")
-       # 3. CA
-       CA = "%s%sCA%s%s-%s%sbin"%(METAMOSDIR, os.sep, os.sep, OSTYPE, MACHINETYPE.replace("x86_64","amd64"), os.sep)
-       if not os.path.exists(CA + os.sep + "gatekeeper"):
-          CA = getFromPath("gatekeeper", "Celera Assembler") 
-       # 4. Newbler
-       NEWBLER = "%s%s"%(METAMOSDIR, os.sep);
-       if not os.path.exists(NEWBLER + os.sep + "runProject"):
-          NEWBLER = getFromPath("runProject", "Newbler")
 
-       # now for the mappers
-       BOWTIE = "%s%scpp"%(METAMOS_UTILS, os.sep)
-       if not os.path.exists(BOWTIE + os.sep + "bowtie"):
-          BOWTIE = getFromPath("bowtie", "Bowtie")
+    # now check for assemblers
+    # 1. AMOS
+    AMOS = "%s%sAMOS%sbin"%(METAMOSDIR, os.sep, os.sep)
+    if not os.path.exists(AMOS + os.sep + "bank-transact"):
+       AMOS = getFromPath("bank-transact", "AMOS") 
+    # 2. Soap
+    SOAP = "%s%scpp"%(METAMOS_UTILS, os.sep) 
+    if not os.path.exists(SOAP + os.sep + "SOAPdenovo-63mer"):
+       SOAP = getFromPath("SOAPdenovo-63mer", "SOAP")
+    # 3. CA
+    CA = "%s%sCA%s%s-%s%sbin"%(METAMOSDIR, os.sep, os.sep, OSTYPE, MACHINETYPE.replace("x86_64","amd64"), os.sep)
+    if not os.path.exists(CA + os.sep + "gatekeeper"):
+       CA = getFromPath("gatekeeper", "Celera Assembler") 
+    # 4. Newbler
+    NEWBLER = "%s%snewbler"%(METAMOSDIR, os.sep);
+    if not os.path.exists(NEWBLER + os.sep + "runProject"):
+       NEWBLER = getFromPath("runProject", "Newbler")
 
-       # now for the rest
+    # now for the mappers
+    BOWTIE = "%s%scpp"%(METAMOS_UTILS, os.sep)
+    if not os.path.exists(BOWTIE + os.sep + "bowtie"):
+       BOWTIE = getFromPath("bowtie", "Bowtie")
 
     print "Configuration summary:"
     print "OS:\t\t\t%s\nOS Version:\t\t%s\nMachine:\t\t%s\n"%(OSTYPE, OSVERSION, MACHINETYPE)

@@ -7,8 +7,7 @@ def usage():
     print "usage: createProject.py -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300,500 -f/-q"
     print "options: -s -q, -f, -1, -2, -d, -i"
 
-allsteps = ["Preprocess","Assemble","FindORFS","FindRepeats","Metaphyler","Annotate","Scaffold","Propagate","Classify","Postpr\
-ocess"]
+allsteps = ["Preprocess","Assemble","FindORFS","FindRepeats","Metaphyler","Annotate","Scaffold","FindScaffoldORFS","Propagate","Classify","Postprocess"]
 
 today = datetime.datetime.now()
 #todaytime = date.fromtimestamp(time.time())

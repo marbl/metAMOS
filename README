@@ -1,0 +1,101 @@
+metAMOS README, v1.0
+July 18th, 2011
+
+> SUMMARY
+        * A/ HARDWARE REQUIREMENTS
+        * B/ SOFTWARE REQUIREMENTS
+        * C/ INSTALLING metAMOS
+        * D/ QUICK START
+        * E/ USER MANUAL
+        * F/ CONTACT
+
+----------------------------------------------------------------------------------
+A/ HARDWARE REQUIREMENTS
+
+metAMOS was designed to work on any standard 64bit Linx
+environment. To use metAMOS for tutorial/teaching purposes, a minimum
+of 8 GB RAM is required. To get started on real data sets a minimum of
+32 GB of RAM is recommened, and anywhere from 64-512 GB may be
+necessary for larger datasets. In our experience, for most 50-60
+million read datasets, 64 GB is a good place to start (68 GB of memory
+available on High Memory Instance at Amazon Elastic Compute Cloud ).
+
+----------------------------------------------------------------------------------
+B/ SOFTWARE REQUIREMENTS
+
+The main prequisite software is python2.6+ and AMOS (available from
+http://amos.sf.net). Once python2.6+ and AMOS are installed, there
+should not be any other major prerequisites as most everything that is
+needed is distributed with metAMOS inside of the /Utilities
+directory. However, there is some software that metAMOS can
+incorporate into its pipeline that we are not allowed to distribute,
+such as MetaGeneMark. To get a license to use MetaGeneMark, plesae
+visit: http://exon.gatech.edu/license_download.cgi.
+
+----------------------------------------------------------------------------------
+C/ INSTALLING metAMOS
+
+To download the software, go to  https://github.com/treangen/metAMOS and click on Downloads. Once downloaded, simply unpack the files and open the metAMOS directory.
+
+----------------------------------------------------------------------------------
+D/ QUICK START
+
+Before you get started using metAMOS a brief review of its design will help clarify its intended use. metAMOS gas two main components:
+
+1) createProject.py
+2) runPipeline.py
+
+The first component, createProject.py, is for creating new projects
+and also initiliazing sequence libraries. Currently fasta, fastq, and
+SFF files are supported.
+
+usage info:
+
+createProject.py -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300,500 -f/-q
+
+Currently metAMOS supports only 1 library per project (either fragment or mated), but in the near future multiple libraries will be supported via a "addLib.py" component, to be ran after createProject.
+
+The second component, runPipeline.py, takes a project directory as
+input and runs the following steps by default:
+
+Preprocess
+Assemble
+FindORFs
+FindRepeats
+Metaphyler
+Scaffold
+
+usage info:
+
+usage: runPipeline.py [options] -d projectdir (required)
+options:  -a <assembler> -k <kmer size> -c <classification method> -m <enable metaphyler?> -p <num threads>  
+
+Any single step in the pipeline can be skipped by passing the
+following parameter to runPipeline:
+
+--skipsteps=Step1,..
+
+metAMOS reruns steps based on timestamp information, so if the input
+files for a step in the pipeline hasn't changed since the last run, it
+will be skipped automatically. However, you can forefully run any step
+in the pipeline by passing the following parameter to runPipeline:
+
+--force=Step1,..
+
+Upon completion, all of the final results will be stored in the
+Postprocess/out directory. A third component, createReport.py, takes
+this directory (or multiple Posprocess/out directories) as input and
+as output, generates an HTML page with summary statistics and a few
+static plots.
+
+----------------------------------------------------------------------------------
+E/ USER MANUAL
+
+on its way!
+
+----------------------------------------------------------------------------------
+F/ CONTACT
+
+who to contact (for bugs, complaints, feature requests, etc):
+
+Todd Treangen: treangen@gmail.com

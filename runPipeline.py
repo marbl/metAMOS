@@ -882,6 +882,18 @@ def Scaffold(input,output):
    os.system("%s/OutputScaffolds -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.linearize.scaffolds.final"%(AMOS,rundir,PREFIX,rundir,PREFIX))
 
 @follows(Scaffold)
+@files("%s/Scaffold/out/%s.linearize.scaffolds.final"%(rundir,PREFIX),"%s/FindORFS/out/%s.scaffolds.faa"%(rundir,PREFIX))
+def FindScaffoldORFS(input,output):
+   if "FindScaffoldORFS" in skipsteps:
+      os.system("touch %s/FindScaffoldORFS/out/%s.scaffolds.faa"%(rundir, PREFIX))
+      return 0
+
+   os.system("%s/cpp/gmhmmp -o %s/FindORFS/out/%s.scaffolds.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/FindScaffoldORFS/out/%s.linearize.scaffolds.final"%(METAMOS_UTILS,rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX))
+   parse_genemarkout("%s/FindORFS/out/%s.scaffolds.orfs"%(rundir,PREFIX))
+   os.system("unlink ./%s/Annotate/in/%s.scaffolds.faa"%(rundir,PREFIX))
+   os.system("ln -t ./%s/Annotate/in/ -s ../../FindORFS/out/%s.scaffolds.faa"%(rundir,PREFIX))
+
+@follows(Scaffold)
 @files("%s/Scaffold/in/%s.bnk"%(rundir,PREFIX),"%s/Scaffold/out/%s.genus"%(rundir,PREFIX))
 def Propagate(input,output):
    #run propogate java script
@@ -900,6 +912,8 @@ def Classify(input,output):
 
 @follows(Classify)
 def Postprocess():
+#create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm>
+   #copy files into output for createReport   
    #generate reports
    #linearize
    pass
@@ -1078,7 +1092,7 @@ if __name__ == "__main__":
     
     files = os.listdir(".")
     dlist = []
-    pipeline_printout(sys.stdout,[Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler], verbose=5)
+    pipeline_printout(sys.stdout,[Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold], verbose=5)
     pipeline_printout_graph (   'flowchart.svg',
                             'svg',
                             [Postprocess],

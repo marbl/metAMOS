@@ -32,6 +32,11 @@ incorporate into its pipeline that we are not allowed to distribute,
 such as MetaGeneMark. To get a license to use MetaGeneMark, plesae
 visit: http://exon.gatech.edu/license_download.cgi.
 
+*PYTHON 2.6
+*AMOS
+*blastall, formatdb
+*MetaGeneMark
+
 ----------------------------------------------------------------------------------
 C/ INSTALLING metAMOS
 
@@ -58,12 +63,16 @@ Currently metAMOS supports only 1 library per project (either fragment or mated)
 The second component, runPipeline.py, takes a project directory as
 input and runs the following steps by default:
 
-Preprocess
-Assemble
-FindORFs
-FindRepeats
-Metaphyler
-Scaffold
+1. Preprocess
+2. Assemble
+3. FindORFs
+4. FindRepeats
+5. Metaphyler (Phylum level)
+6. Scaffold
+7. Propagate (Phylum level)
+8. FindScaffoldORFs
+9. Classify (Phylum level)
+10. Postprocess
 
 usage info:
 

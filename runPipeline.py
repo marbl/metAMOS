@@ -83,7 +83,8 @@ def guessPaths():
     # now check for assemblers
     # 1. AMOS
     AMOS = "%s%sAMOS%sbin"%(METAMOSDIR, os.sep, os.sep)
-    if not os.path.exists(AMOS + os.sep + "bank-transact"):
+    #if not os.path.exists(AMOS + os.sep + "bank-transact"):
+    if not os.path.exists(AMOS + os.sep + "toAmos_new"):
        AMOS = getFromPath("bank-transact", "AMOS") 
     # 2. Soap
     SOAP = "%s%scpp"%(METAMOS_UTILS, os.sep) 
@@ -116,7 +117,7 @@ def usage():
     #print "options: annotate, stopafter, startafter, fq, fa"
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hd:s:e:o:k:c:a:n:p:tfvm4", ["help", "projectdir","startat","endat", "minoverlap","kmersize","classifier","assembler","skipsteps","threads","filter","force","verbose","metaphyler","454"])
+    opts, args = getopt.getopt(sys.argv[1:], "hd:s:e:o:k:c:a:n:p:tf:vm4", ["help", "projectdir","startat","endat", "minoverlap","kmersize","classifier","assembler","skipsteps","threads","filter","forcesteps","verbose","metaphyler","454"])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -166,10 +167,13 @@ for o, a in opts:
     elif o in ("-4", "--454"):
         fff = "-454"
     elif o in ("-f", "--forcesteps"):
+        print o,a
         forcesteps = a.split(",")
+        print forcesteps
     elif o in ("-n", "--skipsteps"):
+        print o, a
         skipsteps = a.split(",")
-        
+        print skipsteps
     elif o in ("-p", "--threads"):
         threads = int(a)
     elif o in ("-d", "--projectdir"):
@@ -319,12 +323,12 @@ def map2contig(min,max,fasta=True):
             f2.close()
         if not os.path.exists("%s/Assemble/out/IDX.1.ebwt"%(rundir)):
             os.system("%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(BOWTIE, rundir,PREFIX,rundir))
-        if (fasta):
+        if "bowtie" not in skipsteps and fasta:
             if trim:
                 os.system("%s/bowtie -p 20 -f -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/all.seq.trim >& %s/Assemble/out/%s.bout"%(BOWTIE,rundir,rundir,rundir,PREFIX))
             else:
                 os.system("%s/bowtie -p 20 -f -l 28 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/all.seq >& %s/Assemble/out/%s.bout"%(BOWTIE,rundir,rundir,rundir,PREFIX))
-        else:
+        elif "bowtie" not in skipsteps:
             if trim:
                 os.system("%s/bowtie  -p 20 -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/all.seq.trim >& %s/Assemble/out/%s.bout"%(BOWTIE,rundir,rundir,rundir,PREFIX))
             else:
@@ -688,7 +692,7 @@ def Assemble(input,output):
       cnt = 1
       #print libs
       #for lib in libs:
-      if format == "fastq":
+      if (format == "fastq" or format == "fasta")  and mated:
           soapd = soapd.replace("LIBQ1REPLACE","%s/Preprocess/out/%s"%(rundir,f1))
           soapd = soapd.replace("LIBQ2REPLACE","%s/Preprocess/out/%s"%(rundir,f2))
       else:
@@ -814,22 +818,24 @@ def Annotate(input,output):
 
 if "Metaphyler" in forcesteps:
    os.system("touch %s/FindORFS/out/%s.faa"%(rundir,PREFIX))
+   #os.system("rm %s/Metaphyler/out/%s.phylum.tab"%(rundir,PREFIX))
 
 @follows(FindORFS)
-@files("%s/FindORFS/out/%s.faa"%(rundir,PREFIX),"%s/Metaphyler/out/%s.genus.tab"%(rundir,PREFIX))
+@files("%s/FindORFS/out/%s.faa"%(rundir,PREFIX),"%s/Metaphyler/out/%s.phylum.tab"%(rundir,PREFIX))
 def Metaphyler(input,output):
-   if "FindORFS" in skipsteps or "Metaphyler" in skipsteps:
-      return 0;
+   #if "FindORFS" in skipsteps or "Metaphyler" in skipsteps:
+   #   return 0;
 
    os.system("unlink ./%s/Metaphyler/in/%s.contig.cvg"%(rundir,PREFIX))
    os.system("unlink ./%s/Metaphyler/in/%s.faa"%(rundir,PREFIX))
    os.system("ln -t ./%s/Metaphyler/in/ -s ../../FindORFS/out/%s.contig.cvg"%(rundir,PREFIX))
    os.system("ln -t ./%s/Metaphyler/in/ -s ../../FindORFS/out/%s.faa"%(rundir,PREFIX))
    blastfile = PREFIX+".blastx"
+   os.system("formatdb  -p F -i %s/DB/markers.fna"%(METAMOS_UTILS))
    os.system("perl %s/perl/runblast.pl  %s/Metaphyler/in/%s.faa %s/Metaphyler/out/%s.blastx %s/DB/markers.fna"%(METAMOS_UTILS,rundir,PREFIX, rundir,PREFIX,METAMOS_UTILS))
    print "perl %s/perl/metaphyler_contigs.pl %s/Metaphyler/out/%s.blastx %s/Metaphyler/out/%s %s/Metaphyler/in/%s.contig.cvg"%(METAMOS_UTILS,rundir,PREFIX, rundir, PREFIX, rundir, PREFIX)
    os.system("perl %s/perl/metaphyler_contigs.pl %s/Metaphyler/out/%s.blastx %s/Metaphyler/out/%s %s/Metaphyler/in/%s.contig.cvg"%(METAMOS_UTILS,rundir,PREFIX, rundir, PREFIX, rundir, PREFIX))
-   #os.system("ln -t ./%s/Postprocess/in/ -s ../../Metaphyler/out/%s.genus"%(rundir,PREFIX))
+
    
 
 @follows(Metaphyler)
@@ -851,12 +857,12 @@ def Scaffold(input,output):
            #os.system("ln -t ./%s/Metaphyler/in/ -s ../../FindORFS/out/%s.faa"%(rundir,PREFIX))
            os.system("rm -rf %s/Scaffold/in/%s.bnk"%(rundir,PREFIX))
            if format == "fasta":
-               if "bowtie" not in skipsteps:
-                   map2contig(min,max,1)
+               #if "bowtie" not in skipsteps:
+               map2contig(min,max,1)
                os.system("%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -s %s/Preprocess/out/all.seq -m %s/Preprocess/out//all.seq.mates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,PREFIX,rundir, rundir,rundir,PREFIX))
            elif format == "fastq":
-               if "bowtie" not in skipsteps:
-                   map2contig(min,max,0)
+               #if "bowtie" not in skipsteps:
+               map2contig(min,max,0)
                print "%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -Q %s/Preprocess/out/all.seq -m %s/Assemble/out/%s.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,PREFIX,rundir, rundir,PREFIX,rundir,PREFIX)
                os.system("%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -Q %s/Preprocess/out/all.seq -m %s/Assemble/out/%s.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,PREFIX,rundir, rundir,PREFIX,rundir,PREFIX))
    elif asm == "newbler":
@@ -898,25 +904,29 @@ def FindScaffoldORFS(input,output):
 def Propagate(input,output):
    #run propogate java script
    # create s12.annots from Metaphyler output
-   os.system("python %s/python/create_mapping.py %s/Metaphyler/out/%s.blastx in/phymm.out in/s12.annots")
+   os.system("python %s/python/create_mapping.py %s/DB/class_key.tab %s/Metaphyler/out/%s.blastx %s/Propagate/in/%s.annots"%(METAMOS_UTILS,METAMOS_UTILS,PREFIX,rundir,PREFIX))
    # strip headers from file and contig name prefix
 
-   os.system("cat in/s12.annots |sed s/contig_//g |grep -v contigID > in/s12.clusters")
-   os.system("%s/cpp/FilterEdgesByCluster -b %s/Scaffold/in/%s.bnk -clusters in/s12.clusters -noRemoveEdges > %s/Propagate/out/%s.clusters"%(rundir,rundir,PREFIX,rundir,PREFIX))
+   os.system("cat %s/Propagate/in/%s.annots |sed s/contig_//g |grep -v contigID > %s/Propagate/in/%s.clusters"%(rundir,PREFIX,rundir,PREFIX))
+   os.system("%s/cpp/FilterEdgesByCluster -b %s/Scaffold/in/%s.bnk -clusters in/s12.clusters -noRemoveEdges > %s/Propagate/out/%s.clusters"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX))
 
 @follows(Propagate)
 @files("%s/Propagate/out/%s.clusters"%(rundir,PREFIX),"%s/Classify/out/sorted.txt"%(rundir))
 def Classify(input,output):
    #run Dan's classify script
-   os.system("cat %s/Propagate/in/%s.clusters | %s/python/sort_contigs.py"%(rundir, PREFIX, METAMOS_UTILS))
+   os.system("python %s/python/sort_contigs.py %s/Propagate/in/%s.clusters %s/DB/class_key.tab %s/Classify/out %s/Scaffold/in/%s.bnk"%(rundir, PREFIX, METAMOS_UTILS, METAMOS_UTILS,rundir, rundir, PREFIX))
 
-@follows(Classify)
+@follows(Scaffold)
 def Postprocess():
 #create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm>
    #copy files into output for createReport   
    #generate reports
    #linearize
-   pass
+   os.system("cp %s/Metaphyler/out/%s.phylum.tab %s/Postprocess/out/. "%(rundir,PREFIX,rundir))
+   os.system("cp %s/Scaffold/out/%s.linearize.scaffolds.final %s/Postproces/out/%s.scf.fa"%(rundir,PREFIX,rundir,PREFIX))
+   os.system("ln -t %s/Postprocess/out/ -s ../../Scaffold/in/%s.bnk "%(rundir,PREFIX))
+   os.system("python %s/python/create_report.py %s/Postprocess/out/%s.phylum.tab  %s/Postprocess/out/%s.bnk %s %s/Postprocess/out/%s.scf.fa"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX,PREFIX,rundir,PREFIX))   
+   
 
 
 def parse_genemarkout(orf_file):
@@ -1092,14 +1102,14 @@ if __name__ == "__main__":
     
     files = os.listdir(".")
     dlist = []
-    pipeline_printout(sys.stdout,[Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold], verbose=5)
+    pipeline_printout(sys.stdout,[Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold, Propagate, FindScaffoldORFS, Classify, Postprocess], verbose=5)
     pipeline_printout_graph (   'flowchart.svg',
                             'svg',
                             [Postprocess],
-                            no_key_legend = False)
-    pipeline_run([Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold], verbose = 5) 
+                            no_key_legend = True)
+    pipeline_run([Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold, Propagate, FindScaffoldORFS, Classify, Postprocess], verbose = 5) 
    
     t2 = time.clock()
     elapsed = t2-t1
-    print "done! pipeline took %d minutes"%(elapsed/60)
+    print "done! pipeline took %.2f minutes"%(float(elapsed)/float(60))
     #os.kill(pid)

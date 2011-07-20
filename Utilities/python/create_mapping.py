@@ -2,12 +2,10 @@ import os, sys, string
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print "usage: create_mapping.py <translation file> <phymm output> <output file>"
-#    r = open("class_key.tab",'r')
+        print "usage: create_mapping.py <translation file> <metaphyler output> <output file>"
+
     r = open(sys.argv[1],'r')
-#    p = open("phymm.out",'r')
     p = open(sys.argv[2],'r')
-#    out = open("s12.annots",'w')
     out = open(sys.argv[3],'w')
     class_dict = {}
     
@@ -23,7 +21,7 @@ if __name__ == "__main__":
         id = ""
         data = line.split("\t")
         contig_id = data[0]
-        phylum = data[11].split("-")[0]
+        phylum = data[9].split("-")[0]
         try:
             id = class_dict[phylum]
         except KeyError:

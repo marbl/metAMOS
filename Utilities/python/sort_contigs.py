@@ -7,8 +7,13 @@ contigs_by_class = { }
 id_class = { }
 id_class["0"] = "UNKNOWN"
 
-class_key = open("in/class_key.tab")
-
+class_file = open(sys.argv[1])
+#pass class_key as argument
+class_key = open(sys.argv[2])
+#pass outdir as argument
+out_dir = sys.argv[3]
+#pass AMOS bank as argument
+amos_bnk = sys.argv[4]
 # parse in key file
 for line in class_key:
     line = line.strip()
@@ -23,7 +28,7 @@ for line in class_key:
 
 
 # parse contig class file
-for line in sys.stdin:
+for line in class_file:
     line = line.strip()
     fields = line.split()
     # f1 is contig, f2 is class
@@ -41,14 +46,14 @@ for line in sys.stdin:
 
 for key in contigs_by_class:
     class_name = id_class[key]
-    path = "out/" + class_name + "/"
+    path = out_dir + class_name + "/"
     if not os.path.exists(path):
         os.mkdir(path)
 
     f = open(path + class_name + ".iid", 'w')
     f.write("\n".join(contigs_by_class[key]))
     f.close()
-    ret = os.system("bank2fasta -b in/s12.bnk -i " + path + class_name + ".iid > " + path + class_name + ".fasta")
+    ret = os.system("bank2fasta -b %s -i "%(amos_bnk) + path + class_name + ".iid > " + path + class_name + ".fasta")
     
     
 

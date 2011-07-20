@@ -1,7 +1,7 @@
 import sys, os, string
 ROOT = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(ROOT, '..'))
-sys.path.append(ROOT+"/lib")
+#sys.path.insert(0, os.path.join(ROOT, '..'))
+#sys.path.append(ROOT+"/lib")
 import  markup, datetime
 from pygooglechart import StackedVerticalBarChart
 from pygooglechart import PieChart2D
@@ -21,9 +21,9 @@ if __name__ == "__main__":
         sys.exit(0)
     ref_asm = sys.argv[4]
     mp = open(sys.argv[1],'r')
-    mp2 = open(sys.argv[1].replace("s12","s3"),'r')    
-    if not os.path.exists("./out/asmstats.out"):
-        os.system("perl ./lib/statistics.pl %s > ./out/asmstats.out"%(sys.argv[4]))        
+    #mp2 = open(sys.argv[1].replace("s12","s3"),'r')    
+    #if not os.path.exists("./out/asmstats.out"):
+    #    os.system("perl ./lib/statistics.pl %s > ./out/asmstats.out"%(sys.argv[4]))        
     report = open("./out/asmstats.out",'r')
     
     rdata = []

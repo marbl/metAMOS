@@ -15,6 +15,7 @@ SOAP          = "%s%scpp"%(METAMOS_UTILS, os.sep)
 CA            = "%s%sCA%s%s-%s%sbin"%(METAMOSDIR, os.sep, os.sep, OSTYPE, MACHINETYPE.replace("x86_64", "amd64"), os.sep)
 NEWBLER       = "%s%snewbler"%(METAMOSDIR, os.sep)
 BOWTIE        = "%s%scpp"%(METAMOS_UTILS, os.sep)
+GMHMMP        = "%s%scpp"%(METAMOS_UTILS, os.sep)
 
 sys.path.append(METAMOS_UTILS)
 from ruffus import *
@@ -66,6 +67,7 @@ def guessPaths():
     global CA
     global NEWBLER
     global BOWTIE
+    global GMHMMP
 
     getMachineType()
 
@@ -104,12 +106,41 @@ def guessPaths():
     if not os.path.exists(BOWTIE + os.sep + "bowtie"):
        BOWTIE = getFromPath("bowtie", "Bowtie")
 
+    # now for the annotation
+    GMHMMP = "%s%scpp"%(METAMOS_UTILS, os.sep)
+    if not os.path.exists(GMHMMP + os.sep + "gmhmmp"):
+       GMHMMP = getFromPath("gmhmmp", "GeneMark.hmm")
+
     # finally add the utilities to our path
     print "Configuration summary:"
     print "OS:\t\t\t%s\nOS Version:\t\t%s\nMachine:\t\t%s\n"%(OSTYPE, OSVERSION, MACHINETYPE)
     print "metAMOS main dir:\t%s\nmetAMOS Utilities:\t%s\nmetAMOS Java:\t\t%s\n"%(METAMOSDIR, METAMOS_UTILS, METAMOS_JAVA)
     print "AMOS:\t\t\t%s\nSOAP:\t\t\t%s\nCelera Assembler:\t%s\nNEWBLER:\t\t%s\n"%(AMOS, SOAP, CA, NEWBLER)
     print "Bowtie:\t\t\t%s"%(BOWTIE)
+    print "GMHMMP:\t\t\t%s"%(GMHMMP)
+
+def getProgramParams(fileName, module="", prefix="", comment="#"):
+    cmdOptions = ""
+    read = False
+    if module == "":
+       read = True
+
+    spec = open("%s/config/%s"%(METAMOS_UTILS, fileName),'r')
+    for line in spec:
+       (line, sep, commentLine) = line.partition(comment)
+       line = line.strip()
+
+       if line == "[" + module + "]":
+          read = True
+          continue;
+       elif read == True and line.startswith("["):
+          break;
+
+       if read:
+          if (line != ""):
+             cmdOptions += " " + prefix + line
+    spec.close()
+    return cmdOptions
 
 def usage():
     print "usage: runPipeline.py [options] -d projectdir (required)"
@@ -628,7 +659,7 @@ def Preprocess(input,output):
            os.system("ln -t ./%s/Preprocess/out/ -s ../../Preprocess/in/%s"%(rundir,lib))
    if format == "sff":
       # generate the fasta files from the sff file
-      sffToCACmd = "%s/sffToCA -clear 454 -trim chop -libraryname sff -output %s/Preprocess/out/%s"%(CA, rundir, PREFIX)
+      sffToCACmd = "%s/sffToCA -clear 454 -clear discard-n -trim chop -libraryname sff -output %s/Preprocess/out/%s"%(CA, rundir, PREFIX)
       if (mated == True):
          os.system("%s -linker %s -insertsize %d %d %s"%(sffToCACmd, linkerType, mean, stdev, infile))
       else:
@@ -716,11 +747,7 @@ def Assemble(input,output):
       os.system("%s/addRun %s/Assemble/out %s/Preprocess/out/all.seq"%(NEWBLER, rundir, rundir));
       newblerCmd = "%s%srunProject"%(NEWBLER, os.sep)
       # read spec file to input to newbler parameters
-      newblerSpec = open("%s/config/newbler.spec"%(METAMOS_UTILS),'r')
-      for line in newblerSpec:
-        if (not "#" in line):
-           newblerCmd += " " + line.strip()
-      newblerSpec.close()
+      newblerCmd += getProgramParams("newbler.spec", "", "-")
       os.system("%s -cpu %d %s/Assemble/out"%(newblerCmd,threads,rundir));
 
       # convert to AMOS
@@ -780,7 +807,7 @@ def FindORFS(input,output):
 
 
    #os.system("ln -t ./%s/FindORFS/in/ -s ../../Assemble/out/%s.asm.scafSeq.contigs"%(rundir,PREFIX))
-   os.system("%s/cpp/gmhmmp -o %s/FindORFS/out/%s.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/FindORFS/in/%s.asm.contig"%(METAMOS_UTILS,rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX))
+   os.system("%s/gmhmmp -o %s/FindORFS/out/%s.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/FindORFS/in/%s.asm.contig"%(GMHMMP,rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX))
    parse_genemarkout("%s/FindORFS/out/%s.orfs"%(rundir,PREFIX))
    os.system("unlink ./%s/Annotate/in/%s.faa"%(rundir,PREFIX))
    #os.system("unlink ./%s/Annotate/in/%s.fna"%(rundir,PREFIX))
@@ -823,8 +850,8 @@ if "Metaphyler" in forcesteps:
 @follows(FindORFS)
 @files("%s/FindORFS/out/%s.faa"%(rundir,PREFIX),"%s/Metaphyler/out/%s.phylum.tab"%(rundir,PREFIX))
 def Metaphyler(input,output):
-   #if "FindORFS" in skipsteps or "Metaphyler" in skipsteps:
-   #   return 0;
+   if "FindORFS" in skipsteps or "Metaphyler" in skipsteps:
+      return 0;
 
    os.system("unlink ./%s/Metaphyler/in/%s.contig.cvg"%(rundir,PREFIX))
    os.system("unlink ./%s/Metaphyler/in/%s.faa"%(rundir,PREFIX))
@@ -871,10 +898,14 @@ def Scaffold(input,output):
       os.system("%s/bank-transact -b %s/Scaffold/in/%s.bnk -c -m %s/Assemble/out/%s.afg"%(AMOS,rundir, PREFIX, rundir, PREFIX));
 
    #calls to Bambus2, goBambus2 script
+   # first, parse the parameters
+   markRepeatParams = getProgramParams("bambus.spec", "MarkRepeats", "-")
+   orientContigParams = getProgramParams("bambus.spec", "OrientContigs", "-")
+
    os.system("%s/clk -b %s/Scaffold/in/%s.bnk"%(AMOS,rundir,PREFIX))
    os.system("%s/Bundler -b %s/Scaffold/in/%s.bnk"%(AMOS,rundir,PREFIX))
-   os.system("%s/MarkRepeats -d 3 -b %s/Scaffold/in/%s.bnk > %s/Scaffold/in/%s.reps"%(AMOS,rundir,PREFIX,rundir,PREFIX))
-   os.system("%s/OrientContigs -b %s/Scaffold/in/%s.bnk -all -repeats %s/Scaffold/in/%s.reps "%(AMOS,rundir,PREFIX, rundir, PREFIX))
+   os.system("%s/MarkRepeats %s -b %s/Scaffold/in/%s.bnk > %s/Scaffold/in/%s.reps"%(AMOS,markRepeatParams,rundir,PREFIX,rundir,PREFIX))
+   os.system("%s/OrientContigs %s -b %s/Scaffold/in/%s.bnk -repeats %s/Scaffold/in/%s.reps "%(AMOS,orientContigParams,rundir,PREFIX, rundir, PREFIX))
 
    # output results
    os.system("%s/bank2fasta -d -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.contigs"%(AMOS,rundir,PREFIX,rundir,PREFIX))
@@ -904,11 +935,11 @@ def FindScaffoldORFS(input,output):
 def Propagate(input,output):
    #run propogate java script
    # create s12.annots from Metaphyler output
-   os.system("python %s/python/create_mapping.py %s/DB/class_key.tab %s/Metaphyler/out/%s.blastx %s/Propagate/in/%s.annots"%(METAMOS_UTILS,METAMOS_UTILS,PREFIX,rundir,PREFIX))
+   os.system("python %s/python/create_mapping.py %s/DB/class_key.tab %s/Metaphyler/out/%s.blastx %s/Propagate/in/%s.annots"%(METAMOS_UTILS,METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX))
    # strip headers from file and contig name prefix
 
    os.system("cat %s/Propagate/in/%s.annots |sed s/contig_//g |grep -v contigID > %s/Propagate/in/%s.clusters"%(rundir,PREFIX,rundir,PREFIX))
-   os.system("%s/cpp/FilterEdgesByCluster -b %s/Scaffold/in/%s.bnk -clusters in/s12.clusters -noRemoveEdges > %s/Propagate/out/%s.clusters"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX))
+   os.system("%s/FilterEdgesByCluster -noRemoveEdges -b %s/Scaffold/in/%s.bnk -clusters in/s12.clusters -noRemoveEdges > %s/Propagate/out/%s.clusters"%(AMOS,rundir,PREFIX,rundir,PREFIX))
 
 @follows(Propagate)
 @files("%s/Propagate/out/%s.clusters"%(rundir,PREFIX),"%s/Classify/out/sorted.txt"%(rundir))

@@ -1,13 +1,18 @@
 import os, sys, string, time, BaseHTTPServer, getopt, time, datetime
 #from datetime import date
 
+
 from ruffus import *
+
 
 def usage():
     print "usage: createProject.py -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300,500 -f/-q"
     print "options: -s -q, -f, -1, -2, -d, -i"
 
-allsteps = ["Preprocess","Assemble","FindORFS","FindRepeats","Metaphyler","Annotate","Scaffold","FindScaffoldORFS","Propagate","Classify","Postprocess"]
+if len(sys.argv) < 2:
+    usage()
+    sys.exit(1)
+allsteps = ["Preprocess","Assemble","FindORFS","FindRepeats","Metaphyler","Annotate","Scaffold","Propagate","FindScaffoldORFS","Classify","Postprocess"]
 
 today = datetime.datetime.now()
 #todaytime = date.fromtimestamp(time.time())
@@ -123,7 +128,7 @@ else:
         filen1 = os.path.basename(f1)
         filen2 = os.path.basename(f2)
         os.system("cp %s.qual %s/Preprocess/in/."%(f1,id))
-        os.system("cp %.qual %s/Preprocess/in/. "%(f2,id))
+        os.system("cp %s.qual %s/Preprocess/in/. "%(f2,id))
 if not mated:
     filen = os.path.basename(f1)
     if format == "sff" and min != "":

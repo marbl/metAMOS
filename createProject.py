@@ -2,12 +2,12 @@ import os, sys, string, time, BaseHTTPServer, getopt, time, datetime
 #from datetime import date
 
 
-from ruffus import *
+#from ruffus import *
 
 
 def usage():
     print "usage: createProject.py -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300,500 -f/-q"
-    print "options: -s -q, -f, -1, -2, -d, -i"
+    print "options: -s -q, -f, -1, -2, -d, -m, -i"
 
 if len(sys.argv) < 2:
     usage()
@@ -19,7 +19,7 @@ today = datetime.datetime.now()
 timestamp = "P_"+today.isoformat().replace("-","_").replace(".","").replace(":","").replace("T","_")
 #print timestamp
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hfsq1:2:i:d:or", ["help", "fasta=","fastq=","sff=","f1=","f2=","insertlen=","dir=","outtie=","readlen="])
+    opts, args = getopt.getopt(sys.argv[1:], "hfsq1:2:m:i:d:or", ["help", "fasta=","fastq=","sff=","f1=","f2=","matelib=","insertlen=","dir=","outtie=","readlen="])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -33,6 +33,7 @@ frags = []
 cf = ""
 format ="fastq"
 mated = False
+interleaved = False
 min = ""
 max = ""
 maxreadlen = 150
@@ -72,7 +73,15 @@ for o, a in opts:
         #lib1, min, max  = a.split(",")
         #libs[lib1] = [int(min),int(max)]
         mated = True
+        interleaved = False
         f2 = a
+
+    elif o in ("-m"):
+        #lib1, min, max  = a.split(",")
+        #libs[lib1] = [int(min),int(max)]
+        mated = True
+        interleaved = True
+        f1 = a
         
     elif o in ("-i"):
         data = a.split(",")
@@ -121,7 +130,7 @@ elif format == "sff":
 else:
 
     cf.write("format:\tfasta\n")
-    if not mated:
+    if interleaved or not mated:
         filen = os.path.basename(f1)
         os.system("cp %s.qual %s/Preprocess/in/. "%(f1,id))
     else:
@@ -133,6 +142,7 @@ if not mated:
     filen = os.path.basename(f1)
     if format == "sff" and min != "":
        cf.write("mated:\tTrue\n")
+       cf.write("interleaved:\tTrue\n")
        min = int(min)
        max = int(max)
        mean = (min+max)/2
@@ -140,12 +150,14 @@ if not mated:
        cf.write("f1:\t%s,%d,%d,%d,%d\n"%(filen,min,max,mean,stdev))
     else:
        cf.write("mated:\tFalse\n")
+       cf.write("interleaved:\tFalse\n")
        cf.write("frg:\t%s\n"%(filen))
     os.system("cp %s %s/Preprocess/in/. "%(f1,id))
 
     #os.system("ln -t %s -s ./%s/Preprocess/in/%s"%(frg,id,filen))
-elif mated:
+elif mated and not interleaved:
     cf.write("mated:\tTrue\n")
+    cf.write("interleaved:\tFalse\n")
     filen1 =  os.path.basename(f1)
     filen2 =  os.path.basename(f2)
     min = int(min)
@@ -160,25 +172,45 @@ elif mated:
     os.system("cp %s %s/Preprocess/in/. "%(f1,id))
     os.system("cp %s  %s/Preprocess/in/. "%(f2,id))
     #open config.txt, edit LIBs
-if mated:
+
+elif mated and interleaved:
+    cf.write("mated:\tTrue\n")
+    cf.write("interleaved:\tTrue\n")
+    filen1 =  os.path.basename(f1)
+    min = int(min)
+    max = int(max)
+    mean = (min+max)/2
+    stdev = mean * 0.2
+    cf.write("f1:\t%s,%d,%d,%d,%d\n"%(filen1,min,max,mean,stdev))
+    #print "ln -t %s/Preprocess/in/ -s %s"%(id,f1)
+    #print "ln -t %s/Preprocess/in/ -s %s"%(id,f2)
+
+    os.system("cp %s %s/Preprocess/in/. "%(f1,id))
+    #open config.txt, edit LIBs
+if 1:
     soapf = open("%s/config.txt"%(id),'a')
     soaplib = "[LIB]\n"
-    soaplib += "avg_ins="+str((min+max)/2)+"\n"
+    if min != "" and max != "":
+        soaplib += "avg_ins="+str((min+max)/2)+"\n"
+    else:
+        soaplib += "avg_ins=0\n"
     if innie:
         soaplib += "reverse_seq=0\n"
     else:
         soaplib += "reverse_seq=1\n"
     soaplib += "asm_flags=3\n"
     soaplib += "rank=1\n"
-    if format == "fastq" and mated:
+    if format == "fastq" and mated and not interleaved:
         soaplib += "q1=LIBQ1REPLACE\n"
         soaplib += "q2=LIBQ2REPLACE\n"
-    elif format == "fasta" and mated:
+    elif format == "fasta" and mated and not interleaved:
         soaplib += "f1=LIBQ1REPLACE\n"
         soaplib += "f2=LIBQ2REPLACE\n"
+    elif format == "fasta" and not mated:
+        soaplib += "f=LIBQ1REPLACE\n"
     elif format == "fastq" and not mated:
         soaplib += "q=LIBQ1REPLACE\n"
-    elif format == "fasta" and not mated:
+    elif format == "fasta" and mated and interleaved:
         soaplib += "p=LIBQ1REPLACE\n"
     soapf.write(soaplib)
     soapf.close()

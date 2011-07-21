@@ -92,6 +92,7 @@ def guessPaths():
     SOAP = "%s%scpp"%(METAMOS_UTILS, os.sep) 
     if not os.path.exists(SOAP + os.sep + "SOAPdenovo-63mer"):
        SOAP = getFromPath("SOAPdenovo-63mer", "SOAP")
+       #SOAP = getFromPath("SOAPdenovo-63mer", "SOAP")
     # 3. CA
     CA = "%s%sCA%s%s-%s%sbin"%(METAMOSDIR, os.sep, os.sep, OSTYPE, MACHINETYPE.replace("x86_64","amd64"), os.sep)
     if not os.path.exists(CA + os.sep + "gatekeeper"):
@@ -252,6 +253,7 @@ stdev = 0
 mmin = 0
 mmax = 0
 mated = True
+interleaved = False
 linkerType = "titanium"
 frg = ""
 f1 = ""
@@ -265,6 +267,8 @@ for line in inf:
         format = line.replace("\n","").split("\t")[-1]
     elif "mated:" in line:
         mated = str2bool(line.replace("\n","").split("\t")[-1])
+    elif "interleaved:" in line:
+        interleaved = str2bool(line.replace("\n","").split("\t")[-1])
     elif "linker:" in line:
         linkerType = line.replace("\n","").split("\t")[-1]
     elif "f1:" in line:# or "f2:" in line:
@@ -299,7 +303,7 @@ for line in inf:
         libs.append(frg)
 
 def map2contig(min,max,fasta=True):
-    bowtie_mapping = 1
+    bowtie_mapping = 0
     
     readDir = ""
     asmDir = ""
@@ -411,7 +415,8 @@ def map2contig(min,max,fasta=True):
             except KeyError:
                 contigdict[contig] = [[int(spos),int(spos)+epos,strand,read_lookup[read]]]
             read_seq = "TEST"
-            seqdict[read] = read_seq
+            
+            seqdict[read_lookup[read]] = read_seq
             linecnt +=1
         
     contig_data = contigfile.read()
@@ -458,16 +463,16 @@ def map2contig(min,max,fasta=True):
         for read in contigdict[ref]:
             
             try:
-                if read[0] <= 500 and ctgslen - (int(read[1])) <= 500:
-                    matectgdict[read[-1]] = ref
-                    mateotdict[read[-1]] = read[2]
+                #if read[0] <= 500 and ctgslen - (int(read[1])) <= 500:
+                matectgdict[read[-1]] = ref
+                mateotdict[read[-1]] = read[2]
             except KeyError:
                 pass
             if read[2] == "-":
 #                matedict[read[-1]]
-                tigr_file.write("#%s(%d) [RC] %d bases, 00000000 checksum. {%d 1} <%d %s>\n"%(read[-1],read[0]-1, len(seqdict[read[-1]]), len(seqdict[read[-1]]), read[0], read[1]))
+                tigr_file.write("#%s(%d) [RC] %d bases, 00000000 checksum. {%d 1} <%d %s>\n"%(read[-1],read[0]-1, len(seqdict[read[-1]]), len(read[-1]), read[0], read[1]))
             else:
-                tigr_file.write("#%s(%d) [] %d bases, 00000000 checksum. {1 %d} <%d %s>\n"%(read[-1],read[0]-1, len(seqdict[read[-1]]), len(seqdict[read[-1]]), read[0], read[1]))
+                tigr_file.write("#%s(%d) [] %d bases, 00000000 checksum. {1 %d} <%d %s>\n"%(read[-1],read[0]-1, len(seqdict[read[-1]]), len(read[-1]), read[0], read[1]))
             tigr_file.write(seqdict[read[-1]]+"\n")
 
    
@@ -648,11 +653,11 @@ def Preprocess(input,output):
            if (format == "fastq"):
                #os.system(" perl %s/perl/prinseq.pl -stats_all -verbose -fastq %s/Preprocess/in/%s"%(METAMOS_UTILS,rundir,lib))
                #print "perl %s/perl/prinseq.pl -fastq %s -min_qual_score 10 -ns_max_p 5 -seq_id f%d_ -out_good %s/Preprocess/out/%s.clean"%(METAMOS_UTILS,lib,cnt,rundir,lib)
-               os.system("perl %s/perl/prinseq.pl -fastq %s -seq_id %s -out_good %s/Preprocess/out/%s"%(METAMOS_UTILS,lib,os.path.basename(lib).rsplit(".",1)[0],rundir,lib.rsplit(".",1)[0]))
+               os.system("perl %s/perl/prinseq.pl -ns_max_n 0 -fastq %s  -out_good %s/Preprocess/out/%s"%(METAMOS_UTILS,lib,rundir,lib.rsplit(".",1)[0]))
            else:
                #os.system(" perl %s/perl/prinseq.pl -stats_all -verbose -fasta %s/Preprocess/in/%s"%(METAMOS_UTILS,rundir,lib))
                #os.system("perl %s/perl/prinseq.pl -ns_max_p 5 -fasta %s -min_qual_score 10 -ns_max_p 5 -seq_id %s -out_good %s/Preprocess/out/%s"%(METAMOS_UTILS,lib,os.path.basename(lib).rsplit(".",1)[0],rundir,lib.rsplit(".",1)[0]))
-               os.system("perl %s/perl/prinseq.pl -fasta %s -seq_id %s -out_good %s/Preprocess/out/%s"%(METAMOS_UTILS,lib,os.path.basename(lib).rsplit(".",1)[0],rundir,lib.rsplit(".",1)[0]))
+               os.system("perl %s/perl/prinseq.pl -ns_max_n 0 -fasta %s  -out_good %s/Preprocess/out/%s"%(METAMOS_UTILS,lib,rundir,lib.rsplit(".",1)[0]))
        cnt +=1
    else:
        for lib in libs:
@@ -723,9 +728,17 @@ def Assemble(input,output):
       cnt = 1
       #print libs
       #for lib in libs:
-      if (format == "fastq" or format == "fasta")  and mated:
+      if (format == "fastq" or format == "fasta")  and mated and not interleaved:
           soapd = soapd.replace("LIBQ1REPLACE","%s/Preprocess/out/%s"%(rundir,f1))
           soapd = soapd.replace("LIBQ2REPLACE","%s/Preprocess/out/%s"%(rundir,f2))
+
+      elif format == "fastq"  and mated and interleaved:
+          #this is NOT supported by SOAP, make sure files are split into two..
+          soapd = soapd.replace("LIBQ1REPLACE","%s/Preprocess/out/%s"%(rundir,f1))
+          soapd = soapd.replace("LIBQ2REPLACE","%s/Preprocess/out/%s"%(rundir,f2))
+
+      elif format == "fasta"  and mated and interleaved:
+          soapd = soapd.replace("LIBQ1REPLACE","%s/Preprocess/out/%s"%(rundir,f1))
       else:
           soapd = soapd.replace("LIBQ1REPLACE","%s"%frg)
       #cnt +=1
@@ -734,7 +747,7 @@ def Assemble(input,output):
       soapw.close()
       print "Running SOAPdenovo on input reads..."
       #start stopwatch
-      os.system("%s/SOAPdenovo-63mer all  -D -d -R -p %d -K %d -M 3 -L 300 -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(SOAP, threads, kmer, rundir,rundir,PREFIX))#SOAPdenovo config.txt
+      os.system("%s/soap63 all  -D -d -R -p %d -K %d -M 3 -L 300 -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(SOAP, threads, kmer, rundir,rundir,PREFIX))#SOAPdenovo config.txt
       #os.system("%s/SOAPdenovo-63mer all -D -d -R -p %d -K %d -M 3 -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(SOAP, threads, kmer, rundir,rundir,PREFIX))#SOAPdenovo config.txt
       #os.system("%s/SOAPdenovo-31mer all  -D 3 -d 2 -R -p %d -M 3 -K %d -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(SOAP, threads, kmer, rundir,rundir,PREFIX))#SOAPdenovo config.txt
 
@@ -800,6 +813,8 @@ def FindORFS(input,output):
        os.system("unlink %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX))
        os.system("ln -t ./%s/FindORFS/in/ -s ../../Assemble/out/%s.asm.scafSeq.contigs"%(rundir,PREFIX))
        os.system("mv %s/FindORFS/in/%s.asm.scafSeq.contigs  %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX,rundir,PREFIX))
+       #try using contigs instead of contigs extracted from scaffolds
+       os.system("cp %s/Assemble/out/%s.asm.contig  %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX,rundir,PREFIX))
    else:
 
        os.system("unlink %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX))
@@ -886,7 +901,7 @@ def Scaffold(input,output):
            if format == "fasta":
                #if "bowtie" not in skipsteps:
                map2contig(min,max,1)
-               os.system("%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -s %s/Preprocess/out/all.seq -m %s/Preprocess/out//all.seq.mates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,PREFIX,rundir, rundir,rundir,PREFIX))
+               os.system("%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -s %s/Preprocess/out/all.seq -m %s/Assemble/out/%s.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,PREFIX,rundir, rundir,PREFIX,rundir,PREFIX))
            elif format == "fastq":
                #if "bowtie" not in skipsteps:
                map2contig(min,max,0)

@@ -16,9 +16,11 @@ if __name__ == "__main__":
     firstmate = ""
     linecnt = 0
     for line in f1.xreadlines():
-        if linecnt % 2 == 0:#">" not in line:
+        #if linecnt % 2 == 0:#">" not in line:
+        if ">" in line:
 
             line = line.replace(">","")
+            line = line.replace("\n","")
             data = line.split(" ")
             mate= data[0]
             mate = mate.strip()

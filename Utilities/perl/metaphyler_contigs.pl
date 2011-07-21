@@ -37,7 +37,7 @@ if (scalar @ARGV == 3) {
 #---------------------------------------------------#
 # data files
 #---------------------------------------------------#
-my $dir = "/fs/szasmg3/boliu/blPrograms/pipeline/metaphyler/data/";
+my $dir = "./Utilities/config";
 my $gtaxfile = "$dir/id2tax.tab";
 my $id2mfile = "$dir/id2m.tab";
 my $cutofffile = "$dir/cutoff.tab";

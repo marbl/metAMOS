@@ -17,6 +17,7 @@ NEWBLER       = "%s%snewbler"%(METAMOSDIR, os.sep)
 BOWTIE        = "%s%scpp"%(METAMOS_UTILS, os.sep)
 GMHMMP        = "%s%scpp"%(METAMOS_UTILS, os.sep)
 
+t1 = time.time()#clock()
 sys.path.append(METAMOS_UTILS)
 from ruffus import *
 
@@ -829,7 +830,7 @@ def FindORFS(input,output):
    os.system("%s/gmhmmp -o %s/FindORFS/out/%s.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/FindORFS/in/%s.asm.contig"%(GMHMMP,rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX))
    parse_genemarkout("%s/FindORFS/out/%s.orfs"%(rundir,PREFIX))
    os.system("unlink ./%s/Annotate/in/%s.faa"%(rundir,PREFIX))
-   #os.system("unlink ./%s/Annotate/in/%s.fna"%(rundir,PREFIX))
+   os.system("unlink ./%s/Annotate/in/%s.fna"%(rundir,PREFIX))
    os.system("unlink ./%s/FindRepeats/in/%s.fna"%(rundir,PREFIX))
    os.system("ln -t ./%s/Annotate/in/ -s ../../FindORFS/out/%s.faa"%(rundir,PREFIX))
    os.system("ln -t ./%s/FindRepeats/in/ -s ../../FindORFS/out/%s.fna"%(rundir,PREFIX))
@@ -944,12 +945,13 @@ def FindScaffoldORFS(input,output):
       os.system("touch %s/FindScaffoldORFS/out/%s.scaffolds.faa"%(rundir, PREFIX))
       return 0
 
-   os.system("%s/cpp/gmhmmp -o %s/FindORFS/out/%s.scaffolds.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/FindScaffoldORFS/out/%s.linearize.scaffolds.final"%(METAMOS_UTILS,rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX))
-   parse_genemarkout("%s/FindORFS/out/%s.scaffolds.orfs"%(rundir,PREFIX))
-   os.system("unlink ./%s/Annotate/in/%s.scaffolds.faa"%(rundir,PREFIX))
-   os.system("ln -t ./%s/Annotate/in/ -s ../../FindORFS/out/%s.scaffolds.faa"%(rundir,PREFIX))
+   os.system("%s/cpp/gmhmmp -o %s/FindORFS/out/%s.scaffolds.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/%s/Scaffold/out/%s.linearize.scaffolds.final"%(METAMOS_UTILS,rundir,PREFIX,METAMOS_UTILS,METAMOSDIR,rundir,PREFIX))
+   #print"%s/cpp/gmhmmp -o %s/FindORFS/out/%s.scaffolds.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/Scafffold/out/%s.linearize.scaffolds.final"%(METAMOS_UTILS,rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX)
+   parse_genemarkout("%s/FindORFS/out/%s.scaffolds.orfs"%(rundir,PREFIX),1)
+   #os.system("unlink ./%s/FindORFS/in/%s.scaffolds.faa"%(rundir,PREFIX))
+   #os.system("ln -t ./%s/Annotate/in/ -s ../../FindORFS/out/%s.scaffolds.faa"%(rundir,PREFIX))
 
-@follows(Scaffold)
+@follows(FindScaffoldORFS)
 @files("%s/Scaffold/in/%s.bnk"%(rundir,PREFIX),"%s/Scaffold/out/%s.genus"%(rundir,PREFIX))
 def Propagate(input,output):
    #run propogate java script
@@ -966,20 +968,20 @@ def Classify(input,output):
    #run Dan's classify script
    os.system("python %s/python/sort_contigs.py %s/Propagate/in/%s.clusters %s/DB/class_key.tab %s/Classify/out %s/Scaffold/in/%s.bnk"%(rundir, PREFIX, METAMOS_UTILS, METAMOS_UTILS,rundir, rundir, PREFIX))
 
-@follows(Scaffold)
+@follows(Classify)
 def Postprocess():
 #create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm>
    #copy files into output for createReport   
    #generate reports
    #linearize
    os.system("cp %s/Metaphyler/out/%s.phylum.tab %s/Postprocess/out/. "%(rundir,PREFIX,rundir))
-   os.system("cp %s/Scaffold/out/%s.linearize.scaffolds.final %s/Postproces/out/%s.scf.fa"%(rundir,PREFIX,rundir,PREFIX))
+   os.system("cp %s/Scaffold/out/%s.linearize.scaffolds.final %s/Postprocess/out/%s.scf.fa"%(rundir,PREFIX,rundir,PREFIX))
    os.system("ln -t %s/Postprocess/out/ -s ../../Scaffold/in/%s.bnk "%(rundir,PREFIX))
    os.system("python %s/python/create_report.py %s/Postprocess/out/%s.phylum.tab  %s/Postprocess/out/%s.bnk %s %s/Postprocess/out/%s.scf.fa"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX,PREFIX,rundir,PREFIX))   
    
 
 
-def parse_genemarkout(orf_file):
+def parse_genemarkout(orf_file,is_scaff=False):
     coords = open(orf_file,'r')
     coords.readline()
 #    outf = open("proba.orfs",'w')
@@ -1051,18 +1053,22 @@ def parse_genemarkout(orf_file):
                     cvg = float(cvg.split("cvg_")[1])
                     cvg_dict[curcontig] = cvg
                 except IndexError:
-                    print "Coverage not found, skip?"
+                    #print "Coverage not found, skip?"
                     cvg = 1.0
                     cvg_dict[curcontig] = cvg
             elif asm == "newbler":
                 try:
                     #os.system("./sergeTest/Assemble/out/assembly/454ContigGraph.txt")
-                    p = subprocess.Popen("cat %s/Assemble/out/assembly/454ContigGraph.txt |grep %s |awk \'{print $4}\'"%(rundir, curcontig), stdin=None, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    (checkStdout, checkStderr) = p.communicate()
-                    cvg = float(checkStdout.strip())
+                    os.system("cat %s/%s/Assemble/out/assembly/454ContigGraph.txt | grep %s | awk \'{print $4}\' > %s/%s/cvg1.out"%(METAMOSDIR,rundir, curcontig, METAMOSDIR,rundir))
+                    #print "cat %s/%s/Assemble/out/assembly/454ContigGraph.txt | grep %s | awk \'{print $4}\' > %s/%s/cvg1.out"%(METAMOSDIR,rundir, curcontig, METAMOSDIR,rundir)
+                    #os.system("cat %s/%s/Assemble/out/assembly/454ContigGraph.txt | grep %s  > %s/%s/cvg1.out"%(METAMOSDIR,rundir, curcontig, METAMOSDIR,rundir))
+                    fin = open("%s/%s/cvg1.out"%(METAMOSDIR,rundir),'r')
+                    cvg = fin.readline().replace("\n","")
+                    cvg = float(cvg)
+                    #print cvg
                     cvg_dict[curcontig] = cvg
-                except TypeError:
-                    print "Coverage not found, skip?"
+                except ValueError:
+                    #print "Coverage not found, skip?"
                     cvg = 1.0
                     cvg_dict[curcontig] = cvg                
             prevhdr = 1
@@ -1099,7 +1105,8 @@ def parse_genemarkout(orf_file):
     orfs = {}
     for key in gene_dict.keys():
         genecnt = 1
-        cvgf.write("%s_gene%d\t%s\n"%(key,genecnt,cvg_dict[key])) 
+        if not is_scaff:
+            cvgf.write("%s_gene%d\t%s\n"%(key,genecnt,cvg_dict[key])) 
         for gene in gene_dict[key]:
             #min aa length, read depth
             if len(gene) < 100 or cvg_dict[key] < 5:
@@ -1185,7 +1192,7 @@ if __name__ == "__main__":
     print "Starting metAMOS pipeline"
     guessPaths()
 
-    t1 = time.clock()
+
     
     files = os.listdir(".")
     dlist = []
@@ -1196,7 +1203,8 @@ if __name__ == "__main__":
                             no_key_legend = True)
     pipeline_run([Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold, Propagate, FindScaffoldORFS, Classify, Postprocess], verbose = 5) 
    
-    t2 = time.clock()
-    elapsed = t2-t1
-    print "done! pipeline took %.2f minutes"%(float(elapsed)/float(60))
+    t2 = time.time()#clock()
+    elapsed = float(t2)-float(t1)
+    #print elapsed
+    print "done! pipeline took %.2f minutes"%(float(elapsed)/float(60.0))
     #os.kill(pid)

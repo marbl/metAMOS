@@ -99,6 +99,8 @@ def guessPaths():
        CA = getFromPath("gatekeeper", "Celera Assembler") 
     # 4. Newbler
     NEWBLER = "%s%snewbler"%(METAMOSDIR, os.sep);
+    #print NEWBLER
+    #sys.exit(0)
     if not os.path.exists(NEWBLER + os.sep + "runProject"):
        NEWBLER = getFromPath("runProject", "Newbler")
 
@@ -798,6 +800,8 @@ def Assemble(input,output):
    #sys.exit(0)
    #check if sucessfully completed   
 
+if "FindORFS" in forcesteps:
+   os.system("touch %s/Assemble/out/%s.asm.scafSeq"%(rundir,PREFIX))
 @follows(Assemble)
 @files("%s/Assemble/out/%s.asm.scafSeq"%(rundir,PREFIX),"%s/FindORFS/out/%s.faa"%(rundir,PREFIX))
 def FindORFS(input,output):
@@ -1035,15 +1039,32 @@ def parse_genemarkout(orf_file):
             prevhdr = 1
             lined = line.replace("\n","")
             data = line[1:].split(">",1)[1]
+            
             curcontig = data.split(" ")[0]
+            if len(data.split(" ")) == 1:
+                curcontig = data.split("\t")[0]
+            curcontig = curcontig.strip()
+            #print curcontig, len(curcontig)
             cvg = data.split(" ")[-1]
-            try:
-                cvg = float(cvg.split("cvg_")[1])
-                cvg_dict[curcontig] = cvg
-            except IndexError:
-                print "Coverage not found, skip?"
-                cvg = 1.0
-                cvg_dict[curcontig] = cvg
+            if asm == "soap":
+                try:
+                    cvg = float(cvg.split("cvg_")[1])
+                    cvg_dict[curcontig] = cvg
+                except IndexError:
+                    print "Coverage not found, skip?"
+                    cvg = 1.0
+                    cvg_dict[curcontig] = cvg
+            elif asm == "newbler":
+                try:
+                    #os.system("./sergeTest/Assemble/out/assembly/454ContigGraph.txt")
+                    p = subprocess.Popen("cat %s/Assemble/out/assembly/454ContigGraph.txt |grep %s |awk \'{print $4}\'"%(rundir, curcontig), stdin=None, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    (checkStdout, checkStderr) = p.communicate()
+                    cvg = float(checkStdout.strip())
+                    cvg_dict[curcontig] = cvg
+                except TypeError:
+                    print "Coverage not found, skip?"
+                    cvg = 1.0
+                    cvg_dict[curcontig] = cvg                
             prevhdr = 1
 
         elif len(line) > 2 and prevhdraa == 1 and prevhdr:
@@ -1057,6 +1078,20 @@ def parse_genemarkout(orf_file):
 
         else:
             continue
+    if prevhdraa and curseqaa != "":
+        try:
+          gene_dict[curcontig].append(curseqaa)
+        except KeyError:
+          gene_dict[curcontig] = []
+          gene_dict[curcontig].append(curseqaa)
+          curseqaa = ""
+
+    elif prevhdrnt and curseqnt != "":
+        try:
+          fna_dict[curcontig].append(curseqnt)
+        except KeyError:
+          fna_dict[curcontig] = []
+          fna_dict[curcontig].append(curseqnt)
     outf = open("%s/FindORFS/out/%s.faa"%(rundir,PREFIX),'w')
     outf2 = open("%s/FindORFS/out/%s.fna"%(rundir,PREFIX),'w')
     cvgf = open("%s/FindORFS/out/%s.contig.cvg"%(rundir,PREFIX),'w')
@@ -1077,6 +1112,7 @@ def parse_genemarkout(orf_file):
             outf.write(">%s_gene%d\n%s"%(key,genecnt,gene))
 
             genecnt +=1
+    for key in fna_dict.keys():
         for gene in fna_dict[key]:
             if len(gene) < 300 or cvg_dict[key] < 5:
                 continue

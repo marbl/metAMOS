@@ -945,9 +945,9 @@ def FindScaffoldORFS(input,output):
       os.system("touch %s/FindScaffoldORFS/out/%s.scaffolds.faa"%(rundir, PREFIX))
       return 0
 
-   os.system("%s/cpp/gmhmmp -o %s/FindORFS/out/%s.scaffolds.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/%s/Scaffold/out/%s.linearize.scaffolds.final"%(METAMOS_UTILS,rundir,PREFIX,METAMOS_UTILS,METAMOSDIR,rundir,PREFIX))
+   os.system("%s/cpp/gmhmmp -o %s/FindScaffoldORFS/out/%s.scaffolds.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/%s/Scaffold/out/%s.linearize.scaffolds.final"%(METAMOS_UTILS,rundir,PREFIX,METAMOS_UTILS,METAMOSDIR,rundir,PREFIX))
    #print"%s/cpp/gmhmmp -o %s/FindORFS/out/%s.scaffolds.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/Scafffold/out/%s.linearize.scaffolds.final"%(METAMOS_UTILS,rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX)
-   parse_genemarkout("%s/FindORFS/out/%s.scaffolds.orfs"%(rundir,PREFIX),1)
+   parse_genemarkout("%s/FindScaffoldORFS/out/%s.scaffolds.orfs"%(rundir,PREFIX),1)
    #os.system("unlink ./%s/FindORFS/in/%s.scaffolds.faa"%(rundir,PREFIX))
    #os.system("ln -t ./%s/Annotate/in/ -s ../../FindORFS/out/%s.scaffolds.faa"%(rundir,PREFIX))
 
@@ -1098,10 +1098,10 @@ def parse_genemarkout(orf_file,is_scaff=False):
         except KeyError:
           fna_dict[curcontig] = []
           fna_dict[curcontig].append(curseqnt)
-    outf = open("%s/FindORFS/out/%s.faa"%(rundir,PREFIX),'w')
-    outf2 = open("%s/FindORFS/out/%s.fna"%(rundir,PREFIX),'w')
-    cvgf = open("%s/FindORFS/out/%s.contig.cvg"%(rundir,PREFIX),'w')
-    print len(gene_dict.keys())
+    outf = open("%s/FindScaffoldORFS/out/%s.faa"%(rundir,PREFIX),'w')
+    outf2 = open("%s/FindScaffoldORFS/out/%s.fna"%(rundir,PREFIX),'w')
+    cvgf = open("%s/FindScaffoldORFS/out/%s.contig.cvg"%(rundir,PREFIX),'w')
+    #print len(gene_dict.keys())
     orfs = {}
     for key in gene_dict.keys():
         genecnt = 1
@@ -1109,7 +1109,7 @@ def parse_genemarkout(orf_file,is_scaff=False):
             cvgf.write("%s_gene%d\t%s\n"%(key,genecnt,cvg_dict[key])) 
         for gene in gene_dict[key]:
             #min aa length, read depth
-            if len(gene) < 100 or cvg_dict[key] < 5:
+            if len(gene) < 100:# or cvg_dict[key] < 5:
                 continue
             try:
                 #print "contig"+key
@@ -1121,7 +1121,7 @@ def parse_genemarkout(orf_file,is_scaff=False):
             genecnt +=1
     for key in fna_dict.keys():
         for gene in fna_dict[key]:
-            if len(gene) < 300 or cvg_dict[key] < 5:
+            if len(gene) < 300:# or cvg_dict[key] < 5:
                 continue
             outf2.write(">%s_gene%d\n%s"%(key,genecnt,gene))
 #        print gene_dict[key][0]

@@ -866,7 +866,7 @@ if "Metaphyler" in forcesteps:
 @files("%s/FindORFS/out/%s.faa"%(rundir,PREFIX),"%s/Metaphyler/out/%s.phylum.tab"%(rundir,PREFIX))
 def Metaphyler(input,output):
    if "FindORFS" in skipsteps or "Metaphyler" in skipsteps:
-      return 0;
+      return 0
 
    os.system("unlink ./%s/Metaphyler/in/%s.contig.cvg"%(rundir,PREFIX))
    os.system("unlink ./%s/Metaphyler/in/%s.faa"%(rundir,PREFIX))
@@ -991,8 +991,8 @@ def parse_genemarkout(orf_file):
     fna_dict = {}
     cvg_dict = {}
     for line in coords:
-        if ">gene" in line:
-            if "_nt" in line:
+        if ">gene" in line[0:10]:
+            if "_nt|" in line:
                 #print prevhdraa, prevhdrnt#, curseqaa, curseqnt
                 if prevhdraa and curseqaa != "":
                     try:
@@ -1013,7 +1013,7 @@ def parse_genemarkout(orf_file):
                 prevhdrnt = 1
                 prevhdraa = 0
 
-            elif "_aa" in line:
+            elif "_aa|" in line:
 
                 if prevhdrnt and curseqnt != "":
                     try:
@@ -1037,8 +1037,13 @@ def parse_genemarkout(orf_file):
             data = line[1:].split(">",1)[1]
             curcontig = data.split(" ")[0]
             cvg = data.split(" ")[-1]
-            cvg = float(cvg.split("_")[1])
-            cvg_dict[curcontig] = cvg
+            try:
+                cvg = float(cvg.split("cvg_")[1])
+                cvg_dict[curcontig] = cvg
+            except IndexError:
+                print "Coverage not found, skip?"
+                cvg = 1.0
+                cvg_dict[curcontig] = cvg
             prevhdr = 1
 
         elif len(line) > 2 and prevhdraa == 1 and prevhdr:

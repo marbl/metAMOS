@@ -885,8 +885,8 @@ def Metaphyler(input,output):
 
    
 
-@follows(Metaphyler)
-@files(["%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX),"%s/Preprocess/out/all.seq.mates"%(rundir)],"%s/Scaffold/out/%s.genus"%(rundir,PREFIX))
+#@follows(Metaphyler)
+@files(["%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX),"%s/Preprocess/out/all.seq.mates"%(rundir)],"%s/Scaffold/out/%s.scaffolds.final"%(rundir,PREFIX))
 def Scaffold(input,output):
    # check if we need to do scaffolding
    numMates = 0
@@ -928,7 +928,7 @@ def Scaffold(input,output):
    os.system("%s/OrientContigs %s -b %s/Scaffold/in/%s.bnk -repeats %s/Scaffold/in/%s.reps "%(AMOS,orientContigParams,rundir,PREFIX, rundir, PREFIX))
 
    # output results
-   os.system("%s/bank2fasta -d -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.contigs"%(AMOS,rundir,PREFIX,rundir,PREFIX))
+   os.system("%s/bank2fasta  -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.contigs"%(AMOS,rundir,PREFIX,rundir,PREFIX))
    os.system("%s/OutputMotifs -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.motifs"%(AMOS,rundir,PREFIX,rundir,PREFIX))
    os.system("%s/OutputResults -b %s/Scaffold/in/%s.bnk -p %s/Scaffold/out/%s "%(AMOS,rundir,PREFIX,rundir,PREFIX))
    os.system("%s/OutputScaffolds -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.scaffolds.final"%(AMOS,rundir,PREFIX,rundir,PREFIX))
@@ -951,12 +951,12 @@ def FindScaffoldORFS(input,output):
    #os.system("unlink ./%s/FindORFS/in/%s.scaffolds.faa"%(rundir,PREFIX))
    #os.system("ln -t ./%s/Annotate/in/ -s ../../FindORFS/out/%s.scaffolds.faa"%(rundir,PREFIX))
 
-@follows(FindScaffoldORFS)
-@files("%s/Scaffold/in/%s.bnk"%(rundir,PREFIX),"%s/Scaffold/out/%s.genus"%(rundir,PREFIX))
+#@follows(FindScaffoldORFS)
+@files("%s/Metaphyler/out/%s.phylum.tab"%(rundir,PREFIX),"%s/Propagate/out/%s.clusters"%(rundir,PREFIX))
 def Propagate(input,output):
    #run propogate java script
    # create s12.annots from Metaphyler output
-   os.system("python %s/python/create_mapping.py %s/DB/class_key.tab %s/Metaphyler/out/%s.blastx %s/Propagate/in/%s.annots"%(METAMOS_UTILS,METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX))
+   os.system("python %s/python/create_mapping.py %s/DB/class_key.tab %s/Metaphyler/out/%s.phylum.tab %s/Propagate/in/%s.annots"%(METAMOS_UTILS,METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX))
    # strip headers from file and contig name prefix
 
    os.system("cat %s/Propagate/in/%s.annots |sed s/contig_//g |grep -v contigID > %s/Propagate/in/%s.clusters"%(rundir,PREFIX,rundir,PREFIX))
@@ -969,6 +969,7 @@ def Classify(input,output):
    os.system("python %s/python/sort_contigs.py %s/Propagate/in/%s.clusters %s/DB/class_key.tab %s/Classify/out %s/Scaffold/in/%s.bnk"%(rundir, PREFIX, METAMOS_UTILS, METAMOS_UTILS,rundir, rundir, PREFIX))
 
 @follows(Classify)
+@files("%s/Classify/out/sorted.txt"%(rundir),"%s/Postprocess/%.scf.fa"%(rundir,PREFIX))
 def Postprocess():
 #create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm>
    #copy files into output for createReport   
@@ -1050,7 +1051,7 @@ def parse_genemarkout(orf_file,is_scaff=False):
             cvg = data.split(" ")[-1]
             if asm == "soap":
                 try:
-                    cvg = float(cvg.split("cvg_")[1])
+                    cvg = float(cvg.split("_")[1])
                     cvg_dict[curcontig] = cvg
                 except IndexError:
                     #print "Coverage not found, skip?"
@@ -1098,9 +1099,14 @@ def parse_genemarkout(orf_file,is_scaff=False):
         except KeyError:
           fna_dict[curcontig] = []
           fna_dict[curcontig].append(curseqnt)
-    outf = open("%s/FindScaffoldORFS/out/%s.faa"%(rundir,PREFIX),'w')
-    outf2 = open("%s/FindScaffoldORFS/out/%s.fna"%(rundir,PREFIX),'w')
-    cvgf = open("%s/FindScaffoldORFS/out/%s.contig.cvg"%(rundir,PREFIX),'w')
+    if is_scaff:
+        outf = open("%s/FindScaffoldORFS/out/%s.faa"%(rundir,PREFIX),'w')
+        outf2 = open("%s/FindScaffoldORFS/out/%s.fna"%(rundir,PREFIX),'w')
+        cvgf = open("%s/FindScaffoldORFS/out/%s.contig.cvg"%(rundir,PREFIX),'w')
+    else:
+        outf = open("%s/FindORFS/out/%s.faa"%(rundir,PREFIX),'w')
+        outf2 = open("%s/FindORFS/out/%s.fna"%(rundir,PREFIX),'w')
+        cvgf = open("%s/FindORFS/out/%s.contig.cvg"%(rundir,PREFIX),'w')
     #print len(gene_dict.keys())
     orfs = {}
     for key in gene_dict.keys():
@@ -1196,12 +1202,12 @@ if __name__ == "__main__":
     
     files = os.listdir(".")
     dlist = []
-    pipeline_printout(sys.stdout,[Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold, Propagate, FindScaffoldORFS, Classify, Postprocess], verbose=5)
+    pipeline_printout(sys.stdout,[Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold, FindScaffoldORFS, Propagate, Classify, Postprocess], verbose=5)
     pipeline_printout_graph (   'flowchart.svg',
                             'svg',
                             [Postprocess],
                             no_key_legend = True)
-    pipeline_run([Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold, Propagate, FindScaffoldORFS, Classify, Postprocess], verbose = 5) 
+    pipeline_run([Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold, FindScaffoldORFS, Propagate, Classify, Postprocess], verbose = 5) 
    
     t2 = time.time()#clock()
     elapsed = float(t2)-float(t1)

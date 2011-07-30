@@ -885,7 +885,7 @@ def Metaphyler(input,output):
 
    
 
-#@follows(Metaphyler)
+@follows(Metaphyler)
 @files(["%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX),"%s/Preprocess/out/all.seq.mates"%(rundir)],"%s/Scaffold/out/%s.scaffolds.final"%(rundir,PREFIX))
 def Scaffold(input,output):
    # check if we need to do scaffolding
@@ -951,7 +951,7 @@ def FindScaffoldORFS(input,output):
    #os.system("unlink ./%s/FindORFS/in/%s.scaffolds.faa"%(rundir,PREFIX))
    #os.system("ln -t ./%s/Annotate/in/ -s ../../FindORFS/out/%s.scaffolds.faa"%(rundir,PREFIX))
 
-#@follows(FindScaffoldORFS)
+@follows(FindScaffoldORFS)
 @files("%s/Metaphyler/out/%s.phylum.tab"%(rundir,PREFIX),"%s/Propagate/out/%s.clusters"%(rundir,PREFIX))
 def Propagate(input,output):
    #run propogate java script

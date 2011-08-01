@@ -884,7 +884,8 @@ def Metaphyler(input,output):
    os.system("perl %s/perl/metaphyler_contigs.pl %s/Metaphyler/out/%s.blastx %s/Metaphyler/out/%s %s/Metaphyler/in/%s.contig.cvg"%(METAMOS_UTILS,rundir,PREFIX, rundir, PREFIX, rundir, PREFIX))
 
    
-
+if "Scaffold" in forcesteps:
+    os.system("touch %s/Assemble/out/%s.asm.contig"%(rundir,PREFIX))
 @follows(Metaphyler)
 @files(["%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX),"%s/Preprocess/out/all.seq.mates"%(rundir)],"%s/Scaffold/out/%s.scaffolds.final"%(rundir,PREFIX))
 def Scaffold(input,output):
@@ -938,6 +939,9 @@ def Scaffold(input,output):
    os.system("%s/OutputResults -b %s/Scaffold/in/%s.bnk -p %s/Scaffold/out/%s.linearize "%(AMOS,rundir,PREFIX,rundir,PREFIX))
    os.system("%s/OutputScaffolds -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.linearize.scaffolds.final"%(AMOS,rundir,PREFIX,rundir,PREFIX))
 
+
+if "FindScaffoldORFS" in forcesteps:
+    os.system("touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(rundir,PREFIX))
 @follows(Scaffold)
 @files("%s/Scaffold/out/%s.linearize.scaffolds.final"%(rundir,PREFIX),"%s/FindORFS/out/%s.scaffolds.faa"%(rundir,PREFIX))
 def FindScaffoldORFS(input,output):
@@ -945,7 +949,7 @@ def FindScaffoldORFS(input,output):
       os.system("touch %s/FindScaffoldORFS/out/%s.scaffolds.faa"%(rundir, PREFIX))
       return 0
 
-   os.system("%s/cpp/gmhmmp -o %s/FindScaffoldORFS/out/%s.scaffolds.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/%s/Scaffold/out/%s.linearize.scaffolds.final"%(METAMOS_UTILS,rundir,PREFIX,METAMOS_UTILS,METAMOSDIR,rundir,PREFIX))
+   os.system("%s/gmhmmp -o %s/FindScaffoldORFS/out/%s.scaffolds.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/%s/Scaffold/out/%s.linearize.scaffolds.final"%(GMHMMP,rundir,PREFIX,METAMOS_UTILS,METAMOSDIR,rundir,PREFIX))
    #print"%s/cpp/gmhmmp -o %s/FindORFS/out/%s.scaffolds.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/Scafffold/out/%s.linearize.scaffolds.final"%(METAMOS_UTILS,rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX)
    parse_genemarkout("%s/FindScaffoldORFS/out/%s.scaffolds.orfs"%(rundir,PREFIX),1)
    #os.system("unlink ./%s/FindORFS/in/%s.scaffolds.faa"%(rundir,PREFIX))

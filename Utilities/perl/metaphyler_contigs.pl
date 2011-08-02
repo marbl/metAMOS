@@ -18,7 +18,7 @@ use strict;
 use warnings;
 
 
-my $dir = "/fs/szasmg3/boliu/metaphyler/MetaPhylerV1.21/data/";
+
 
 #---------------------------------------------------#
 # command line parameters
@@ -26,13 +26,19 @@ my $dir = "/fs/szasmg3/boliu/metaphyler/MetaPhylerV1.21/data/";
 my $blastfile = "";       # input blastx file
 my $prefix = "";          # output files prefix
 my $contigCovfile = "";
-if (scalar @ARGV == 3) {
+my $outdir = ".";
+my $rundir = ".";
+if (scalar @ARGV == 5) {
     $blastfile = $ARGV[0];
     $prefix = $ARGV[1];
     $contigCovfile = $ARGV[2];
+    $outdir = $ARGV[3];
+    $rundir = $ARGV[4];
 } else {
     Usage();
 }
+
+my $dir = "$rundir/config/";
 #---------------------------------------------------#
 
 
@@ -172,7 +178,7 @@ close FH;
 #---------------------------------------------------#
 
 # output classification file
-open(OUTPUT, ">./$prefix.classify.txt");
+open(OUTPUT, ">$outdir/$prefix.classify.txt");
 select OUTPUT;
 
 foreach my $rid (keys %hits) {
@@ -242,7 +248,7 @@ foreach my $rid (keys %hits) {
 	}
 
 	if ($assign == 1 && $num ==1 && $hacc =~ /^tm7/) {
-		$numMapped++;
+		$numMapped++;#=($numMapped*$cov);
 		
 		print "$rid\t$hacc\tNA\t";
 		
@@ -298,8 +304,8 @@ foreach my $rid (keys %hits) {
 	    if ($g2m{$hacc} eq "tsf") { next;}
 
 	    # total number of reads mapped
-	    $numMapped++;
-	    
+	    #$numMapped++;
+	    $numMapped+=($cov*$hspl);	    
 	    print "$rid\t$hacc\t$g2m{$hacc}\t";
 	    my $levtag = 0;
 
@@ -361,8 +367,8 @@ select STDOUT;
 # taxonomic profile at each level
 #---------------------------------------------------#
 # output taxonomic profile file
-open(PCT, ">./$prefix.taxprof.pct.txt");
-open(COUNT, ">./$prefix.taxprof.count.txt");
+open(PCT, ">$outdir/$prefix.taxprof.pct.txt");
+open(COUNT, ">$outdir/$prefix.taxprof.count.txt");
 foreach my $lev (@tlevs) {
     
     print PCT ">$lev\n";

@@ -12,22 +12,23 @@ if __name__ == "__main__":
     for line in r:
         line = line.replace("\n","")
         id,label = line.split("\t")
-        class_dict[label] = id
-
+        class_dict[string.upper(label)] = id
+        #print label
     p.readline()
     out.write("contigID\tclassID\n")
     contig_dict = {}
+    phylum_flag = 0
     for line in p:
         id = ""
         data = line.split("\t")
         contig_id = data[0]
-        phylum = data[9].split("-")[0]
+        phylum = data[7].replace("\n","").replace(" ","")
         try:
-            id = class_dict[phylum]
+            id = class_dict[string.upper(phylum)]
         except KeyError:
             print "phylum %s not found!"%phylum
             continue
-        contig_dict[int(contig_id.split("_")[1])] = id
+        contig_dict[int(contig_id.split("_")[0])] = id
     keys = contig_dict.keys()
     keys.sort()
     for key in keys:

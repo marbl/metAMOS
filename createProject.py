@@ -138,7 +138,7 @@ i = 0
 while i < numlibs:
     f1 = libs1[i]
     f2 = ""
-    if not interleaved or mated:
+    if mated and not interleaved:
         f2 = libs2[i]
     if format == "fastq":
          cf.write("lib%dformat:\tfastq\n"%(i+1))
@@ -229,7 +229,7 @@ while i < numlibs:
         elif format == "fastq" and not mated:
             soaplib += "q=LIB%dQ1REPLACE\n"%(i+1)
         elif format == "fasta" and mated and interleaved:
-            soaplib += "p=LiB%dQ1REPLACE\n"%(i+1)
+            soaplib += "p=LIB%dQ1REPLACE\n"%(i+1)
         soapf.write(soaplib)
         soapf.close()
     i+=1

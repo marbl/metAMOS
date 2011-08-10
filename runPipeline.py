@@ -42,7 +42,7 @@ class Read:
         self.mated = mated
         self.interleaved = interleaved
         #self.init()
-        self.validate()
+        #self.validate()
 
 class readLib:
     format = ""
@@ -72,10 +72,11 @@ class readLib:
         self.mmax = mmax
         self.f1 = f1
         self.f2 = f2
-        readDict[f1.id] = self.f1
-        readDict[f2.id] = self.f2
-        pairDict[f1.id] = f2.id
-        pairDict[f2.id] = f1.id
+        self.readDict[f1.id] = self.f1
+        if f2 != "":
+            self.readDict[f2.id] = self.f2
+            self.pairDict[f1.id] = f2.id
+            self.pairDict[f2.id] = f1.id
 
         self.reads.append(f1)
         if self.f2 != "":
@@ -157,23 +158,23 @@ def parseInterleaved(rf,wf,fastq=True):
                                recordcnt +=1
                                hdr = lib.sid+"r"+str(recordcnt)+"/"
                                if fastq == True:
-                                   wf.writeline("@"+hdr+"1\n")
-                                   wf.writeline(record[1])
-                                   wf.writeline("+"+hdr+"1\n")
-                                   wf.writeline(record[3])
-                                   wf.writeline("@"+hdr+"2\n")
-                                   wf.writeline(record[5])
-                                   wf.writeline("+"+hdr+"2\n")
-                                   wf.writeline(record[7])
+                                   wf.writelines("@"+hdr+"1\n")
+                                   wf.writelines(record[1])
+                                   wf.writelines("+"+hdr+"1\n")
+                                   wf.writelines(record[3])
+                                   wf.writelines("@"+hdr+"2\n")
+                                   wf.writelines(record[5])
+                                   wf.writelines("+"+hdr+"2\n")
+                                   wf.writelines(record[7])
                                else:
-                                   wf.writeline(">"+hdr+"1\n")
-                                   wf.writeline(record[1])
-                                   wf.writeline(">"+hdr+"1\n")
-                                   wf.writeline(record[3])
-                                   wf.writeline(">"+hdr+"2\n")
-                                   wf.writeline(record[5])
-                                   wf.writeline(">"+hdr+"2\n")
-                                   wf.writeline(record[7])
+                                   wf.writelines(">"+hdr+"1\n")
+                                   wf.writelines(record[1])
+                                   wf.writelines(">"+hdr+"1\n")
+                                   wf.writelines(record[3])
+                                   wf.writelines(">"+hdr+"2\n")
+                                   wf.writelines(record[5])
+                                   wf.writelines(">"+hdr+"2\n")
+                                   wf.writelines(record[7])
                            elif rcnt % 4 == 0:
                                s2hdr = line
                                rlcs = LCS(s1hdr,s2hdr)
@@ -476,7 +477,8 @@ for line in inf:
         data = line.split("\t")
 
         fqlibs[data[0]] = data[1]
-        f1 = data[1].split(",")[0]
+        #f1 = data[1].split(",")[0]
+        f1 = "%s/Preprocess/in/%s"%(rundir,data[1].split(",")[0])
         inf = data[1].split(",")
         mean = int(inf[3])
         stdev = int(inf[4])
@@ -488,7 +490,7 @@ for line in inf:
         data = line.split("\t")
 
         fqlibs[data[0]] = data[1]
-        f2 = data[1].split(",")[0]
+        f2 = "%s/Preprocess/in/%s"%(rundir,data[1].split(",")[0])
         inf = data[1].split(",")
         mean = int(inf[3])
         stdev = int(inf[4])
@@ -524,8 +526,8 @@ def run_process(command):
            print p.stdout.read(), p.stderr.read()
        (checkStdout, checkStderr) = p.communicate()
 
-def map2contig(fasta=True):
-    #bowtie_mapping = 1
+def map2contig(fasta):
+    bowtie_mapping = 1
     
     readDir = ""
     asmDir = ""
@@ -548,8 +550,8 @@ def map2contig(fasta=True):
 
     for lib in readlibs:
          
-        seqfile = open("%s/Preprocess/out/lib%d.seq.btfilt"%(lib.id,rundir),'w')
-        matefile = open("%s/Preprocess/out/lib%d.seq.mates"%(lib.id,rundir),'r')
+        seqfile = open("%s/Preprocess/out/lib%d.seq.btfilt"%(rundir,lib.id),'w')
+        matefile = open("%s/Preprocess/out/lib%d.seq.mates"%(rundir,lib.id),'r')
         new_matefile = open("%s/Assemble/out/%s.lib%d.mappedmates"%(rundir,PREFIX,lib.id),'w')
         matedict[lib.id] = {}
         for line in matefile.xreadlines():
@@ -558,6 +560,7 @@ def map2contig(fasta=True):
             mate1 = mate1.replace("@","").replace(">","")
             mate2 = mate2.replace("@","").replace(">","")
             matedict[lib.id][mate2] = mate1
+            #matedict[lib.id][mate1] = mate2
             read_lookup[readcnt] = mate1
             read_lookup[readcnt+1] = mate2
             readcnt += 2
@@ -702,7 +705,7 @@ def map2contig(fasta=True):
         new_matefile.write("library\t%d\t%d\t%d\n"%(lib.id,lib.mmin,lib.mmax))
     for lib in readlibs:
         linked_contigs = {}
-        for mate in matedict.keys():
+        for mate in matedict[lib.id].keys():
             new_matefile.write("%s\t%s\t%d\n"%(mate,matedict[lib.id][mate],lib.id))
             new_matefile.flush()
             continue
@@ -771,9 +774,9 @@ elif format == "sff":
 readpaths = []
 filtreadpaths = []
 for lib in readlibs:
-    
-    readpaths.append("%s/Preprocess/in"%(rundir)+lib.path)
-    filtreadpaths.append("%s/Preprocess/out"%(rundir)+read.path)
+    for read in lib.reads:
+        readpaths.append("%s/Preprocess/in/"%(rundir)+read.fname)
+        filtreadpaths.append("%s/Preprocess/out/"%(rundir)+read.fname)
    
 if "Preprocess" in forcesteps:
     for path in readpaths:
@@ -790,15 +793,24 @@ def Preprocess(input,output):
                run_process("ln -t ./%s/Preprocess/out/ -s ../../Preprocess/in/%s"%(rundir,read.fname))
        return 0
    if filter == True:
+       #print "filtering.."
+     
        #for reads+libs
        cnt = 1
        for lib in readlibs:
+           print lib.interleaved, lib.mated, lib.format
            for read in lib.reads:
+               print read.interleaved, read.mated, read.format
                if not read.filtered and read.format == "fastq" and read.mated and read.interleaved:
                    #this means we have this entire lib in one file
                    #parse out paired record (8 lines), rename header to be filename + "/1" or "/2", and remove reads with N
                    rf = open(read.path,'r')
-                   wf = open(read.path.replace("in","out"),'w')
+                   npath = read.path.replace("in","out")
+                   #readpath,base = os.path.split(npath)
+                   #newpath = readpath+"lib%d"%(lib.id)
+                   wf = open(npath,'w')
+                   #wf = open(read.path.replace("in","out"),'w')
+                   #wf = open(readpath+"lib%d"%(lib.id),'w')
                    start = 1
                    rcnt = 0
                    recordcnt = 0
@@ -826,14 +838,14 @@ def Preprocess(input,output):
                                #update hdrs to be filename /1 or /2
                                recordcnt +=1
                                hdr = lib.sid+"r"+str(recordcnt)+"/"
-                               wf.writeline("@"+hdr+"1\n")
-                               wf.writeline(record[1])
-                               wf.writeline("+"+hdr+"1\n")
-                               wf.writeline(record[3])
-                               wf.writeline("@"+hdr+"2\n")
-                               wf.writeline(record[5])
-                               wf.writeline("+"+hdr+"2\n")
-                               wf.writeline(record[7])
+                               wf.writelines("@"+hdr+"1\n")
+                               wf.writelines(record[1])
+                               wf.writelines("+"+hdr+"1\n")
+                               wf.writelines(record[3])
+                               wf.writelines("@"+hdr+"2\n")
+                               wf.writelines(record[5])
+                               wf.writelines("+"+hdr+"2\n")
+                               wf.writelines(record[7])
                            elif rcnt % 4 == 0:
                                s2hdr = line
                                rlcs = LCS(s1hdr,s2hdr)
@@ -856,6 +868,7 @@ def Preprocess(input,output):
                                rcnt +=1
                    #update to new path
                    read.path = read.path.replace("in","out")            
+                   #read.fname = "lib%d"%(lib.id)
                    read.filtered = True
                elif not read.filtered and read.format == "fastq" and read.mated and not read.interleaved:
                    readpair = lib.getPair(read.id)
@@ -926,66 +939,66 @@ def Preprocess(input,output):
                        rseq = string.upper(rs2)                               
                        if "N" in rseq:
                            continue
-                       wf.writeline(rs1)
-                       wf.writeline(rs2)
-                       wf.writeline(rs3)
-                       wf.writeline(rs4)
+                       wf.writelines(rs1)
+                       wf.writelines(rs2)
+                       wf.writelines(rs3)
+                       wf.writelines(rs4)
                    read.path = read.path.replace("in","out")
                elif not read.filtered and read.format == "fasta" and read.mated and read.interleaved:
                    #this means we have this entire lib in one file
                    #parse out paired record (4 lines), rename header to be filename + "/1" or "/2", and remove reads with N
                    rf = open(read.path,'r')
-                   wf = open(read.path.replace("in","out"),'w')
+                   npath = read.path.replace("in","out")
+                   print npath
+                   #readpath,base = os.path.split(npath)
+                   #newpath = readpath+"lib%d"%(lib.id)
+                   wf = open(npath,'w')
+                   #wf = open(read.path.replace("in","out"),'w')
                    start = 1
                    rcnt = 0
                    recordcnt = 0
                    record = []
                    shdr = ""
-                   for line in rf.xreadlines():
-                       if start:
-                           s1hdr = line
-                           record.append(line)
-                           start = 0
-                           rcnt =1
+                   reads = rf.read().split(">")[1:]
+                   if len(reads) % 4 != 0:
+                       print "Read file corrupted, please fix and restart!"
+                       sys.exit(1)
 
-                       else:
-                           if rcnt == 3:
-                               #end of record
-                               record.append(line)
-                               rcnt +=1
-                               if len(record) != 4:
-                                   #something went wrong
-                                   continue
-                               rseq = string.upper(record[0]+record[5])                               
-                               if "N" in rseq:
-                                   #skip both, dont' want Ns
-                                   continue
-                               #update hdrs to be filename /1 or /2
-                               recordcnt +=1
-                               hdr = lib.sid+"r"+str(recordcnt)+"/"
-                               wf.writeline(">"+hdr+"1\n")
-                               wf.writeline(record[1])
-                               wf.writeline(">"+hdr+"2\n")
-                               wf.writeline(record[3])
+                   prevok = False
+                   first = True
+                   second = False
+                   prevseq = ""
+                   readcnt = 1
+                   for rd in reads:
+                       if first:
+                           hdr,seq = rd.split("\n",1)
+                           if "N" in string.upper(seq) or len(seq) < 2:
+                               prevok = False
+                           else: 
+                               prevok = True
+                               prevseq = seq
 
-                           elif rcnt % 2 == 0:
-                               s2hdr = line
-                               rlcs = LCS(s1hdr,s2hdr)
-                               #these should almost identical
-                               if float(len(rlcs))/float(len(s1hdr)) < 0.9:
-                                   #missing record somewhere, start over with this one
-                                   s1hdr = line
-                                   record = [line]
-                                   start = 0
-                                   rcnt = 1
-                               else:
-                                   record.append(line)
-                                   rcnt +=1
-                           else:
-                               record.append(line)
-                               rcnt +=1
+                           second = True
+                           first = False
+                       elif second:
+                           hdr,seq = rd.split("\n",1)
+                           if "N" in string.upper(seq) or len(seq) < 2:
+                               pass
+                           elif prevok:
+                               hdr = lib.sid+"r"+str(readcnt)+"/"
+                               wf.writelines(">"+hdr+"1\n")
+                               wf.writelines(prevseq)
+                               wf.writelines(">"+hdr+"2\n")
+                               wf.writelines(seq)
+                               readcnt +=1
+                           second = False
+                           first = True
+
                    #update to new path
                    read.path = read.path.replace("in","out")            
+
+                   #read.path = newpath#read.path.replace("in","out")            
+                   #read.fname = "lib%d"%(lib.id)
                elif not read.filtered and read.format == "fasta" and read.mated and not read.interleaved:
                    readpair = lib.getPair(read.id)
                    if readpair == -1:
@@ -1017,7 +1030,7 @@ def Preprocess(input,output):
                            continue
 
                        rlcs = LCS(rs1,rp1)
-                       if float(len(rlcs))/float(len(rs1)) < 0.9:
+                       if 0:#float(len(rlcs))/float(len(rs1)) < 0.9:
                            #not aligned! something needs to be removed?
                            #go on to next
                            continue
@@ -1048,8 +1061,8 @@ def Preprocess(input,output):
                        rseq = string.upper(rs2)                               
                        if "N" in rseq:
                            continue
-                       wf.writeline(rs1)
-                       wf.writeline(rs2)
+                       wf.writelines(rs1)
+                       wf.writelines(rs2)
                    read.path = read.path.replace("in","out")
            cnt +=1
    else:
@@ -1088,9 +1101,14 @@ def Preprocess(input,output):
                run_process("ln -t ./%s/Preprocess/out/ -s ../../Preprocess/in/lib%d.seq.mates"%(rundir,lib.id))
            elif format == "fastq" and mated and not interleaved:
                #extract mates from fastq
-               run_process("perl %s/perl/shuffleSequences_fastq.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(METAMOS_UTILS,rundir,lib.f1.fnmae, rundir,lib.f2.fname,rundir,lib.id))
+               run_process("perl %s/perl/shuffleSequences_fastq.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(METAMOS_UTILS,rundir,lib.f1.fname, rundir,lib.f2.fname,rundir,lib.id))
                run_process("python %s/python/extract_mates_from_fastq.py %s/Preprocess/out/lib%d.seq"%(METAMOS_UTILS,rundir,lib.id))
-
+           elif mated and interleaved:
+               os.system("cp %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(rundir,lib.f1.fname,rundir,lib.id))
+               if format == "fastq":
+                   run_process("python %s/python/extract_mates_from_fastq.py %s/Preprocess/out/lib%d.seq"%(METAMOS_UTILS,rundir,lib.id))
+               else:
+                   run_process("python %s/python/extract_mates_from_fasta.py %s/Preprocess/out/lib%d.seq"%(METAMOS_UTILS,rundir,lib.id))
            #update_soap_config()
            elif asm == "ca":
                #useful for 454, need to get SFF to FRG?
@@ -1100,12 +1118,15 @@ def Preprocess(input,output):
                #call toAmos_new              
                pass
 
+asmfiles = []
 #if asm == "soap"
+
 for lib in readlibs:
     if "Assemble" in forcesteps:
         run_process("touch %s/Preprocess/out/lib%d.seq"%(rundir,lib.id))
+    asmfiles.append("%s/Preprocess/out/lib%d.seq"%(rundir,lib.id))
 
-@files("%s/Preprocess/out/all.seq"%(rundir),["%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX),"%s/Assemble/out/%s.asm.scafSeq"%(rundir,PREFIX)])
+@files(asmfiles,["%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX),"%s/Assemble/out/%s.asm.scafSeq"%(rundir,PREFIX)])
 #@posttask(create_symlink,touch_file("completed.flag"))
 @follows(Preprocess)
 def Assemble(input,output):
@@ -1122,20 +1143,20 @@ def Assemble(input,output):
       #print libs
       for lib in readlibs:
           if (lib.format == "fastq" or lib.format == "fasta")  and lib.mated and not lib.interleaved:
-              soapd = soapd.replace("LIB%dQ1REPLACE","%s/Preprocess/out/%s"%(lib.id,rundir,lib.f1.fname))
-              soapd = soapd.replace("LIB%dQ2REPLACE","%s/Preprocess/out/%s"%(lib.id,rundir,lib.f2.fname))
+              soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(rundir,lib.f1.fname))
+              soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(rundir,lib.f2.fname))
 
           elif lib.format == "fastq"  and lib.mated and lib.interleaved:
               #this is NOT supported by SOAP, make sure files are split into two..
               #need to update lib.f2 path
               run_process("perl spilt_fastq.pl %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/%s"%(lib.f1.fname,lib.f1.fname,lib.f2.fname))
-              soapd = soapd.replace("LIB%dQ1REPLACE","%s/Preprocess/out/%s"%(lib.id,rundir,lib.f1.fname))
-              soapd = soapd.replace("LIB%dQ2REPLACE","%s/Preprocess/out/%s"%(lib.id,rundir,lib.f2.fname))
+              soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(rundir,lib.f1.fname))
+              soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(rundir,lib.f2.fname))
 
           elif format == "fasta"  and mated and interleaved:
-              soapd = soapd.replace("LIB%dQ1REPLACE","%s/Preprocess/out/%s"%(lib.id,rundir,lib.f1.fname))
+              soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(rundir,lib.f1.fname))
           else:
-              soapd = soapd.replace("LIB%dQ1REPLACE","%s"%(lib.id,lib.f1))#frg))
+              soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s"%(lib.f1))#frg))
       #cnt +=1
       soapw = open("%s/soapconfig.txt"%(rundir),'w')
       soapw.write(soapd)
@@ -1287,7 +1308,7 @@ def Metaphyler(input,output):
 if "Scaffold" in forcesteps:
     run_process("touch %s/Assemble/out/%s.asm.contig"%(rundir,PREFIX))
 @follows(Metaphyler)
-@files(["%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX),"%s/Preprocess/out/all.seq.mates"%(rundir)],"%s/Scaffold/out/%s.scaffolds.final"%(rundir,PREFIX))
+@files(["%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX)],"%s/Scaffold/out/%s.scaffolds.final"%(rundir,PREFIX))
 def Scaffold(input,output):
    # check if we need to do scaffolding
    numMates = 0
@@ -1307,12 +1328,12 @@ def Scaffold(input,output):
            if lib.format == "fasta":
                map2contig(1)
                #PUNT: here, add toAmos_new call for each lib
-               run_process("%s/toAmos_new -s %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,lib.id,PREFIX,rundir, rundir,PREFIX,lib.id,rundir,PREFIX))
+               run_process("%s/toAmos_new -s %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,lib.id,rundir, PREFIX,lib.id,rundir,PREFIX))
 
            elif format == "fastq":
                #if "bowtie" not in skipsteps:
                map2contig(0)
-               run_process("%s/toAmos_new -Q %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,lib.id,PREFIX,rundir, rundir,PREFIX,lib.id,rundir,PREFIX))
+               run_process("%s/toAmos_new -Q %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,lib.id,rundir,PREFIX, lib.id,rundir,PREFIX))
 
        run_process("%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,PREFIX,rundir,PREFIX))
 

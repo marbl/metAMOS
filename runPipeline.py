@@ -2,7 +2,7 @@ import os, sys, string, time, BaseHTTPServer, getopt, subprocess#
 from operator import itemgetter
 
 PREFIX = "proba"
-
+VERBOSE = False
 OSTYPE        = "Linux"
 OSVERSION     = "0.0"
 MACHINETYPE   = "x86_64"
@@ -16,10 +16,187 @@ CA            = "%s%sCA%s%s-%s%sbin"%(METAMOSDIR, os.sep, os.sep, OSTYPE, MACHIN
 NEWBLER       = "%s%snewbler"%(METAMOSDIR, os.sep)
 BOWTIE        = "%s%scpp"%(METAMOS_UTILS, os.sep)
 GMHMMP        = "%s%scpp"%(METAMOS_UTILS, os.sep)
-
+libcounter = 1
+readcounter = 1
 t1 = time.time()#clock()
 sys.path.append(METAMOS_UTILS)
 from ruffus import *
+
+
+class Read:
+    format = ""
+    maxlen = 150
+    qformat = "Sanger"
+    filtered = False
+    mated = True
+    path = ""
+    fname = ""
+    id = 0
+    def __init__(self,format,path,mated=True,interleaved=False):
+        global readcounter 
+        self.id = readcounter
+        readcounter +=1
+        self.format = format
+        self.path = path
+        self.fname = os.path.basename(self.path)
+        self.mated = mated
+        self.interleaved = interleaved
+        self.init()
+        self.validate()
+
+class readLib:
+    format = ""
+    mean = 0
+    stdev = 0
+    mmin = 0
+    mmax = 0
+    mated = True
+    interleaved = False
+    linkerType = "titanium"
+    frg = ""
+    f1 = ""
+    f2 = ""
+    f12 = ""
+    reads = []
+    readDict = {}
+    pairDict = {}
+    def __init__(self,format,mmin,mmax,f1,f2="",mated=True,interleaved=False):
+        global libcounter
+        self.id = libcounter
+        self.sid = "lib"+str(libcounter)
+        libcounter +=1
+        self.format = format
+        self.mated=mated
+        self.interleaved=interleaved
+        self.mmin = mmin
+        self.mmax = mmax
+        self.f1 = f1
+        self.f2 = f2
+        readDict[f1.id] = self.f1
+        readDict[f2.id] = self.f2
+        pairDict[f1.id] = f2.id
+        pairDict[f2.id] = f1.id
+
+        self.reads.append(f1)
+        if self.f2 != "":
+            self.reads.append(f2)
+        self.initLib()
+        self.validateLib()
+    def getPair(self,readId):
+        try:
+            return self.readDict[pairDict[readId]]
+        except KeyError:
+            #no pair for read
+            return -1
+    def initLib(self):
+        self.mean = (self.mmin+self.mmax)/2.0
+        self.stdev = 0.1*self.mean
+        #count num reads
+        #check pairs
+        #if self.interleaved:
+        #    f12 = self.f1.path
+        #else:
+        #need to shuffle em
+        #    if self.f1.format == "fasta" and self.f2.format == "fasta":
+        #        pass
+        #    elif self.f2.format = "fastq" and self.f1.format == "fastq":
+        #        pass
+        #    f12 = ""
+    def validateLib(self):
+        pass
+
+    def concatLib(self):
+        #combine two libs of same format & w/ same insert size into one 
+        pass
+   
+    def toggleInterleaved(self):
+        #if interleaved switch to two files, else vice versa
+        pass
+
+    def filterReads(self):
+        #remove all Reads with N, etc
+        pass
+
+    def __str__(self):
+        pass
+
+     
+def parseInterleaved(rf,wf,fastq=True):
+    if 1:
+        if 1:
+            if 1:
+                   #this means we have this entire lib in one file
+                   #parse out paired record (8 lines), rename header to be filename + "/1" or "/2", and remove reads with N
+                   rf = open(read.path,'r')
+                   wf = open(read.path.replace("in","out"),'w')
+                   start = 1
+                   rcnt = 0
+                   recordcnt = 0
+                   record = []
+                   shdr = ""
+                   for line in rf.xreadlines():
+                       if start:
+                           s1hdr = line
+                           record.append(line)
+                           start = 0
+                           rcnt =1
+
+                       else:
+                           if rcnt == 7:
+                               #end of record
+                               record.append(line)
+                               rcnt +=1
+                               if len(record) != 8:
+                                   #something went wrong
+                                   continue
+                               rseq = string.upper(record[0]+record[5])                               
+                               if "N" in rseq:
+                                   #skip both, dont' want Ns
+                                   continue
+                               #update hdrs to be filename /1 or /2
+                               recordcnt +=1
+                               hdr = lib.sid+"r"+str(recordcnt)+"/"
+                               if fastq == True:
+                                   wf.writeline("@"+hdr+"1\n")
+                                   wf.writeline(record[1])
+                                   wf.writeline("+"+hdr+"1\n")
+                                   wf.writeline(record[3])
+                                   wf.writeline("@"+hdr+"2\n")
+                                   wf.writeline(record[5])
+                                   wf.writeline("+"+hdr+"2\n")
+                                   wf.writeline(record[7])
+                               else:
+                                   wf.writeline(">"+hdr+"1\n")
+                                   wf.writeline(record[1])
+                                   wf.writeline(">"+hdr+"1\n")
+                                   wf.writeline(record[3])
+                                   wf.writeline(">"+hdr+"2\n")
+                                   wf.writeline(record[5])
+                                   wf.writeline(">"+hdr+"2\n")
+                                   wf.writeline(record[7])
+                           elif rcnt % 4 == 0:
+                               s2hdr = line
+                               rlcs = LCS(s1hdr,s2hdr)
+                               #these should almost identical
+                               if float(len(rlcs))/float(len(s1hdr)) < 0.9:
+                                   #missing record somewhere, start over with this one
+                                   s1hdr = line
+                                   record = [line]
+                                   start = 0
+                                   rcnt = 1
+                               else:
+                                   record.append(line)
+                                   rcnt +=1
+                           elif rcnt % 2 == 0:
+                               #quality hdr
+                               record .append(line)
+                               rcnt +=1
+                           else:
+                               record .append(line)
+                               rcnt +=1
+                   #update to new path
+                   read.path = read.path.replace("in","out")            
+
 
 def str2bool(v):
   return v.lower() in ("yes", "true", "t", "1")
@@ -152,7 +329,7 @@ def usage():
     #print "options: annotate, stopafter, startafter, fq, fa"
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hd:s:e:o:k:c:a:n:p:tf:vm4", ["help", "projectdir","startat","endat", "minoverlap","kmersize","classifier","assembler","skipsteps","threads","filter","forcesteps","verbose","metaphyler","454"])
+    opts, args = getopt.getopt(sys.argv[1:], "hb:d:s:e:o:k:c:a:n:p:tf:vm4", ["help", "bowtie","projectdir","startat","endat", "minoverlap","kmersize","classifier","assembler","skipsteps","threads","filter","forcesteps","verbose","metaphyler","454"])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -165,6 +342,7 @@ reads = None
 quals = None
 format = None
 verbose = False
+bowtie_mapping = False
 startat = None
 stopat = None
 filter = False
@@ -181,13 +359,15 @@ readlen = 75
 kmer = 31
 fqlibs = {}
 fqfrags = []
+rlibs = []
 for o, a in opts:
     if o in ("-v","--verbose"):
-        verbose = True
+        VERBOSE = True
     elif o in ("-h", "--help"):
         usage()
         sys.exit()
-
+    elif o in ("-b","--bowtie"):
+        bowtie_mapping = True
     elif o in ("-s","--startat"):
         startat = a
         if startat not in allsteps:
@@ -249,6 +429,8 @@ if not os.path.exists(rundir) or rundir == "":
 inifile = os.curdir+os.sep+rundir+os.sep+"pipeline.ini"
 inf = open(inifile,'r')
 libs = []
+readlibs = []
+readobjs = []
 frgs = []
 format = ""
 mean = 0
@@ -261,13 +443,29 @@ linkerType = "titanium"
 frg = ""
 f1 = ""
 f2 = ""
-
+currlibno = 1
+newlib = ""
 for line in inf:
     line = line.replace("\n","")
     if "#" in line:
         continue
     elif "format:" in line:
+        newlibno = int(line.split("format")[0].split("lib")[0])
+
+
+        if newlibno != currlibno:
+            nread1 = Read(format,f1,mated,interleaved)
+            readobjs.append(nread1)
+            nread2 = ""
+            if f2 != "":
+                nread2 = Read(format,f2,mated,interleaved)
+                readobjs.append(nread2)
+                #nread12 = Read(format,f1+".interleaved",mated,1)
+            nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved)
+            readlibs.append(nlib)
+            
         format = line.replace("\n","").split("\t")[-1]
+        currlibno = newlibno
     elif "mated:" in line:
         mated = str2bool(line.replace("\n","").split("\t")[-1])
     elif "interleaved:" in line:
@@ -301,31 +499,43 @@ for line in inf:
 
         data = line.split("\t")
         frg = data[1]
+        mated = False
+        f1 = frg
         #fqfrags[data[0]] = data[1]
         #frgs.append(data[1])
         libs.append(frg)
-
+nread1 = Read(format,f1,mated,interleaved)
+nread2 = ""
+readobjs.append(nread1)
+if f2 != "":
+    nread2 = Read(format,f2,mated,interleaved)
+    readobjs.append(nread2)
+nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved)
+readlibs.append(nlib)
+print len(readlibs)
 def run_process(command):
-       print command
+       if VERBOSE:
+           print command
+       stdout = ""
+       stderr = ""
        p = subprocess.Popen(command, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+       #p = subprocess.Popen(command, shell=True, stdin=None, stdout=stdout, stderr=stderr)
+       if VERBOSE:
+           print p.stdout.read(), p.stderr.read()
        (checkStdout, checkStderr) = p.communicate()
-       print "done!"
-def map2contig(min,max,fasta=True):
-    bowtie_mapping = 0
+
+def map2contig(fasta=True):
+    #bowtie_mapping = 1
     
     readDir = ""
     asmDir = ""
     threads = 0
-
-    contigfile = open("%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX),'r')
-    #seqfile = open("%s/Preprocess/out/all.seq.btfilt"%(rundir),'w')
-    matefile = open("%s/Preprocess/out/all.seq.mates"%(rundir),'r')
     tigr_file = open("%s/Assemble/out/%s.asm.tigr"%(rundir,PREFIX),'w')
-    new_matefile = open("%s/Assemble/out/%s.mappedmates"%(rundir,PREFIX),'w')
+    contigfile = open("%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX),'r')
+
     seqdict = {}
     hdr = ""
     cnt = 0
-    matedict = {}
     contigdict = {}
     contigdict2 = {}
     readdict = {}
@@ -335,98 +545,101 @@ def map2contig(min,max,fasta=True):
     mateotdict = {}
     read_lookup = {}
     readcnt = 1
-    for line in matefile.xreadlines():
-        line = line.replace("\n","")
-        mate1, mate2 = line.split("\t")
-        mate1 = mate1.replace("@","").replace(">","")
-        mate2 = mate2.replace("@","").replace(">","")
-        matedict[mate2] = mate1
-        read_lookup[readcnt] = mate1
-        read_lookup[readcnt+1] = mate2
-        readcnt += 2
 
-            
-        #matedict[mate2] = mate1
-        #print mate1, mate2
+    for lib in readlibs:
+         
+        seqfile = open("%s/Preprocess/out/lib%d.seq.btfilt"%(lib.id,rundir),'w')
+        matefile = open("%s/Preprocess/out/lib%d.seq.mates"%(lib.id,rundir),'r')
+        new_matefile = open("%s/Assemble/out/%s.lib%d.mappedmates"%(rundir,PREFIX,lib.id),'w')
+        matedict[lib.id] = {}
+        for line in matefile.xreadlines():
+            line = line.replace("\n","")
+            mate1, mate2 = line.split("\t")
+            mate1 = mate1.replace("@","").replace(">","")
+            mate2 = mate2.replace("@","").replace(">","")
+            matedict[lib.id][mate2] = mate1
+            read_lookup[readcnt] = mate1
+            read_lookup[readcnt+1] = mate2
+            readcnt += 2
 
-    if bowtie_mapping == 1:
-        #trim to 25bp
-        trim = 0
-        if trim:
-            f1 = open("%s/Preprocess/out/all.seq"%(rundir))
-            f2 = open("%s/Preprocess/out/all.seq.trim"%(rundir),'w')
-            linecnt = 1
-            for line in f1.xreadlines():
-                if linecnt % 2 == 0:
-                    f2.write(line[0:25]+"\n")
-                else:
-                    f2.write(line)
-                linecnt +=1
-            f1.close()
-            f2.close()
-        if not os.path.exists("%s/Assemble/out/IDX.1.ebwt"%(rundir)):
-            run_process("%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(BOWTIE, rundir,PREFIX,rundir))
+        if bowtie_mapping == 1:
+            #trim to 25bp
+            trim = 0
+            if trim:
+                f1 = open("%s/Preprocess/out/lib%d.seq"%(rundir,lib.id))
+                f2 = open("%s/Preprocess/out/lib%d.seq.trim"%(rundir,lib.id),'w')
+                linecnt = 1
+                for line in f1.xreadlines():
+                    if linecnt % 2 == 0:
+                        f2.write(line[0:25]+"\n")
+                    else:
+                        f2.write(line)
+                    linecnt +=1
+                f1.close()
+                f2.close()
+            if not os.path.exists("%s/Assemble/out/IDX.1.ebwt"%(rundir)):
+                run_process("%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(BOWTIE, rundir,PREFIX,rundir))
             #run_process("%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(BOWTIE, rundir,PREFIX,rundir))
-        if "bowtie" not in skipsteps and fasta:
-            if trim:
-                run_process("%s/bowtie -p 20 -f -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/all.seq.trim >& %s/Assemble/out/%s.bout"%(BOWTIE,rundir,rundir,rundir,PREFIX))
-            else:
-                run_process("%s/bowtie -p 20 -f -l 28 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/all.seq >& %s/Assemble/out/%s.bout"%(BOWTIE,rundir,rundir,rundir,PREFIX))
-        elif "bowtie" not in skipsteps:
-            if trim:
-                run_process("%s/bowtie  -p 20 -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/all.seq.trim >& %s/Assemble/out/%s.bout"%(BOWTIE,rundir,rundir,rundir,PREFIX))
-            else:
-                run_process("%s/bowtie  -p 20 -l 28 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/all.seq >& %s/Assemble/out/%s.bout"%(BOWTIE,rundir,rundir,rundir,PREFIX))
-        infile = open("%s/Assemble/out/%s.bout"%(rundir,PREFIX),'r')
-        for line1 in infile.xreadlines():
-            line1 = line1.replace("\n","")
-            ldata = line1.split("\t")
-            if len(ldata) < 6:
-                continue
-            read, strand, contig, spos,read_seq, read_qual  = ldata[:6]
-            read = read.split(" ")[0]
-            epos = int(spos)+len(read_seq)
-            try:
-                contigdict[contig].append([int(spos), int(spos)+epos, strand, read])
-            except KeyError:
-                contigdict[contig] = [[int(spos),int(spos)+epos,strand,read]]
+            if "bowtie" not in skipsteps and fasta:
+                if trim:
+                    run_process("%s/bowtie -p 20 -f -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim >& %s/Assemble/out/%s.bout"%(BOWTIE,rundir,rundir,lib.id,rundir,PREFIX))
+                else:
+                    run_process("%s/bowtie -p 20 -f -l 28 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq >& %s/Assemble/out/%s.bout"%(BOWTIE,rundir,rundir,lib.id,rundir,PREFIX))
+            elif "bowtie" not in skipsteps:
+                if trim:
+                    run_process("%s/bowtie  -p 20 -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim >& %s/Assemble/out/%s.bout"%(BOWTIE,rundir,rundir,lib.id,rundir,PREFIX))
+                else:
+                    run_process("%s/bowtie  -p 20 -l 28 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq >& %s/Assemble/out/%s.bout"%(BOWTIE,rundir,rundir,lib.id,rundir,PREFIX))
+            infile = open("%s/Assemble/out/%s.bout"%(rundir,PREFIX),'r')
+            for line1 in infile.xreadlines():
+                line1 = line1.replace("\n","")
+                ldata = line1.split("\t")
+                if len(ldata) < 6:
+                    continue
+                read, strand, contig, spos,read_seq, read_qual  = ldata[:6]
+                read = read.split(" ")[0]
+                epos = int(spos)+len(read_seq)
+                try:
+                    contigdict[contig].append([int(spos), int(spos)+epos, strand, read])
+                except KeyError:
+                    contigdict[contig] = [[int(spos),int(spos)+epos,strand,read]]
             
-            seqdict[read] = read_seq
-            #seqfile.write(">%s\n%s\n"%(read,read_seq))
-            #seqfile.flush()
+                seqdict[read] = read_seq
+                seqfile.write(">%s\n%s\n"%(read,read_seq))
+                seqfile.flush()
 
-    else:
+        else:
  
-        #open soap ReadOnContig
-        #some contigs are missing!
-        infile = open("%s/Assemble/out/%s.asm.readOnContig"%(rundir,PREFIX),'r')
-        #readID, ContigID, startpos, strand
-        hdr = infile.readline()
-        linecnt = 1
-        for line in infile.xreadlines():
-            if linecnt % 100000 == 0:
-                #print linecnt,
-                sys.stdout.flush()
-            data = line.replace("\n","").split("\t")
-            #print data
-            if len(data) < 4:
-                continue
-            contig = data[1]
-            spos = int(data[2])
-            if spos < 0:
-                spos = 0
-            epos = spos+readlen
-            strand = data[3]
-            read = int(data[0])
-            #print read, read_lookup[read]
-            try:
-                contigdict[contig].append([int(spos), int(spos)+epos, strand, read_lookup[read]])
-            except KeyError:
-                contigdict[contig] = [[int(spos),int(spos)+epos,strand,read_lookup[read]]]
-            read_seq = "TEST"
+            #open soap ReadOnContig
+            #some contigs are missing!
+            infile = open("%s/Assemble/out/%s.asm.readOnContig"%(rundir,PREFIX),'r')
+            #readID, ContigID, startpos, strand
+            hdr = infile.readline()
+            linecnt = 1
+            for line in infile.xreadlines():
+                if linecnt % 100000 == 0:
+                    #print linecnt,
+                    sys.stdout.flush()
+                data = line.replace("\n","").split("\t")
+                #print data
+                if len(data) < 4:
+                    continue
+                contig = data[1]
+                spos = int(data[2])
+                if spos < 0:
+                    spos = 0
+                epos = spos+readlen
+                strand = data[3]
+                read = int(data[0])
+
+                try:
+                    contigdict[contig].append([int(spos), int(spos)+epos, strand, read_lookup[read]])
+                except KeyError:
+                    contigdict[contig] = [[int(spos),int(spos)+epos,strand,read_lookup[read]]]
+                read_seq = "TEST"
             
-            seqdict[read_lookup[read]] = read_seq
-            linecnt +=1
+                seqdict[read_lookup[read]] = read_seq
+                linecnt +=1
         
     contig_data = contigfile.read()
     contig_data = contig_data.split(">")
@@ -478,130 +691,40 @@ def map2contig(min,max,fasta=True):
             except KeyError:
                 pass
             if read[2] == "-":
-#                matedict[read[-1]]
                 tigr_file.write("#%s(%d) [RC] %d bases, 00000000 checksum. {%d 1} <%d %s>\n"%(read[-1],read[0]-1, len(seqdict[read[-1]]), len(read[-1]), read[0], read[1]))
             else:
                 tigr_file.write("#%s(%d) [] %d bases, 00000000 checksum. {1 %d} <%d %s>\n"%(read[-1],read[0]-1, len(seqdict[read[-1]]), len(read[-1]), read[0], read[1]))
             tigr_file.write(seqdict[read[-1]]+"\n")
 
    
-    nonctgmates = 0
-    sffcnt = 0
-    sfrcnt = 0
-    srfcnt = 0
-    srrcnt = 0
-    nffcnt = 0
-    nfrcnt = 0
-    nrfcnt = 0
-    nrrcnt = 0
-    new_matefile.write("library\t110110\t%d\t%d\n"%(mmin,mmax))
-    linked_contigs = {}
-    for mate in matedict.keys():
-        try:
-            #matectgdict[mate]
-            #matectgdict[matedict[mate]]
-            #mateotdict[mate]
-            pass
-        except KeyError:
+
+    for lib in readlibs:
+        new_matefile.write("library\t%d\t%d\t%d\n"%(lib.id,lib.mmin,lib.mmax))
+    for lib in readlibs:
+        linked_contigs = {}
+        for mate in matedict.keys():
+            new_matefile.write("%s\t%s\t%d\n"%(mate,matedict[lib.id][mate],lib.id))
+            new_matefile.flush()
             continue
-        new_matefile.write("%s\t%s\t110110\n"%(mate,matedict[mate]))
-        new_matefile.flush()
-        continue
-        if matectgdict[mate] == matectgdict[matedict[mate]]:
-            ctgmates +=1
-            if mateotdict[mate] == "+" and mateotdict[matedict[mate]] == "+":
-                sffcnt +=1
-            elif mateotdict[mate] == "+" and mateotdict[matedict[mate]] == "-":
-                sfrcnt +=1
-            elif mateotdict[mate] == "-" and mateotdict[matedict[mate]] == "-":
-                srrcnt +=1
-            elif mateotdict[mate] == "-" and mateotdict[matedict[mate]] == "+":
-                srfcnt +=1
-        else:
-            nonctgmates +=1
-            ctgid = [matectgdict[mate],matectgdict[matedict[mate]]]
-            ctgid.sort()
-            try:
-                linked_contigs[ctgid[0]+"*"+ctgid[1]] += 1
-            except KeyError:
-                linked_contigs[ctgid[0]+"*"+ctgid[1]] = 1
-
-            if mateotdict[mate] == "+" and mateotdict[matedict[mate]] == "+":
-                nffcnt +=1
-            elif mateotdict[mate] == "+" and mateotdict[matedict[mate]] == "-":
-                nfrcnt +=1
-            elif mateotdict[mate] == "-" and mateotdict[matedict[mate]] == "-":
-                nrrcnt +=1
-            elif mateotdict[mate] == "-" and mateotdict[matedict[mate]] == "+":
-                nrfcnt +=1
-
-    ffcnt = 0
-    frcnt = 0
-    rfcnt = 0
-    rrcnt = 0
-
-
-    
-    for mate in matedict.keys():
-        try:
-            matectgdict[mate]
-            matectgdict[matedict[mate]]
-        except KeyError:
-            continue
-        if mateotdict[mate] == "+" and mateotdict[matedict[mate]] == "+":
-            ffcnt +=1
-        elif mateotdict[mate] == "+" and mateotdict[matedict[mate]] == "-":
-            frcnt +=1
-        elif mateotdict[mate] == "-" and mateotdict[matedict[mate]] == "-":
-            rrcnt +=1
-        elif mateotdict[mate] == "-" and mateotdict[matedict[mate]] == "+":
-            rfcnt +=1
-
-    #ctgcnt = 1
-    #ctgseq = 0
-    #ctgsizes = []
-    #n50_size = 0
-    #n50_mid = 955,000
-    print "total contigs: ", ctgcnt
-    #print "max contig size: ", max(ctgsizes)
-    #print "min contig size: ", min(ctgsizes)
-    print "average contig size: ",float(sum(ctgsizes))/float(ctgcnt)
-    i = 0
-    cp = 0
-    ctgsizes.sort()
-    ctgsizes = ctgsizes[::-1]
-    while i < len(ctgsizes):
-        cp += ctgsizes[i]
-        if cp >= 955000:
-            n50_size = ctgsizes[i]
-            break
-        i+=1
-    print "N50 size: ", n50_size
-    print "total pairs of contigs with links:", len(linked_contigs.keys())
-    items = linked_contigs.items()
-    items.sort(key=itemgetter(1),reverse=True)
-    #print items[0:10]
-    #print "---->    ---->", ffcnt
-    #print "---->    <----", frcnt
-    #print "<----    ---->", rfcnt
-    #print "<----    <----", rrcnt
-    print "mates located in same contig: ", ctgmates
-    #print "---->    ---->", sffcnt
-    #print "---->    <----", sfrcnt
-    #print "<----    ---->", srfcnt
-    #print "<----    <----", srrcnt
-    print "mates located in diff contig: ", nonctgmates
-    #print "---->    ---->", nffcnt
-    #print "---->    <----", nfrcnt
-    #print "<----    ---->", nrfcnt
-    #print "<----    <----", nrrcnt
-
     
     tigr_file.close()
         
     
         
-        
+def LCS(S1, S2):
+    M = [[0]*(1+len(S2)) for i in xrange(1+len(S1))]
+    longest, x_longest = 0, 0
+    for x in xrange(1,1+len(S1)):
+        for y in xrange(1,1+len(S2)):
+            if S1[x-1] == S2[y-1]:
+                M[x][y] = M[x-1][y-1] + 1
+                if M[x][y]>longest:
+                    longest = M[x][y]
+                    x_longest  = x
+            else:
+                M[x][y] = 0
+    return S1[x_longest-longest: x_longest]
+
 
 def start_http(server_class=BaseHTTPServer.HTTPServer,
         handler_class=BaseHTTPServer.BaseHTTPRequestHandler):
@@ -645,82 +768,342 @@ elif format == "sff":
        infile = frg
 
 #if asm == "soap":
-#ASSUME SOAP + 1 LIB for now..
+readpaths = []
+filtreadpaths = []
+for lib in readlibs:
+    
+    readpaths.append("%s/Preprocess/in"%(rundir)+lib.path)
+    filtreadpaths.append("%s/Preprocess/out"%(rundir)+read.path)
+   
 if "Preprocess" in forcesteps:
-    run_process("touch %s/Preprocess/in/"%(rundir)+infile)
+    for path in readpaths:
+        run_process("touch %s"%path)
 
-@files("%s/Preprocess/in/"%(rundir)+infile,["%s/Preprocess/out/all.seq"%(rundir),"%s/Preprocess/out/all.seq.mates"%(rundir)])
+#@transform(readpaths,["%s/Preprocess/out/all.seq"%(rundir),"%s/Preprocess/out/all.seq.mates"%(rundir)])
+@files(readpaths,filtreadpaths)
 def Preprocess(input,output):
    #move input files into Preprocess ./in dir
    #output will either be split fastq files in out, or AMOS bank
    if "Preprocess" in skipsteps or "preprocess" in skipsteps:
+       for lib in readlibs:
+           for read in lib.reads:
+               run_process("ln -t ./%s/Preprocess/out/ -s ../../Preprocess/in/%s"%(rundir,read.fname))
        return 0
    if filter == True:
        #for reads+libs
        cnt = 1
-       for lib in libs:
-           if (format == "fastq"):
-               #run_process(" perl %s/perl/prinseq.pl -stats_all -verbose -fastq %s/Preprocess/in/%s"%(METAMOS_UTILS,rundir,lib))
-               #print "perl %s/perl/prinseq.pl -fastq %s -min_qual_score 10 -ns_max_p 5 -seq_id f%d_ -out_good %s/Preprocess/out/%s.clean"%(METAMOS_UTILS,lib,cnt,rundir,lib)
-               run_process("perl %s/perl/prinseq.pl -ns_max_n 0 -fastq %s  -out_good %s/Preprocess/out/%s"%(METAMOS_UTILS,lib,rundir,lib.rsplit(".",1)[0]))
-           else:
-               #run_process(" perl %s/perl/prinseq.pl -stats_all -verbose -fasta %s/Preprocess/in/%s"%(METAMOS_UTILS,rundir,lib))
-               #run_process("perl %s/perl/prinseq.pl -ns_max_p 5 -fasta %s -min_qual_score 10 -ns_max_p 5 -seq_id %s -out_good %s/Preprocess/out/%s"%(METAMOS_UTILS,lib,os.path.basename(lib).rsplit(".",1)[0],rundir,lib.rsplit(".",1)[0]))
-               run_process("perl %s/perl/prinseq.pl -ns_max_n 0 -fasta %s  -out_good %s/Preprocess/out/%s"%(METAMOS_UTILS,lib,rundir,lib.rsplit(".",1)[0]))
-       cnt +=1
-   else:
-       for lib in libs:
-           run_process("ln -t ./%s/Preprocess/out/ -s ../../Preprocess/in/%s"%(rundir,lib))
-   if format == "sff":
-      # generate the fasta files from the sff file
-      sffToCACmd = "%s/sffToCA -clear 454 -clear discard-n -trim chop -libraryname sff -output %s/Preprocess/out/%s"%(CA, rundir, PREFIX)
-      if (mated == True):
-         run_process("%s -linker %s -insertsize %d %d %s"%(sffToCACmd, linkerType, mean, stdev, infile))
-      else:
-         run_process("%s %s"%(sffToCACmd, infile))
-      run_process("%s/gatekeeper -T -F -o %s/Preprocess/out/%s.gkpStore %s/Preprocess/out/%s.frg"%(CA, rundir, PREFIX, rundir, PREFIX))
-      run_process("%s/gatekeeper -dumpnewbler %s/Preprocess/out/%s %s/Preprocess/out/%s.gkpStore"%(CA, rundir, PREFIX, rundir, PREFIX))
-      run_process("%s/gatekeeper -dumplibraries -tabular %s/Preprocess/out/%s.gkpStore |awk '{if (match($3, \"U\") == 0 && match($1, \"UID\") == 0) print \"library\t\"$1\"\t\"$4-$5*3\"\t\"$4+$5*3}' > %s/Preprocess/out/all.seq.mates"%(CA, rundir, PREFIX, rundir))
-      run_process("%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3\"\t\"$5}' >> %s/Preprocess/out/all.seq.mates"%(CA, rundir, PREFIX, rundir))
-      run_process("unlink %s/Preprocess/out/all.seq"%(rundir))
-      run_process("ln -s  ../../Preprocess/out/%s.fna %s/Preprocess/out/all.seq"%(PREFIX, rundir))
-      run_process("ln -s ../../Preprocess/out/%s.fna.qual %s/Preprocess/out/all.seq.qual"%(PREFIX, rundir))
-      run_process("rm -rf %s/Preproces/out/%s.gkpStore"%(rundir, PREFIX))
-      run_process("unlink %s/Preprocess/out/%s.frg"%(rundir, PREFIX))
-   elif format == "fasta" and not mated:
-      run_process("ln -s  ../../Preprocess/in/%s %s/Preprocess/out/all.seq"%(infile, rundir))
-      run_process("ln -s ../../Preprocess/in/%s.qual %s/Preprocess/out/all.seq.qual"%(infile, rundir))
-      run_process("touch %s/Preprocess/out/all.seq.mates"%(rundir))
-   elif format == "fasta" and mated:
-       #FIXME, make me faster!
-       run_process("perl %s/perl/shuffleSequences_fasta.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/all.seq"%(METAMOS_UTILS,rundir,f1, rundir,f2,rundir))
-       run_process("python %s/python/extract_mates_from_fasta.py %s/Preprocess/out/all.seq"%(METAMOS_UTILS,rundir))
-       run_process("unlink ./%s/Preprocess/out/%s.mates"%(rundir, lib))
-       run_process("ln -t ./%s/Preprocess/out/ -s ../../Preprocess/in/%s.mates"%(rundir,lib))
-   elif format == "fastq" and mated:
-       #extract mates from fastq
-       run_process("perl %s/perl/shuffleSequences_fastq.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/all.seq"%(METAMOS_UTILS,rundir,f1, rundir,f2,rundir))
-       run_process("python %s/python/extract_mates_from_fastq.py %s/Preprocess/out/all.seq"%(METAMOS_UTILS,rundir))
+       for lib in readlibs:
+           for read in lib.reads:
+               if not read.filtered and read.format == "fastq" and read.mated and read.interleaved:
+                   #this means we have this entire lib in one file
+                   #parse out paired record (8 lines), rename header to be filename + "/1" or "/2", and remove reads with N
+                   rf = open(read.path,'r')
+                   wf = open(read.path.replace("in","out"),'w')
+                   start = 1
+                   rcnt = 0
+                   recordcnt = 0
+                   record = []
+                   shdr = ""
+                   for line in rf.xreadlines():
+                       if start:
+                           s1hdr = line
+                           record.append(line)
+                           start = 0
+                           rcnt =1
 
-   #update_soap_config()
-   elif asm == "ca":
-       #useful for 454, need to get SFF to FRG?
-       #/fs/wrenhomes/sergek/wgs-assembler/Linux-amd64/bin/sffToCA
-       pass
-   elif asm == "amos":
-       #call toAmos_new              
-       pass
-   #params
-   #toAmos (-m mates|-f frg)
-   #      (-c contig|-s fasta|-q qual|-Q fastq)
-   #      -t fastqQualtyType [SCUFL]
-   #no mates, fastq, lib info?
-   #toAmos_new -Q file.fastq -t fastq_type -b bank.bnk
-   
+                       else:
+                           if rcnt == 7:
+                               #end of record
+                               record.append(line)
+                               rcnt +=1
+                               if len(record) != 8:
+                                   #something went wrong
+                                   continue
+                               rseq = string.upper(record[0]+record[5])                               
+                               if "N" in rseq:
+                                   #skip both, dont' want Ns
+                                   continue
+                               #update hdrs to be filename /1 or /2
+                               recordcnt +=1
+                               hdr = lib.sid+"r"+str(recordcnt)+"/"
+                               wf.writeline("@"+hdr+"1\n")
+                               wf.writeline(record[1])
+                               wf.writeline("+"+hdr+"1\n")
+                               wf.writeline(record[3])
+                               wf.writeline("@"+hdr+"2\n")
+                               wf.writeline(record[5])
+                               wf.writeline("+"+hdr+"2\n")
+                               wf.writeline(record[7])
+                           elif rcnt % 4 == 0:
+                               s2hdr = line
+                               rlcs = LCS(s1hdr,s2hdr)
+                               #these should almost identical
+                               if float(len(rlcs))/float(len(s1hdr)) < 0.9:
+                                   #missing record somewhere, start over with this one
+                                   s1hdr = line
+                                   record = [line]
+                                   start = 0
+                                   rcnt = 1
+                               else:
+                                   record.append(line)
+                                   rcnt +=1
+                           elif rcnt % 2 == 0:
+                               #quality hdr
+                               record .append(line)
+                               rcnt +=1
+                           else:
+                               record .append(line)
+                               rcnt +=1
+                   #update to new path
+                   read.path = read.path.replace("in","out")            
+                   read.filtered = True
+               elif not read.filtered and read.format == "fastq" and read.mated and not read.interleaved:
+                   readpair = lib.getPair(read.id)
+                   if readpair == -1:
+                       #not interleaved and mated, yet do not have 2nd file..
+                       continue
+                   rf1 = open(read.path,'r')
+                   wf1 = open(read.path.replace("in","out"),'w')
+                   rf2 = open(readpair.path,'r')
+                   wf2 = open(readpair.path.replace("in","out"),'w')
+                   recordcnt = 0
+                   while 1:                   
+                       rs1 = rf1.readline()
+                       rs2 = rf1.readline()
+                       rs3 = rf1.readline()
+                       rs4 = rf1.readline()
+                       if rs1 == "" or rs2 == "" or rs3 == "" or rs4 == "":
+                           #EOF or something went wrong, break
+                           break 
+                       rseq = string.upper(rs2)                               
+                       if "N" in rseq:
+                           continue
+                       rp1 = rf2.readline()
+                       rp2 = rf2.readline()
+                       rp3 = rf2.readline()
+                       rp4 = rf2.readline()
+                       if rp1 == "" or rp2 == "" or rp3 == "" or rp4 == "":
+                           #EOF or something went wrong, break
+                           break 
+                       rseq = string.upper(rp2)                               
+                       if "N" in rseq:
+                           continue
+
+                       rlcs = LCS(rs1,rp1)
+                       if float(len(rlcs))/float(len(rs1)) < 0.9:
+                           #not aligned! something needs to be removed?
+                           #go on to next
+                           continue
+                       else:
+                           #record.append(line)
+                           #rcnt +=1
+                           recordcnt +=1
+                           hdr = lib.sid+"r"+str(recordcnt)+"/"
+                           wf1.writeline("@"+hdr+"1\n")
+                           wf1.writeline(rs2)
+                           wf1.writeline("+"+hdr+"1\n")
+                           wf1.writeline(rs4)
+                           wf2.writeline("@"+hdr+"2\n")
+                           wf2.writeline(rp2)
+                           wf2.writeline("+"+hdr+"2\n")
+                           wf2.writeline(rp4)
+                   readpair.filtered = True
+                   read.filtered = True
+                   read.path = read.path.replace("in","out")
+                   readpair.path = readpair.path.replace("in","out")
+               elif not read.filtered and read.format == "fastq" and not read.mated:
+                   #this is easy, just throw out reads with Ns
+                   rf = open(read.path,'r')
+                   wf = open(read.path.replace("in","out"),'w')
+                   while 1:
+                       rs1 = rf.readline()
+                       rs2 = rf.readline()
+                       rs3 = rf.readline()
+                       rs4 = rf.readline()
+                       if rs1 == "" or rs2 == "" or rs3 == "" or rs4 == "":
+                           #EOF or something went wrong, break
+                           break 
+                       rseq = string.upper(rs2)                               
+                       if "N" in rseq:
+                           continue
+                       wf.writeline(rs1)
+                       wf.writeline(rs2)
+                       wf.writeline(rs3)
+                       wf.writeline(rs4)
+                   read.path = read.path.replace("in","out")
+               elif not read.filtered and read.format == "fasta" and read.mated and read.interleaved:
+                   #this means we have this entire lib in one file
+                   #parse out paired record (4 lines), rename header to be filename + "/1" or "/2", and remove reads with N
+                   rf = open(read.path,'r')
+                   wf = open(read.path.replace("in","out"),'w')
+                   start = 1
+                   rcnt = 0
+                   recordcnt = 0
+                   record = []
+                   shdr = ""
+                   for line in rf.xreadlines():
+                       if start:
+                           s1hdr = line
+                           record.append(line)
+                           start = 0
+                           rcnt =1
+
+                       else:
+                           if rcnt == 3:
+                               #end of record
+                               record.append(line)
+                               rcnt +=1
+                               if len(record) != 4:
+                                   #something went wrong
+                                   continue
+                               rseq = string.upper(record[0]+record[5])                               
+                               if "N" in rseq:
+                                   #skip both, dont' want Ns
+                                   continue
+                               #update hdrs to be filename /1 or /2
+                               recordcnt +=1
+                               hdr = lib.sid+"r"+str(recordcnt)+"/"
+                               wf.writeline(">"+hdr+"1\n")
+                               wf.writeline(record[1])
+                               wf.writeline(">"+hdr+"2\n")
+                               wf.writeline(record[3])
+
+                           elif rcnt % 2 == 0:
+                               s2hdr = line
+                               rlcs = LCS(s1hdr,s2hdr)
+                               #these should almost identical
+                               if float(len(rlcs))/float(len(s1hdr)) < 0.9:
+                                   #missing record somewhere, start over with this one
+                                   s1hdr = line
+                                   record = [line]
+                                   start = 0
+                                   rcnt = 1
+                               else:
+                                   record.append(line)
+                                   rcnt +=1
+                           else:
+                               record.append(line)
+                               rcnt +=1
+                   #update to new path
+                   read.path = read.path.replace("in","out")            
+               elif not read.filtered and read.format == "fasta" and read.mated and not read.interleaved:
+                   readpair = lib.getPair(read.id)
+                   if readpair == -1:
+                       #not interleaved and mated, yet do not have 2nd file..
+                       continue
+                   rf1 = open(read.path,'r')
+                   wf1 = open(read.path.replace("in","out"),'w')
+                   rf2 = open(readpair.path,'r')
+                   wf2 = open(readpair.path.replace("in","out"),'w')
+                   recordcnt = 0
+                   while 1:                   
+                       rs1 = rf1.readline()
+                       rs2 = rf1.readline()
+
+                       if rs1 == "" or rs2 == "":
+                           #EOF or something went wrong, break
+                           break 
+                       rseq = string.upper(rs2)                               
+                       if "N" in rseq:
+                           continue
+                       rp1 = rf2.readline()
+                       rp2 = rf2.readline()
+
+                       if rp1 == "" or rp2 == "":
+                           #EOF or something went wrong, break
+                           break 
+                       rseq = string.upper(rp2)                               
+                       if "N" in rseq:
+                           continue
+
+                       rlcs = LCS(rs1,rp1)
+                       if float(len(rlcs))/float(len(rs1)) < 0.9:
+                           #not aligned! something needs to be removed?
+                           #go on to next
+                           continue
+                       else:
+                           #record.append(line)
+                           #rcnt +=1
+                           recordcnt +=1
+                           hdr = lib.sid+"r"+str(recordcnt)+"/"
+                           wf1.writeline(">"+hdr+"1\n")
+                           wf1.writeline(rs2)
+                           wf2.writeline(">"+hdr+"2\n")
+                           wf2.writeline(rp2)
+
+                   readpair.filtered = True
+                   read.filtered = True
+                   read.path = read.path.replace("in","out")
+                   readpair.path = readpair.path.replace("in","out")
+               elif not read.filtered and read.format == "fasta" and not read.mated:
+                   #easiest case, check for Ns
+                   rf = open(read.path,'r')
+                   wf = open(read.path.replace("in","out"),'w')
+                   while 1:
+                       rs1 = rf.readline()
+                       rs2 = rf.readline()
+                       if rs1 == "" or rs2 == "":
+                           #EOF or something went wrong, break
+                           break
+                       rseq = string.upper(rs2)                               
+                       if "N" in rseq:
+                           continue
+                       wf.writeline(rs1)
+                       wf.writeline(rs2)
+                   read.path = read.path.replace("in","out")
+           cnt +=1
+   else:
+       for lib in readlibs:
+           for read in lib.reads:
+               run_process("ln -t ./%s/Preprocess/out/ -s ../../Preprocess/in/%s"%(rundir,read.fname))
+   #PUNT HERE
+   for lib in readlibs:
+      if 1:
+           #this means interleaved, single file
+           if lib.format == "sff":
+               # generate the fasta files from the sff file
+               sffToCACmd = "%s/sffToCA -clear 454 -clear discard-n -trim chop -libraryname lib%d -output %s/Preprocess/out/%s"%(CA, lib.id,rundir, PREFIX)
+               if (read.mated == True):
+                   run_process("%s -linker %s -insertsize %d %d %s"%(sffToCACmd, read.linkerType, lib.mean, lib.stdev, read.path))
+               else:
+                   run_process("%s %s"%(sffToCACmd, read.path))
+               run_process("%s/gatekeeper -T -F -o %s/Preprocess/out/%s.gkpStore %s/Preprocess/out/%s.frg"%(CA, rundir, PREFIX, rundir, PREFIX))
+               run_process("%s/gatekeeper -dumpnewbler %s/Preprocess/out/%s %s/Preprocess/out/%s.gkpStore"%(CA, rundir, PREFIX, rundir, PREFIX))
+               run_process("%s/gatekeeper -dumplibraries -tabular %s/Preprocess/out/%s.gkpStore |awk '{if (match($3, \"U\") == 0 && match($1, \"UID\") == 0) print \"library\t\"$1\"\t\"$4-$5*3\"\t\"$4+$5*3}' > %s/Preprocess/out/lib%d.seq.mates"%(CA, rundir, PREFIX, rundir,lib.id))
+               run_process("%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3\"\t\"$5}' >> %s/Preprocess/out/lib%d.seq.mates"%(CA, rundir, PREFIX, rundir,lib.id))
+               run_process("unlink %s/Preprocess/out/lib%d.seq"%(rundir,lib.id))
+               run_process("ln -s  ../../Preprocess/out/%s.fna %s/Preprocess/out/lib%d.seq"%(PREFIX, rundir,lib.id))
+               run_process("ln -s ../../Preprocess/out/%s.fna.qual %s/Preprocess/out/lib%d.seq.qual"%(PREFIX, rundir,lib.id))
+               run_process("rm -rf %s/Preproces/out/%s.gkpStore"%(rundir, PREFIX))
+               run_process("unlink %s/Preprocess/out/%s.frg"%(rundir, PREFIX))
+           elif lib.format == "fasta" and not lib.mated:
+               run_process("ln -s  ../../Preprocess/in/%s %s/Preprocess/out/lib%d.seq"%(lib.id,lib.f1.fname, rundir))
+               run_process("ln -s ../../Preprocess/in/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(lib.id,lib.f1.fname, rundir))
+               run_process("touch %s/Preprocess/out/lib%d.seq.mates"%(lib.id,rundir))
+           elif format == "fasta" and mated and not interleaved:
+               #FIXME, make me faster!
+               run_process("perl %s/perl/shuffleSequences_fasta.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(METAMOS_UTILS,rundir,lib.f1.fname, rundir,lib.f2.fname,rundir,lib.id))
+               run_process("python %s/python/extract_mates_from_fasta.py %s/Preprocess/out/lib%d.seq"%(METAMOS_UTILS,rundir,lib.id))
+               run_process("unlink ./%s/Preprocess/out/lib%d.seq.mates"%(rundir, lib.id))
+               run_process("ln -t ./%s/Preprocess/out/ -s ../../Preprocess/in/lib%d.seq.mates"%(rundir,lib.id))
+           elif format == "fastq" and mated and not interleaved:
+               #extract mates from fastq
+               run_process("perl %s/perl/shuffleSequences_fastq.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(METAMOS_UTILS,rundir,lib.f1.fnmae, rundir,lib.f2.fname,rundir,lib.id))
+               run_process("python %s/python/extract_mates_from_fastq.py %s/Preprocess/out/lib%d.seq"%(METAMOS_UTILS,rundir,lib.id))
+
+           #update_soap_config()
+           elif asm == "ca":
+               #useful for 454, need to get SFF to FRG?
+               #/fs/wrenhomes/sergek/wgs-assembler/Linux-amd64/bin/sffToCA
+               pass
+           elif asm == "amos":
+               #call toAmos_new              
+               pass
 
 #if asm == "soap"
-if "Assemble" in forcesteps:
-    run_process("touch %s/Preprocess/out/all.seq"%(rundir))
+for lib in readlibs:
+    if "Assemble" in forcesteps:
+        run_process("touch %s/Preprocess/out/lib%d.seq"%(rundir,lib.id))
 
 @files("%s/Preprocess/out/all.seq"%(rundir),["%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX),"%s/Assemble/out/%s.asm.scafSeq"%(rundir,PREFIX)])
 #@posttask(create_symlink,touch_file("completed.flag"))
@@ -735,21 +1118,24 @@ def Assemble(input,output):
       soapd = soapf.read()
       soapf.close()
       cnt = 1
+      libno = 1
       #print libs
-      #for lib in libs:
-      if (format == "fastq" or format == "fasta")  and mated and not interleaved:
-          soapd = soapd.replace("LIBQ1REPLACE","%s/Preprocess/out/%s"%(rundir,f1))
-          soapd = soapd.replace("LIBQ2REPLACE","%s/Preprocess/out/%s"%(rundir,f2))
+      for lib in readlibs:
+          if (lib.format == "fastq" or lib.format == "fasta")  and lib.mated and not lib.interleaved:
+              soapd = soapd.replace("LIB%dQ1REPLACE","%s/Preprocess/out/%s"%(lib.id,rundir,lib.f1.fname))
+              soapd = soapd.replace("LIB%dQ2REPLACE","%s/Preprocess/out/%s"%(lib.id,rundir,lib.f2.fname))
 
-      elif format == "fastq"  and mated and interleaved:
-          #this is NOT supported by SOAP, make sure files are split into two..
-          soapd = soapd.replace("LIBQ1REPLACE","%s/Preprocess/out/%s"%(rundir,f1))
-          soapd = soapd.replace("LIBQ2REPLACE","%s/Preprocess/out/%s"%(rundir,f2))
+          elif lib.format == "fastq"  and lib.mated and lib.interleaved:
+              #this is NOT supported by SOAP, make sure files are split into two..
+              #need to update lib.f2 path
+              run_process("perl spilt_fastq.pl %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/%s"%(lib.f1.fname,lib.f1.fname,lib.f2.fname))
+              soapd = soapd.replace("LIB%dQ1REPLACE","%s/Preprocess/out/%s"%(lib.id,rundir,lib.f1.fname))
+              soapd = soapd.replace("LIB%dQ2REPLACE","%s/Preprocess/out/%s"%(lib.id,rundir,lib.f2.fname))
 
-      elif format == "fasta"  and mated and interleaved:
-          soapd = soapd.replace("LIBQ1REPLACE","%s/Preprocess/out/%s"%(rundir,f1))
-      else:
-          soapd = soapd.replace("LIBQ1REPLACE","%s"%frg)
+          elif format == "fasta"  and mated and interleaved:
+              soapd = soapd.replace("LIB%dQ1REPLACE","%s/Preprocess/out/%s"%(lib.id,rundir,lib.f1.fname))
+          else:
+              soapd = soapd.replace("LIB%dQ1REPLACE","%s"%(lib.id,lib.f1))#frg))
       #cnt +=1
       soapw = open("%s/soapconfig.txt"%(rundir),'w')
       soapw.write(soapd)
@@ -767,7 +1153,9 @@ def Assemble(input,output):
 
    elif asm == "newbler":
       run_process("%s/newAssembly -force %s/Assemble/out"%(NEWBLER, rundir));
-      run_process("%s/addRun %s/Assemble/out %s/Preprocess/out/all.seq"%(NEWBLER, rundir, rundir));
+      for lib in readlibs:
+          if lib.format == "fasta"  and lib.interleaved:
+              run_process("%s/addRun %s/Assemble/out %s/Preprocess/out/%s"%(NEWBLER, rundir, rundir,lib.f1.fname));
       newblerCmd = "%s%srunProject"%(NEWBLER, os.sep)
       # read spec file to input to newbler parameters
       newblerCmd += getProgramParams("newbler.spec", "", "-")
@@ -793,12 +1181,13 @@ def Assemble(input,output):
    elif asm == "CA":
       #runCA script
       frglist = ""
-      for lib in libs:
-          if format == "fastq":
-              run_process("%s/fastqToCA -insertsize %d %d -libraryname %s -t illumina -innie -fastq %s/Preprocess/in/%s"%(CA, mean[lib],stdev[lib], lib, rundir,PREFIX))
-          elif format == "fasta":
-              run_process("%s/convert-fasta-to-v2.pl -l %s -mean %d -stddev %d -s %s/Preprocess/in/%s -q %s/Preprocess/in/%s.qual -m matepairids %s/Preprocess/out/%s.mateids %s"%(CA, lib, mean[lib], stdev[lib], rundir, lib, rundir, lib, lib,fff))
-          frglist += "%s.frg"%(lib)
+      for lib in readlibs:
+          for read in lib.reads:
+              if read.format == "fastq":
+                  run_process("%s/fastqToCA -insertsize %d %d -libraryname %s -t illumina -innie -fastq %s/Preprocess/in/%s"%(CA, lib.mean,lib.stdev, read.path, rundir,PREFIX))
+              elif read.format == "fasta":
+                  run_process("%s/convert-fasta-to-v2.pl -l %s -mean %d -stddev %d -s %s/Preprocess/in/%s -q %s/Preprocess/in/%s.qual -m matepairids %s/Preprocess/out/%s.mateids %s"%(CA,read.path, lib.mean, lib.stdev, rundir, read.fname, rundir, read.fname, rundir, read.fname,fff))
+              frglist += "%s.frg"%(lib)
       run_process("%s/runCA -p asm -d %s/Assemble/out/ -s %/config/asm.spec %s"%(CA,rundir,METAMOS_UTILSPREFIX,frglist))
       #convert CA to AMOS
       run_process("%s/gatekeeper -dumpfrg -allreads -format2 asm.gkpStore > asm.frg bzip2 asm.frg"%(CA))
@@ -872,10 +1261,10 @@ def Annotate(input,output):
 
 if "Metaphyler" in forcesteps:
    run_process("touch %s/FindORFS/out/%s.faa"%(rundir,PREFIX))
-   #run_process("rm %s/Metaphyler/out/%s.phylum.tab"%(rundir,PREFIX))
+   #run_process("rm %s/Metaphyler/out/%s.classify.txt"%(rundir,PREFIX))
 
 @follows(FindORFS)
-@files("%s/FindORFS/out/%s.faa"%(rundir,PREFIX),"%s/Metaphyler/out/%s.phylum.tab"%(rundir,PREFIX))
+@files("%s/FindORFS/out/%s.faa"%(rundir,PREFIX),"%s/Metaphyler/out/%s.classify.txt"%(rundir,PREFIX))
 def Metaphyler(input,output):
    if "FindORFS" in skipsteps or "Metaphyler" in skipsteps:
       return 0
@@ -912,18 +1301,22 @@ def Scaffold(input,output):
       return 0
 
    if asm == "soap":
-       if 1:
+       for lib in readlibs:
            #run_process("ln -t ./%s/Metaphyler/in/ -s ../../FindORFS/out/%s.faa"%(rundir,PREFIX))
            run_process("rm -rf %s/Scaffold/in/%s.bnk"%(rundir,PREFIX))
-           if format == "fasta":
-               #if "bowtie" not in skipsteps:
-               map2contig(min,max,1)
-               run_process("%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -s %s/Preprocess/out/all.seq -m %s/Assemble/out/%s.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,PREFIX,rundir, rundir,PREFIX,rundir,PREFIX))
+           if lib.format == "fasta":
+               map2contig(1)
+               #PUNT: here, add toAmos_new call for each lib
+               run_process("%s/toAmos_new -s %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,lib.id,PREFIX,rundir, rundir,PREFIX,lib.id,rundir,PREFIX))
+
            elif format == "fastq":
                #if "bowtie" not in skipsteps:
-               map2contig(min,max,0)
-               print "%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -Q %s/Preprocess/out/all.seq -m %s/Assemble/out/%s.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,PREFIX,rundir, rundir,PREFIX,rundir,PREFIX)
-               run_process("%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -Q %s/Preprocess/out/all.seq -m %s/Assemble/out/%s.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,PREFIX,rundir, rundir,PREFIX,rundir,PREFIX))
+               map2contig(0)
+               run_process("%s/toAmos_new -Q %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,lib.id,PREFIX,rundir, rundir,PREFIX,lib.id,rundir,PREFIX))
+
+       run_process("%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,PREFIX,rundir,PREFIX))
+
+
    elif asm == "newbler":
       run_process("rm -rf %s/Scaffold/in/%s.bnk"%(rundir, PREFIX))
       # build the bank for amos
@@ -966,22 +1359,23 @@ def FindScaffoldORFS(input,output):
    #run_process("unlink ./%s/FindORFS/in/%s.scaffolds.faa"%(rundir,PREFIX))
    #run_process("ln -t ./%s/Annotate/in/ -s ../../FindORFS/out/%s.scaffolds.faa"%(rundir,PREFIX))
 
+if "Propagate" in forcesteps:
+    run_process("touch %s/Metaphyler/out/%s.classify.txt"%(rundir,PREFIX))
 @follows(FindScaffoldORFS)
-@files("%s/Metaphyler/out/%s.phylum.tab"%(rundir,PREFIX),"%s/Propagate/out/%s.clusters"%(rundir,PREFIX))
+@files("%s/Metaphyler/out/%s.classify.txt"%(rundir,PREFIX),"%s/Propagate/out/%s.clusters"%(rundir,PREFIX))
 def Propagate(input,output):
    #run propogate java script
    # create s12.annots from Metaphyler output
-   run_process("python %s/python/create_mapping.py %s/DB/class_key.tab %s/Metaphyler/out/%s.phylum.tab %s/Propagate/in/%s.annots"%(METAMOS_UTILS,METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX))
+   run_process("python %s/python/create_mapping.py %s/DB/class_key.tab %s/Metaphyler/out/%s.classify.txt %s/Propagate/in/%s.annots"%(METAMOS_UTILS,METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX))
    # strip headers from file and contig name prefix
 
    run_process("cat %s/Propagate/in/%s.annots |sed s/contig_//g |grep -v contigID > %s/Propagate/in/%s.clusters"%(rundir,PREFIX,rundir,PREFIX))
-   run_process("%s/FilterEdgesByCluster -noRemoveEdges -b %s/Scaffold/in/%s.bnk -clusters in/s12.clusters -noRemoveEdges > %s/Propagate/out/%s.clusters"%(AMOS,rundir,PREFIX,rundir,PREFIX))
+   run_process("%s/cpp/FilterEdgesByCluster -b %s/Scaffold/in/%s.bnk -clusters in/s12.clusters -noRemoveEdges > %s/Propagate/out/%s.clusters"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX))
 
 @follows(Propagate)
 @files("%s/Propagate/out/%s.clusters"%(rundir,PREFIX),"%s/Classify/out/sorted.txt"%(rundir))
 def Classify(input,output):
-   #run Dan's classify script
-   run_process("python %s/python/sort_contigs.py %s/Propagate/in/%s.clusters %s/DB/class_key.tab %s/Classify/out %s/Scaffold/in/%s.bnk"%(rundir, PREFIX, METAMOS_UTILS, METAMOS_UTILS,rundir, rundir, PREFIX))
+   run_process("python %s/python/sort_contigs.py %s/Propagate/in/%s.clusters %s/DB/class_key.tab %s/Classify/out %s/Scaffold/in/%s.bnk"%(METAMOS_UTILS, rundir, PREFIX, METAMOS_UTILS,rundir, rundir, PREFIX))
 
 @follows(Classify)
 @files("%s/Classify/out/sorted.txt"%(rundir),"%s/Postprocess/%.scf.fa"%(rundir,PREFIX))
@@ -990,10 +1384,10 @@ def Postprocess():
    #copy files into output for createReport   
    #generate reports
    #linearize
-   run_process("cp %s/Metaphyler/out/%s.phylum.tab %s/Postprocess/out/. "%(rundir,PREFIX,rundir))
+   run_process("cp %s/Metaphyler/out/%s.classify.txt %s/Postprocess/out/. "%(rundir,PREFIX,rundir))
    run_process("cp %s/Scaffold/out/%s.linearize.scaffolds.final %s/Postprocess/out/%s.scf.fa"%(rundir,PREFIX,rundir,PREFIX))
    run_process("ln -t %s/Postprocess/out/ -s ../../Scaffold/in/%s.bnk "%(rundir,PREFIX))
-   run_process("python %s/python/create_report.py %s/Postprocess/out/%s.phylum.tab  %s/Postprocess/out/%s.bnk %s %s/Postprocess/out/%s.scf.fa"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX,PREFIX,rundir,PREFIX))   
+   run_process("python %s/python/create_report.py %s/Postprocess/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s %s/Postprocess/out/%s.scf.fa"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX,PREFIX,rundir,PREFIX))   
    
 
 
@@ -1222,7 +1616,7 @@ if __name__ == "__main__":
                             'svg',
                             [Postprocess],
                             no_key_legend = True)
-    pipeline_run([Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold, FindScaffoldORFS, Propagate, Classify, Postprocess], verbose = 5) 
+    pipeline_run([Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold, FindScaffoldORFS, Propagate, Classify, Postprocess], multiprocess=threads,verbose = 3) 
    
     t2 = time.time()#clock()
     elapsed = float(t2)-float(t1)

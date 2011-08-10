@@ -6,7 +6,7 @@ import os, sys, string, time, BaseHTTPServer, getopt, time, datetime
 
 
 def usage():
-    print "usage: createProject.py -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300,500 -f/-q"
+    print "usage: createProject.py -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500 -f/-q"
     print "options: -s -q, -f, -1, -2, -d, -m, -i"
 
 if len(sys.argv) < 2:
@@ -36,10 +36,15 @@ mated = False
 interleaved = False
 min = ""
 max = ""
+inserts = []
 maxreadlen = 150
 f1 = ""
 f2 = ""
+libs1 = []
+libs2 = []
 innie = True
+innies = []
+numlibs = 1
 SFFLinkerType = "titanium"
 
 for o, a in opts:
@@ -65,30 +70,38 @@ for o, a in opts:
         SFFLinkerType = a
 
     elif o in ("-1"):
+        
         #lib1,min,max = a.split(",")
         #libs[lib1] = [int(min),int(max)]
-        f1 = a
-
+        libs1 = a.split(",")
+        f1 = libs1[0]#a
+        numlibs = len(libs1)
     elif o in ("-2"):
         #lib1, min, max  = a.split(",")
         #libs[lib1] = [int(min),int(max)]
+        libs2 = a.split(",")
         mated = True
         interleaved = False
-        f2 = a
+        f2 = libs2[0]#a
 
     elif o in ("-m"):
         #lib1, min, max  = a.split(",")
         #libs[lib1] = [int(min),int(max)]
         mated = True
         interleaved = True
-        f1 = a
+        libs1 = a.split(",")
+        f1 = libs1[0]
         
     elif o in ("-i"):
-        data = a.split(",")
-        if len(data) < 2:
-            print "Need to provide both min & max!"
-            sys.exit(1)
-        min,max = a.split(",")
+
+        ins = a.split(",")
+        for insert in ins:
+            data = insert.split(":")
+            if len(data) < 2:
+                print "Need to provide both min & max!"
+                sys.exit(1)
+            min,max = data[0],data[1]#insert.split(",")
+            inserts.append([min,max])
            
     elif o in ("-d"):
         id = a
@@ -121,103 +134,105 @@ if f1 == "" and f2 == "":
 cf = open("./"+id+"/pipeline.ini",'w')
 cf.write("#metAMOS pipeline configuration file\n")
 #cnt = 1
-if format == "fastq":
-    cf.write("format:\tfastq\n")
+i = 0
+while i < numlibs:
+    f1 = libs1[i]
+    f2 = ""
+    if not interleaved or mated:
+        f2 = libs2[i]
+    if format == "fastq":
+         cf.write("lib%dformat:\tfastq\n"%(i+1))
 
-elif format == "sff":
-    cf.write("format:\tsff\n")
-    cf.write("linker:\t%s\n"%(SFFLinkerType))
-else:
-
-    cf.write("format:\tfasta\n")
-    if interleaved or not mated:
+    elif format == "sff":
+        cf.write("lib%dformat:\tsff\n"%(i+1))
+        cf.write("lib%dlinker:\t%s\n"%(i+1,SFFLinkerType))
+    else:
+ 
+        cf.write("lib%dformat:\tfasta\n"%(i+1))
+        if interleaved or not mated:
+            filen = os.path.basename(f1)
+            os.system("cp %s.qual %s/Preprocess/in/. "%(f1,id))
+        else:
+            filen1 = os.path.basename(f1)
+            filen2 = os.path.basename(f2)
+            os.system("cp %s.qual %s/Preprocess/in/."%(f1,id))
+            os.system("cp %s.qual %s/Preprocess/in/. "%(f2,id))
+    if not mated:
         filen = os.path.basename(f1)
-        os.system("cp %s.qual %s/Preprocess/in/. "%(f1,id))
-    else:
-        filen1 = os.path.basename(f1)
-        filen2 = os.path.basename(f2)
-        os.system("cp %s.qual %s/Preprocess/in/."%(f1,id))
-        os.system("cp %s.qual %s/Preprocess/in/. "%(f2,id))
-if not mated:
-    filen = os.path.basename(f1)
-    if format == "sff" and min != "":
-       cf.write("mated:\tTrue\n")
-       cf.write("interleaved:\tTrue\n")
-       min = int(min)
-       max = int(max)
-       mean = (min+max)/2
-       stdev = mean * 0.2
-       cf.write("f1:\t%s,%d,%d,%d,%d\n"%(filen,min,max,mean,stdev))
-    else:
-       cf.write("mated:\tFalse\n")
-       cf.write("interleaved:\tFalse\n")
-       cf.write("frg:\t%s\n"%(filen))
-    os.system("cp %s %s/Preprocess/in/. "%(f1,id))
+        if format == "sff" and min != "":
+            cf.write("lib%dmated:\tTrue\n"%(i+1))
+            cf.write("lib%dinterleaved:\tTrue\n"%(i+1))
+            min = int(inserts[i][0])
+            max = int(inserts[i][1])
+            mean = (min+max)/2
+            stdev = mean * 0.2
+            cf.write("lib%df1:\t%s,%d,%d,%d,%d\n"%(i+1,filen,min,max,mean,stdev))
+        else:
+            cf.write("lib%dmated:\tFalse\n"%(i+1))
+            cf.write("lib%dinterleaved:\tFalse\n"%(i+1))
+            cf.write("lib%dfrg:\t%s\n"%(i+1,filen))
+        os.system("cp %s %s/Preprocess/in/. "%(f1,id))
 
     #os.system("ln -t %s -s ./%s/Preprocess/in/%s"%(frg,id,filen))
-elif mated and not interleaved:
-    cf.write("mated:\tTrue\n")
-    cf.write("interleaved:\tFalse\n")
-    filen1 =  os.path.basename(f1)
-    filen2 =  os.path.basename(f2)
-    min = int(min)
-    max = int(max)
-    mean = (min+max)/2
-    stdev = mean * 0.2
-    cf.write("f1:\t%s,%d,%d,%d,%d\n"%(filen1,min,max,mean,stdev))
-    cf.write("f2:\t%s,%d,%d,%d,%d\n"%(filen2,min,max,mean,stdev))
-    #print "ln -t %s/Preprocess/in/ -s %s"%(id,f1)
-    #print "ln -t %s/Preprocess/in/ -s %s"%(id,f2)
+    elif mated and not interleaved:
+        cf.write("lib%dmated:\tTrue\n"%(i+1))
+        cf.write("lib%dinterleaved:\tFalse\n"%(i+1))
+        filen1 =  os.path.basename(f1)
+        filen2 =  os.path.basename(f2)
 
-    os.system("cp %s %s/Preprocess/in/. "%(f1,id))
-    os.system("cp %s  %s/Preprocess/in/. "%(f2,id))
-    #open config.txt, edit LIBs
+        min = int(inserts[i][0])
+        max = int(inserts[i][1])
+        mean = (min+max)/2
+        stdev = mean * 0.2
+        cf.write("lib%df1:\t%s,%d,%d,%d,%d\n"%(i+1,filen1,min,max,mean,stdev))
+        cf.write("lib%df2:\t%s,%d,%d,%d,%d\n"%(i+1,filen2,min,max,mean,stdev))
+        os.system("cp %s %s/Preprocess/in/. "%(f1,id))
+        os.system("cp %s  %s/Preprocess/in/. "%(f2,id))
 
-elif mated and interleaved:
-    cf.write("mated:\tTrue\n")
-    cf.write("interleaved:\tTrue\n")
-    filen1 =  os.path.basename(f1)
-    min = int(min)
-    max = int(max)
-    mean = (min+max)/2
-    stdev = mean * 0.2
-    cf.write("f1:\t%s,%d,%d,%d,%d\n"%(filen1,min,max,mean,stdev))
-    #print "ln -t %s/Preprocess/in/ -s %s"%(id,f1)
-    #print "ln -t %s/Preprocess/in/ -s %s"%(id,f2)
 
-    os.system("cp %s %s/Preprocess/in/. "%(f1,id))
-    #open config.txt, edit LIBs
-if 1:
-    soapf = open("%s/config.txt"%(id),'a')
-    soaplib = "[LIB]\n"
-    if min != "" and max != "":
-        soaplib += "avg_ins="+str((min+max)/2)+"\n"
-    else:
-        soaplib += "avg_ins=0\n"
-    if innie:
-        soaplib += "reverse_seq=0\n"
-    else:
-        soaplib += "reverse_seq=1\n"
-    soaplib += "asm_flags=3\n"
-    soaplib += "rank=1\n"
-    if format == "fastq" and mated and not interleaved:
-        soaplib += "q1=LIBQ1REPLACE\n"
-        soaplib += "q2=LIBQ2REPLACE\n"
-    elif format == "fasta" and mated and not interleaved:
-        soaplib += "f1=LIBQ1REPLACE\n"
-        soaplib += "f2=LIBQ2REPLACE\n"
-    elif format == "fasta" and not mated:
-        soaplib += "f=LIBQ1REPLACE\n"
-    elif format == "fastq" and not mated:
-        soaplib += "q=LIBQ1REPLACE\n"
-    elif format == "fasta" and mated and interleaved:
-        soaplib += "p=LIBQ1REPLACE\n"
-    soapf.write(soaplib)
-    soapf.close()
-     
-    #os.system("ln -t %s/Preprocess/in/%s.1 -s %s.1"%(lib,id,filen))
-    #os.system("ln -t %s/Preprocess/in/%s.2 -s %s.2"%(lib,id,filen))
+    elif mated and interleaved:
+        cf.write("lib%dmated:\tTrue\n"%(i+1))
+        cf.write("lib%dinterleaved:\tTrue\n"%(i+1))
+        filen1 =  os.path.basename(f1)
+        #min = int(min)
+        #max = int(max)
+        min = int(inserts[i][0])
+        max = int(inserts[i][1])
+        mean = (min+max)/2
+        stdev = mean * 0.2
+        cf.write("lib%df1:\t%s,%d,%d,%d,%d\n"%(i+1,filen1,min,max,mean,stdev))
+        os.system("cp %s %s/Preprocess/in/. "%(f1,id))
 
+    if 1:
+        soapf = open("%s/config.txt"%(id),'a')
+        soaplib = "[LIB]\n"
+        if min != "" and max != "":
+            min = int(inserts[i][0])
+            max = int(inserts[i][1])
+            soaplib += "avg_ins="+str((min+max)/2)+"\n"
+        else:
+            soaplib += "avg_ins=0\n"
+        if innie:
+            soaplib += "reverse_seq=0\n"
+        else:
+            soaplib += "reverse_seq=1\n"
+        soaplib += "asm_flags=3\n"
+        soaplib += "rank=1\n"
+        if format == "fastq" and mated and not interleaved:
+            soaplib += "q1=LIB%dQ1REPLACE\n"%(i+1)
+            soaplib += "q2=LIB%dQ2REPLACE\n"%(i+1)
+        elif format == "fasta" and mated and not interleaved:
+            soaplib += "f1=LIB%dQ1REPLACE\n"%(i+1)
+            soaplib += "f2=LIB%dQ2REPLACE\n"%(i+1)
+        elif format == "fasta" and not mated:
+            soaplib += "f=LIB%dQ1REPLACE\n"%(i+1)
+        elif format == "fastq" and not mated:
+            soaplib += "q=LIB%dQ1REPLACE\n"%(i+1)
+        elif format == "fasta" and mated and interleaved:
+            soaplib += "p=LiB%dQ1REPLACE\n"%(i+1)
+        soapf.write(soaplib)
+        soapf.close()
+    i+=1
 
 print "Project dir %s successfully created!"%(id)
 print "Use runPipeline.py to start Pipeline"

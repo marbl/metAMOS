@@ -41,7 +41,7 @@ class Read:
         self.fname = os.path.basename(self.path)
         self.mated = mated
         self.interleaved = interleaved
-        self.init()
+        #self.init()
         self.validate()
 
 class readLib:
@@ -450,7 +450,7 @@ for line in inf:
     if "#" in line:
         continue
     elif "format:" in line:
-        newlibno = int(line.split("format")[0].split("lib")[0])
+        newlibno = int(line.split("format")[0].split("lib")[1])
 
 
         if newlibno != currlibno:

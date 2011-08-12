@@ -85,7 +85,7 @@ class readLib:
         self.validateLib()
     def getPair(self,readId):
         try:
-            return self.readDict[pairDict[readId]]
+            return self.readDict[self.pairDict[readId]]
         except KeyError:
             #no pair for read
             return -1
@@ -129,7 +129,7 @@ def parseInterleaved(rf,wf,fastq=True):
                    #this means we have this entire lib in one file
                    #parse out paired record (8 lines), rename header to be filename + "/1" or "/2", and remove reads with N
                    rf = open(read.path,'r')
-                   wf = open(read.path.replace("in","out"),'w')
+                   wf = open(read.path.replace("/in/","/out/"),'w')
                    start = 1
                    rcnt = 0
                    recordcnt = 0
@@ -196,7 +196,7 @@ def parseInterleaved(rf,wf,fastq=True):
                                record .append(line)
                                rcnt +=1
                    #update to new path
-                   read.path = read.path.replace("in","out")            
+                   read.path = read.path.replace("/in/","/out/")            
 
 
 def str2bool(v):
@@ -805,11 +805,11 @@ def Preprocess(input,output):
                    #this means we have this entire lib in one file
                    #parse out paired record (8 lines), rename header to be filename + "/1" or "/2", and remove reads with N
                    rf = open(read.path,'r')
-                   npath = read.path.replace("in","out")
+                   npath = read.path.replace("/in/","/out/")
                    #readpath,base = os.path.split(npath)
                    #newpath = readpath+"lib%d"%(lib.id)
                    wf = open(npath,'w')
-                   #wf = open(read.path.replace("in","out"),'w')
+                   #wf = open(read.path.replace("/in/","/out/"),'w')
                    #wf = open(readpath+"lib%d"%(lib.id),'w')
                    start = 1
                    rcnt = 0
@@ -867,7 +867,7 @@ def Preprocess(input,output):
                                record .append(line)
                                rcnt +=1
                    #update to new path
-                   read.path = read.path.replace("in","out")            
+                   read.path = read.path.replace("/in/","/out/")            
                    #read.fname = "lib%d"%(lib.id)
                    read.filtered = True
                elif not read.filtered and read.format == "fastq" and read.mated and not read.interleaved:
@@ -876,9 +876,9 @@ def Preprocess(input,output):
                        #not interleaved and mated, yet do not have 2nd file..
                        continue
                    rf1 = open(read.path,'r')
-                   wf1 = open(read.path.replace("in","out"),'w')
+                   wf1 = open(read.path.replace("/in/","/out/"),'w')
                    rf2 = open(readpair.path,'r')
-                   wf2 = open(readpair.path.replace("in","out"),'w')
+                   wf2 = open(readpair.path.replace("/in/","/out/"),'w')
                    recordcnt = 0
                    while 1:                   
                        rs1 = rf1.readline()
@@ -922,12 +922,12 @@ def Preprocess(input,output):
                            wf2.writeline(rp4)
                    readpair.filtered = True
                    read.filtered = True
-                   read.path = read.path.replace("in","out")
-                   readpair.path = readpair.path.replace("in","out")
+                   read.path = read.path.replace("/in/","/out/")
+                   readpair.path = readpair.path.replace("/in/","/out/")
                elif not read.filtered and read.format == "fastq" and not read.mated:
                    #this is easy, just throw out reads with Ns
                    rf = open(read.path,'r')
-                   wf = open(read.path.replace("in","out"),'w')
+                   wf = open(read.path.replace("/in/","/out/"),'w')
                    while 1:
                        rs1 = rf.readline()
                        rs2 = rf.readline()
@@ -943,17 +943,17 @@ def Preprocess(input,output):
                        wf.writelines(rs2)
                        wf.writelines(rs3)
                        wf.writelines(rs4)
-                   read.path = read.path.replace("in","out")
+                   read.path = read.path.replace("/in/","/out/")
                elif not read.filtered and read.format == "fasta" and read.mated and read.interleaved:
                    #this means we have this entire lib in one file
                    #parse out paired record (4 lines), rename header to be filename + "/1" or "/2", and remove reads with N
                    rf = open(read.path,'r')
-                   npath = read.path.replace("in","out")
+                   npath = read.path.replace("/in/","/out/")
                    print npath
                    #readpath,base = os.path.split(npath)
                    #newpath = readpath+"lib%d"%(lib.id)
                    wf = open(npath,'w')
-                   #wf = open(read.path.replace("in","out"),'w')
+                   #wf = open(read.path.replace("/in/","/out/"),'w')
                    start = 1
                    rcnt = 0
                    recordcnt = 0
@@ -995,9 +995,9 @@ def Preprocess(input,output):
                            first = True
 
                    #update to new path
-                   read.path = read.path.replace("in","out")            
+                   read.path = read.path.replace("/in/","/out/")            
 
-                   #read.path = newpath#read.path.replace("in","out")            
+                   #read.path = newpath#read.path.replace("/in/","/out/")            
                    #read.fname = "lib%d"%(lib.id)
                elif not read.filtered and read.format == "fasta" and read.mated and not read.interleaved:
                    readpair = lib.getPair(read.id)
@@ -1005,9 +1005,9 @@ def Preprocess(input,output):
                        #not interleaved and mated, yet do not have 2nd file..
                        continue
                    rf1 = open(read.path,'r')
-                   wf1 = open(read.path.replace("in","out"),'w')
+                   wf1 = open(read.path.replace("/in/","/out/"),'w')
                    rf2 = open(readpair.path,'r')
-                   wf2 = open(readpair.path.replace("in","out"),'w')
+                   wf2 = open(readpair.path.replace("/in/","/out/"),'w')
                    recordcnt = 0
                    while 1:                   
                        rs1 = rf1.readline()
@@ -1046,12 +1046,12 @@ def Preprocess(input,output):
 
                    readpair.filtered = True
                    read.filtered = True
-                   read.path = read.path.replace("in","out")
-                   readpair.path = readpair.path.replace("in","out")
+                   read.path = read.path.replace("/in/","/out/")
+                   readpair.path = readpair.path.replace("/in/","/out/")
                elif not read.filtered and read.format == "fasta" and not read.mated:
                    #easiest case, check for Ns
                    rf = open(read.path,'r')
-                   wf = open(read.path.replace("in","out"),'w')
+                   wf = open(read.path.replace("/in/","/out/"),'w')
                    while 1:
                        rs1 = rf.readline()
                        rs2 = rf.readline()
@@ -1063,7 +1063,7 @@ def Preprocess(input,output):
                            continue
                        wf.writelines(rs1)
                        wf.writelines(rs2)
-                   read.path = read.path.replace("in","out")
+                   read.path = read.path.replace("/in/","/out/")
            cnt +=1
    else:
        for lib in readlibs:
@@ -1176,7 +1176,10 @@ def Assemble(input,output):
       run_process("%s/newAssembly -force %s/Assemble/out"%(NEWBLER, rundir));
       for lib in readlibs:
           if lib.format == "fasta"  and lib.interleaved:
-              run_process("%s/addRun %s/Assemble/out %s/Preprocess/out/%s"%(NEWBLER, rundir, rundir,lib.f1.fname));
+              run_process("%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(NEWBLER, rundir, rundir,lib.id));
+          elif lib.format == "fastq":
+              print "WARNING!! FASTQ + Newbler only supported in version 2.6+, Newbler may fail"
+              sys.exit(1)
       newblerCmd = "%s%srunProject"%(NEWBLER, os.sep)
       # read spec file to input to newbler parameters
       newblerCmd += getProgramParams("newbler.spec", "", "-")

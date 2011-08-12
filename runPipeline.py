@@ -531,7 +531,7 @@ def map2contig(fasta):
     
     readDir = ""
     asmDir = ""
-    threads = 0
+    #threads = 0
     tigr_file = open("%s/Assemble/out/%s.asm.tigr"%(rundir,PREFIX),'w')
     contigfile = open("%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX),'r')
 
@@ -588,7 +588,7 @@ def map2contig(fasta):
                     run_process("%s/bowtie -p %d -f -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim >& %s/Assemble/out/%s.bout"%(BOWTIE,threads,rundir,rundir,lib.id,rundir,PREFIX))
                 else:
                     run_process("%s/bowtie -p %d -f -l 28 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq >& %s/Assemble/out/%s.bout"%(BOWTIE,threads,rundir,rundir,lib.id,rundir,PREFIX))
-            elif "bowtie" not in skipsteps:
+            elif "bowtie" not in skipsteps and not fasta:
                 if trim:
                     run_process("%s/bowtie  -p %d -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim >& %s/Assemble/out/%s.bout"%(BOWTIE,threads,rundir,rundir,lib.id,rundir,PREFIX))
                 else:
@@ -1332,13 +1332,14 @@ def Scaffold(input,output):
            #run_process("ln -t ./%s/Metaphyler/in/ -s ../../FindORFS/out/%s.faa"%(rundir,PREFIX))
            run_process("rm -rf %s/Scaffold/in/%s.bnk"%(rundir,PREFIX))
            if lib.format == "fasta":
-               map2contig(1)
+               if "bowtie" not in skipsteps:
+                   map2contig(1)
                #PUNT: here, add toAmos_new call for each lib
                run_process("%s/toAmos_new -s %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,lib.id,rundir, PREFIX,lib.id,rundir,PREFIX))
 
            elif format == "fastq":
-               #if "bowtie" not in skipsteps:
-               map2contig(0)
+               if "bowtie" not in skipsteps:
+                   map2contig(0)
                run_process("%s/toAmos_new -Q %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,lib.id,rundir,PREFIX, lib.id,rundir,PREFIX))
 
        run_process("%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,PREFIX,rundir,PREFIX))

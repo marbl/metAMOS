@@ -522,7 +522,7 @@ def run_process(command):
        stderr = ""
        p = subprocess.Popen(command, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
        #p = subprocess.Popen(command, shell=True, stdin=None, stdout=stdout, stderr=stderr)
-       if VERBOSE:
+       if "clk" not in command and "Bundler" not in command and "MarkRepeats" not in command and VERBOSE:
            print p.stdout.read(), p.stderr.read()
        (checkStdout, checkStderr) = p.communicate()
 

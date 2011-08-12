@@ -32,12 +32,6 @@ incorporate into its pipeline that we are not allowed to distribute,
 such as MetaGeneMark. To get a license to use MetaGeneMark, plesae
 visit: http://exon.gatech.edu/license_download.cgi.
 
-*PYTHON 2.6
-*AMOS
-*blastall, formatdb
-*MetaGeneMark
-*Graphviz
-
 ----------------------------------------------------------------------------------
 C/ INSTALLING metAMOS
 
@@ -57,9 +51,18 @@ SFF files are supported.
 
 usage info:
 
-createProject.py -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300,500 -f/-q
+(non-interleaved fastq, single library)
+createProject.py -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500 -q
 
-Currently metAMOS supports only 1 library per project (either fragment or mated), but in the near future multiple libraries will be supported via a "addLib.py" component, to be ran after createProject.
+(non-interleaved fasta, single library)
+createProject.py -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500 -f
+
+(interleaved fastq, single library)
+createProject.py -m file.fastq.12  -d projectDir -i 300:500 -q
+
+(interleaved fastq, multiple libraries)
+createProject.py -m file.fastq.12,file2.fastq.12  -d projectDir -i 300:500,1000:2000 -q
+
 
 The second component, runPipeline.py, takes a project directory as
 input and runs the following steps by default:
@@ -78,19 +81,19 @@ input and runs the following steps by default:
 usage info:
 
 usage: runPipeline.py [options] -d projectdir (required)
-options:  -a <assembler> -k <kmer size> -c <classification method> -m <enable metaphyler?> -p <num threads>  
+options:  -a <assembler> -k <kmer size> -f (forcestep) -s (skipstep) -p <num threads>  -v (verbose?) -t (filter reads?)
 
 Any single step in the pipeline can be skipped by passing the
 following parameter to runPipeline:
 
---skipsteps=Step1,..
+-s,--skipsteps=Step1,..
 
 metAMOS reruns steps based on timestamp information, so if the input
 files for a step in the pipeline hasn't changed since the last run, it
 will be skipped automatically. However, you can forefully run any step
 in the pipeline by passing the following parameter to runPipeline:
 
---force=Step1,..
+-f,--force=Step1,..
 
 Upon completion, all of the final results will be stored in the
 Postprocess/out directory. A third component, createReport.py, takes

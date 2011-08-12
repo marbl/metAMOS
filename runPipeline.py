@@ -585,14 +585,14 @@ def map2contig(fasta):
             #run_process("%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(BOWTIE, rundir,PREFIX,rundir))
             if "bowtie" not in skipsteps and fasta:
                 if trim:
-                    run_process("%s/bowtie -p 20 -f -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim >& %s/Assemble/out/%s.bout"%(BOWTIE,rundir,rundir,lib.id,rundir,PREFIX))
+                    run_process("%s/bowtie -p %d -f -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim >& %s/Assemble/out/%s.bout"%(BOWTIE,threads,rundir,rundir,lib.id,rundir,PREFIX))
                 else:
-                    run_process("%s/bowtie -p 20 -f -l 28 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq >& %s/Assemble/out/%s.bout"%(BOWTIE,rundir,rundir,lib.id,rundir,PREFIX))
+                    run_process("%s/bowtie -p %d -f -l 28 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq >& %s/Assemble/out/%s.bout"%(BOWTIE,threads,rundir,rundir,lib.id,rundir,PREFIX))
             elif "bowtie" not in skipsteps:
                 if trim:
-                    run_process("%s/bowtie  -p 20 -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim >& %s/Assemble/out/%s.bout"%(BOWTIE,rundir,rundir,lib.id,rundir,PREFIX))
+                    run_process("%s/bowtie  -p %d -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim >& %s/Assemble/out/%s.bout"%(BOWTIE,threads,rundir,rundir,lib.id,rundir,PREFIX))
                 else:
-                    run_process("%s/bowtie  -p 20 -l 28 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq >& %s/Assemble/out/%s.bout"%(BOWTIE,rundir,rundir,lib.id,rundir,PREFIX))
+                    run_process("%s/bowtie  -p %d -l 28 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq >& %s/Assemble/out/%s.bout"%(BOWTIE,threads,rundir,rundir,lib.id,rundir,PREFIX))
             infile = open("%s/Assemble/out/%s.bout"%(rundir,PREFIX),'r')
             for line1 in infile.xreadlines():
                 line1 = line1.replace("\n","")
@@ -902,8 +902,8 @@ def Preprocess(input,output):
                        if "N" in rseq:
                            continue
 
-                       rlcs = LCS(rs1,rp1)
-                       if float(len(rlcs))/float(len(rs1)) < 0.9:
+                       #rlcs = LCS(rs1,rp1)
+                       if 0:#float(len(rlcs))/float(len(rs1)) < 0.9:
                            #not aligned! something needs to be removed?
                            #go on to next
                            continue
@@ -912,14 +912,16 @@ def Preprocess(input,output):
                            #rcnt +=1
                            recordcnt +=1
                            hdr = lib.sid+"r"+str(recordcnt)+"/"
-                           wf1.writeline("@"+hdr+"1\n")
-                           wf1.writeline(rs2)
-                           wf1.writeline("+"+hdr+"1\n")
-                           wf1.writeline(rs4)
-                           wf2.writeline("@"+hdr+"2\n")
-                           wf2.writeline(rp2)
-                           wf2.writeline("+"+hdr+"2\n")
-                           wf2.writeline(rp4)
+                           wf1.writelines("@"+hdr+"1\n")
+                           wf1.writelines(rs2)
+                           wf1.writelines("+"+hdr+"1\n")
+                           wf1.writelines(rs4)
+                           wf2.writelines("@"+hdr+"2\n")
+                           wf2.writelines(rp2)
+                           wf2.writelines("+"+hdr+"2\n")
+                           wf2.writelines(rp4)
+                           wf1.flush()
+                           wf2.flush()
                    readpair.filtered = True
                    read.filtered = True
                    read.path = read.path.replace("/in/","/out/")
@@ -1126,7 +1128,7 @@ for lib in readlibs:
         run_process("touch %s/Preprocess/out/lib%d.seq"%(rundir,lib.id))
     asmfiles.append("%s/Preprocess/out/lib%d.seq"%(rundir,lib.id))
 
-@files(asmfiles,["%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX),"%s/Assemble/out/%s.asm.scafSeq"%(rundir,PREFIX)])
+@files(asmfiles,["%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX)])
 #@posttask(create_symlink,touch_file("completed.flag"))
 @follows(Preprocess)
 def Assemble(input,output):
@@ -1222,9 +1224,9 @@ def Assemble(input,output):
    #check if sucessfully completed   
 
 if "FindORFS" in forcesteps:
-   run_process("touch %s/Assemble/out/%s.asm.scafSeq"%(rundir,PREFIX))
+   run_process("touch %s/Assemble/out/%s.asm.contig"%(rundir,PREFIX))
 @follows(Assemble)
-@files("%s/Assemble/out/%s.asm.scafSeq"%(rundir,PREFIX),"%s/FindORFS/out/%s.faa"%(rundir,PREFIX))
+@files("%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX),"%s/FindORFS/out/%s.faa"%(rundir,PREFIX))
 def FindORFS(input,output):
    if "FindORFS" in skipsteps:
       run_process("touch %s/FindRepeats/in/%s.fna"%(rundir, PREFIX))
@@ -1232,12 +1234,13 @@ def FindORFS(input,output):
       return 0
 
    if asm == "soap":
-       if not os.path.exists("%s/Assemble/out/%s.asm.scafSeq.contigs"%(rundir,PREFIX)):
-           run_process("python %s/python/extract_soap_contigs.py %s/Assemble/out/%s.asm.scafSeq"%(METAMOS_UTILS,rundir,PREFIX))
-       run_process("unlink %s/FindORFS/in/%s.asm.scafSeq.contigs"%(rundir,PREFIX))
-       run_process("unlink %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX))
-       run_process("ln -t ./%s/FindORFS/in/ -s ../../Assemble/out/%s.asm.scafSeq.contigs"%(rundir,PREFIX))
-       run_process("mv %s/FindORFS/in/%s.asm.scafSeq.contigs  %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX,rundir,PREFIX))
+         
+       #if not os.path.exists("%s/Assemble/out/%s.asm.scafSeq.contigs"%(rundir,PREFIX)):
+       #    run_process("python %s/python/extract_soap_contigs.py %s/Assemble/out/%s.asm.scafSeq"%(METAMOS_UTILS,rundir,PREFIX))
+       #run_process("unlink %s/FindORFS/in/%s.asm.scafSeq.contigs"%(rundir,PREFIX))
+       #run_process("unlink %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX))
+       #run_process("ln -t ./%s/FindORFS/in/ -s ../../Assemble/out/%s.asm.scafSeq.contigs"%(rundir,PREFIX))
+       #run_process("mv %s/FindORFS/in/%s.asm.scafSeq.contigs  %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX,rundir,PREFIX))
        #try using contigs instead of contigs extracted from scaffolds
        run_process("cp %s/Assemble/out/%s.asm.contig  %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX,rundir,PREFIX))
    else:

@@ -1312,7 +1312,8 @@ def Metaphyler(input,output):
 
    
 if "Scaffold" in forcesteps:
-    run_process("touch %s/Assemble/out/%s.asm.contig"%(rundir,PREFIX))
+    #run_process("touch %s/Assemble/out/%s.asm.contig"%(rundir,PREFIX))
+    run_process("rm %s/Scaffold/out/%s.scaffolds.final"%(rundir,PREFIX))
 @follows(Metaphyler)
 @files(["%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX)],"%s/Scaffold/out/%s.scaffolds.final"%(rundir,PREFIX))
 def Scaffold(input,output):
@@ -1644,8 +1645,8 @@ if __name__ == "__main__":
                             'svg',
                             [Postprocess],
                             no_key_legend = True)
-    pipeline_run([Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold, FindScaffoldORFS, Propagate, Classify, Postprocess], multiprocess=threads,verbose = 3) 
-   
+    pipeline_run([Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold, FindScaffoldORFS, Propagate, Classify, Postprocess], verbose = 3) 
+    #multiprocess threads
     t2 = time.time()#clock()
     elapsed = float(t2)-float(t1)
     #print elapsed

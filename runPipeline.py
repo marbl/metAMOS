@@ -527,7 +527,7 @@ def run_process(command):
        (checkStdout, checkStderr) = p.communicate()
 
 def map2contig(fasta):
-    bowtie_mapping = 1
+    #bowtie_mapping = 1
     
     readDir = ""
     asmDir = ""
@@ -567,7 +567,7 @@ def map2contig(fasta):
 
         if bowtie_mapping == 1:
             #trim to 25bp
-            trim = 0
+            trim = 1
             if trim:
                 f1 = open("%s/Preprocess/out/lib%d.seq"%(rundir,lib.id))
                 f2 = open("%s/Preprocess/out/lib%d.seq.trim"%(rundir,lib.id),'w')
@@ -599,7 +599,12 @@ def map2contig(fasta):
                 ldata = line1.split("\t")
                 if len(ldata) < 6:
                     continue
-                read, strand, contig, spos,read_seq, read_qual  = ldata[:6]
+                read = ldata[0]
+                strand = ldata[1]
+                contig = ldata[2]
+                spos = ldata[3] 
+                read_seq = ldata[4]
+                read_qual = ldata[5]
                 read = read.split(" ")[0]
                 epos = int(spos)+len(read_seq)
                 try:
@@ -885,16 +890,18 @@ def Preprocess(input,output):
                        rs2 = rf1.readline()
                        rs3 = rf1.readline()
                        rs4 = rf1.readline()
+
+                       rp1 = rf2.readline()
+                       rp2 = rf2.readline()
+                       rp3 = rf2.readline()
+                       rp4 = rf2.readline()
+
                        if rs1 == "" or rs2 == "" or rs3 == "" or rs4 == "":
                            #EOF or something went wrong, break
                            break 
                        rseq = string.upper(rs2)                               
                        if "N" in rseq:
                            continue
-                       rp1 = rf2.readline()
-                       rp2 = rf2.readline()
-                       rp3 = rf2.readline()
-                       rp4 = rf2.readline()
                        if rp1 == "" or rp2 == "" or rp3 == "" or rp4 == "":
                            #EOF or something went wrong, break
                            break 

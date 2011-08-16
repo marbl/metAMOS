@@ -330,7 +330,7 @@ def usage():
     #print "options: annotate, stopafter, startafter, fq, fa"
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hb:d:s:e:o:k:c:a:n:p:tf:vm4", ["help", "bowtie","projectdir","startat","endat", "minoverlap","kmersize","classifier","assembler","skipsteps","threads","filter","forcesteps","verbose","metaphyler","454"])
+    opts, args = getopt.getopt(sys.argv[1:], "hbd:s:e:o:k:c:a:n:p:tf:vm4", ["help", "bowtie","projectdir","startat","endat", "minoverlap","kmersize","classifier","assembler","skipsteps","threads","filter","forcesteps","verbose","metaphyler","454"])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -1172,8 +1172,8 @@ def Assemble(input,output):
       soapw.close()
       print "Running SOAPdenovo on input reads..."
       #start stopwatch
-      run_process("%s/soap63 all  -D -d -R -p %d -K %d -M 3 -L 300 -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(SOAP, threads, kmer, rundir,rundir,PREFIX))#SOAPdenovo config.txt
-
+      run_process("%s/soap63 all -R -p %d -K %d -M 3 -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(SOAP, threads, kmer, rundir,rundir,PREFIX))#SOAPdenovo config.txt
+      #-L 300
       #run_process("%s/SOAPdenovo-63mer all -D -d -R -p %d -K %d -M 3 -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(SOAP, threads, kmer, rundir,rundir,PREFIX))#SOAPdenovo config.txt
       #run_process("%s/SOAPdenovo-31mer all  -D 3 -d 2 -R -p %d -M 3 -K %d -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(SOAP, threads, kmer, rundir,rundir,PREFIX))#SOAPdenovo config.txt
 
@@ -1188,7 +1188,7 @@ def Assemble(input,output):
               run_process("%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(NEWBLER, rundir, rundir,lib.id));
           elif lib.format == "fastq":
               print "WARNING!! FASTQ + Newbler only supported in version 2.6+, Newbler may fail"
-              sys.exit(1)
+              #sys.exit(1)
       newblerCmd = "%s%srunProject"%(NEWBLER, os.sep)
       # read spec file to input to newbler parameters
       newblerCmd += getProgramParams("newbler.spec", "", "-")
@@ -1242,14 +1242,14 @@ def FindORFS(input,output):
 
    if asm == "soap":
          
-       #if not os.path.exists("%s/Assemble/out/%s.asm.scafSeq.contigs"%(rundir,PREFIX)):
-       #    run_process("python %s/python/extract_soap_contigs.py %s/Assemble/out/%s.asm.scafSeq"%(METAMOS_UTILS,rundir,PREFIX))
-       #run_process("unlink %s/FindORFS/in/%s.asm.scafSeq.contigs"%(rundir,PREFIX))
-       #run_process("unlink %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX))
-       #run_process("ln -t ./%s/FindORFS/in/ -s ../../Assemble/out/%s.asm.scafSeq.contigs"%(rundir,PREFIX))
-       #run_process("mv %s/FindORFS/in/%s.asm.scafSeq.contigs  %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX,rundir,PREFIX))
+       if not os.path.exists("%s/Assemble/out/%s.asm.scafSeq.contigs"%(rundir,PREFIX)):
+           run_process("python %s/python/extract_soap_contigs.py %s/Assemble/out/%s.asm.scafSeq"%(METAMOS_UTILS,rundir,PREFIX))
+       run_process("unlink %s/FindORFS/in/%s.asm.scafSeq.contigs"%(rundir,PREFIX))
+       run_process("unlink %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX))
+       run_process("ln -t ./%s/FindORFS/in/ -s ../../Assemble/out/%s.asm.scafSeq.contigs"%(rundir,PREFIX))
+       run_process("cp %s/FindORFS/in/%s.asm.scafSeq.contigs  %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX,rundir,PREFIX))
        #try using contigs instead of contigs extracted from scaffolds
-       run_process("cp %s/Assemble/out/%s.asm.contig  %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX,rundir,PREFIX))
+       #run_process("cp %s/Assemble/out/%s.asm.contig  %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX,rundir,PREFIX))
    else:
 
        run_process("unlink %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX))

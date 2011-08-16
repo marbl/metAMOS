@@ -1131,10 +1131,15 @@ asmfiles = []
 #if asm == "soap"
 
 for lib in readlibs:
+    #print "touch"
     if "Assemble" in forcesteps:
+        #print lib.id
         run_process("touch %s/Preprocess/out/lib%d.seq"%(rundir,lib.id))
+
     asmfiles.append("%s/Preprocess/out/lib%d.seq"%(rundir,lib.id))
 
+if "Assemble" in forcesteps:
+    run_process("rm %s/Assemble/out/%s.asm.contig"%(rundir,PREFIX))
 @files(asmfiles,["%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX)])
 #@posttask(create_symlink,touch_file("completed.flag"))
 @follows(Preprocess)
@@ -1231,7 +1236,7 @@ def Assemble(input,output):
    #check if sucessfully completed   
 
 if "FindORFS" in forcesteps:
-   run_process("touch %s/Assemble/out/%s.asm.contig"%(rundir,PREFIX))
+   run_process("rm %s/FindORFS/out/%s.faa"%(rundir,PREFIX))
 @follows(Assemble)
 @files("%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX),"%s/FindORFS/out/%s.faa"%(rundir,PREFIX))
 def FindORFS(input,output):

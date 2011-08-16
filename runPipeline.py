@@ -550,9 +550,8 @@ def map2contig(fasta):
 
     for lib in readlibs:
          
-        seqfile = open("%s/Preprocess/out/lib%d.seq.btfilt"%(rundir,lib.id),'w')
+
         matefile = open("%s/Preprocess/out/lib%d.seq.mates"%(rundir,lib.id),'r')
-        new_matefile = open("%s/Assemble/out/%s.lib%d.mappedmates"%(rundir,PREFIX,lib.id),'w')
         matedict[lib.id] = {}
         for line in matefile.xreadlines():
             line = line.replace("\n","")
@@ -564,8 +563,11 @@ def map2contig(fasta):
             read_lookup[readcnt] = mate1
             read_lookup[readcnt+1] = mate2
             readcnt += 2
+    if bowtie_mapping == 1:
+        for lib in readlibs:
+            seqfile = open("%s/Preprocess/out/lib%d.seq.btfilt"%(rundir,lib.id),'w')
 
-        if bowtie_mapping == 1:
+
             #trim to 25bp
             trim = 1
             if trim:
@@ -615,8 +617,8 @@ def map2contig(fasta):
                 seqdict[read] = read_seq
                 seqfile.write(">%s\n%s\n"%(read,read_seq))
                 seqfile.flush()
-
-        else:
+    else:
+        if 1:
  
             #open soap ReadOnContig
             #some contigs are missing!
@@ -707,8 +709,9 @@ def map2contig(fasta):
    
 
     for lib in readlibs:
+        new_matefile = open("%s/Assemble/out/%s.lib%d.mappedmates"%(rundir,PREFIX,lib.id),'w')
         new_matefile.write("library\t%d\t%d\t%d\n"%(lib.id,lib.mmin,lib.mmax))
-    for lib in readlibs:
+        #    for lib in readlibs:
         linked_contigs = {}
         for mate in matedict[lib.id].keys():
             new_matefile.write("%s\t%s\t%d\n"%(mate,matedict[lib.id][mate],lib.id))

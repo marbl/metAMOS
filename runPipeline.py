@@ -1,4 +1,4 @@
-import os, sys, string, time, BaseHTTPServer, getopt, subprocess#
+import os, sys, string, time, BaseHTTPServer, getopt, re, subprocess#
 from operator import itemgetter
 
 PREFIX = "proba"
@@ -1191,12 +1191,27 @@ def Assemble(input,output):
 
    elif asm == "newbler":
       run_process("%s/newAssembly -force %s/Assemble/out"%(NEWBLER, rundir));
+
+      NEWBLER_VERSION = 0.0;
+      p = subprocess.Popen("%s/newAssembly --version | head -n 1"%(NEWBLER), shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE) 
+      (checkStdout, checkStderr) = p.communicate()
+      if checkStderr != "":
+         print "Warning: Cannot determine Newbler version"
+      else:
+         mymatch = re.findall('\d+\.\d+', checkStdout.strip())
+         print "String %s %d\n"%(checkStdout.strip(), len(mymatch));
+         if (len(mymatch) == 1 and mymatch[0] != None):
+            NEWBLER_VERSION = float(mymatch[0]);
+
       for lib in readlibs:
           if lib.format == "fasta"  and lib.interleaved:
               run_process("%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(NEWBLER, rundir, rundir,lib.id));
           elif lib.format == "fastq":
-              print "WARNING!! FASTQ + Newbler only supported in version 2.6+, Newbler may fail"
-              #sys.exit(1)
+              if (NEWBLER_VERSION < 2.6):
+                 print "ERROR!! FASTQ + Newbler only supported in Newbler version 2.6+. You are using version %s."%(NEWBLER_VERSION)
+                 sys.exit(1)
+              run_process("%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(NEWBLER, rundir, rundir, lib.id));
+
       newblerCmd = "%s%srunProject"%(NEWBLER, os.sep)
       # read spec file to input to newbler parameters
       newblerCmd += getProgramParams("newbler.spec", "", "-")

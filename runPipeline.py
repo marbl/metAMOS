@@ -1334,6 +1334,7 @@ if "Scaffold" in forcesteps:
 def Scaffold(input,output):
    # check if we need to do scaffolding
    numMates = 0
+   run_process("rm -rf %s/Scaffold/in/%s.bnk"%(rundir,PREFIX))
    if asm == "newbler":
       p = subprocess.Popen("cat %s/Assemble/out/%s.graph.cte |grep \"{CTL\" |wc -l"%(rundir, PREFIX), stdin=None, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       (checkStdout, checkStderr) = p.communicate()
@@ -1346,7 +1347,7 @@ def Scaffold(input,output):
    if asm == "soap":
        for lib in readlibs:
            #run_process("ln -t ./%s/Metaphyler/in/ -s ../../FindORFS/out/%s.faa"%(rundir,PREFIX))
-           run_process("rm -rf %s/Scaffold/in/%s.bnk"%(rundir,PREFIX))
+
            if lib.format == "fasta":
                if "bowtie" not in skipsteps:
                    map2contig(1)

@@ -405,13 +405,13 @@ for o, a in opts:
     elif o in ("-4", "--454"):
         fff = "-454"
     elif o in ("-f", "--forcesteps"):
-        print o,a
+        #print o,a
         forcesteps = a.split(",")
-        print forcesteps
+        #print forcesteps
     elif o in ("-n", "--skipsteps"):
-        print o, a
+        #print o, a
         skipsteps = a.split(",")
-        print skipsteps
+        #print skipsteps
     elif o in ("-p", "--threads"):
         threads = int(a)
     elif o in ("-d", "--projectdir"):
@@ -536,7 +536,7 @@ if f2 != "":
     readobjs.append(nread2)
 nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved)
 readlibs.append(nlib)
-print len(readlibs)
+#print len(readlibs)
 def run_process(command):
        if VERBOSE:
            print command
@@ -1074,10 +1074,10 @@ def Preprocess(input,output):
                            #rcnt +=1
                            recordcnt +=1
                            hdr = lib.sid+"r"+str(recordcnt)+"/"
-                           wf1.writeline(">"+hdr+"1\n")
-                           wf1.writeline(rs2)
-                           wf2.writeline(">"+hdr+"2\n")
-                           wf2.writeline(rp2)
+                           wf1.writelines(">"+hdr+"1\n")
+                           wf1.writelines(rs2)
+                           wf2.writelines(">"+hdr+"2\n")
+                           wf2.writelines(rp2)
 
                    readpair.filtered = True
                    read.filtered = True

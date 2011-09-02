@@ -264,9 +264,11 @@ def guessPaths():
     # now check for assemblers
     # 1. AMOS
     AMOS = "%s%sAMOS%sbin"%(METAMOSDIR, os.sep, os.sep)
-    #if not os.path.exists(AMOS + os.sep + "bank-transact"):
     if not os.path.exists(AMOS + os.sep + "toAmos_new"):
        AMOS = getFromPath("bank-transact", "AMOS") 
+       if not os.path.exists(AMOS + os.sep + "toAmos_new"):
+          print "Error: cannot find AMOS. Will not run pipeline"
+          sys.exit(1)
     # 2. Soap
     SOAP = "%s%scpp"%(METAMOS_UTILS, os.sep) 
     if not os.path.exists(SOAP + os.sep + "SOAPdenovo-63mer"):
@@ -302,26 +304,46 @@ def guessPaths():
     print "GMHMMP:\t\t\t%s"%(GMHMMP)
 
 def getProgramParams(fileName, module="", prefix="", comment="#"):
+    # we process parameters in the following priority:
+    # first: current directory
+    # second: user home directory
+    # third: metAMOS directory
+    # a parameter specifeid in the current directory takes priority over all others, and so on down the line
+    dirs = [METAMOS_UTILS + os.sep + "config", os.getenv('HOME') + os.sep + ".metAMOS", os.getcwd()]
+    optDict = {} 
+
     cmdOptions = ""
-    read = False
-    if module == "":
-       read = True
 
-    spec = open("%s/config/%s"%(METAMOS_UTILS, fileName),'r')
-    for line in spec:
-       (line, sep, commentLine) = line.partition(comment)
-       line = line.strip()
+    for curDir in dirs:
+       curFile = curDir + os.sep + fileName;
+       try:
+          spec = open(curFile, 'r')
+       except IOError as e:
+          continue
 
-       if line == "[" + module + "]":
+       read = False
+       if module == "":
           read = True
-          continue;
-       elif read == True and line.startswith("["):
-          break;
 
-       if read:
-          if (line != ""):
-             cmdOptions += " " + prefix + line
-    spec.close()
+       for line in spec:
+          (line, sep, commentLine) = line.partition(comment)
+          line = line.strip()
+
+          if line == "[" + module + "]":
+             read = True
+             continue;
+          elif read == True and line.startswith("["):
+             break;
+
+          if read:
+             if (line != ""):
+                splitLine = line.split();
+                optDict[splitLine[0]] = "".join(splitLine[1:]).strip() 
+       spec.close()
+
+    for option in optDict:
+       cmdOptions += prefix + option + " " + optDict[option];
+
     return cmdOptions
 
 def usage():
@@ -791,7 +813,8 @@ if "Preprocess" in forcesteps:
         run_process("touch %s"%path)
 
 #@transform(readpaths,["%s/Preprocess/out/all.seq"%(rundir),"%s/Preprocess/out/all.seq.mates"%(rundir)])
-@files(readpaths,filtreadpaths)
+@files(readpaths,"%s/Preprocess/out/preprocess.success"%(rundir))
+#filtreadpaths)
 def Preprocess(input,output):
    #move input files into Preprocess ./in dir
    #output will either be split fastq files in out, or AMOS bank
@@ -1129,6 +1152,7 @@ def Preprocess(input,output):
            elif asm == "amos":
                #call toAmos_new              
                pass
+   run_process("touch %s/Preprocess/out/preprocess.success"%(rundir))
 
 asmfiles = []
 #if asm == "soap"
@@ -1206,11 +1230,14 @@ def Assemble(input,output):
       for lib in readlibs:
           if lib.format == "fasta"  and lib.interleaved:
               run_process("%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(NEWBLER, rundir, rundir,lib.id));
-          elif lib.format == "fastq":
+          elif lib.format == "fastq" and lib.interleaved:
               if (NEWBLER_VERSION < 2.6):
                  print "ERROR!! FASTQ + Newbler only supported in Newbler version 2.6+. You are using version %s."%(NEWBLER_VERSION)
                  sys.exit(1)
               run_process("%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(NEWBLER, rundir, rundir, lib.id));
+          elif lib.interleaved == false:
+              print "ERROR!! Only interleaved files support for Newbler"
+              sys.exit(1);
 
       newblerCmd = "%s%srunProject"%(NEWBLER, os.sep)
       # read spec file to input to newbler parameters
@@ -1357,6 +1384,7 @@ def Scaffold(input,output):
 
    if mated == False and numMates == 0:
       print "No mate pair info available for scaffolding, skipping"
+      skipsteps.append("FindScaffoldORFS")
       return 0
 
    if asm == "soap":
@@ -1375,7 +1403,6 @@ def Scaffold(input,output):
                run_process("%s/toAmos_new -Q %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,lib.id,rundir,PREFIX, lib.id,rundir,PREFIX))
 
        run_process("%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,PREFIX,rundir,PREFIX))
-
 
    elif asm == "newbler":
       run_process("rm -rf %s/Scaffold/in/%s.bnk"%(rundir, PREFIX))
@@ -1407,14 +1434,13 @@ def Scaffold(input,output):
 if "FindScaffoldORFS" in forcesteps:
     run_process("touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(rundir,PREFIX))
 @follows(Scaffold)
-@files("%s/Scaffold/out/%s.linearize.scaffolds.final"%(rundir,PREFIX),"%s/FindORFS/out/%s.scaffolds.faa"%(rundir,PREFIX))
+@files("%s/Scaffold/out/%s.linearize.scaffolds.final"%(rundir,PREFIX),"%s/FindScaffoldORFS/out/%s.scaffolds.orfs"%(rundir,PREFIX))
 def FindScaffoldORFS(input,output):
    if "FindScaffoldORFS" in skipsteps:
       run_process("touch %s/FindScaffoldORFS/out/%s.scaffolds.faa"%(rundir, PREFIX))
       return 0
 
-   run_process("%s/gmhmmp -o %s/FindScaffoldORFS/out/%s.scaffolds.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/%s/Scaffold/out/%s.linearize.scaffolds.final"%(GMHMMP,rundir,PREFIX,METAMOS_UTILS,METAMOSDIR,rundir,PREFIX))
-   #print"%s/cpp/gmhmmp -o %s/FindORFS/out/%s.scaffolds.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/Scafffold/out/%s.linearize.scaffolds.final"%(METAMOS_UTILS,rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX)
+   run_process("%s/gmhmmp -o %s/FindScaffoldORFS/out/%s.scaffolds.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/Scaffold/out/%s.linearize.scaffolds.final"%(GMHMMP,rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX))
    parse_genemarkout("%s/FindScaffoldORFS/out/%s.scaffolds.orfs"%(rundir,PREFIX),1)
    #run_process("unlink ./%s/FindORFS/in/%s.scaffolds.faa"%(rundir,PREFIX))
    #run_process("ln -t ./%s/Annotate/in/ -s ../../FindORFS/out/%s.scaffolds.faa"%(rundir,PREFIX))
@@ -1438,8 +1464,8 @@ def Classify(input,output):
    run_process("python %s/python/sort_contigs.py %s/Propagate/in/%s.clusters %s/DB/class_key.tab %s/Classify/out %s/Scaffold/in/%s.bnk"%(METAMOS_UTILS, rundir, PREFIX, METAMOS_UTILS,rundir, rundir, PREFIX))
 
 @follows(Classify)
-@files("%s/Classify/out/sorted.txt"%(rundir),"%s/Postprocess/%.scf.fa"%(rundir,PREFIX))
-def Postprocess():
+@files("%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX),"%s/Postprocess/%s.scf.fa"%(rundir,PREFIX))
+def Postprocess(input,output):
 #create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm>
    #copy files into output for createReport   
    #generate reports

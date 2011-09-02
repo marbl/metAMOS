@@ -844,9 +844,7 @@ def Preprocess(input,output):
        #for reads+libs
        cnt = 1
        for lib in readlibs:
-           print lib.interleaved, lib.mated, lib.format
            for read in lib.reads:
-               print read.interleaved, read.mated, read.format
                if not read.filtered and read.format == "fastq" and read.mated and read.interleaved:
                    #this means we have this entire lib in one file
                    #parse out paired record (8 lines), rename header to be filename + "/1" or "/2", and remove reads with N
@@ -926,6 +924,8 @@ def Preprocess(input,output):
                    rf2 = open(readpair.path,'r')
                    wf2 = open(readpair.path.replace("/in/","/out/"),'w')
                    recordcnt = 0
+                   f1cnt = 0
+                   f2cnt = 0
                    while 1:                   
                        rs1 = rf1.readline()
                        rs2 = rf1.readline()
@@ -946,6 +946,8 @@ def Preprocess(input,output):
                        if rp1 == "" or rp2 == "" or rp3 == "" or rp4 == "":
                            #EOF or something went wrong, break
                            break 
+                       f1cnt +=4
+                       f2cnt +=4
                        rseq = string.upper(rp2)                               
                        if "N" in rseq:
                            continue
@@ -970,6 +972,9 @@ def Preprocess(input,output):
                            wf2.writelines(rp4)
                            wf1.flush()
                            wf2.flush()
+                   if f1cnt != f2cnt:
+                       print "Error: error in library, read files not of equal length!"
+                       raise(JobSignalledBreak)
                    readpair.filtered = True
                    read.filtered = True
                    read.path = read.path.replace("/in/","/out/")

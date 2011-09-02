@@ -267,7 +267,7 @@ def guessPaths():
     if not os.path.exists(AMOS + os.sep + "toAmos_new"):
        AMOS = getFromPath("bank-transact", "AMOS") 
        if not os.path.exists(AMOS + os.sep + "toAmos_new"):
-          print "Error: cannot find AMOS. Will not run pipeline"
+          print "Error: cannot find AMOS in %s or %s. Please check your path and try again."%(METAMOSDIR + os.sep + "AMOS", AMOS)
           sys.exit(1)
     # 2. Soap
     SOAP = "%s%scpp"%(METAMOS_UTILS, os.sep) 
@@ -342,7 +342,7 @@ def getProgramParams(fileName, module="", prefix="", comment="#"):
        spec.close()
 
     for option in optDict:
-       cmdOptions += prefix + option + " " + optDict[option];
+       cmdOptions += prefix + option + " " + optDict[option] + " ";
 
     return cmdOptions
 
@@ -1109,6 +1109,10 @@ def Preprocess(input,output):
       if 1:
            #this means interleaved, single file
            if lib.format == "sff":
+               if not os.path.exists(CA + os.sep + "sffToCA"):
+                  print "Error: CA not found in %s. It is needed to process SFF files. Please check your path and try again.\n"%(CA)
+                  raise(JobSignalledBreak)
+
                # generate the fasta files from the sff file
                sffToCACmd = "%s/sffToCA -clear 454 -clear discard-n -trim chop -libraryname lib%d -output %s/Preprocess/out/%s"%(CA, lib.id,rundir, PREFIX)
                if (read.mated == True):
@@ -1202,9 +1206,15 @@ def Assemble(input,output):
       soapw = open("%s/soapconfig.txt"%(rundir),'w')
       soapw.write(soapd)
       soapw.close()
+
+      if not os.path.exists(SOAP + os.sep + "soap63"):
+         print "Error: SOAPdenovo not found in %s. Please check your path and try again.\n"%(SOAP)
+         raise(JobSignalledBreak)
+
       print "Running SOAPdenovo on input reads..."
+      soapOptions = getProgramParams("soap.spec", "", "-") 
       #start stopwatch
-      run_process("%s/soap63 all -D -d -R -p %d -K %d -M 3 -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(SOAP, threads, kmer, rundir,rundir,PREFIX))#SOAPdenovo config.txt
+      run_process("%s/soap63 all -p %d -K %d %s -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(SOAP, threads, kmer, soapOptions, rundir,rundir,PREFIX))#SOAPdenovo config.txt
       #-L 300
       #run_process("%s/SOAPdenovo-63mer all -D -d -R -p %d -K %d -M 3 -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(SOAP, threads, kmer, rundir,rundir,PREFIX))#SOAPdenovo config.txt
       #run_process("%s/SOAPdenovo-31mer all  -D 3 -d 2 -R -p %d -M 3 -K %d -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(SOAP, threads, kmer, rundir,rundir,PREFIX))#SOAPdenovo config.txt
@@ -1214,6 +1224,10 @@ def Assemble(input,output):
       #if OK, convert output to AMOS
 
    elif asm == "newbler":
+      if not os.path.exist(NEWBLER + os.sep + "newAssembly"):
+         print "Error: Newbler not found in %s. Please check your path and try again.\n"%(NEWBLER)
+         raise(JobSignalledBreak)
+
       run_process("%s/newAssembly -force %s/Assemble/out"%(NEWBLER, rundir));
 
       NEWBLER_VERSION = 0.0;
@@ -1232,12 +1246,12 @@ def Assemble(input,output):
               run_process("%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(NEWBLER, rundir, rundir,lib.id));
           elif lib.format == "fastq" and lib.interleaved:
               if (NEWBLER_VERSION < 2.6):
-                 print "ERROR!! FASTQ + Newbler only supported in Newbler version 2.6+. You are using version %s."%(NEWBLER_VERSION)
-                 sys.exit(1)
+                 print "Error: FASTQ + Newbler only supported in Newbler version 2.6+. You are using version %s."%(NEWBLER_VERSION)
+                 raise(JobSignalledBreak)
               run_process("%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(NEWBLER, rundir, rundir, lib.id));
           elif lib.interleaved == false:
-              print "ERROR!! Only interleaved files support for Newbler"
-              sys.exit(1);
+              print "Error: Only interleaved fastq files are supported for Newbler"
+              raise(JobSignalledBreak)
 
       newblerCmd = "%s%srunProject"%(NEWBLER, os.sep)
       # read spec file to input to newbler parameters
@@ -1693,19 +1707,19 @@ if __name__ == "__main__":
     print "Starting metAMOS pipeline"
     guessPaths()
 
-
-    
-    files = os.listdir(".")
-    dlist = []
-    pipeline_printout(sys.stdout,[Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold, FindScaffoldORFS, Propagate, Classify, Postprocess], verbose=5)
-    pipeline_printout_graph (   'flowchart.svg',
+    try:
+       files = os.listdir(".")
+       dlist = []
+       pipeline_printout(sys.stdout,[Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold, FindScaffoldORFS, Propagate, Classify, Postprocess], verbose=1)
+       pipeline_printout_graph (   'flowchart.svg',
                             'svg',
                             [Postprocess],
                             no_key_legend = True)
-    pipeline_run([Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold, FindScaffoldORFS, Propagate, Classify, Postprocess], verbose = 3) 
-    #multiprocess threads
-    t2 = time.time()#clock()
-    elapsed = float(t2)-float(t1)
-    #print elapsed
-    print "done! pipeline took %.2f minutes"%(float(elapsed)/float(60.0))
-    #os.kill(pid)
+       pipeline_run([Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold, FindScaffoldORFS, Propagate, Classify, Postprocess], verbose = 1) 
+       #multiprocess threads
+       t2 = time.time()#clock()
+       elapsed = float(t2)-float(t1)
+       #print elapsed
+       print "done! pipeline took %.2f minutes"%(float(elapsed)/float(60.0))
+    except JobSignalledBreak:
+       print "Done with errors\n"

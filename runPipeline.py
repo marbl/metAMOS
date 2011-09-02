@@ -415,7 +415,7 @@ for o, a in opts:
     elif o in ("-p", "--threads"):
         threads = int(a)
     elif o in ("-d", "--projectdir"):
-        rundir = a
+        rundir = os.path.abspath(a)
         if not os.path.exists(a):
           print "project dir %s does not exist!"%(rundir)
           usage()
@@ -449,7 +449,7 @@ if not os.path.exists(rundir) or rundir == "":
     sys.exit(1)
 
 #parse frag/libs out of pipeline.ini out of rundir
-inifile = os.curdir+os.sep+rundir+os.sep+"pipeline.ini"
+inifile = rundir+os.sep+"pipeline.ini"
 inf = open(inifile,'r')
 libs = []
 readlibs = []
@@ -821,7 +821,7 @@ def Preprocess(input,output):
    if "Preprocess" in skipsteps or "preprocess" in skipsteps:
        for lib in readlibs:
            for read in lib.reads:
-               run_process("ln -t ./%s/Preprocess/out/ -s ../../Preprocess/in/%s"%(rundir,read.fname))
+               run_process("ln -s -t %s/Preprocess/out/ %s/Preprocess/in/%s"%(rundir,rundir,read.fname))
        return 0
    if filter == True:
        #print "filtering.."
@@ -1103,7 +1103,7 @@ def Preprocess(input,output):
    else:
        for lib in readlibs:
            for read in lib.reads:
-               run_process("ln -t ./%s/Preprocess/out/ -s ../../Preprocess/in/%s"%(rundir,read.fname))
+               run_process("ln -s -t %s/Preprocess/out/ %s/Preprocess/in/%s"%(rundir,rundir,read.fname))
    #PUNT HERE
    for lib in readlibs:
       if 1:
@@ -1120,24 +1120,24 @@ def Preprocess(input,output):
                else:
                    run_process("%s %s"%(sffToCACmd, read.path))
                run_process("%s/gatekeeper -T -F -o %s/Preprocess/out/%s.gkpStore %s/Preprocess/out/%s.frg"%(CA, rundir, PREFIX, rundir, PREFIX))
-               run_process("%s/gatekeeper -dumpnewbler %s/Preprocess/out/%s %s/Preprocess/out/%s.gkpStore"%(CA, rundir, PREFIX, rundir, PREFIX))
+               run_process("%s/gatekeeper -dumpnewbler %s/Preprocess/out/%s.%d %s/Preprocess/out/%s.gkpStore"%(CA, rundir, PREFIX, rundir, PREFIX, lib.id))
                run_process("%s/gatekeeper -dumplibraries -tabular %s/Preprocess/out/%s.gkpStore |awk '{if (match($3, \"U\") == 0 && match($1, \"UID\") == 0) print \"library\t\"$1\"\t\"$4-$5*3\"\t\"$4+$5*3}' > %s/Preprocess/out/lib%d.seq.mates"%(CA, rundir, PREFIX, rundir,lib.id))
                run_process("%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3\"\t\"$5}' >> %s/Preprocess/out/lib%d.seq.mates"%(CA, rundir, PREFIX, rundir,lib.id))
                run_process("unlink %s/Preprocess/out/lib%d.seq"%(rundir,lib.id))
-               run_process("ln -s  ../../Preprocess/out/%s.fna %s/Preprocess/out/lib%d.seq"%(PREFIX, rundir,lib.id))
-               run_process("ln -s ../../Preprocess/out/%s.fna.qual %s/Preprocess/out/lib%d.seq.qual"%(PREFIX, rundir,lib.id))
+               run_process("ln -s %s/Preprocess/out/%s.%d.fna %s/Preprocess/out/lib%d.seq"%(rundir,PREFIX,lib.id,rundir,lib.id))
+               run_process("ln -s %s/Preprocess/out/%s.%d.fna.qual %s/Preprocess/out/lib%d.seq.qual"%(rundir,PREFIX,lib.id,rundir,lib.id))
                run_process("rm -rf %s/Preproces/out/%s.gkpStore"%(rundir, PREFIX))
                run_process("unlink %s/Preprocess/out/%s.frg"%(rundir, PREFIX))
            elif lib.format == "fasta" and not lib.mated:
-               run_process("ln -s  ../../Preprocess/in/%s %s/Preprocess/out/lib%d.seq"%(lib.id,lib.f1.fname, rundir))
-               run_process("ln -s ../../Preprocess/in/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(lib.id,lib.f1.fname, rundir))
+               run_process("ln -s %s/Preprocess/in/%s %s/Preprocess/out/lib%d.seq"%(rundir,lib.f1.fname,rundir,lib.id))
+               run_process("ln -s %s/Preprocess/in/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(rundir,lib.f1.fname,rundir,lib.id))
                run_process("touch %s/Preprocess/out/lib%d.seq.mates"%(lib.id,rundir))
            elif format == "fasta" and mated and not interleaved:
                #FIXME, make me faster!
                run_process("perl %s/perl/shuffleSequences_fasta.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(METAMOS_UTILS,rundir,lib.f1.fname, rundir,lib.f2.fname,rundir,lib.id))
                run_process("python %s/python/extract_mates_from_fasta.py %s/Preprocess/out/lib%d.seq"%(METAMOS_UTILS,rundir,lib.id))
-               run_process("unlink ./%s/Preprocess/out/lib%d.seq.mates"%(rundir, lib.id))
-               run_process("ln -t ./%s/Preprocess/out/ -s ../../Preprocess/in/lib%d.seq.mates"%(rundir,lib.id))
+               run_process("unlink %s/Preprocess/out/lib%d.seq.mates"%(rundir, lib.id))
+               run_process("ln -t %s/Preprocess/out/ -s %s/Preprocess/in/lib%d.seq.mates"%(rundir,rundir,lib.id))
            elif format == "fastq" and mated and not interleaved:
                #extract mates from fastq
                run_process("perl %s/perl/shuffleSequences_fastq.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(METAMOS_UTILS,rundir,lib.f1.fname, rundir,lib.f2.fname,rundir,lib.id))
@@ -1219,7 +1219,7 @@ def Assemble(input,output):
       #run_process("%s/SOAPdenovo-63mer all -D -d -R -p %d -K %d -M 3 -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(SOAP, threads, kmer, rundir,rundir,PREFIX))#SOAPdenovo config.txt
       #run_process("%s/SOAPdenovo-31mer all  -D 3 -d 2 -R -p %d -M 3 -K %d -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(SOAP, threads, kmer, rundir,rundir,PREFIX))#SOAPdenovo config.txt
 
-      #run_process("ln -s %s/Assemble/out/%s.asm.contig ./%s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX, rundir, PREFIX)) 
+      #run_process("ln -s %s/Assemble/out/%s.asm.contig %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX, rundir, PREFIX)) 
 
       #if OK, convert output to AMOS
 
@@ -1267,14 +1267,14 @@ def Assemble(input,output):
     
       # make symlink for subsequent steps
       run_process("rm %s/Assemble/out/%s.asm.contig"%(rundir, PREFIX));
-      run_process("ln -s ../../Assemble/out/assembly/454AllContigs.fna %s/Assemble/out/%s.asm.contig"%(rundir, PREFIX))
+      run_process("ln -s %s/Assemble/out/assembly/454AllContigs.fna %s/Assemble/out/%s.asm.contig"%(rundir, rundir, PREFIX))
       if mated == True:
-         run_process("ln -s ../../Assemble/out/assembly/454Scaffolds.fna %s/Assemble/out/%s.asm.scafSeq"%(rundir, PREFIX))
+         run_process("ln -s %s/Assemble/out/assembly/454Scaffolds.fna %s/Assemble/out/%s.asm.scafSeq"%(rundir, rundir, PREFIX))
       else:
-         run_process("ln -s ../../Assemble/out/assembly/454AllContigs.fna %s/Assemble/out/%s.asm.scafSeq"%(rundir, PREFIX))
+         run_process("ln -s %s/Assemble/out/assembly/454AllContigs.fna %s/Assemble/out/%s.asm.scafSeq"%(rundir, rundir, PREFIX))
 
    elif asm == "amos":
-      run_process("Minimus ./Preprocess/out/bank")
+      run_process("%s/Minimus %s/Preprocess/out/bank"%(AMOS,rundir))
    elif asm == "CA":
       #runCA script
       frglist = ""
@@ -1310,24 +1310,24 @@ def FindORFS(input,output):
        #    run_process("python %s/python/extract_soap_contigs.py %s/Assemble/out/%s.asm.scafSeq"%(METAMOS_UTILS,rundir,PREFIX))
        #run_process("unlink %s/FindORFS/in/%s.asm.scafSeq.contigs"%(rundir,PREFIX))
        #run_process("unlink %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX))
-       #run_process("ln -t ./%s/FindORFS/in/ -s ../../Assemble/out/%s.asm.scafSeq.contigs"%(rundir,PREFIX))
+       #run_process("ln -t %s/FindORFS/in/ -s %s/Assemble/out/%s.asm.scafSeq.contigs"%(rundir, rundir,PREFIX))
        #run_process("cp %s/FindORFS/in/%s.asm.scafSeq.contigs  %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX,rundir,PREFIX))
        #try using contigs instead of contigs extracted from scaffolds
        run_process("cp %s/Assemble/out/%s.asm.contig  %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX,rundir,PREFIX))
    else:
 
        run_process("unlink %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX))
-       run_process("ln -t ./%s/FindORFS/in/ -s ../../Assemble/out/%s.asm.contig"%(rundir,PREFIX))
+       run_process("ln -t %s/FindORFS/in/ -s %s/Assemble/out/%s.asm.contig"%(rundir,rundir,PREFIX))
 
 
-   #run_process("ln -t ./%s/FindORFS/in/ -s ../../Assemble/out/%s.asm.scafSeq.contigs"%(rundir,PREFIX))
+   #run_process("ln -t %s/FindORFS/in/ -s %s/Assemble/out/%s.asm.scafSeq.contigs"%(rundir,rundir,PREFIX))
    run_process("%s/gmhmmp -o %s/FindORFS/out/%s.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/FindORFS/in/%s.asm.contig"%(GMHMMP,rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX))
    parse_genemarkout("%s/FindORFS/out/%s.orfs"%(rundir,PREFIX))
-   run_process("unlink ./%s/Annotate/in/%s.faa"%(rundir,PREFIX))
-   run_process("unlink ./%s/Annotate/in/%s.fna"%(rundir,PREFIX))
-   run_process("unlink ./%s/FindRepeats/in/%s.fna"%(rundir,PREFIX))
-   run_process("ln -t ./%s/Annotate/in/ -s ../../FindORFS/out/%s.faa"%(rundir,PREFIX))
-   run_process("ln -t ./%s/FindRepeats/in/ -s ../../FindORFS/out/%s.fna"%(rundir,PREFIX))
+   run_process("unlink %s/Annotate/in/%s.faa"%(rundir,PREFIX))
+   run_process("unlink %s/Annotate/in/%s.fna"%(rundir,PREFIX))
+   run_process("unlink %s/FindRepeats/in/%s.fna"%(rundir,PREFIX))
+   run_process("ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.faa"%(rundir,rundir,PREFIX))
+   run_process("ln -t %s/FindRepeats/in/ -s %s/FindORFS/out/%s.fna"%(rundir,rundir,PREFIX))
 
 @follows(FindORFS)
 @files("%s/FindRepeats/in/%s.fna"%(rundir,PREFIX),"%s/FindRepeats/out/%s.repeats"%(rundir,PREFIX))
@@ -1367,10 +1367,10 @@ def Metaphyler(input,output):
    if "FindORFS" in skipsteps or "Metaphyler" in skipsteps:
       return 0
 
-   run_process("unlink ./%s/Metaphyler/in/%s.contig.cvg"%(rundir,PREFIX))
-   run_process("unlink ./%s/Metaphyler/in/%s.faa"%(rundir,PREFIX))
-   run_process("ln -t ./%s/Metaphyler/in/ -s ../../FindORFS/out/%s.contig.cvg"%(rundir,PREFIX))
-   run_process("ln -t ./%s/Metaphyler/in/ -s ../../FindORFS/out/%s.faa"%(rundir,PREFIX))
+   run_process("unlink %s/Metaphyler/in/%s.contig.cvg"%(rundir,PREFIX))
+   run_process("unlink %s/Metaphyler/in/%s.faa"%(rundir,PREFIX))
+   run_process("ln -t %s/Metaphyler/in/ -s %s/FindORFS/out/%s.contig.cvg"%(rundir,rundir,PREFIX))
+   run_process("ln -t %s/Metaphyler/in/ -s %s/FindORFS/out/%s.faa"%(rundir,rundir,PREFIX))
    blastfile = PREFIX+".blastx"
    run_process("formatdb  -p T -i %s/DB/markers.pfasta"%(METAMOS_UTILS))
    #run_process("perl %s/perl/runblast.pl  %s/Metaphyler/in/%s.faa %s/Metaphyler/out/%s.blastx %s/DB/markers.fna"%(METAMOS_UTILS,rundir,PREFIX, rundir,PREFIX,METAMOS_UTILS))
@@ -1403,7 +1403,7 @@ def Scaffold(input,output):
 
    if asm == "soap":
        for lib in readlibs:
-           #run_process("ln -t ./%s/Metaphyler/in/ -s ../../FindORFS/out/%s.faa"%(rundir,PREFIX))
+           #run_process("ln -t %s/Metaphyler/in/ -s %s/FindORFS/out/%s.faa"%(rundir,rundir,PREFIX))
 
            if lib.format == "fasta":
                if "bowtie" not in skipsteps:
@@ -1456,8 +1456,8 @@ def FindScaffoldORFS(input,output):
 
    run_process("%s/gmhmmp -o %s/FindScaffoldORFS/out/%s.scaffolds.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/Scaffold/out/%s.linearize.scaffolds.final"%(GMHMMP,rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX))
    parse_genemarkout("%s/FindScaffoldORFS/out/%s.scaffolds.orfs"%(rundir,PREFIX),1)
-   #run_process("unlink ./%s/FindORFS/in/%s.scaffolds.faa"%(rundir,PREFIX))
-   #run_process("ln -t ./%s/Annotate/in/ -s ../../FindORFS/out/%s.scaffolds.faa"%(rundir,PREFIX))
+   #run_process("unlink %s/FindORFS/in/%s.scaffolds.faa"%(rundir,PREFIX))
+   #run_process("ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.scaffolds.faa"%(rundir,rundir,PREFIX))
 
 if "Propagate" in forcesteps:
     run_process("touch %s/Metaphyler/out/%s.classify.txt"%(rundir,PREFIX))
@@ -1486,7 +1486,7 @@ def Postprocess(input,output):
    #linearize
    run_process("cp %s/Metaphyler/out/%s.classify.txt %s/Postprocess/out/. "%(rundir,PREFIX,rundir))
    run_process("cp %s/Scaffold/out/%s.linearize.scaffolds.final %s/Postprocess/out/%s.scf.fa"%(rundir,PREFIX,rundir,PREFIX))
-   run_process("ln -t %s/Postprocess/out/ -s ../../Scaffold/in/%s.bnk "%(rundir,PREFIX))
+   run_process("ln -t %s/Postprocess/out/ -s %s/Scaffold/in/%s.bnk "%(rundir,rundir,PREFIX))
    run_process("python %s/python/create_report.py %s/Postprocess/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s %s/Postprocess/out/%s.scf.fa"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX,PREFIX,rundir,PREFIX))   
    
 
@@ -1568,7 +1568,6 @@ def parse_genemarkout(orf_file,is_scaff=False):
                     cvg_dict[curcontig] = cvg
             elif asm == "newbler":
                 try:
-                    #run_process("./sergeTest/Assemble/out/assembly/454ContigGraph.txt")
                     run_process("cat %s/%s/Assemble/out/assembly/454ContigGraph.txt | grep %s | awk \'{print $4}\' > %s/%s/cvg1.out"%(METAMOSDIR,rundir, curcontig, METAMOSDIR,rundir))
                     #print "cat %s/%s/Assemble/out/assembly/454ContigGraph.txt | grep %s | awk \'{print $4}\' > %s/%s/cvg1.out"%(METAMOSDIR,rundir, curcontig, METAMOSDIR,rundir)
                     #run_process("cat %s/%s/Assemble/out/assembly/454ContigGraph.txt | grep %s  > %s/%s/cvg1.out"%(METAMOSDIR,rundir, curcontig, METAMOSDIR,rundir))
@@ -1708,7 +1707,7 @@ if __name__ == "__main__":
     guessPaths()
 
     try:
-       files = os.listdir(".")
+       #files = os.listdir(".")
        dlist = []
        pipeline_printout(sys.stdout,[Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold, FindScaffoldORFS, Propagate, Classify, Postprocess], verbose=1)
        pipeline_printout_graph (   'flowchart.svg',

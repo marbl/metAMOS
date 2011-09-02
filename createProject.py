@@ -27,7 +27,7 @@ except getopt.GetoptError, err:
     sys.exit(2)
 
 
-id = timestamp
+id = os.path.abspath(timestamp)
 libs = {}
 frags = []
 cf = ""
@@ -104,7 +104,7 @@ for o, a in opts:
             inserts.append([min,max])
            
     elif o in ("-d"):
-        id = a
+        id = os.path.abspath(a)
         #print a
 
 if os.path.exists(id):
@@ -115,10 +115,10 @@ else:
     os.system("mkdir " + id)
     #create config file
     for dir in allsteps:
-        os.system("mkdir ./%s/"%(id)+dir)
-        os.system("mkdir ./%s/%s/in"%(id,dir))   
-        os.system("mkdir ./%s/%s/out"%(id,dir))   
-    #os.system("cp soapconfig.txt ./%s/config.txt"%(id))
+        os.system("mkdir %s/"%(id)+dir)
+        os.system("mkdir %s/%s/in"%(id,dir))   
+        os.system("mkdir %s/%s/out"%(id,dir))   
+    #os.system("cp soapconfig.txt %s/config.txt"%(id))
     soapf = open("%s/config.txt"%(id),'w')
     soapf.write("max_rd_len=%d\n"%(maxreadlen))
     soapf.close()
@@ -131,7 +131,7 @@ if f1 == "" and f2 == "":
 
 
 
-cf = open("./"+id+"/pipeline.ini",'w')
+cf = open(id+"/pipeline.ini",'w')
 cf.write("#metAMOS pipeline configuration file\n")
 #cnt = 1
 i = 0
@@ -173,7 +173,7 @@ while i < numlibs:
             cf.write("lib%dfrg:\t%s\n"%(i+1,filen))
         os.system("cp %s %s/Preprocess/in/. "%(f1,id))
 
-    #os.system("ln -t %s -s ./%s/Preprocess/in/%s"%(frg,id,filen))
+    #os.system("ln -t %s -s %s/Preprocess/in/%s"%(frg,id,filen))
     elif mated and not interleaved:
         cf.write("lib%dmated:\tTrue\n"%(i+1))
         cf.write("lib%dinterleaved:\tFalse\n"%(i+1))

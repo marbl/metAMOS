@@ -468,11 +468,20 @@ f1 = ""
 f2 = ""
 currlibno = 0
 newlib = ""
+libadded = False
 for line in inf:
     line = line.replace("\n","")
     if "#" in line:
         continue
     elif "format:" in line:
+
+        if f1 and not libadded:
+            nread1 = Read(format,f1,mated,interleaved)
+            readobjs.append(nread1)
+            nread2 = ""
+            nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved)
+            readlibs.append(nlib)
+        libadded = False
         format = line.replace("\n","").split("\t")[-1]
     elif "mated:" in line:
         mated = str2bool(line.replace("\n","").split("\t")[-1])
@@ -511,6 +520,7 @@ for line in inf:
         readobjs.append(nread2)
         nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved)
         readlibs.append(nlib)
+        libadded = True
     elif "frg" in line:
 
         data = line.split("\t")
@@ -520,6 +530,13 @@ for line in inf:
         #fqfrags[data[0]] = data[1]
         #frgs.append(data[1])
         libs.append(frg)
+if f1 and not libadded:
+    nread1 = Read(format,f1,mated,interleaved)
+    readobjs.append(nread1)
+    nread2 = ""
+    nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved)
+    readlibs.append(nlib)
+    #libadded = True
 #nread1 = Read(format,f1,mated,interleaved)
 #nread2 = ""
 #readobjs.append(nread1)

@@ -466,29 +466,14 @@ linkerType = "titanium"
 frg = ""
 f1 = ""
 f2 = ""
-currlibno = 1
+currlibno = 0
 newlib = ""
 for line in inf:
     line = line.replace("\n","")
     if "#" in line:
         continue
     elif "format:" in line:
-        newlibno = int(line.split("format")[0].split("lib")[1])
-
-
-        if newlibno != currlibno:
-            nread1 = Read(format,f1,mated,interleaved)
-            readobjs.append(nread1)
-            nread2 = ""
-            if f2 != "":
-                nread2 = Read(format,f2,mated,interleaved)
-                readobjs.append(nread2)
-                #nread12 = Read(format,f1+".interleaved",mated,1)
-            nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved)
-            readlibs.append(nlib)
-            
         format = line.replace("\n","").split("\t")[-1]
-        currlibno = newlibno
     elif "mated:" in line:
         mated = str2bool(line.replace("\n","").split("\t")[-1])
     elif "interleaved:" in line:
@@ -519,6 +504,13 @@ for line in inf:
         mmin = int(inf[1])
         mmax = int(inf[2])
         libs.append(f2)
+        
+        nread1 = Read(format,f1,mated,interleaved)
+        readobjs.append(nread1)
+        nread2 = Read(format,f2,mated,interleaved)
+        readobjs.append(nread2)
+        nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved)
+        readlibs.append(nlib)
     elif "frg" in line:
 
         data = line.split("\t")

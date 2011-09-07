@@ -520,14 +520,14 @@ for line in inf:
         #fqfrags[data[0]] = data[1]
         #frgs.append(data[1])
         libs.append(frg)
-nread1 = Read(format,f1,mated,interleaved)
-nread2 = ""
-readobjs.append(nread1)
-if f2 != "":
-    nread2 = Read(format,f2,mated,interleaved)
-    readobjs.append(nread2)
-nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved)
-readlibs.append(nlib)
+#nread1 = Read(format,f1,mated,interleaved)
+#nread2 = ""
+#readobjs.append(nread1)
+#if f2 != "":
+#    nread2 = Read(format,f2,mated,interleaved)
+#    readobjs.append(nread2)
+#nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved)
+#readlibs.append(nlib)
 #print len(readlibs)
 def run_process(command,step=""):
        outf = ""

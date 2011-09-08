@@ -1160,7 +1160,10 @@ def Preprocess(input,output):
            elif lib.format == "fasta" and not lib.mated:
                run_process("ln -s %s/Preprocess/in/%s %s/Preprocess/out/lib%d.seq"%(rundir,lib.f1.fname,rundir,lib.id),"Preprocess")
                run_process("ln -s %s/Preprocess/in/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(rundir,lib.f1.fname,rundir,lib.id),"Preprocess")
-               run_process("touch %s/Preprocess/out/lib%d.seq.mates"%(lib.id,rundir),"Preprocess")
+               run_process("touch %s/Preprocess/out/lib%d.seq.mates"%(rundir,lib.id),"Preprocess")
+           elif lib.format == "fastq" and not lib.mated:
+               run_process("ln -s %s/Preprocess/in/%s %s/Preprocess/out/lib%d.seq"%(rundir, lib.fq, fname, rundir, lib.id), "Preprocess")
+               run_process("touch %s/Preprocess/out/lib%d.seq.mates"%(rundir, lib.id), "Preprocess")
            elif format == "fasta" and mated and not interleaved:
                #FIXME, make me faster!
                run_process("perl %s/perl/shuffleSequences_fasta.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(METAMOS_UTILS,rundir,lib.f1.fname, rundir,lib.f2.fname,rundir,lib.id),"Preprocess")
@@ -1230,7 +1233,8 @@ def Assemble(input,output):
           elif format == "fasta"  and mated and interleaved:
               soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(rundir,lib.f1.fname))
           else:
-              soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s"%(lib.f1))#frg))
+              soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(rundir,lib.f1.fname))
+
       #cnt +=1
       soapw = open("%s/soapconfig.txt"%(rundir),'w')
       soapw.write(soapd)
@@ -1426,7 +1430,9 @@ def Scaffold(input,output):
       numMates = int(checkStdout.strip())
 
    if mated == False and numMates == 0:
+
       print "No mate pair info available for scaffolding, skipping"
+      run_process("touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(rundir, PREFIX), "Scaffold")
       skipsteps.append("FindScaffoldORFS")
       return 0
 

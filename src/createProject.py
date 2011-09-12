@@ -1,9 +1,8 @@
+#!python
+
 import os, sys, string, time, BaseHTTPServer, getopt, time, datetime
 #from datetime import date
-
-
 #from ruffus import *
-
 
 def usage():
     print "usage: createProject.py -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500 -f/-q"

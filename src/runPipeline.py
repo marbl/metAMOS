@@ -1,3 +1,5 @@
+#!python
+
 import os, sys, string, time, BaseHTTPServer, getopt, re, subprocess#
 from operator import itemgetter
 
@@ -11,11 +13,16 @@ METAMOSDIR    = sys.path[0]
 METAMOS_UTILS = "%s%sUtilities"%(METAMOSDIR, os.sep) 
 METAMOS_JAVA  = "%s%sjava:%s"%(METAMOS_UTILS,os.sep,os.curdir)
 AMOS          = "%s%sAMOS%sbin"%(METAMOSDIR, os.sep, os.sep)
-SOAP          = "%s%scpp"%(METAMOS_UTILS, os.sep)
+SOAP          = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
 CA            = "%s%sCA%s%s-%s%sbin"%(METAMOSDIR, os.sep, os.sep, OSTYPE, MACHINETYPE.replace("x86_64", "amd64"), os.sep)
-NEWBLER       = "%s%snewbler"%(METAMOSDIR, os.sep)
-BOWTIE        = "%s%scpp"%(METAMOS_UTILS, os.sep)
-GMHMMP        = "%s%scpp"%(METAMOS_UTILS, os.sep)
+NEWBLER       = "%s%snewbler%s%s-%s"%(METAMOSDIR, os.sep, os.sep, OSTYPE, MACHINETYPE)
+BOWTIE        = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
+GMHMMP        = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
+
+FCP           = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
+PHMMER        = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
+BLAST         = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
+
 libcounter = 1
 readcounter = 1
 t1 = time.time()#clock()
@@ -247,6 +254,9 @@ def guessPaths():
     global NEWBLER
     global BOWTIE
     global GMHMMP
+    global FCP
+    global PHMMER
+    global BLAST
 
     getMachineType()
 
@@ -263,37 +273,44 @@ def guessPaths():
 
     # now check for assemblers
     # 1. AMOS
-    AMOS = "%s%sAMOS%sbin"%(METAMOSDIR, os.sep, os.sep)
+    AMOS = "%s%sAMOS%s%s-%s%sbin"%(METAMOSDIR, os.sep, os.sep, OSTYPE, MACHINETYPE, os.sep)
     if not os.path.exists(AMOS + os.sep + "toAmos_new"):
-       AMOS = getFromPath("bank-transact", "AMOS") 
+       AMOS = getFromPath("toAmos_new", "AMOS") 
        if not os.path.exists(AMOS + os.sep + "toAmos_new"):
           print "Error: cannot find AMOS in %s or %s. Please check your path and try again."%(METAMOSDIR + os.sep + "AMOS", AMOS)
           sys.exit(1)
     # 2. Soap
-    SOAP = "%s%scpp"%(METAMOS_UTILS, os.sep) 
+    SOAP = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE) 
     if not os.path.exists(SOAP + os.sep + "SOAPdenovo-63mer"):
        SOAP = getFromPath("SOAPdenovo-63mer", "SOAP")
-       #SOAP = getFromPath("SOAPdenovo-63mer", "SOAP")
     # 3. CA
     CA = "%s%sCA%s%s-%s%sbin"%(METAMOSDIR, os.sep, os.sep, OSTYPE, MACHINETYPE.replace("x86_64","amd64"), os.sep)
     if not os.path.exists(CA + os.sep + "gatekeeper"):
        CA = getFromPath("gatekeeper", "Celera Assembler") 
     # 4. Newbler
     NEWBLER = "%s%snewbler"%(METAMOSDIR, os.sep);
-    #print NEWBLER
-    #sys.exit(0)
     if not os.path.exists(NEWBLER + os.sep + "runProject"):
        NEWBLER = getFromPath("runProject", "Newbler")
 
     # now for the mappers
-    BOWTIE = "%s%scpp"%(METAMOS_UTILS, os.sep)
+    BOWTIE = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
     if not os.path.exists(BOWTIE + os.sep + "bowtie"):
        BOWTIE = getFromPath("bowtie", "Bowtie")
 
     # now for the annotation
-    GMHMMP = "%s%scpp"%(METAMOS_UTILS, os.sep)
+    GMHMMP = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
     if not os.path.exists(GMHMMP + os.sep + "gmhmmp"):
        GMHMMP = getFromPath("gmhmmp", "GeneMark.hmm")
+
+    FCP = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
+    if not os.path.exists(FCP + os.sep + "fcp"):
+       FCP = getFromPath("fcp", "FCP")
+    PHMMER = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
+    if not os.path.exists(PHMMER + os.sep + "phmmer"):
+       PHMMER = getFromPath("phmmer", "PHmmer")
+    BLAST = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
+    if not os.path.exists(BLAST + os.sep + "blastall"):
+       BLAST = getFromPath("blastall", "blast")
 
     # finally add the utilities to our path
     print "Configuration summary:"
@@ -302,6 +319,9 @@ def guessPaths():
     print "AMOS:\t\t\t%s\nSOAP:\t\t\t%s\nCelera Assembler:\t%s\nNEWBLER:\t\t%s\n"%(AMOS, SOAP, CA, NEWBLER)
     print "Bowtie:\t\t\t%s"%(BOWTIE)
     print "GMHMMP:\t\t\t%s"%(GMHMMP)
+    print "FCP:\t\t\t%s"%(FCP)
+    print "PHMMER:\t\t\t%s"%(PHMMER)
+    print "BLAST:\t\t\t%s"%(BLAST)
 
 def getProgramParams(fileName, module="", prefix="", comment="#"):
     # we process parameters in the following priority:
@@ -1257,7 +1277,7 @@ def Assemble(input,output):
       #if OK, convert output to AMOS
 
    elif asm == "newbler":
-      if not os.path.exist(NEWBLER + os.sep + "newAssembly"):
+      if not os.path.exists(NEWBLER + os.sep + "newAssembly"):
          print "Error: Newbler not found in %s. Please check your path and try again.\n"%(NEWBLER)
          raise(JobSignalledBreak)
 
@@ -1371,19 +1391,30 @@ def FindRepeats(input,output):
    run_process("python %s/python/getContigRepeats.py  %s/FindRepeats/in/%s.fna %s/FindRepeats/out/%s.repeats"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX),"Findrepeats")
 
 
-#@follows(FindRepeats)
+@follows(FindRepeats)
 @files("%s/Annotate/in/%s.faa"%(rundir,PREFIX),"%s/Annotate/out/%s.hits"%(rundir,PREFIX))
 def Annotate(input,output):
+   if "Annotate" in skipsteps or "FindORFs" in skipsteps:
+      run_process("touch %s/Annotate/out/%s.hits"%(rundir, PREFIX), "Annotate")
+      return 0
+
    #annotate contigs > 1000bp with FCP
    #lets start by annotating ORFs with phmmer
    if cls == "phmmer":
+       if not os.path.exists(PHMMER + os.sep + "phmmer"):
+          print "Error: PHmmer not found in %s. Please check your path and try again.\n"%(PHMMER)
+          raise(JobSignalledBreak)
 
-       run_process("phmmer --cpu %d --F1 0.01 --F2 0.0001 --F3 0.000001 -E 0.01 -o %s/Annotate/out/%s.phm.out --tblout %s/Annotate/out/%s.phm.tbl --notextw %s/Annotate/in/%s.faa %s/DB/allprots.faa"%(threads,rundir,PREFIX,rundir,PREFIX,rundir,PREFIX,METAMOS_UTILS),"Annotate")
+       run_process("%s/phmmer --cpu %d --F1 0.01 --F2 0.0001 --F3 0.000001 -E 0.01 -o %s/Annotate/out/%s.phm.out --tblout %s/Annotate/out/%s.phm.tbl --notextw %s/Annotate/in/%s.faa %s/DB/allprots.faa"%(PHMMER, threads,rundir,PREFIX,rundir,PREFIX,rundir,PREFIX,METAMOS_UTILS),"Annotate")
        parse_phmmerout("%s/Annotate/out/%s.phm.tbl"%(rundir,PREFIX))
        run_process("mv %s/Annotate/out/%s.phm.tbl  %s/Annotate/out/%s.hits"%(rundir,PREFIX,rundir,PREFIX),"Annotate")
        #run_process("mv %s/Annotate/out/%s.phm.tbl  %s/Annotate/out/%s.annotate"%(rundir,PREFIX,rundir,PREFIX))
    elif cls == "blast":
-       run_process("blastall -v 1 -b 1 -a %d -p blastp -m 8 -e 0.00001 -i %s/Annotate/in/%s.faa -d %s/DB/new_all_complete_bacteria.faa -o %s/Annotate/out/%s.blastout"%(threads, rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX),"Annotate")
+       if not os.path.exists(BLAST + os.sep + "blastall"):
+          print "Error: BLAST not found in %s. Please check your path and try again.\n"%(BLAST)
+          raise(JobSignalledBreak)
+
+       run_process("%s/blastall -v 1 -b 1 -a %d -p blastp -m 8 -e 0.00001 -i %s/Annotate/in/%s.faa -d %s/DB/new_all_complete_bacteria.faa -o %s/Annotate/out/%s.blastout"%(BLAST, threads, rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX),"Annotate")
        run_process("mv %s/Annotate/out/%s.blastout  %s/Annotate/out/%s.hits"%(rundir,PREFIX,rundir,PREFIX),"Annotate")
    elif cls == "fcp":
        print "FCP not yet supported.. stay tuned!"
@@ -1505,7 +1536,7 @@ def Propagate(input,output):
    # strip headers from file and contig name prefix
 
    run_process("cat %s/Propagate/in/%s.annots |sed s/contig_//g |grep -v contigID > %s/Propagate/in/%s.clusters"%(rundir,PREFIX,rundir,PREFIX),"Propagate")
-   run_process("%s/cpp/FilterEdgesByCluster -b %s/Scaffold/in/%s.bnk -clusters in/s12.clusters -noRemoveEdges > %s/Propagate/out/%s.clusters"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX),"Propagate")
+   run_process("%s/FilterEdgesByCluster -b %s/Scaffold/in/%s.bnk -clusters in/s12.clusters -noRemoveEdges > %s/Propagate/out/%s.clusters"%(AMOS,rundir,PREFIX,rundir,PREFIX),"Propagate")
 
 @follows(Propagate)
 @files("%s/Propagate/out/%s.clusters"%(rundir,PREFIX),"%s/Classify/out/sorted.txt"%(rundir))
@@ -1744,12 +1775,12 @@ if __name__ == "__main__":
     try:
        #files = os.listdir(".")
        dlist = []
-       pipeline_printout(sys.stdout,[Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold, FindScaffoldORFS, Propagate, Classify, Postprocess], verbose=1)
+       pipeline_printout(sys.stdout,[Preprocess,Assemble, FindORFS, FindRepeats, Annotate, Metaphyler, Scaffold, FindScaffoldORFS, Propagate, Classify, Postprocess], verbose=1)
        pipeline_printout_graph (   'flowchart.svg',
                             'svg',
                             [Postprocess],
                             no_key_legend = True)
-       pipeline_run([Preprocess,Assemble, FindORFS, FindRepeats, Metaphyler, Scaffold, FindScaffoldORFS, Propagate, Classify, Postprocess], verbose = 1) 
+       pipeline_run([Preprocess,Assemble, FindORFS, FindRepeats, Annotate, Metaphyler, Scaffold, FindScaffoldORFS, Propagate, Classify, Postprocess], verbose = 1) 
        #multiprocess threads
        t2 = time.time()#clock()
        elapsed = float(t2)-float(t1)

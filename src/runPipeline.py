@@ -1434,7 +1434,10 @@ def Metaphyler(input,output):
    run_process("formatdb  -p T -i %s/DB/markers.pfasta"%(METAMOS_UTILS),"Metaphyler")
    #run_process("perl %s/perl/runblast.pl  %s/Metaphyler/in/%s.faa %s/Metaphyler/out/%s.blastx %s/DB/markers.fna"%(METAMOS_UTILS,rundir,PREFIX, rundir,PREFIX,METAMOS_UTILS))
 
-   run_process("%s/cpp/blastall -p blastp -i %s/Metaphyler/in/%s.faa -d %s/DB/markers.pfasta -m8 -b10 -v10 -a %s -o %s/Metaphyler/out/%s.blastp"%(METAMOS_UTILS,rundir,PREFIX,METAMOS_UTILS,threads,rundir,PREFIX),"Metaphyler")
+   if not os.path.exists(BLAST + os.sep + "blastall"):
+       print "Error: BLAST not found in %s. Please check your path and try again.\n"%(BLAST)
+       raise(JobSignalledBreak)
+   run_process("%s/blastall -p blastp -i %s/Metaphyler/in/%s.faa -d %s/DB/markers.pfasta -m8 -b10 -v10 -a %s -o %s/Metaphyler/out/%s.blastp"%(BLAST,rundir,PREFIX,METAMOS_UTILS,threads,rundir,PREFIX),"Metaphyler")
 
    run_process("perl %s/perl/metaphyler_contigs.pl %s/Metaphyler/out/%s.blastp %s %s/Metaphyler/in/%s.contig.cvg %s/Metaphyler/out %s"%(METAMOS_UTILS,rundir,PREFIX,PREFIX,rundir,PREFIX,rundir,METAMOS_UTILS),"Metaphyler")
 

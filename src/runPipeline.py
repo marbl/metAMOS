@@ -577,14 +577,9 @@ def run_process(command,step=""):
            print command
        stdout = ""
        stderr = ""
-       #p = subprocess.Popen(command, shell=True, stdin=None, stdout=outf, stderr=outf)
-       p = subprocess.Popen(command, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+       p = subprocess.Popen(command, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,close_fds=True)
        fstdout,fstderr = p.communicate()
-       #print checkStdout
-       #print fstdout,fstderr
-       
-       #p = subprocess.Popen(command, shell=True, stdin=None, stdout=stdout, stderr=stderr)
-       #if "clk" not in command and "Bundler" not in command and "MarkRepeats" not in command and VERBOSE:
+
        if step == "":
            print fstdout,fstderr
        else:

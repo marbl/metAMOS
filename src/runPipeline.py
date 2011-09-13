@@ -1443,7 +1443,10 @@ def Metaphyler(input,output):
 
    #run_process("perl %s/perl/metaphyler_contigs.pl %s/Metaphyler/out/%s.blastx %s/Metaphyler/out/%s %s/Metaphyler/in/%s.contig.cvg"%(METAMOS_UTILS,rundir,PREFIX, rundir, PREFIX, rundir, PREFIX))
 
-   
+   # finally add the GI numbers to the results where we can
+   parse_metaphyler("%s/DB/markers.toGI.txt"%(METAMOS_UTILS), "%s/Metaphyler/out/%s.blastp"%(rundir, PREFIX), "%s/Metaphyler/out/%s.gi.blastp"%(rundir, PREFIX))
+
+
 if "Scaffold" in forcesteps:
     #run_process("touch %s/Assemble/out/%s.asm.contig"%(rundir,PREFIX))
     run_process("rm %s/Scaffold/out/%s.scaffolds.final"%(rundir,PREFIX))
@@ -1553,6 +1556,31 @@ def Postprocess(input,output):
    run_process("ln -t %s/Postprocess/out/ -s %s/Scaffold/in/%s.bnk "%(rundir,rundir,PREFIX),"Postprocess")
    run_process("python %s/python/create_report.py %s/Postprocess/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s %s/Postprocess/out/%s.scf.fa"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX,PREFIX,rundir,PREFIX),"Postprocess")   
    
+
+def parse_metaphyler(giMapping, toTranslate, output):
+   giDictionary = {};
+   try:
+      GIs = open(giMapping, 'r')
+   except IOError as e:
+      return
+   for line in GIs:
+      line = line.replace("\n","")
+      splitLine = line.split("\t")
+      giDictionary[splitLine[0]] = splitLine[1]
+   GIs.close();
+   try:
+      GIs = open(toTranslate, 'r')
+   except IOError as e:
+      print "Exception opening file %s"%(e)
+      return
+   outf = open(output, 'w')
+   for line in GIs:
+      line = line.replace("\n","")
+      splitLine = line.split("\t")
+      if splitLine[1] in giDictionary:
+         outf.write(line.replace(splitLine[1], giDictionary[splitLine[1]]) + "\n") 
+   GIs.close()
+   outf.close()
 
 
 def parse_genemarkout(orf_file,is_scaff=False):

@@ -18,7 +18,7 @@ BEGIN
 	abs_path($0) =~ /(.*)\//;
 	$scriptPath = $1;
 }
-use lib "$scriptPath/../lib";
+use lib "$scriptPath/";
 
 use Getopt::Long;
 use Krona;

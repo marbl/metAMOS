@@ -24,7 +24,7 @@ use Getopt::Long;
 use Krona;
 
 my $totalMag;
-my $outFile = 'blast.krona.html';
+my $outFile = 'report.krona.html';
 my $include;
 my $random;
 my $colorIdentity;

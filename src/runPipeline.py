@@ -1,8 +1,12 @@
 #!python
 
-import os, sys, string, time, BaseHTTPServer, getopt, re, subprocess#
+import os, sys, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser
 from operator import itemgetter
 
+openbrowser = False
+print os.environ.get('DISPLAY')
+if os.environ.get('DISPLAY') != None:
+    openbrowser = True
 PREFIX = "proba"
 VERBOSE = False
 OSTYPE        = "Linux"
@@ -12,6 +16,7 @@ MACHINETYPE   = "x86_64"
 METAMOSDIR    = sys.path[0]
 METAMOS_UTILS = "%s%sUtilities"%(METAMOSDIR, os.sep) 
 METAMOS_JAVA  = "%s%sjava:%s"%(METAMOS_UTILS,os.sep,os.curdir)
+KRONA         = "%s%skrona"%(METAMOS_UTILS,os.sep)
 AMOS          = "%s%sAMOS%sbin"%(METAMOSDIR, os.sep, os.sep)
 SOAP          = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
 CA            = "%s%sCA%s%s-%s%sbin"%(METAMOSDIR, os.sep, os.sep, OSTYPE, MACHINETYPE.replace("x86_64", "amd64"), os.sep)
@@ -25,7 +30,7 @@ BLAST         = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINE
 
 libcounter = 1
 readcounter = 1
-t1 = time.time()#clock()
+t1 = time.time()
 sys.path.append(METAMOS_UTILS)
 from ruffus import *
 
@@ -1397,11 +1402,16 @@ def Annotate(input,output):
    #lets start by annotating ORFs with phmmer
    if cls == "phmmer":
        if not os.path.exists(PHMMER + os.sep + "phmmer"):
-          print "Error: PHmmer not found in %s. Please check your path and try again.\n"%(PHMMER)
+          print "Error: PHMMER not found in %s. Please check your path and try again.\n"%(PHMMER)
           raise(JobSignalledBreak)
 
-       run_process("%s/phmmer --cpu %d --F1 0.01 --F2 0.0001 --F3 0.000001 -E 0.01 -o %s/Annotate/out/%s.phm.out --tblout %s/Annotate/out/%s.phm.tbl --notextw %s/Annotate/in/%s.faa %s/DB/allprots.faa"%(PHMMER, threads,rundir,PREFIX,rundir,PREFIX,rundir,PREFIX,METAMOS_UTILS),"Annotate")
+       if not os.path.exists("%s/DB/allprots.faa"%(METAMOS_UTILS)):
+          print "Error: allprots.faa not found in %s/DB. Please check your path and try again.\n"%(METAMOS_UTILS)
+          raise(JobSignalledBreak)
+
+       run_process("%s/phmmer --cpu %d -E 0.0000000000000001 -o %s/Annotate/out/%s.phm.out --tblout %s/Annotate/out/%s.phm.tbl --notextw %s/Annotate/in/%s.faa %s/DB/allprots.faa"%(PHMMER, threads,rundir,PREFIX,rundir,PREFIX,rundir,PREFIX,METAMOS_UTILS),"Annotate")
        parse_phmmerout("%s/Annotate/out/%s.phm.tbl"%(rundir,PREFIX))
+       run_process("cp %s/Annotate/out/%s.phm.tbl  %s/Postprocessin/%s.hits"%(rundir,PREFIX,rundir,PREFIX),"Annotate")
        run_process("mv %s/Annotate/out/%s.phm.tbl  %s/Annotate/out/%s.hits"%(rundir,PREFIX,rundir,PREFIX),"Annotate")
        #run_process("mv %s/Annotate/out/%s.phm.tbl  %s/Annotate/out/%s.annotate"%(rundir,PREFIX,rundir,PREFIX))
    elif cls == "blast":
@@ -1409,11 +1419,17 @@ def Annotate(input,output):
           print "Error: BLAST not found in %s. Please check your path and try again.\n"%(BLAST)
           raise(JobSignalledBreak)
 
-       run_process("%s/blastall -v 1 -b 1 -a %d -p blastp -m 8 -e 0.00001 -i %s/Annotate/in/%s.faa -d %s/DB/new_all_complete_bacteria.faa -o %s/Annotate/out/%s.blastout"%(BLAST, threads, rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX),"Annotate")
+       if not os.path.exists("%s/DB/allprots.faa"%(METAMOS_UTILS)):
+          print "Error: allprots.faa not found in %s/DB. Please check your path and try again.\n"%(METAMOS_UTILS)
+          raise(JobSignalledBreak)
+       #run_process("%s/formatdb -v 1 -b 1 -a %d -p blastp -m 8 -e 0.00001 -i %s/Annotate/in/%s.faa -d %s/DB/new_all_complete_bacteria.faa -o %s/Annotate/out/%s.blastout"%(BLAST, threads, rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX),"Annotate")
+       run_process("%s/blastall -v 1 -b 1 -a %d -p blastp -m 8 -e 0.00001 -i %s/Annotate/in/%s.faa -d %s/DB/allprots.faa -o %s/Annotate/out/%s.blastout"%(BLAST, threads, rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX),"Annotate")
+       run_process("cp %s/Annotate/out/%s.blastout  %s/Postprocess/in/%s.hits"%(rundir,PREFIX,rundir,PREFIX),"Annotate")
        run_process("mv %s/Annotate/out/%s.blastout  %s/Annotate/out/%s.hits"%(rundir,PREFIX,rundir,PREFIX),"Annotate")
    elif cls == "fcp":
-       print "FCP not yet supported.. stay tuned!"
-
+       print "FCP not yet supported.. stay tuned"
+   elif cls == "phymm":
+       print "Phymm not yet supported.. stay tuned"
 
 
 if "Metaphyler" in forcesteps:
@@ -1434,10 +1450,7 @@ def Metaphyler(input,output):
    run_process("formatdb  -p T -i %s/DB/markers.pfasta"%(METAMOS_UTILS),"Metaphyler")
    #run_process("perl %s/perl/runblast.pl  %s/Metaphyler/in/%s.faa %s/Metaphyler/out/%s.blastx %s/DB/markers.fna"%(METAMOS_UTILS,rundir,PREFIX, rundir,PREFIX,METAMOS_UTILS))
 
-   if not os.path.exists(BLAST + os.sep + "blastall"):
-       print "Error: BLAST not found in %s. Please check your path and try again.\n"%(BLAST)
-       raise(JobSignalledBreak)
-   run_process("%s/blastall -p blastp -i %s/Metaphyler/in/%s.faa -d %s/DB/markers.pfasta -m8 -b10 -v10 -a %s -o %s/Metaphyler/out/%s.blastp"%(BLAST,rundir,PREFIX,METAMOS_UTILS,threads,rundir,PREFIX),"Metaphyler")
+   run_process("%s/cpp/blastall -p blastp -i %s/Metaphyler/in/%s.faa -d %s/DB/markers.pfasta -m8 -b10 -v10 -a %s -o %s/Metaphyler/out/%s.blastp"%(METAMOS_UTILS,rundir,PREFIX,METAMOS_UTILS,threads,rundir,PREFIX),"Metaphyler")
 
    run_process("perl %s/perl/metaphyler_contigs.pl %s/Metaphyler/out/%s.blastp %s %s/Metaphyler/in/%s.contig.cvg %s/Metaphyler/out %s"%(METAMOS_UTILS,rundir,PREFIX,PREFIX,rundir,PREFIX,rundir,METAMOS_UTILS),"Metaphyler")
 
@@ -1446,7 +1459,7 @@ def Metaphyler(input,output):
    # finally add the GI numbers to the results where we can
    parse_metaphyler("%s/DB/markers.toGI.txt"%(METAMOS_UTILS), "%s/Metaphyler/out/%s.blastp"%(rundir, PREFIX), "%s/Metaphyler/out/%s.gi.blastp"%(rundir, PREFIX))
 
-
+   
 if "Scaffold" in forcesteps:
     #run_process("touch %s/Assemble/out/%s.asm.contig"%(rundir,PREFIX))
     run_process("rm %s/Scaffold/out/%s.scaffolds.final"%(rundir,PREFIX))
@@ -1551,11 +1564,47 @@ def Postprocess(input,output):
    #copy files into output for createReport   
    #generate reports
    #linearize
+   #call KronaReports
+   if cls == 'phmmer':
+       if not os.path.exists(KRONA + os.sep + "ImportPHMMER.pl"):
+          print "Error: Krona importer for PHMMER not found in %s. Please check your path and try again.\n"%(KRONA)
+          raise(JobSignalledBreak)
+       run_process("perl %s/ImportPHMMER.pl -c -v -i %s/Postprocess/in/%s.hits"%(KRONA,rundir,PREFIX),"Postprocess")
+   elif cls == 'blast' or cls == 'metaphyler' or cls == None:
+       if not os.path.exists(KRONA + os.sep + "ImportBLAST.pl"):
+          print "Error: Krona importer for BLAST not found in %s. Please check your path and try again.\n"%(KRONA)
+          raise(JobSignalledBreak)
+       run_process("perl %s/ImportBLAST.pl -c -v -i %s/Postprocess/in/%s.hits"%(KRONA,rundir,PREFIX),"Postprocess")
+   elif cls == 'fcp':
+       if not os.path.exists(KRONA + os.sep + "ImportFCP.pl"):
+          print "Error: Krona importer for FCP not found in %s. Please check your path and try again.\n"%(KRONA)
+          raise(JobSignalledBreak)
+       run_process("perl %s/ImportFCP.pl -c -v -i %s/Postprocess/in/%s.hits"%(KRONA,rundir,PREFIX),"Postprocess")
+   elif cls == 'phymm':
+       if not os.path.exists(KRONA + os.sep + "ImportPHYMM.pl"):
+          print "Error: Krona importer for PHYMM not found in %s. Please check your path and try again.\n"%(KRONA)
+          raise(JobSignalledBreak)
+       run_process("perl %s/ImportPhymmBL.pl -c -v -i %s/Postprocess/in/%s.hits"%(KRONA,rundir,PREFIX),"Postprocess")
+
+   #command to open webbrowser?
+   #try to open Krona output
+   if openbrowser:
+       if os.path.exists("report.krona.html"):
+           webbrowser.open_new("report.krona.html")
+       else:
+           print "ERROR: No Krona html file available! skipping"
+   #webbrowser.open_new(output.html)
+   #webbrowser.open_new_tab(output.html)
    run_process("cp %s/Metaphyler/out/%s.classify.txt %s/Postprocess/out/. "%(rundir,PREFIX,rundir),"Postprocess")
    run_process("cp %s/Scaffold/out/%s.linearize.scaffolds.final %s/Postprocess/out/%s.scf.fa"%(rundir,PREFIX,rundir,PREFIX),"Postprocess")
    run_process("ln -t %s/Postprocess/out/ -s %s/Scaffold/in/%s.bnk "%(rundir,rundir,PREFIX),"Postprocess")
-   run_process("python %s/python/create_report.py %s/Postprocess/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s %s/Postprocess/out/%s.scf.fa"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX,PREFIX,rundir,PREFIX),"Postprocess")   
-   
+   run_process("python %s/python/create_report.py %s/Metaphyler/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/ %s/Postprocess/out/%s.scf.fa"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX,rundir,rundir,PREFIX),"Postprocess")   
+   #webbrowser.open_new_tab(createreport.html)
+   if openbrowser:
+       if os.path.exists("%s/Postprocess/summary.html"%(rundir)):
+           webbrowser.open_new_tab("%s/Postprocess/summary.html"%(rundir))
+       else:
+           print "ERROR: No Krona html file available! skipping"
 
 def parse_metaphyler(giMapping, toTranslate, output):
    giDictionary = {};
@@ -1578,10 +1627,9 @@ def parse_metaphyler(giMapping, toTranslate, output):
       line = line.replace("\n","")
       splitLine = line.split("\t")
       if splitLine[1] in giDictionary:
-         outf.write(line.replace(splitLine[1], giDictionary[splitLine[1]]) + "\n") 
+         outf.write(line.replace(splitLine[1], giDictionary[splitLine[1]]) + "\n")
    GIs.close()
    outf.close()
-
 
 def parse_genemarkout(orf_file,is_scaff=False):
     coords = open(orf_file,'r')

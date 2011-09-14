@@ -18,7 +18,8 @@ BEGIN
 	abs_path($0) =~ /(.*)\//;
 	$scriptPath = $1;
 }
-use lib "$scriptPath/../lib";
+#use lib "$scriptPath/../lib";
+use lib "$scriptPath/";
 
 use Getopt::Long;
 use Krona;
@@ -217,8 +218,11 @@ foreach my $input (@ARGV)
                 #print "$queryID\n";
                 #print "$lastQueryID\n";
 
-                print "$taxID\n";
-		if ( $queryID ne $lastQueryID && defined $taxID )
+                #print "$taxID\n";
+                #print "$queryID $lastQueryID\n";
+
+		#if ( $queryID ne $lastQueryID && defined $taxID )
+                if ( defined $hitID && defined $taxID )
 		{
 			# add the chosen hit from the last queryID
 			
@@ -252,18 +256,22 @@ foreach my $input (@ARGV)
                 #print "$hitID\n";
 		my $gi = $1;
                 #print "$gi\n";
-                $taxID = getTaxID($gi);		
+                #if ( $queryID ne $lastQueryID)
+                #{              
+                #    $taxID = getTaxID($gi);		
+		#}
 		if
 		(
 			$queryID ne $lastQueryID ||
-			(
+			(       
 				$random &&
 				$bitScore == $topScore &&
 				int(rand(++$ties)) == 0
 			)
 		)
 		{
-                        
+ 
+                        $taxID = getTaxID($gi);		                        
 			my $nid = getTaxID($gi);
                         #print "gid: $gi taxid: $nid\n";
                         #print "taxid $taxID\n";
@@ -274,6 +282,7 @@ foreach my $input (@ARGV)
 			}
 			elsif ( $colorBitScore )
 			{
+                                 
 				$score = $bitScore;
 			}
 			else

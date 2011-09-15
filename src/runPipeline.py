@@ -1434,10 +1434,10 @@ def Annotate(input,output):
 
 if "Metaphyler" in forcesteps:
    run_process("touch %s/FindORFS/out/%s.faa"%(rundir,PREFIX))
-   run_process("rm %s/Metaphyler/out/%s.classify.txt"%(rundir,PREFIX))
+   run_process("rm %s/Metaphyler/out/%s.taxprof.pct.txt"%(rundir,PREFIX))
 
 @follows(FindORFS)
-@files("%s/FindORFS/out/%s.faa"%(rundir,PREFIX),"%s/Metaphyler/out/%s.classify.txt"%(rundir,PREFIX))
+@files("%s/FindORFS/out/%s.faa"%(rundir,PREFIX),"%s/Metaphyler/out/%s.taxprof.pct.txt"%(rundir,PREFIX))
 def Metaphyler(input,output):
    if "FindORFS" in skipsteps or "Metaphyler" in skipsteps:
       return 0

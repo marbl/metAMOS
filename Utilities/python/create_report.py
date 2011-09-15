@@ -19,12 +19,13 @@ if __name__ == "__main__":
     if len(sys.argv) < 5:
         print "usage: create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm>"
         sys.exit(0)
+    prefix = sys.argv[3]
     ref_asm = sys.argv[4]
     mp = open(sys.argv[1],'r')
     #mp2 = open(sys.argv[1].replace("s12","s3"),'r')    
-    #if not os.path.exists("./out/asmstats.out"):
-    #    os.system("perl ./lib/statistics.pl %s > ./out/asmstats.out"%(sys.argv[4]))        
-    report = open("./out/asmstats.out",'r')
+    if not os.path.exists(prefix+"asmstats.out"):
+        os.system("perl ./Utilities/perl/statistics.pl %s > %sasmstats.out"%(sys.argv[4],prefix))        
+    report = open(prefix+"asmstats.out",'r')
     
     rdata = []
     for line in report:
@@ -36,20 +37,20 @@ if __name__ == "__main__":
     #for line in report:
     #    rdata.append(line)        
        
-    if not os.path.exists("./out/covstats.out"):
-        os.system("analyze-read-depth -i %s -x 10 -l 500 > ./out/covstats.out"%(sys.argv[2]))
-    ff = open("./out/covstats.out",'r')
+    if not os.path.exists(prefix+"covstats.out"):
+        os.system("analyze-read-depth -i %s -x 10 -l 500 > %scovstats.out"%(sys.argv[2],prefix))
+    ff = open(prefix+"covstats.out",'r')
     covdata = []
     #covdata = ff.readlines()
     #zflag = 0
     for line in ff:
         covdata.append(line)
     
-    if not os.path.exists("./out/stats.out"):
-        os.system("astats %s > ./out/stats.out"%(sys.argv[2]))
-    dd = open("./out/stats.out",'r')
+    if not os.path.exists(prefix+"stats.out"):
+        os.system("astats %s > %sstats.out"%(sys.argv[2],prefix))
+    dd = open(prefix+"stats.out",'r')
     ddata = dd.readlines()
-    prefix = sys.argv[3]
+
     ddf = ""
     bflag = 0
     cflag = 0
@@ -78,23 +79,22 @@ if __name__ == "__main__":
     abund = []
     ids = []
     mpd = mp.readlines()
+    phylum = False
     for line in mpd:
+        if ">phylum" in line:
+            phylum = True
+        if len(line) < 3:
+            continue
         data = line.split("\t")
-         
+        if len(data) < 2:
+            continue
+        if not phylum:
+            continue
         ids.append(data[0])
-        cov.append(int(float(data[2])))
-        abund.append(float(data[1]))
+        #cov.append(int(float(data[2])))
+        abund.append(100*float(data[1]))
 
-    mp2.readline()
-    cov2 = []
-    abund2 = []
-    ids2 = []
-    mpd = mp2.readlines()
-    for line in mpd:
-        data = line.split("\t")
-        ids2.append(data[0])
-        cov2.append(int(float(data[2])))
-        abund2.append(float(data[1]))        
+
         
     # Create a chart object of 200x100 pixels
 #    chart2 = StackedVerticalBarChart(600, 300)
@@ -110,7 +110,7 @@ if __name__ == "__main__":
 #    chart2.set_axis_labels(Axis.BOTTOM, ids)
 
     # Download the chart
-    chart2.download('./out/abund.png')
+    chart2.download(prefix+'abund.png')
 
     chart = GroupedHorizontalBarChart(600, 500, x_range=(0,100))
     chart.set_bar_width(30)
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     index = chart.set_axis_labels(Axis.LEFT, ['Phylum'])
     chart.set_axis_style(index, '202020', font_size=10, alignment=0)
     chart.set_axis_positions(index, [50])
-    chart.download('./out/bar-phylum.png')
+    chart.download(prefix+'bar-phylum.png')
     
     dt = datetime.now()
     ds = dt.strftime("%A, %d. %B %Y %I:%M%p")
@@ -234,6 +234,6 @@ if __name__ == "__main__":
     page.div.close()
     page.div.close()
 
-    fout = open(prefix+".html",'w')
+    fout = open(prefix+"summary.html",'w')
     fout.write(page.__str__())
     fout.close()

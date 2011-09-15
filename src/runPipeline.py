@@ -1447,14 +1447,15 @@ def Metaphyler(input,output):
    run_process("ln -t %s/Metaphyler/in/ -s %s/FindORFS/out/%s.contig.cvg"%(rundir,rundir,PREFIX),"Metaphyler")
    run_process("ln -t %s/Metaphyler/in/ -s %s/FindORFS/out/%s.faa"%(rundir,rundir,PREFIX),"Metaphyler")
    blastfile = PREFIX+".blastx"
-   run_process("formatdb  -p T -i %s/DB/markers.pfasta"%(METAMOS_UTILS),"Metaphyler")
+   blastc = BLAST + os.sep + "blastall"
+   formatc = BLAST + os.sep + "formatdb"
+   run_process("%s  -p T -i %s/DB/markers.pfasta"%(formatc,METAMOS_UTILS),"Metaphyler")
    #run_process("perl %s/perl/runblast.pl  %s/Metaphyler/in/%s.faa %s/Metaphyler/out/%s.blastx %s/DB/markers.fna"%(METAMOS_UTILS,rundir,PREFIX, rundir,PREFIX,METAMOS_UTILS))
 
-   run_process("%s -p blastp -i %s/Metaphyler/in/%s.faa -d %s/DB/markers.pfasta -m8 -b10 -v10 -a %s -o %s/Metaphyler/out/%s.blastp"%(BLAST, rundir,PREFIX,METAMOS_UTILS,threads,rundir,PREFIX),"Metaphyler")
+
+   run_process("%s -p blastp -i %s/Metaphyler/in/%s.faa -d %s/DB/markers.pfasta -m8 -b10 -v10 -a %s -o %s/Metaphyler/out/%s.blastp"%(blastc, rundir,PREFIX,METAMOS_UTILS,threads,rundir,PREFIX),"Metaphyler")
 
    run_process("perl %s/perl/metaphyler_contigs.pl %s/Metaphyler/out/%s.blastp %s %s/Metaphyler/in/%s.contig.cvg %s/Metaphyler/out %s"%(METAMOS_UTILS,rundir,PREFIX,PREFIX,rundir,PREFIX,rundir,METAMOS_UTILS),"Metaphyler")
-
-   #run_process("perl %s/perl/metaphyler_contigs.pl %s/Metaphyler/out/%s.blastx %s/Metaphyler/out/%s %s/Metaphyler/in/%s.contig.cvg"%(METAMOS_UTILS,rundir,PREFIX, rundir, PREFIX, rundir, PREFIX))
 
    # finally add the GI numbers to the results where we can
    parse_metaphyler("%s/DB/markers.toGI.txt"%(METAMOS_UTILS), "%s/Metaphyler/out/%s.blastp"%(rundir, PREFIX), "%s/Metaphyler/out/%s.gi.blastp"%(rundir, PREFIX))

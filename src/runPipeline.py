@@ -4,7 +4,6 @@ import os, sys, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser
 from operator import itemgetter
 
 openbrowser = False
-print os.environ.get('DISPLAY')
 if os.environ.get('DISPLAY') != None:
     openbrowser = True
 PREFIX = "proba"
@@ -398,7 +397,7 @@ forcesteps = []
 skipsteps = []
 run_metaphyler = False
 runfast = False
-cls = "phmmer"
+cls = None
 asm = "soap"
 rundir = ""
 fff = ""
@@ -1406,7 +1405,7 @@ def Annotate(input,output):
           raise(JobSignalledBreak)
 
        if not os.path.exists("%s/DB/allprots.faa"%(METAMOS_UTILS)):
-          print "Error: allprots.faa not found in %s/DB. Please check your path and try again.\n"%(METAMOS_UTILS)
+          print "Error: You indicated you would like to run phmmer but DB allprots.faa not found in %s/DB. Please check your path and try again.\n"%(METAMOS_UTILS)
           raise(JobSignalledBreak)
 
        run_process("%s/phmmer --cpu %d -E 0.0000000000000001 -o %s/Annotate/out/%s.phm.out --tblout %s/Annotate/out/%s.phm.tbl --notextw %s/Annotate/in/%s.faa %s/DB/allprots.faa"%(PHMMER, threads,rundir,PREFIX,rundir,PREFIX,rundir,PREFIX,METAMOS_UTILS),"Annotate")
@@ -1420,9 +1419,8 @@ def Annotate(input,output):
           raise(JobSignalledBreak)
 
        if not os.path.exists("%s/DB/allprots.faa"%(METAMOS_UTILS)):
-          print "Error: allprots.faa not found in %s/DB. Please check your path and try again.\n"%(METAMOS_UTILS)
+          print "Error: You indicated you would like to run BLAST but DB allprots.faa not found in %s/DB. Please check your path and try again.\n"%(METAMOS_UTILS)
           raise(JobSignalledBreak)
-       #run_process("%s/formatdb -v 1 -b 1 -a %d -p blastp -m 8 -e 0.00001 -i %s/Annotate/in/%s.faa -d %s/DB/new_all_complete_bacteria.faa -o %s/Annotate/out/%s.blastout"%(BLAST, threads, rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX),"Annotate")
        run_process("%s/blastall -v 1 -b 1 -a %d -p blastp -m 8 -e 0.00001 -i %s/Annotate/in/%s.faa -d %s/DB/allprots.faa -o %s/Annotate/out/%s.blastout"%(BLAST, threads, rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX),"Annotate")
        run_process("cp %s/Annotate/out/%s.blastout  %s/Postprocess/in/%s.hits"%(rundir,PREFIX,rundir,PREFIX),"Annotate")
        run_process("mv %s/Annotate/out/%s.blastout  %s/Annotate/out/%s.hits"%(rundir,PREFIX,rundir,PREFIX),"Annotate")
@@ -1430,7 +1428,8 @@ def Annotate(input,output):
        print "FCP not yet supported.. stay tuned"
    elif cls == "phymm":
        print "Phymm not yet supported.. stay tuned"
-
+   else cls == None:
+       print "No method specified, skipping"
 
 if "Metaphyler" in forcesteps:
    run_process("touch %s/FindORFS/out/%s.faa"%(rundir,PREFIX))
@@ -1458,6 +1457,7 @@ def Metaphyler(input,output):
 
    # finally add the GI numbers to the results where we can
    parse_metaphyler("%s/DB/markers.toGI.txt"%(METAMOS_UTILS), "%s/Metaphyler/out/%s.blastp"%(rundir, PREFIX), "%s/Metaphyler/out/%s.gi.blastp"%(rundir, PREFIX))
+   run_process("cp %s/Metaphyler/out/%s.gi.blastp %/Postprocess/in/%s.hits"%(rundir, PREFIX,rundir,PREFIX))
 
    
 if "Scaffold" in forcesteps:

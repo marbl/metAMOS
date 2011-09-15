@@ -15,10 +15,10 @@ sub indexGI
 	
 	my ($file) = @_;
 	
-	open NUC, "<taxonomy/gi_taxid_nucl.dmp" or die $!;
-	open PRO, "<taxonomy/gi_taxid_prot.dmp" or die $!;
+	open NUC, "<Utilities/krona/gi_taxid_nucl.dmp" or die $!;
+	open PRO, "<Utilities/krona/gi_taxid_prot.dmp" or die $!;
 	
-	open OUT, ">taxonomy/gi_taxid.dat" or die $!;
+	open OUT, ">Utilities/krona/gi_taxid.dat" or die $!;
 	
 	my $lastGI = -1;
 	my $giNuc;

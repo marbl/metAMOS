@@ -1389,7 +1389,8 @@ def FindRepeats(input,output):
 
    run_process("python %s/python/getContigRepeats.py  %s/FindRepeats/in/%s.fna %s/FindRepeats/out/%s.repeats"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX),"Findrepeats")
 
-
+if "Annotate" in forcesteps:
+   run_process("rm %s/Annotate/out/%s.hits"%(rundir,PREFIX))
 @follows(FindRepeats)
 @files("%s/Annotate/in/%s.faa"%(rundir,PREFIX),"%s/Annotate/out/%s.hits"%(rundir,PREFIX))
 def Annotate(input,output):

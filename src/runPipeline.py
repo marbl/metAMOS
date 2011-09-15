@@ -1457,7 +1457,7 @@ def Metaphyler(input,output):
 
    # finally add the GI numbers to the results where we can
    parse_metaphyler("%s/DB/markers.toGI.txt"%(METAMOS_UTILS), "%s/Metaphyler/out/%s.blastp"%(rundir, PREFIX), "%s/Metaphyler/out/%s.gi.blastp"%(rundir, PREFIX))
-   run_process("cp %s/Metaphyler/out/%s.gi.blastp %/Postprocess/in/%s.hits"%(rundir, PREFIX,rundir,PREFIX))
+   run_process("cp %s/Metaphyler/out/%s.gi.blastp %s/Postprocess/in/%s.hits"%(rundir, PREFIX,rundir,PREFIX))
 
    
 if "Scaffold" in forcesteps:

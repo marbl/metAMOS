@@ -1428,7 +1428,7 @@ def Annotate(input,output):
        print "FCP not yet supported.. stay tuned"
    elif cls == "phymm":
        print "Phymm not yet supported.. stay tuned"
-   else cls == None:
+   elif cls == None:
        print "No method specified, skipping"
 
 if "Metaphyler" in forcesteps:

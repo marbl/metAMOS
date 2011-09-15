@@ -17,15 +17,16 @@ if not os.path.exists("./Utilities/DB/refseq_protein.pal"):
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.01.tar.gz")
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.02.tar.gz")
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.03.tar.gz")
-
+        print "    running fastacmd (might take a few min)..."
         os.system("fastacmd -d ./Utilities/DB/refseq_protein -p T -a T -D 1 -o ./Utilities/DB/allprots.faa")
 
 if not os.path.exists("./Utilities/krona/taxonomy.tab"):
     print "ncbi taxonomy file not found, needed for Postprocess, download now?"
     dl = raw_input("Enter Y/N: ")
-    print "Download and install ncbi taxonomy.."
-    os.system("./Utilities/krona/updateTaxonomy.sh")
-    os.system("rm *.dmp")
+    if dl == 'y' or dl == 'Y':
+        print "Download and install ncbi taxonomy.."
+        os.system("./Utilities/krona/updateTaxonomy.sh")
+        #os.system("rm *.dmp")
     
 #os.system("
 print "Run setup.py.."

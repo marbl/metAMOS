@@ -1434,7 +1434,7 @@ def Annotate(input,output):
 
 if "Metaphyler" in forcesteps:
    run_process("touch %s/FindORFS/out/%s.faa"%(rundir,PREFIX))
-   #run_process("rm %s/Metaphyler/out/%s.classify.txt"%(rundir,PREFIX))
+   run_process("rm %s/Metaphyler/out/%s.classify.txt"%(rundir,PREFIX))
 
 @follows(FindORFS)
 @files("%s/FindORFS/out/%s.faa"%(rundir,PREFIX),"%s/Metaphyler/out/%s.classify.txt"%(rundir,PREFIX))

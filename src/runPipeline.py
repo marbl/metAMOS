@@ -1599,7 +1599,7 @@ def Postprocess(input,output):
    run_process("cp %s/Metaphyler/out/%s.classify.txt %s/Postprocess/out/. "%(rundir,PREFIX,rundir),"Postprocess")
    run_process("cp %s/Scaffold/out/%s.linearize.scaffolds.final %s/Postprocess/out/%s.scf.fa"%(rundir,PREFIX,rundir,PREFIX),"Postprocess")
    run_process("ln -t %s/Postprocess/out/ -s %s/Scaffold/in/%s.bnk "%(rundir,rundir,PREFIX),"Postprocess")
-   run_process("python %s/python/create_report.py %s/Metaphyler/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/ %s/Postprocess/out/%s.scf.fa"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX,rundir,rundir,PREFIX),"Postprocess")   
+   run_process("python %s/python/create_report.py %s/Metaphyler/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/ %s/Postprocess/out/%s.scf.fa %s %s"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX,rundir,rundir,PREFIX,METAMOS_UTILS,rundir),"Postprocess")   
    #webbrowser.open_new_tab(createreport.html)
    if openbrowser:
        if os.path.exists("%s/Postprocess/summary.html"%(rundir)):

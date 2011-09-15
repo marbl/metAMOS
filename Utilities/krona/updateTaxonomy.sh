@@ -9,7 +9,7 @@
 
 oldPath=$(pwd)
 
-taxonomyPath=./Utilties/krona;
+taxonomyPath=./Utilities/krona;
 cd $taxonomyPath;
 
 function update

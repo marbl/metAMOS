@@ -17,28 +17,24 @@ import helper
 
 if __name__ == "__main__":
     if len(sys.argv) < 5:
-        print "usage: create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm>"
+        print "usage: create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm> <Utils dir> <run dir>"
         sys.exit(0)
+    rund = sys.argv[6]
+    utils = sys.argv[5]
     prefix = sys.argv[3]
     ref_asm = sys.argv[4]
     mp = open(sys.argv[1],'r')
     #mp2 = open(sys.argv[1].replace("s12","s3"),'r')    
     if not os.path.exists(prefix+"asmstats.out"):
-        os.system("perl ./Utilities/perl/statistics.pl %s > %sasmstats.out"%(sys.argv[4],prefix))        
+        os.system("perl %s/perl/statistics.pl %s > %sasmstats.out"%(utils,sys.argv[4],prefix))        
     report = open(prefix+"asmstats.out",'r')
     
     rdata = []
     for line in report:
         rdata.append(line)
-    #if not os.path.exists("./out/asmstats2.out"):
-    #    os.system("perl ./lib/statistics.pl ./even/s3.fa > ./out/asmstats2.out")#%(sys.argv[5]))        
-    #report = open("./out/asmstats2.out",'r')
-    #report.readline()
-    #for line in report:
-    #    rdata.append(line)        
        
     if not os.path.exists(prefix+"covstats.out"):
-        os.system("analyze-read-depth -i %s -x 10 -l 500 > %scovstats.out"%(sys.argv[2],prefix))
+        os.system("%s/analyze-read-depth -i %s -x 10 -l 500 > %scovstats.out"%(rund,sys.argv[2],prefix))
     ff = open(prefix+"covstats.out",'r')
     covdata = []
     #covdata = ff.readlines()
@@ -47,7 +43,7 @@ if __name__ == "__main__":
         covdata.append(line)
     
     if not os.path.exists(prefix+"stats.out"):
-        os.system("astats %s > %sstats.out"%(sys.argv[2],prefix))
+        os.system("%s/astats %s > %sstats.out"%(rund,sys.argv[2],prefix))
     dd = open(prefix+"stats.out",'r')
     ddata = dd.readlines()
 

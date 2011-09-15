@@ -1421,7 +1421,7 @@ def Annotate(input,output):
        if not os.path.exists("%s/DB/allprots.faa"%(METAMOS_UTILS)):
           print "Error: You indicated you would like to run BLAST but DB allprots.faa not found in %s/DB. Please check your path and try again.\n"%(METAMOS_UTILS)
           raise(JobSignalledBreak)
-       run_process("%s/blastall -v 1 -b 1 -a %d -p blastp -m 8 -e 0.00001 -i %s/Annotate/in/%s.faa -d %s/DB/allprots.faa -o %s/Annotate/out/%s.blastout"%(BLAST, threads, rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX),"Annotate")
+       run_process("%s/blastall -v 1 -b 1 -a %d -p blastp -m 8 -e 0.00001 -i %s/Annotate/in/%s.faa -d %s/DB/refseq_protein -o %s/Annotate/out/%s.blastout"%(BLAST, threads, rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX),"Annotate")
        run_process("cp %s/Annotate/out/%s.blastout  %s/Postprocess/in/%s.hits"%(rundir,PREFIX,rundir,PREFIX),"Annotate")
        run_process("mv %s/Annotate/out/%s.blastout  %s/Annotate/out/%s.hits"%(rundir,PREFIX,rundir,PREFIX),"Annotate")
    elif cls == "fcp":

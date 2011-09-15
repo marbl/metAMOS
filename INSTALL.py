@@ -1,6 +1,11 @@
 import os, sys, string, distutils.util
 
 print "<<Weclome to metAMOS install>>"
+#check for python version
+if (sys.version_info[0] < 2) or (sys.version_info[0] == 2 and sys.version_info[1] < 6):
+  print "Python version is %s. metAMOS requires at least 2.6"%(sys.version)
+  sys.exit(1)
+
 #check for DBs, etc
 if not os.path.exists("./Utilities/DB/refseq_protein.pal"):
     print "refseq protein DB not found, needed for Annotate step, download now?"
@@ -27,7 +32,14 @@ if not os.path.exists("./Utilities/krona/taxonomy.tab"):
         print "Download and install ncbi taxonomy.."
         os.system("./Utilities/krona/updateTaxonomy.sh")
         #os.system("rm *.dmp")
-    
+
+if not os.path.exists("./AMOS"):
+    print "AMOS binaries not found, needed for all steps, download now?"
+    dl = raw_input("Enter Y/N: ")
+    if dl == 'y' or dl == 'Y':
+        os.system("wget http://treangen.github.com/metAMOS/amos-binaries.tar.gz .")
+        os.system("tar -xvf amos-binaries.tar.gz")
+
 #os.system("
 print "Run setup.py.."
 os.system("python setup.py install_scripts --install-dir=`pwd`")

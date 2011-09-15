@@ -1450,7 +1450,7 @@ def Metaphyler(input,output):
    run_process("formatdb  -p T -i %s/DB/markers.pfasta"%(METAMOS_UTILS),"Metaphyler")
    #run_process("perl %s/perl/runblast.pl  %s/Metaphyler/in/%s.faa %s/Metaphyler/out/%s.blastx %s/DB/markers.fna"%(METAMOS_UTILS,rundir,PREFIX, rundir,PREFIX,METAMOS_UTILS))
 
-   run_process("%s/cpp/blastall -p blastp -i %s/Metaphyler/in/%s.faa -d %s/DB/markers.pfasta -m8 -b10 -v10 -a %s -o %s/Metaphyler/out/%s.blastp"%(METAMOS_UTILS,rundir,PREFIX,METAMOS_UTILS,threads,rundir,PREFIX),"Metaphyler")
+   run_process("%s -p blastp -i %s/Metaphyler/in/%s.faa -d %s/DB/markers.pfasta -m8 -b10 -v10 -a %s -o %s/Metaphyler/out/%s.blastp"%(BLAST, METAMOS_UTILS,rundir,PREFIX,METAMOS_UTILS,threads,rundir,PREFIX),"Metaphyler")
 
    run_process("perl %s/perl/metaphyler_contigs.pl %s/Metaphyler/out/%s.blastp %s %s/Metaphyler/in/%s.contig.cvg %s/Metaphyler/out %s"%(METAMOS_UTILS,rundir,PREFIX,PREFIX,rundir,PREFIX,rundir,METAMOS_UTILS),"Metaphyler")
 

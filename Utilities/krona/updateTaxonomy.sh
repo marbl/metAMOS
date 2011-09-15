@@ -51,18 +51,18 @@ fi
 
 cd $oldPath
 
-if [ taxonomy/gi_taxid_nucl.dmp -nt taxonomy/gi_taxid.dat ]
+if [ $taxonomyPath/gi_taxid_nucl.dmp -nt $taxonomyPath/gi_taxid.dat ]
 then
 	echo ">>>>> Creating combined GI to taxID index..."
-	./scripts/indexGIs.pl
+	$taxonomyPath/indexGIs.pl
 else
 	echo ">>>>> GI index is up to date"
 fi
 
-if [ taxonomy/nodes.dmp -nt taxonomy/taxonomy.tab ]
+if [ $taxonomyPath/nodes.dmp -nt $taxonomyPath/taxonomy.tab ]
 then
 	echo ">>>>> Extracting node info..." 
-	./scripts/extractTaxonomy.pl
+	$taxonomyPath/extractTaxonomy.pl
 else
 	echo ">>>>> Node info is up to date"
 fi

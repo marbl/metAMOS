@@ -20,7 +20,7 @@ if not os.path.exists("./Utilities/DB/refseq_protein.pal"):
 
         os.system("fastacmd -d ./Utilities/DB/refseq_protein -p T -a T -D 1 -o ./Utilities/DB/allprots.faa")
 
-if not os.path.exists("./Utilities/krona/taxonomy.tab")
+if not os.path.exists("./Utilities/krona/taxonomy.tab"):
     print "ncbi taxonomy file not found, needed for Postprocess, download now?"
     dl = raw_input("Enter Y/N: ")
     print "Download and install ncbi taxonomy.."
@@ -33,4 +33,5 @@ os.system("python setup.py install_scripts --install-dir=`pwd`")
 #print "Compile & optimize"
 #distutils.util.byte_compile(['./runPipeline.py'],optimize=2,force=True)
 #os.system("chmod a+wrx runPipeline.pyo")
-#os.system("mv runPipeline.pyo runPipeline")
+os.system("mv runPipeline.py runPipeline")
+os.system("mv createProject.py createProject")

@@ -43,7 +43,7 @@ class Read:
     path = ""
     fname = ""
     id = 0
-    libid = 1
+    sid = ""
     def __init__(self,format,path,mated=True,interleaved=False):
         global readcounter 
         self.id = readcounter
@@ -84,13 +84,13 @@ class readLib:
         self.mmax = mmax
         self.f1 = f1
         self.f2 = f2
-        self.f1.libid = self.sid
+        self.f1.sid = self.sid
         self.readDict[f1.id] = self.f1
         if f2 != "":
             self.readDict[f2.id] = self.f2
             self.pairDict[f1.id] = f2.id
             self.pairDict[f2.id] = f1.id
-            self.f2.libid = self.sid
+            self.f2.sid = self.sid
         self.reads.append(f1)
         if self.f2 != "":
             self.reads.append(f2)

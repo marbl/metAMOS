@@ -43,6 +43,7 @@ class Read:
     path = ""
     fname = ""
     id = 0
+    libid = 1
     def __init__(self,format,path,mated=True,interleaved=False):
         global readcounter 
         self.id = readcounter
@@ -83,12 +84,13 @@ class readLib:
         self.mmax = mmax
         self.f1 = f1
         self.f2 = f2
+        self.f1.libid = self.sid
         self.readDict[f1.id] = self.f1
         if f2 != "":
             self.readDict[f2.id] = self.f2
             self.pairDict[f1.id] = f2.id
             self.pairDict[f2.id] = f1.id
-
+            self.f2.libid = self.sid
         self.reads.append(f1)
         if self.f2 != "":
             self.reads.append(f2)
@@ -167,8 +169,8 @@ def parseInterleaved(rf,wf,fastq=True):
                                    continue
                                #update hdrs to be filename /1 or /2
                                recordcnt +=1
-                               hdr = lib.sid+"r"+str(recordcnt)+"/"
-                               hdr2 = lib.sid[0:3]+str(int(lib.sid[3:])+1)+str(recordcnt)+"/"
+                               hdr = read.sid+"r"+str(recordcnt)+"/"
+                               #hdr2 = lib.sid[0:3]+str(int(lib.sid[3:])+1)+str(recordcnt)+"/"
                                if fastq == True:
                                    wf.writelines("@"+hdr+"1\n")
                                    wf.writelines(record[1])
@@ -179,13 +181,13 @@ def parseInterleaved(rf,wf,fastq=True):
                                    wf.writelines("+"+hdr+"2\n")
                                    wf.writelines(record[7])
                                else:
-                                   wf.writelines(">"+hdr2+"1\n")
+                                   wf.writelines(">"+hdr+"1\n")
                                    wf.writelines(record[1])
-                                   wf.writelines(">"+hdr2+"1\n")
+                                   wf.writelines(">"+hdr+"1\n")
                                    wf.writelines(record[3])
-                                   wf.writelines(">"+hdr2+"2\n")
+                                   wf.writelines(">"+hdr+"2\n")
                                    wf.writelines(record[5])
-                                   wf.writelines(">"+hdr2+"2\n")
+                                   wf.writelines(">"+hdr+"2\n")
                                    wf.writelines(record[7])
                            elif rcnt % 4 == 0:
                                s2hdr = line
@@ -910,15 +912,15 @@ def Preprocess(input,output):
                                    continue
                                #update hdrs to be filename /1 or /2
                                recordcnt +=1
-                               hdr = lib.sid+"r"+str(recordcnt)+"/"
-                               hdr2 = lib.sid[0:3]+str(int(lib.sid[3:])+1)+str(recordcnt)+"/"
+                               hdr = read.sid+"r"+str(recordcnt)+"/"
+                               #hdr2 = lib.sid[0:3]+str((int(lib.sid[3:])+1))+str(recordcnt)+"/"
                                wf.writelines("@"+hdr+"1\n")
                                wf.writelines(record[1])
                                wf.writelines("+"+hdr+"1\n")
                                wf.writelines(record[3])
-                               wf.writelines("@"+hdr2+"2\n")
+                               wf.writelines("@"+hdr+"2\n")
                                wf.writelines(record[5])
-                               wf.writelines("+"+hdr2+"2\n")
+                               wf.writelines("+"+hdr+"2\n")
                                wf.writelines(record[7])
                            elif rcnt % 4 == 0:
                                s2hdr = line
@@ -991,15 +993,15 @@ def Preprocess(input,output):
                            #record.append(line)
                            #rcnt +=1
                            recordcnt +=1
-                           hdr = lib.sid+"r"+str(recordcnt)+"/"
+                           hdr = read.sid+"r"+str(recordcnt)+"/"
                            wf1.writelines("@"+hdr+"1\n")
                            wf1.writelines(rs2)
                            wf1.writelines("+"+hdr+"1\n")
                            wf1.writelines(rs4)
-                           hdr2 = lib.sid[0:3]+str(int(lib.sid[3:])+1)+str(recordcnt)+"/"
-                           wf2.writelines("@"+hdr2+"2\n")
+                           hdr2 = readpair.sid[0:3]+str(int(lib.sid[3:])+1)+str(recordcnt)+"/"
+                           wf2.writelines("@"+hdr+"2\n")
                            wf2.writelines(rp2)
-                           wf2.writelines("+"+hdr2+"2\n")
+                           wf2.writelines("+"+hdr+"2\n")
                            wf2.writelines(rp4)
                            wf1.flush()
                            wf2.flush()
@@ -1071,7 +1073,7 @@ def Preprocess(input,output):
                            if "N" in string.upper(seq) or len(seq) < 2:
                                pass
                            elif prevok:
-                               hdr = lib.sid+"r"+str(readcnt)+"/"
+                               hdr = read.sid+"r"+str(readcnt)+"/"
                                wf.writelines(">"+hdr+"1\n")
                                wf.writelines(prevseq)
                                wf.writelines(">"+hdr+"2\n")
@@ -1124,7 +1126,7 @@ def Preprocess(input,output):
                            #record.append(line)
                            #rcnt +=1
                            recordcnt +=1
-                           hdr = lib.sid+"r"+str(recordcnt)+"/"
+                           hdr = read.sid+"r"+str(recordcnt)+"/"
                            wf1.writelines(">"+hdr+"1\n")
                            wf1.writelines(rs2)
                            wf2.writelines(">"+hdr+"2\n")

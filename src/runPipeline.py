@@ -1754,7 +1754,7 @@ def parse_metaphyler(giMapping, toTranslate, output):
    GIs.close()
    outf.close()
 
-def parse_genemarkout(orf_file,is_scaff=False, errorStream="Findorfs"):
+def parse_genemarkout(orf_file,is_scaff=False, error_stream="Findorfs"):
     coords = open(orf_file,'r')
     coords.readline()
 #    outf = open("proba.orfs",'w')

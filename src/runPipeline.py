@@ -18,6 +18,7 @@ METAMOS_JAVA  = "%s%sjava:%s"%(METAMOS_UTILS,os.sep,os.curdir)
 KRONA         = "%s%skrona"%(METAMOS_UTILS,os.sep)
 AMOS          = "%s%sAMOS%sbin"%(METAMOSDIR, os.sep, os.sep)
 SOAP          = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
+REPEATOIRE    = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
 CA            = "%s%sCA%s%s-%s%sbin"%(METAMOSDIR, os.sep, os.sep, OSTYPE, MACHINETYPE.replace("x86_64", "amd64"), os.sep)
 NEWBLER       = "%s%snewbler%s%s-%s"%(METAMOSDIR, os.sep, os.sep, OSTYPE, MACHINETYPE)
 BOWTIE        = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
@@ -133,6 +134,110 @@ class readLib:
 
     def __str__(self):
         pass
+
+
+
+
+def concatContig(ctgfile):
+    if len(sys.argv) < 3:
+        print "usage: contig_file out_file"
+    contig_file = open(ctgfile,'r')
+    out_file = open(ctgfile+".merged",'w')
+    out_data = ""
+    for line in contig_file.xreadlines():
+        if ">" not in line:
+             out_data += line.replace("\n","")
+    width = 60
+    pp = 0
+    out_file.write(">seq\n")
+    while pp+60 < len(out_data):
+        out_file.write(out_data[pp:pp+60]+"\n")
+        pp +=60
+    out_file.write(out_data[pp:]+"\n")
+    out_file.close()
+    contig_file.close()
+
+
+
+def getContigRepeats(contigFile,outFile):
+
+    contig_repeats = ""
+    contig_file = ""
+    try:
+        contig_repeats = open(outFile,'w')
+    except IOError, errmsg:
+        print "Error creating output file %s "%(sys.argv[2]), errmsg
+        sys.exit(1)
+
+    try:
+        contig_file = open(contigFile,'r')
+    except IOError, errmsg:
+        print "Error opening input file %s "%(sys.argv[1]), errmsg
+        sys.exit(1)
+    contig_file.close()
+    contig_file = open(contigFile,'r')
+    concatContig(contigFile)
+
+    if 1:
+        print REPEATOIRE
+        os.system("%s --minreplen=200 --z=17 --sequence=%s.merged --xmfa=%s.xmfa"%(REPEATOIRE,contigFile,contigFile))
+    repeat_file = open(contigFile+".xmfa",'r')
+    ctg_dict = {}
+    seq_map = {}
+    contig_data = contig_file.read()
+    num_contigs = contig_data.count(">")
+    contig_data = contig_data.split(">")[1:]
+    prev_pos = 0
+    eid = ""
+    iid = 1
+    for contig in contig_data:
+        hdr,seq = contig.split("\n",1)
+        id = hdr.split(" ")[0]
+        hdr = hdr.replace(">","").replace("\n","")
+        start = prev_pos
+        clen = len(seq.replace("\n",""))
+        end = prev_pos+clen
+        ctg_dict[iid] = [start, end, seq]
+        i = 0
+        while i < clen:
+            seq_map[prev_pos+i] = hdr#iid
+            i+=1
+        prev_pos = end+1
+        iid +=1
+
+    repeat_data = repeat_file.readlines()
+    repfam = 1
+    reppos = []
+    clc = 1
+    for line in repeat_data:
+        if "=" in line:
+          repfam +=1
+          ctg_list = []
+          for copy in reppos:
+             try:
+                #print seq_map[int(copy[0])]
+                if seq_map[int(copy[0])] == seq_map[int(copy[1])]:
+                    ctg_list.append(seq_map[int(copy[0])])
+                    #ctg_list.append(seq_map[copy[1]])
+             except KeyError:
+                 continue
+          #print ctg_list
+
+          if len(ctg_list) > 1 and ctg_list.count(ctg_list[0]) != len(ctg_list):
+              for item in ctg_list:
+                   contig_repeats.write("%d:"%repfam+str(item)+"\n")
+          clc +=1
+          reppos = []
+        if ">" not in line:
+            continue
+        gg, info = line.split(":",1)
+        spos,info = info.split("-",1)
+        epos,info = info.split(" ",1)
+        orient, info = info.split(" ",1)
+#        print spos, epos, orient
+        reppos.append([spos,epos])
+
+
 
      
 def parseInterleaved(rf,wf,fastq=True):
@@ -257,6 +362,7 @@ def guessPaths():
     global METAMOS_JAVA
     global AMOS
     global SOAP
+    global REPEATOIRE
     global CA
     global NEWBLER
     global BOWTIE
@@ -299,6 +405,12 @@ def guessPaths():
     if not os.path.exists(NEWBLER + os.sep + "runProject"):
        NEWBLER = getFromPath("runProject", "Newbler")
 
+    # now for repeatoire
+    REPEATOIRE = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
+    if not os.path.exists(REPEATOIRE + os.sep + "repeatoire"):
+       REPEATOIRE = getFromPath("repeatoire", "Repeatoire")
+    else:
+       REPEATOIRE += os.sep + "repeatoire"
     # now for the mappers
     BOWTIE = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
     if not os.path.exists(BOWTIE + os.sep + "bowtie"):
@@ -329,6 +441,7 @@ def guessPaths():
     print "FCP:\t\t\t%s"%(FCP)
     print "PHMMER:\t\t\t%s"%(PHMMER)
     print "BLAST:\t\t\t%s"%(BLAST)
+    print "REPEATOIRE:\t\t\t%s"%(REPEATOIRE)
 
 def getProgramParams(fileName, module="", prefix="", comment="#"):
     # we process parameters in the following priority:
@@ -1392,7 +1505,8 @@ def FindRepeats(input,output):
    if "FindORFS" in skipsteps or "FindRepeats" in skipsteps:
      return 0
 
-   run_process("python %s/python/getContigRepeats.py  %s/FindRepeats/in/%s.fna %s/FindRepeats/out/%s.repeats"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX),"Findrepeats")
+   #run_process("python %s/python/getContigRepeats.py %s/FindRepeats/in/%s.fna %s/FindRepeats/out/%s.repeats"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX),"Findrepeats")
+   getContigRepeats("%s/FindRepeats/in/%s.fna"%(rundir,PREFIX), "%s/FindRepeats/out/%s.repeats"%(rundir,PREFIX))
 
 if "Annotate" in forcesteps:
    run_process("rm %s/Annotate/out/%s.hits"%(rundir,PREFIX))

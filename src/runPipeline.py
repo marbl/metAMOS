@@ -982,6 +982,7 @@ def Preprocess(input,output):
            for read in lib.reads:
                run_process("ln -s -t %s/Preprocess/out/ %s/Preprocess/in/%s"%(rundir,rundir,read.fname),"Preprocess")
        return 0
+   run_process("rm %s/Preprocess/out/all.seq.mates"%(rundir), "Preprocess")
    if filter == True:
        #print "filtering.."
      
@@ -1286,7 +1287,7 @@ def Preprocess(input,output):
                else:
                    run_process("%s %s"%(sffToCACmd, read.path),"Preprocess")
                run_process("%s/gatekeeper -T -F -o %s/Preprocess/out/%s.gkpStore %s/Preprocess/out/%s.frg"%(CA, rundir, PREFIX, rundir, PREFIX),"Preprocess")
-               run_process("%s/gatekeeper -dumpnewbler %s/Preprocess/out/%s.%d %s/Preprocess/out/%s.gkpStore"%(CA, rundir, PREFIX, rundir, PREFIX, lib.id),"Preprocess")
+               run_process("%s/gatekeeper -dumpnewbler %s/Preprocess/out/%s.%d %s/Preprocess/out/%s.gkpStore"%(CA, rundir, PREFIX, lib.id, rundir, PREFIX),"Preprocess")
                run_process("%s/gatekeeper -dumplibraries -tabular %s/Preprocess/out/%s.gkpStore |awk '{if (match($3, \"U\") == 0 && match($1, \"UID\") == 0) print \"library\t\"$1\"\t\"$4-$5*3\"\t\"$4+$5*3}' > %s/Preprocess/out/lib%d.seq.mates"%(CA, rundir, PREFIX, rundir,lib.id),"Preprocess")
                run_process("%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3\"\t\"$5}' >> %s/Preprocess/out/lib%d.seq.mates"%(CA, rundir, PREFIX, rundir,lib.id),"Preprocess")
                run_process("unlink %s/Preprocess/out/lib%d.seq"%(rundir,lib.id),"Preprocess")
@@ -1294,6 +1295,7 @@ def Preprocess(input,output):
                run_process("ln -s %s/Preprocess/out/%s.%d.fna.qual %s/Preprocess/out/lib%d.seq.qual"%(rundir,PREFIX,lib.id,rundir,lib.id),"Preprocess")
                run_process("rm -rf %s/Preproces/out/%s.gkpStore"%(rundir, PREFIX),"Preprocess")
                run_process("unlink %s/Preprocess/out/%s.frg"%(rundir, PREFIX),"Preprocess")
+               run_process("cat %s/Preprocess/out/lib%d.seq.mates >> %s/Preprocess/out/all.seq.mates"%(rundir, lib.id, rundir), "Preprocess")
            elif lib.format == "fasta" and not lib.mated:
                run_process("ln -s %s/Preprocess/in/%s %s/Preprocess/out/lib%d.seq"%(rundir,lib.f1.fname,rundir,lib.id),"Preprocess")
                run_process("ln -s %s/Preprocess/in/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(rundir,lib.f1.fname,rundir,lib.id),"Preprocess")
@@ -1412,18 +1414,18 @@ def Assemble(input,output):
             NEWBLER_VERSION = float(mymatch[0])
 
       for lib in readlibs:
-          if lib.format == "fasta"  and lib.interleaved:
+          if lib.format == "fasta" or lib.format == "sff":
               run_process("%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(NEWBLER, rundir, rundir,lib.id),"Assemble")
           elif lib.format == "fastq" and lib.interleaved:
               if (NEWBLER_VERSION < 2.6):
                  print "Error: FASTQ + Newbler only supported in Newbler version 2.6+. You are using version %s."%(NEWBLER_VERSION)
                  raise(JobSignalledBreak)
               run_process("%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(NEWBLER, rundir, rundir, lib.id),"Assemble")
-          elif lib.interleaved == false:
+          elif not lib.interleaved:
               print "Error: Only interleaved fastq files are supported for Newbler"
               raise(JobSignalledBreak)
 
-      newblerCmd = "%s%srunProject"%(NEWBLER, os.sep)
+      newblerCmd = "%s%srunProject "%(NEWBLER, os.sep)
       # read spec file to input to newbler parameters
       newblerCmd += getProgramParams("newbler.spec", "", "-")
       run_process("%s -cpu %d %s/Assemble/out"%(newblerCmd,threads,rundir),"Assemble")
@@ -1656,7 +1658,7 @@ def FindScaffoldORFS(input,output):
       return 0
 
    run_process("%s/gmhmmp -o %s/FindScaffoldORFS/out/%s.scaffolds.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/Scaffold/out/%s.linearize.scaffolds.final"%(GMHMMP,rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX),"Findscaffoldorfs")
-   parse_genemarkout("%s/FindScaffoldORFS/out/%s.scaffolds.orfs"%(rundir,PREFIX),1)
+   parse_genemarkout("%s/FindScaffoldORFS/out/%s.scaffolds.orfs"%(rundir,PREFIX),1, "Findscaffoldorfs")
    #run_process("unlink %s/FindORFS/in/%s.scaffolds.faa"%(rundir,PREFIX))
    #run_process("ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.scaffolds.faa"%(rundir,rundir,PREFIX))
 
@@ -1752,7 +1754,7 @@ def parse_metaphyler(giMapping, toTranslate, output):
    GIs.close()
    outf.close()
 
-def parse_genemarkout(orf_file,is_scaff=False):
+def parse_genemarkout(orf_file,is_scaff=False, errorStream="Findorfs"):
     coords = open(orf_file,'r')
     coords.readline()
 #    outf = open("proba.orfs",'w')
@@ -1829,10 +1831,10 @@ def parse_genemarkout(orf_file,is_scaff=False):
                     cvg_dict[curcontig] = cvg
             elif asm == "newbler":
                 try:
-                    run_process("cat %s/%s/Assemble/out/assembly/454ContigGraph.txt | grep %s | awk \'{print $4}\' > %s/%s/cvg1.out"%(METAMOSDIR,rundir, curcontig, METAMOSDIR,rundir))
+                    run_process("cat %s/Assemble/out/assembly/454ContigGraph.txt | grep %s | awk \'{print $4}\' > %s/Assemble/out/cvg1.out"%(rundir,curcontig,rundir), error_stream)
                     #print "cat %s/%s/Assemble/out/assembly/454ContigGraph.txt | grep %s | awk \'{print $4}\' > %s/%s/cvg1.out"%(METAMOSDIR,rundir, curcontig, METAMOSDIR,rundir)
                     #run_process("cat %s/%s/Assemble/out/assembly/454ContigGraph.txt | grep %s  > %s/%s/cvg1.out"%(METAMOSDIR,rundir, curcontig, METAMOSDIR,rundir))
-                    fin = open("%s/%s/cvg1.out"%(METAMOSDIR,rundir),'r')
+                    fin = open("%s/Assemble/out/cvg1.out"%(rundir),'r')
                     cvg = fin.readline().replace("\n","")
                     cvg = float(cvg)
                     #print cvg

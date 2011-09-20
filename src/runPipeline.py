@@ -177,10 +177,7 @@ def getContigRepeats(contigFile,outFile):
     contig_file.close()
     contig_file = open(contigFile,'r')
     concatContig(contigFile)
-
-    if 1:
-        print REPEATOIRE
-        os.system("%s --minreplen=200 --z=17 --sequence=%s.merged --xmfa=%s.xmfa"%(REPEATOIRE,contigFile,contigFile))
+    run_process("%s --minreplen=200 --z=17 --sequence=%s.merged --xmfa=%s.xmfa"%(REPEATOIRE,contigFile,contigFile),"FINDREPEATS")
     repeat_file = open(contigFile+".xmfa",'r')
     ctg_dict = {}
     seq_map = {}
@@ -489,10 +486,28 @@ def getProgramParams(fileName, module="", prefix="", comment="#"):
 def usage():
     print "usage: runPipeline.py [options] -d projectdir (required)"
     print "options:  -a <assembler> -k <kmer size> -c <classification method> -m <enable metaphyler?> -p <num threads>  "
+    print "-h: help?"
+    print "-r: retain the AMOS bank?  (default = NO)"
+    print "-b: use bowtie for read mapping? (default = NO)"
+    print "-d = <project dir>: directory created by createProject"
+    print "-s = <runPipeline step>: start at this step in the pipeline"
+    print "-e = <runPipeline step>: end at this step in the pipeline"
+    print "-o = <int>>: min overlap length"
+    print "-k = <int>: kmer size for assembly"
+    print "-c = <classifier>: classifier to use for annotation"
+    print "-a = <assembler>: genome assembler to use"
+    print "-n = <runPipeline step>: step to skip in pipeline"
+    print "-p = <int>: number of threads to use (be greedy!)"
+    print "-t: filter input reads? (default = NO)"
+    print "-f = <runPipeline step>: force this step to be run"
+    print "-v: verbose output? (default = NO)"
+    print "-m: use metaphyler? (default = YES)"
+    print "-4: 454 data? (default = NO)"
+    
     #print "options: annotate, stopafter, startafter, fq, fa"
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hbd:s:e:o:k:c:a:n:p:tf:vm4", ["help", "bowtie","projectdir","startat","endat", "minoverlap","kmersize","classifier","assembler","skipsteps","threads","filter","forcesteps","verbose","metaphyler","454"])
+    opts, args = getopt.getopt(sys.argv[1:], "hrbd:s:e:o:k:c:a:n:p:tf:vm4", ["help", "retainBank""bowtie","projectdir","startat","endat", "minoverlap","kmersize","classifier","assembler","skipsteps","threads","filter","forcesteps","verbose","metaphyler","454"])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -514,6 +529,7 @@ skipsteps = []
 run_metaphyler = False
 runfast = False
 cls = None
+retainBank = False
 asm = "soap"
 rundir = ""
 fff = ""
@@ -565,6 +581,8 @@ for o, a in opts:
 
     elif o in ("-m", "--metaphyler"):
         run_metaphyler = True
+    elif o in ("-r", "--retainBank"):
+        retainBank = True
     elif o in ("-c", "--classifier"):
         #blast,fcp,etc 
         #default: fcp?
@@ -1591,40 +1609,46 @@ if "Scaffold" in forcesteps:
 def Scaffold(input,output):
    # check if we need to do scaffolding
    numMates = 0
-   run_process("rm -rf %s/Scaffold/in/%s.bnk"%(rundir,PREFIX),"Scaffold")
-   if asm == "newbler":
-      p = subprocess.Popen("cat %s/Assemble/out/%s.graph.cte |grep \"{CTL\" |wc -l"%(rundir, PREFIX), stdin=None, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-      (checkStdout, checkStderr) = p.communicate()
-      numMates = int(checkStdout.strip())
+   if not retainBank:
+       run_process("rm -rf %s/Scaffold/in/%s.bnk"%(rundir,PREFIX),"Scaffold")
+       if asm == "newbler":
+          p = subprocess.Popen("cat %s/Assemble/out/%s.graph.cte |grep \"{CTL\" |wc -l"%(rundir, PREFIX), stdin=None, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+          (checkStdout, checkStderr) = p.communicate()
+          numMates = int(checkStdout.strip())
 
-   if mated == False and numMates == 0:
+       if mated == False and numMates == 0:
 
-      print "No mate pair info available for scaffolding, skipping"
-      run_process("touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(rundir, PREFIX), "Scaffold")
-      skipsteps.append("FindScaffoldORFS")
-      return 0
+          print "No mate pair info available for scaffolding, skipping"
+          run_process("touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(rundir, PREFIX), "Scaffold")
+          skipsteps.append("FindScaffoldORFS")
+          return 0
 
-   if asm == "soap":
-       for lib in readlibs:
-           #run_process("ln -t %s/Metaphyler/in/ -s %s/FindORFS/out/%s.faa"%(rundir,rundir,PREFIX))
+       if asm == "soap":
+           for lib in readlibs:
+        
+               if lib.format == "fasta":
+                   if "bowtie" not in skipsteps:
+                       map2contig(1)
+                   run_process("%s/toAmos_new -s %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,lib.id,rundir, PREFIX,lib.id,rundir,PREFIX),"Scaffold")
 
-           if lib.format == "fasta":
-               if "bowtie" not in skipsteps:
-                   map2contig(1)
-               #PUNT: here, add toAmos_new call for each lib
-               run_process("%s/toAmos_new -s %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,lib.id,rundir, PREFIX,lib.id,rundir,PREFIX),"Scaffold")
+               elif format == "fastq":
+                   if "bowtie" not in skipsteps:
+                       map2contig(0)
+                   run_process("%s/toAmos_new -Q %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,lib.id,rundir,PREFIX, lib.id,rundir,PREFIX),"Scaffold")
 
-           elif format == "fastq":
-               if "bowtie" not in skipsteps:
-                   map2contig(0)
-               run_process("%s/toAmos_new -Q %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,lib.id,rundir,PREFIX, lib.id,rundir,PREFIX),"Scaffold")
+           run_process("%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,PREFIX,rundir,PREFIX),"Scaffold")
 
-       run_process("%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,PREFIX,rundir,PREFIX),"Scaffold")
+       elif asm == "newbler":
+          run_process("rm -rf %s/Scaffold/in/%s.bnk"%(rundir, PREFIX),"Scaffold")
+          # build the bank for amos
+          run_process("%s/bank-transact -b %s/Scaffold/in/%s.bnk -c -m %s/Assemble/out/%s.afg"%(AMOS,rundir, PREFIX, rundir, PREFIX),"Scaffold");
 
-   elif asm == "newbler":
-      run_process("rm -rf %s/Scaffold/in/%s.bnk"%(rundir, PREFIX),"Scaffold")
-      # build the bank for amos
-      run_process("%s/bank-transact -b %s/Scaffold/in/%s.bnk -c -m %s/Assemble/out/%s.afg"%(AMOS,rundir, PREFIX, rundir, PREFIX),"Scaffold");
+   else:
+       run_process("%s/bank-unlock %s/Scaffold/in/%s.bnk"%(AMOS,rundir,PREFIX))
+       run_process("rm %s/Scaffold/in/%.bnk/CTE.*"%(rundir,PREFIX),"SCAFFOLD")
+       run_process("rm %s/Scaffold/in/%.bnk/CTL.*"%(rundir,PREFIX),"SCAFFOLD")
+       run_process("rm %s/Scaffold/in/%.bnk/MTF.*"%(rundir,PREFIX),"SCAFFOLD")
+       run_process("rm %s/Scaffold/in/%.bnk/SCF.*"%(rundir,PREFIX),"SCAFFOLD")
 
    #calls to Bambus2, goBambus2 script
    # first, parse the parameters

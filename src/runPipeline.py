@@ -18,6 +18,7 @@ METAMOS_JAVA  = "%s%sjava:%s"%(METAMOS_UTILS,os.sep,os.curdir)
 KRONA         = "%s%skrona"%(METAMOS_UTILS,os.sep)
 AMOS          = "%s%sAMOS%sbin"%(METAMOSDIR, os.sep, os.sep)
 SOAP          = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
+METAIDBA      = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
 REPEATOIRE    = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
 CA            = "%s%sCA%s%s-%s%sbin"%(METAMOSDIR, os.sep, os.sep, OSTYPE, MACHINETYPE.replace("x86_64", "amd64"), os.sep)
 NEWBLER       = "%s%snewbler%s%s-%s"%(METAMOSDIR, os.sep, os.sep, OSTYPE, MACHINETYPE)
@@ -359,6 +360,7 @@ def guessPaths():
     global METAMOS_JAVA
     global AMOS
     global SOAP
+    global METAIDBA
     global REPEATOIRE
     global CA
     global NEWBLER
@@ -402,6 +404,11 @@ def guessPaths():
     if not os.path.exists(NEWBLER + os.sep + "runProject"):
        NEWBLER = getFromPath("runProject", "Newbler")
 
+    # 5. meta-IDBA
+    METAIDBA = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE) 
+    if not os.path.exists(SOAP + os.sep + "metaidba"):
+       METAIDBA = getFromPath("metaidba", "METAIDBA")
+
     # now for repeatoire
     REPEATOIRE = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
     if not os.path.exists(REPEATOIRE + os.sep + "repeatoire"):
@@ -432,7 +439,7 @@ def guessPaths():
     print "Configuration summary:"
     print "OS:\t\t\t%s\nOS Version:\t\t%s\nMachine:\t\t%s\n"%(OSTYPE, OSVERSION, MACHINETYPE)
     print "metAMOS main dir:\t%s\nmetAMOS Utilities:\t%s\nmetAMOS Java:\t\t%s\n"%(METAMOSDIR, METAMOS_UTILS, METAMOS_JAVA)
-    print "AMOS:\t\t\t%s\nSOAP:\t\t\t%s\nCelera Assembler:\t%s\nNEWBLER:\t\t%s\n"%(AMOS, SOAP, CA, NEWBLER)
+    print "AMOS:\t\t\t%s\nSOAP:\t\t\t%s\nMETAIDBA:\t\t\t%s\nCelera Assembler:\t%s\nNEWBLER:\t\t%s\n"%(AMOS, SOAP, METAIDBA,CA, NEWBLER)
     print "Bowtie:\t\t\t%s"%(BOWTIE)
     print "GMHMMP:\t\t\t%s"%(GMHMMP)
     print "FCP:\t\t\t%s"%(FCP)
@@ -520,7 +527,7 @@ reads = None
 quals = None
 format = None
 verbose = False
-bowtie_mapping = False
+bowtie_mapping = 0
 startat = None
 stopat = None
 filter = False
@@ -546,7 +553,7 @@ for o, a in opts:
         usage()
         sys.exit()
     elif o in ("-b","--bowtie"):
-        bowtie_mapping = True
+        bowtie_mapping = 1
     elif o in ("-s","--startat"):
         startat = a
         if startat not in allsteps:
@@ -591,6 +598,8 @@ for o, a in opts:
         #maximus,CA,soap
         #default: maximus?
         asm = a
+        if asm == "metaidba":
+            bowtie_mapping = 1
     elif o in ("-f","--fastest"):
         #tweak all parameters to run fast
         #bambus2, use SOAP, etc
@@ -695,15 +704,11 @@ if f1 and not libadded:
     nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved)
     readlibs.append(nlib)
     #libadded = True
-#nread1 = Read(format,f1,mated,interleaved)
-#nread2 = ""
-#readobjs.append(nread1)
-#if f2 != "":
-#    nread2 = Read(format,f2,mated,interleaved)
-#    readobjs.append(nread2)
-#nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved)
-#readlibs.append(nlib)
-#print len(readlibs)
+
+
+if len(readlibs) > 1 and asm == "metaidba":
+    print "ERROR: meta-IDBA only supports 1 library, please select different assembler or reduce libraries"
+    sys.exit(1)
 def run_process(command,step=""):
        outf = ""
        if step != "":
@@ -1405,13 +1410,18 @@ def Assemble(input,output):
       soapOptions = getProgramParams("soap.spec", "", "-") 
       #start stopwatch
       run_process("%s/soap63 all -p %d -K %d %s -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(SOAP, threads, kmer, soapOptions, rundir,rundir,PREFIX),"Assemble")#SOAPdenovo config.txt
-      #-L 300
-      #run_process("%s/SOAPdenovo-63mer all -D -d -R -p %d -K %d -M 3 -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(SOAP, threads, kmer, rundir,rundir,PREFIX))#SOAPdenovo config.txt
-      #run_process("%s/SOAPdenovo-31mer all  -D 3 -d 2 -R -p %d -M 3 -K %d -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(SOAP, threads, kmer, rundir,rundir,PREFIX))#SOAPdenovo config.txt
-
-      #run_process("ln -s %s/Assemble/out/%s.asm.contig %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX, rundir, PREFIX)) 
 
       #if OK, convert output to AMOS
+   elif asm == "metaidba":
+      bowtie_mapping = 1
+      for lib in readlibs:
+          if lib.format != "fasta"  or (lib.mated and not lib.interleaved):
+              print "ERROR: meta-IDBA requires reads to be in (interleaved) fasta format, cannot run"
+              sys.exit(1)
+          #apparently connect = scaffold? need to convert fastq to interleaved fasta to run, one lib per run??
+          #print "%s/metaidba --read %s/Preprocess/out/%s --output  %s/Assemble/out/%s.asm --mink 21 --maxk %d --cover 1 --connect"%(METAIDBA,rundir,lib.f1.fname,rundir,PREFIX,kmer)
+          run_process("%s/metaidba --read %s/Preprocess/out/%s --output  %s/Assemble/out/%s.asm --mink 21 --maxk %d --cover 1 --connect"%(METAIDBA,rundir,lib.f1.fname,rundir,PREFIX,kmer),"Assemble")
+          run_process("mv %s/Assemble/out/%s.asm-contig.fa %s/Assemble/out/%s.asm.contig"%(rundir,PREFIX,rundir,PREFIX),"Assemble")
 
    elif asm == "newbler":
       if not os.path.exists(NEWBLER + os.sep + "newAssembly"):
@@ -1637,7 +1647,12 @@ def Scaffold(input,output):
                    run_process("%s/toAmos_new -Q %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,lib.id,rundir,PREFIX, lib.id,rundir,PREFIX),"Scaffold")
 
            run_process("%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,PREFIX,rundir,PREFIX),"Scaffold")
-
+       elif asm == "metaidba":
+          for lib in readlibs:
+              bowtie_mapping = 1
+              map2contig(1)
+              run_process("%s/toAmos_new -s %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,lib.id,rundir, PREFIX,lib.id,rundir,PREFIX),"Scaffold")
+          run_process("%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,PREFIX,rundir,PREFIX),"Scaffold")
        elif asm == "newbler":
           run_process("rm -rf %s/Scaffold/in/%s.bnk"%(rundir, PREFIX),"Scaffold")
           # build the bank for amos
@@ -1853,6 +1868,10 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="Findorfs"):
                     #print "Coverage not found, skip?"
                     cvg = 1.0
                     cvg_dict[curcontig] = cvg
+                except ValueError:
+                    #print "Coverage not found, skip?"
+                    cvg = 1.0
+                    cvg_dict[curcontig] = cvg
             elif asm == "newbler":
                 try:
                     run_process("cat %s/Assemble/out/assembly/454ContigGraph.txt | grep %s | awk \'{print $4}\' > %s/Assemble/out/cvg1.out"%(rundir,curcontig,rundir), error_stream)
@@ -1867,6 +1886,19 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="Findorfs"):
                     #print "Coverage not found, skip?"
                     cvg = 1.0
                     cvg_dict[curcontig] = cvg                
+            elif asm == "metaidba":
+                try:
+                    cvg = cvg.replace("\n","")
+                    cvg = float(cvg.split("_")[-1])
+                    cvg_dict[curcontig] = cvg
+                except IndexError:
+                    #print "Coverage not found, skip?"
+                    cvg = 1.0
+                    cvg_dict[curcontig] = cvg
+                except ValueError:
+                    #print "Coverage not found, skip?"
+                    cvg = 1.0
+                    cvg_dict[curcontig] = cvg
             prevhdr = 1
 
         elif len(line) > 2 and prevhdraa == 1 and prevhdr:
@@ -1906,6 +1938,7 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="Findorfs"):
     orfs = {}
     for key in gene_dict.keys():
         genecnt = 1
+
         if not is_scaff:
             cvgf.write("%s_gene%d\t%s\n"%(key,genecnt,cvg_dict[key])) 
         for gene in gene_dict[key]:

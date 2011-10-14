@@ -1185,7 +1185,7 @@ def Preprocess(input,output):
                    record = []
                    shdr = ""
                    reads = rf.read().split(">")[1:]
-                   if len(reads) % 4 != 0:
+                   if len(reads) % 2 != 0:
                        print "Read file corrupted, please fix and restart!"
                        sys.exit(1)
 

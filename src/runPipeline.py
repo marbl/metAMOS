@@ -1420,7 +1420,7 @@ def Assemble(input,output):
               sys.exit(1)
           #apparently connect = scaffold? need to convert fastq to interleaved fasta to run, one lib per run??
           #print "%s/metaidba --read %s/Preprocess/out/%s --output  %s/Assemble/out/%s.asm --mink 21 --maxk %d --cover 1 --connect"%(METAIDBA,rundir,lib.f1.fname,rundir,PREFIX,kmer)
-          run_process("%s/metaidba --read %s/Preprocess/out/%s --output  %s/Assemble/out/%s.asm --mink 21 --maxk %d --cover 1 --connect"%(METAIDBA,rundir,lib.f1.fname,rundir,PREFIX,kmer),"Assemble")
+          run_process("%s/metaidba --read %s/Preprocess/out/%s --output  %s/Assemble/out/%s.asm --mink 25 --maxk %d --connect"%(METAIDBA,rundir,lib.f1.fname,rundir,PREFIX,kmer),"Assemble")
           run_process("mv %s/Assemble/out/%s.asm-contig.fa %s/Assemble/out/%s.asm.contig"%(rundir,PREFIX,rundir,PREFIX),"Assemble")
 
    elif asm == "newbler":

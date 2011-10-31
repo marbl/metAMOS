@@ -15,19 +15,26 @@ MACHINETYPE   = "x86_64"
 METAMOSDIR    = sys.path[0]
 METAMOS_UTILS = "%s%sUtilities"%(METAMOSDIR, os.sep) 
 METAMOS_JAVA  = "%s%sjava:%s"%(METAMOS_UTILS,os.sep,os.curdir)
-KRONA         = "%s%skrona"%(METAMOS_UTILS,os.sep)
+
 AMOS          = "%s%sAMOS%sbin"%(METAMOSDIR, os.sep, os.sep)
+
 SOAP          = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
 METAIDBA      = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
-REPEATOIRE    = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
 CA            = "%s%sCA%s%s-%s%sbin"%(METAMOSDIR, os.sep, os.sep, OSTYPE, MACHINETYPE.replace("x86_64", "amd64"), os.sep)
 NEWBLER       = "%s%snewbler%s%s-%s"%(METAMOSDIR, os.sep, os.sep, OSTYPE, MACHINETYPE)
+VELVET        = "%s%scpp%s%s-%s%svelvet"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE, os.sep)
+VELVET_SC     = "%s%scpp%s%s-%s%svelvet-sc"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE, os.sep)
+
 BOWTIE        = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
+
 GMHMMP        = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
 
 FCP           = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
 PHMMER        = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
 BLAST         = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
+
+KRONA         = "%s%skrona"%(METAMOS_UTILS,os.sep)
+REPEATOIRE    = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
 
 libcounter = 1
 readcounter = 1
@@ -364,6 +371,8 @@ def guessPaths():
     global REPEATOIRE
     global CA
     global NEWBLER
+    global VELVET
+    global VELVET_SC
     global BOWTIE
     global GMHMMP
     global FCP
@@ -406,8 +415,18 @@ def guessPaths():
 
     # 5. meta-IDBA
     METAIDBA = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE) 
-    if not os.path.exists(SOAP + os.sep + "metaidba"):
+    if not os.path.exists(METAIDBA + os.sep + "metaidba"):
        METAIDBA = getFromPath("metaidba", "METAIDBA")
+
+    # when searching for velvet, we ignore paths because there are so many variations of velvet (velvet, velvet-sc, meta-velvet that all have a velveth/g and we have no way to tell if we got the right one
+    #6. velvet
+    VELVET = "%s%scpp%s%s-%s%svelvet"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE, os.sep);
+    if not os.path.exists(VELVET + os.sep + "velvetg"):
+       VELVET = ""
+    #7. velvet-sc
+    VELVET_SC = "%s%scpp%s%s-%s%svelvet-sc"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE, os.sep);
+    if not os.path.exists(VELVET_SC + os.sep + "velvetg"):
+       VELVET_SC = ""
 
     # now for repeatoire
     REPEATOIRE = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
@@ -439,13 +458,14 @@ def guessPaths():
     print "Configuration summary:"
     print "OS:\t\t\t%s\nOS Version:\t\t%s\nMachine:\t\t%s\n"%(OSTYPE, OSVERSION, MACHINETYPE)
     print "metAMOS main dir:\t%s\nmetAMOS Utilities:\t%s\nmetAMOS Java:\t\t%s\n"%(METAMOSDIR, METAMOS_UTILS, METAMOS_JAVA)
-    print "AMOS:\t\t\t%s\nSOAP:\t\t\t%s\nMETAIDBA:\t\t\t%s\nCelera Assembler:\t%s\nNEWBLER:\t\t%s\n"%(AMOS, SOAP, METAIDBA,CA, NEWBLER)
+    print "AMOS:\t\t\t%s\nSOAP:\t\t\t%s\nMETAIDBA:\t\t%s\nCelera Assembler:\t%s\nNEWBLER:\t\t%s\n"%(AMOS, SOAP, METAIDBA,CA, NEWBLER)
+    print "Velvet:\t\t\t%s\nVelvet-SC:\t\t%s\n"%(VELVET, VELVET_SC)
     print "Bowtie:\t\t\t%s"%(BOWTIE)
     print "GMHMMP:\t\t\t%s"%(GMHMMP)
     print "FCP:\t\t\t%s"%(FCP)
     print "PHMMER:\t\t\t%s"%(PHMMER)
     print "BLAST:\t\t\t%s"%(BLAST)
-    print "REPEATOIRE:\t\t\t%s"%(REPEATOIRE)
+    print "REPEATOIRE:\t\t%s"%(REPEATOIRE)
 
 def getProgramParams(fileName, module="", prefix="", comment="#"):
     # we process parameters in the following priority:
@@ -924,7 +944,71 @@ def map2contig(fasta):
     
     tigr_file.close()
         
-    
+def runVelvet(velvetPath, name):
+   if not os.path.exists(velvetPath + os.sep + "velvetg"):
+      print "Error: %s not found in %s. Please check your path and try again.\n"%(name, velvetPath)
+      raise(JobSignalledBreak)
+
+   CATEGORIES = 0.0;
+   p = subprocess.Popen("%s/velveth | grep CATEGORIES"%(velvetPath), shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   (checkStdout, checkStderr) = p.communicate()
+   if checkStderr != "":
+      print "Warning: Cannot determine Velvet number of supported libraries"
+   else:
+      mymatch = re.split('\s+=\s+', checkStdout.strip())
+      if (len(mymatch) == 2 and mymatch[1] != None):
+         CATEGORIES = float(mymatch[1])
+
+   velvethCommandLine = "%s/velveth %s/Assemble/out/ %d "%(velvetPath,rundir,kmer) 
+   currLibID = 1
+   currLibString = "";
+   for lib in readlibs:
+      if (currLibID > CATEGORIES):
+         print "Warning: Velvet only supports %d libraries, will not input any more libraries\n"%(CATEGORIES)
+         break 
+
+      if lib.format == "fasta":
+         velvethCommandLine += "-fasta"
+      elif lib.format == "fastq":
+         velvethCommandLine += "-fastq"
+
+      if lib.mated:
+         velvethCommandLine += " -shortPaired%s "%(currLibString)
+      else:
+         velvethCommandLine += " -short%s "(currLibString)
+      velvethCommandLine += "%s/Preprocess/out/lib%d.seq "%(rundir, lib.id)
+      currLibID += 1
+      if (currLibID > 1):
+         currLibString = "%d"%(currLibID) 
+
+   # now run velveth
+   run_process("%s"%(velvethCommandLine), "Assemble")
+
+   # now build velvetg command line
+   velvetgCommandLine = "%s/velvetg %s/Assemble/out/"%(velvetPath, rundir) 
+
+   currLibID = 1;
+   currLibString = ""
+   for lib in readlibs:
+      if (currLibID > CATEGORIES):
+         print "Warning: Velvet only supports %d libraries, will not input any more libraries\n"%(CATEGORIES)
+         break
+
+      if lib.mated:
+         velvetgCommandLine += " -ins_length%s %d -ins_length%s_sd %d"%(currLibString, lib.mean, currLibString, lib.stdev)
+      currLibID += 1
+      if (currLibID > 1):
+         currLibString = "%d"%(currLibID)
+   velvetgCommandLine += " %s"%(getProgramParams("%s.spec"%(name), "", "-"))
+   velvetgCommandLine += " -read_trkg yes -scaffolding no -amos_file yes";
+   run_process("%s"%(velvetgCommandLine), "Assemble")
+
+   # make symlinks
+   run_process("rm %s/Assemble/out/%s.afg"%(rundir, PREFIX), "Assemble")
+   run_process("ln -s %s/Assemble/out/velvet_asm.afg %s/Assemble/out/%s.afg"%(rundir, rundir, PREFIX),"Assemble")
+   run_process("rm %s/Assemble/out/%s.asm.contig"%(rundir, PREFIX),"Assemble")
+   run_process("ln -s %s/Assemble/out/contigs.fa %s/Assemble/out/%s.asm.contig"%(rundir, rundir, PREFIX), "Assemble")
+
         
 def LCS(S1, S2):
     M = [[0]*(1+len(S2)) for i in xrange(1+len(S1))]
@@ -1437,7 +1521,6 @@ def Assemble(input,output):
          print "Warning: Cannot determine Newbler version"
       else:
          mymatch = re.findall('\d+\.\d+', checkStdout.strip())
-         print "String %s %d\n"%(checkStdout.strip(), len(mymatch))
          if (len(mymatch) == 1 and mymatch[0] != None):
             NEWBLER_VERSION = float(mymatch[0])
 
@@ -1490,6 +1573,11 @@ def Assemble(input,output):
       run_process("%s/gatekeeper -dumpfrg -allreads -format2 asm.gkpStore > asm.frg bzip2 asm.frg"%(CA),"Assemble")
       run_process("%s/terminator -g asm.gkpStore -t asm.tigStore/ 2 -o asm bzip2 asm.asm"%(CA),"Assemble")
       run_process("%s/toAmos_new -a asm.asm.bz2 -f asm.frg.bz2 -b asm.bnk -U "%(AMOS),"Assemble")
+   elif asm == "velvet":
+      runVelvet(VELVET, "velvet")
+   elif asm == "velvet-sc":
+      runVelvet(VELVET_SC, "velvet-sc")
+
    #stop here, for now
    #sys.exit(0)
    #check if sucessfully completed   
@@ -1543,7 +1631,7 @@ if "Annotate" in forcesteps:
 @follows(FindRepeats)
 @files("%s/Annotate/in/%s.faa"%(rundir,PREFIX),"%s/Annotate/out/%s.hits"%(rundir,PREFIX))
 def Annotate(input,output):
-   if "Annotate" in skipsteps or "FindORFs" in skipsteps:
+   if "Annotate" in skipsteps or "FindORFS" in skipsteps:
       run_process("touch %s/Annotate/out/%s.hits"%(rundir, PREFIX), "Annotate")
       return 0
 
@@ -1614,7 +1702,7 @@ def Metaphyler(input,output):
 if "Scaffold" in forcesteps:
     #run_process("touch %s/Assemble/out/%s.asm.contig"%(rundir,PREFIX))
     run_process("rm %s/Scaffold/out/%s.scaffolds.final"%(rundir,PREFIX))
-@follows(Metaphyler)
+@follows(FindORFS)
 @files(["%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX)],"%s/Scaffold/out/%s.scaffolds.final"%(rundir,PREFIX))
 def Scaffold(input,output):
    # check if we need to do scaffolding
@@ -1656,7 +1744,10 @@ def Scaffold(input,output):
        elif asm == "newbler":
           run_process("rm -rf %s/Scaffold/in/%s.bnk"%(rundir, PREFIX),"Scaffold")
           # build the bank for amos
-          run_process("%s/bank-transact -b %s/Scaffold/in/%s.bnk -c -m %s/Assemble/out/%s.afg"%(AMOS,rundir, PREFIX, rundir, PREFIX),"Scaffold");
+          run_process("%s/bank-transact -b %s/Scaffold/in/%s.bnk -c -m %s/Assemble/out/%s.afg"%(AMOS,rundir, PREFIX, rundir, PREFIX),"Scaffold")
+       elif asm == "velvet" or asm == "velvet-sc":
+          run_process("rm -rf %s/Scaffold/in/%s.bnk"%(rundir, PREFIX), "Scaffold")
+          run_process("%s/bank-transact -b %s/Scaffold/in/%s.bnk -c -m %s/Assemble/out/%s.afg"%(AMOS, rundir, PREFIX, rundir, PREFIX), "Scaffold")
 
    else:
        run_process("%s/bank-unlock %s/Scaffold/in/%s.bnk"%(AMOS,rundir,PREFIX))
@@ -1703,7 +1794,7 @@ def FindScaffoldORFS(input,output):
 
 if "Propagate" in forcesteps:
     run_process("touch %s/Metaphyler/out/%s.classify.txt"%(rundir,PREFIX))
-@follows(FindScaffoldORFS)
+@follows(FindScaffoldORFS, Annotate)
 @files("%s/Metaphyler/out/%s.classify.txt"%(rundir,PREFIX),"%s/Propagate/out/%s.clusters"%(rundir,PREFIX))
 def Propagate(input,output):
    #run propogate java script
@@ -1890,6 +1981,20 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="Findorfs"):
                 try:
                     cvg = cvg.replace("\n","")
                     cvg = float(cvg.split("_")[-1])
+                    cvg_dict[curcontig] = cvg
+                except IndexError:
+                    #print "Coverage not found, skip?"
+                    cvg = 1.0
+                    cvg_dict[curcontig] = cvg
+                except ValueError:
+                    #print "Coverage not found, skip?"
+                    cvg = 1.0
+                    cvg_dict[curcontig] = cvg
+            elif asm == "velvet" or asm == "velvet-sc":
+                try:
+                    cvg = cvg.replace("\n", "")
+                    cvg_split = cvg.split("_")
+                    cvg = float(cvg_split[len(cvg_split)-1])
                     cvg_dict[curcontig] = cvg
                 except IndexError:
                     #print "Coverage not found, skip?"

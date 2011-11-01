@@ -51,7 +51,7 @@ my $opt_verbose = 1;
 my $opt_quiet = 0;
 my $opt_force_download = 0;     
 my $opt_help = 0;
-my $opt_passive = 0;
+my $opt_passive = 1;
 my $opt_timeout = 120;
 my $opt_showall = 0;
 my $result = GetOptions("verbose+"  =>  \$opt_verbose,

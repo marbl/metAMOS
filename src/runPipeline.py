@@ -467,6 +467,27 @@ def guessPaths():
     print "BLAST:\t\t\t%s"%(BLAST)
     print "REPEATOIRE:\t\t%s"%(REPEATOIRE)
 
+def run_process(command,step=""):
+       outf = ""
+       if step != "":
+           step = string.upper(step)
+           if not os.path.exists(rundir+"/Logs"):
+               os.system("mkdir %s/Logs"%(rundir))
+           outf = open(rundir+"/Logs/"+step+".log",'a')
+       if VERBOSE:
+           print command
+       stdout = ""
+       stderr = ""
+       p = subprocess.Popen(command, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,close_fds=True,executable="/bin/bash")
+       fstdout,fstderr = p.communicate()
+
+       if step == "":
+           print fstdout,fstderr
+       else:
+           outf.write(fstdout+fstderr)
+           outf.close()
+
+
 def getProgramParams(fileName, module="", prefix="", comment="#"):
     # we process parameters in the following priority:
     # first: current directory
@@ -660,6 +681,15 @@ for line in inf:
     line = line.replace("\n","")
     if "#" in line:
         continue
+    elif "asmcontigs:" in line:
+        #move to proba.asm.contigs
+        #skip Assembly
+        asmc = line.replace("\n","").split("\t")[-1]
+        if len(asmc) <= 2:
+            continue
+        run_process("mv %s %s/Assemble/out/%s"%(asmc,rundir,"proba.asm.contig"))
+        skipsteps.append("Assemble")
+        bowtie_mapping = 1
     elif "format:" in line:
 
         if f1 and not libadded:
@@ -729,26 +759,6 @@ if f1 and not libadded:
 if len(readlibs) > 1 and asm == "metaidba":
     print "ERROR: meta-IDBA only supports 1 library, please select different assembler or reduce libraries"
     sys.exit(1)
-def run_process(command,step=""):
-       outf = ""
-       if step != "":
-           step = string.upper(step)
-           if not os.path.exists(rundir+"/Logs"):
-               os.system("mkdir %s/Logs"%(rundir))
-           outf = open(rundir+"/Logs/"+step+".log",'a')
-       if VERBOSE:
-           print command
-       stdout = ""
-       stderr = ""
-       p = subprocess.Popen(command, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,close_fds=True,executable="/bin/bash")
-       fstdout,fstderr = p.communicate()
-
-       if step == "":
-           print fstdout,fstderr
-       else:
-           outf.write(fstdout+fstderr)
-           outf.close()
-
 
 def map2contig(fasta):
     #bowtie_mapping = 1
@@ -1447,7 +1457,7 @@ for lib in readlibs:
 
     asmfiles.append("%s/Preprocess/out/lib%d.seq"%(rundir,lib.id))
 
-if "Assemble" in forcesteps:
+if "Assemble" not in skipsteps and "Assemble" in forcesteps:
     run_process("rm %s/Assemble/out/%s.asm.contig"%(rundir,PREFIX))
 @files(asmfiles,["%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX)])
 #@posttask(create_symlink,touch_file("completed.flag"))

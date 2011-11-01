@@ -6,8 +6,20 @@ import os, sys, string, time, BaseHTTPServer, getopt, time, datetime
 
 def usage():
     print "usage: createProject.py -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500 -f/-q"
-    print "options: -s -q, -f, -1, -2, -d, -m, -i"
-
+    print "options: -s -c -q, -f, -1, -2, -d, -m, -i"
+    print "-1: either non-paired file of reads or first file in pair, can be list of multiple separated by a comma"
+    print "-2: second paired read file, can be list of multiple separated by a comma"
+    print "-c:  fasta file containing contigs"
+    print "-d: output project directory (required)"
+    print "-f: boolean, reads are in fasta format (default is fastq)"
+    print "-h: display help message"
+    print "-i: insert size of library, can be list separated by commas for multiple libraries"
+    print "-l: SFF linker type"
+    print "-m: interleaved file of paired reads"
+    print "-o: reads are in outtie orientation (default innie)"
+    print "-q: boolean, reads are in fastq format (default is fastq)"
+    print "-s: boolean, reads are in SFF format (default is fastq)"
+    
 if len(sys.argv) < 2:
     usage()
     sys.exit(1)
@@ -18,7 +30,7 @@ today = datetime.datetime.now()
 timestamp = "P_"+today.isoformat().replace("-","_").replace(".","").replace(":","").replace("T","_")
 #print timestamp
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hfsq1:2:m:i:d:or", ["help", "fasta=","fastq=","sff=","f1=","f2=","matelib=","insertlen=","dir=","outtie=","readlen="])
+    opts, args = getopt.getopt(sys.argv[1:], "hfsq1:2:m:c:i:d:or", ["help", "fasta=","fastq=","sff=","f1=","f2=","matelib=","asmcontig=","insertlen=","dir=","outtie=","readlen="])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -45,7 +57,7 @@ innie = True
 innies = []
 numlibs = 1
 SFFLinkerType = "titanium"
-
+contigs = ""
 for o, a in opts:
     if o == "-v":
         verbose = True
@@ -54,6 +66,8 @@ for o, a in opts:
     elif o in ("-h", "--help"):
         usage()
         sys.exit()
+    elif o in ("-c"):
+        contigs = a
     elif o in ("-q"):
         #reads = a
         format = "fastq"
@@ -106,6 +120,9 @@ for o, a in opts:
         id = os.path.abspath(a)
         #print a
 
+if len(contigs) > 1 and not os.path.exists(contigs):
+    print "Error, provided contig file does not exist: ", contigs
+    sys.exit(1)
 if os.path.exists(id):
     print "Project directory already exists, please specify another"
     print "Alternatively, use runPipeline to run an existing project"
@@ -132,6 +149,9 @@ if f1 == "" and f2 == "":
 
 cf = open(id+"/pipeline.ini",'w')
 cf.write("#metAMOS pipeline configuration file\n")
+#if len(contigs) > 0:
+#   #user specified a contig file
+cf.write("asmcontigs:\t%s\n"%(contigs))
 #cnt = 1
 i = 0
 while i < numlibs:

@@ -811,14 +811,14 @@ def map2contig(fasta):
             #run_process("%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(BOWTIE, rundir,PREFIX,rundir))
             if "bowtie" not in skipsteps and fasta:
                 if trim:
-                    run_process("%s/bowtie -p %d -f -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim >& %s/Assemble/out/%s.bout"%(BOWTIE,threads,rundir,rundir,lib.id,rundir,PREFIX),"Scaffold")
+                    run_process("%s/bowtie -p %d -f -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/%s.bout"%(BOWTIE,threads,rundir,rundir,lib.id,rundir,PREFIX),"Scaffold")
                 else:
-                    run_process("%s/bowtie -p %d -f -l 28 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq >& %s/Assemble/out/%s.bout"%(BOWTIE,threads,rundir,rundir,lib.id,rundir,PREFIX))
+                    run_process("%s/bowtie -p %d -f -l 28 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/%s.bout"%(BOWTIE,threads,rundir,rundir,lib.id,rundir,PREFIX))
             elif "bowtie" not in skipsteps and not fasta:
                 if trim:
-                    run_process("%s/bowtie  -p %d -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim >& %s/Assemble/out/%s.bout"%(BOWTIE,threads,rundir,rundir,lib.id,rundir,PREFIX),"Scaffold")
+                    run_process("%s/bowtie  -p %d -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/%s.bout"%(BOWTIE,threads,rundir,rundir,lib.id,rundir,PREFIX),"Scaffold")
                 else:
-                    run_process("%s/bowtie  -p %d -l 28 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq >& %s/Assemble/out/%s.bout"%(BOWTIE,threads,rundir,rundir,lib.id,rundir,PREFIX),"Scaffold")
+                    run_process("%s/bowtie  -p %d -l 28 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/%s.bout"%(BOWTIE,threads,rundir,rundir,lib.id,rundir,PREFIX),"Scaffold")
             infile = open("%s/Assemble/out/%s.bout"%(rundir,PREFIX),'r')
             for line1 in infile.xreadlines():
                 line1 = line1.replace("\n","")

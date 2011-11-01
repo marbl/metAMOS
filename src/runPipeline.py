@@ -740,7 +740,7 @@ def run_process(command,step=""):
            print command
        stdout = ""
        stderr = ""
-       p = subprocess.Popen(command, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,close_fds=True)
+       p = subprocess.Popen(command, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,close_fds=True,executable="/bin/bash")
        fstdout,fstderr = p.communicate()
 
        if step == "":

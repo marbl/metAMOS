@@ -915,7 +915,7 @@ def map2contig(fasta):
         ctgslen = len(item[1])
         #contigdict2[ref] = item[1]
         try:
-            tigr_file.write("##%d %d %d bases, 00000000 checksum.\n"%(ctgcnt,len(contigdict[ref]), len(item[1])))
+            tigr_file.write("##%s %d %d bases, 00000000 checksum.\n"%(ref.replace(">",""),len(contigdict[ref]), len(item[1])))
             tigr_file.flush()
         except KeyError:
             #print "oops, not in mapping file\n"
@@ -1761,10 +1761,10 @@ def Scaffold(input,output):
 
    else:
        run_process("%s/bank-unlock %s/Scaffold/in/%s.bnk"%(AMOS,rundir,PREFIX))
-       run_process("rm %s/Scaffold/in/%.bnk/CTE.*"%(rundir,PREFIX),"SCAFFOLD")
-       run_process("rm %s/Scaffold/in/%.bnk/CTL.*"%(rundir,PREFIX),"SCAFFOLD")
-       run_process("rm %s/Scaffold/in/%.bnk/MTF.*"%(rundir,PREFIX),"SCAFFOLD")
-       run_process("rm %s/Scaffold/in/%.bnk/SCF.*"%(rundir,PREFIX),"SCAFFOLD")
+       run_process("rm %s/Scaffold/in/%s.bnk/CTE.*"%(rundir,PREFIX),"SCAFFOLD")
+       run_process("rm %s/Scaffold/in/%s.bnk/CTL.*"%(rundir,PREFIX),"SCAFFOLD")
+       run_process("rm %s/Scaffold/in/%s.bnk/MTF.*"%(rundir,PREFIX),"SCAFFOLD")
+       run_process("rm %s/Scaffold/in/%s.bnk/SCF.*"%(rundir,PREFIX),"SCAFFOLD")
 
    #calls to Bambus2, goBambus2 script
    # first, parse the parameters

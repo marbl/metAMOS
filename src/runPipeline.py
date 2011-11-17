@@ -32,6 +32,7 @@ GMHMMP        = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINE
 FCP           = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
 PHMMER        = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
 BLAST         = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
+AMPHORA       = "%s%sAmphora-2"%(METAMOSDIR, os.sep)
 
 KRONA         = "%s%skrona"%(METAMOS_UTILS,os.sep)
 REPEATOIRE    = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
@@ -378,6 +379,7 @@ def guessPaths():
     global FCP
     global PHMMER
     global BLAST
+    global AMPHORA
 
     getMachineType()
 
@@ -453,6 +455,14 @@ def guessPaths():
     BLAST = "%s%scpp%s%s-%s"%(METAMOS_UTILS, os.sep, os.sep, OSTYPE, MACHINETYPE)
     if not os.path.exists(BLAST + os.sep + "blastall"):
        BLAST = getFromPath("blastall", "blast")
+    # currently only supported on Linux 64-bit and only from one location
+    AMPHORA = "%s%sAmphora-2"%(METAMOSDIR, os.sep)
+    if not os.path.exists(AMPHORA + os.sep + "amphora2"):
+       print "Warning: Amphora 2 was not found, will not be available\n";
+       AMPHORA = ""
+    if AMPHORA != "" and (OSTYPE != "Linux" or MACHINETYPE != "x86_64"):
+       print "Warning: Amphora 2 not compatible with %s-%s. It requires Linux-x86_64\n"%(OSTYPE, MACHINETYPE)
+       AMPHORA = "" 
 
     # finally add the utilities to our path
     print "Configuration summary:"
@@ -465,6 +475,8 @@ def guessPaths():
     print "FCP:\t\t\t%s"%(FCP)
     print "PHMMER:\t\t\t%s"%(PHMMER)
     print "BLAST:\t\t\t%s"%(BLAST)
+    print "AMPHORA:\t\t\t%s"%(AMPHORA)
+
     print "REPEATOIRE:\t\t%s"%(REPEATOIRE)
 
 def run_process(command,step=""):
@@ -562,7 +574,7 @@ except getopt.GetoptError, err:
     usage()
     sys.exit(2)
 
-allsteps = ["Preprocess","Assemble","FindORFS","Metaphyler","Annotate","Scaffold","Propagate","Classify","Postprocess"]
+allsteps = ["Preprocess","Assemble","FindORFS","Abundance","Annotate","Scaffold","Propagate","Classify","Postprocess"]
 output = None
 reads = None
 quals = None
@@ -1679,34 +1691,34 @@ def Annotate(input,output):
    elif cls == None:
        print "No method specified, skipping"
 
-if "Metaphyler" in forcesteps:
+if "Abundance" in forcesteps:
    run_process("touch %s/FindORFS/out/%s.faa"%(rundir,PREFIX))
-   run_process("rm %s/Metaphyler/out/%s.taxprof.pct.txt"%(rundir,PREFIX))
+   run_process("rm %s/Abundance/out/%s.taxprof.pct.txt"%(rundir,PREFIX))
 
 @follows(FindORFS)
-@files("%s/FindORFS/out/%s.faa"%(rundir,PREFIX),"%s/Metaphyler/out/%s.taxprof.pct.txt"%(rundir,PREFIX))
-def Metaphyler(input,output):
-   if "FindORFS" in skipsteps or "Metaphyler" in skipsteps:
+@files("%s/FindORFS/out/%s.faa"%(rundir,PREFIX),"%s/Abundance/out/%s.taxprof.pct.txt"%(rundir,PREFIX))
+def Abundance(input,output):
+   if "FindORFS" in skipsteps or "Abundance" in skipsteps:
       return 0
 
-   run_process("unlink %s/Metaphyler/in/%s.contig.cvg"%(rundir,PREFIX),"Metaphyler")
-   run_process("unlink %s/Metaphyler/in/%s.faa"%(rundir,PREFIX),"Metaphyler")
-   run_process("ln -t %s/Metaphyler/in/ -s %s/FindORFS/out/%s.contig.cvg"%(rundir,rundir,PREFIX),"Metaphyler")
-   run_process("ln -t %s/Metaphyler/in/ -s %s/FindORFS/out/%s.faa"%(rundir,rundir,PREFIX),"Metaphyler")
+   run_process("unlink %s/Abundance/in/%s.contig.cvg"%(rundir,PREFIX),"Abundance")
+   run_process("unlink %s/Abundance/in/%s.faa"%(rundir,PREFIX),"Abundance")
+   run_process("ln -t %s/Abundance/in/ -s %s/FindORFS/out/%s.contig.cvg"%(rundir,rundir,PREFIX),"Abundance")
+   run_process("ln -t %s/Abundance/in/ -s %s/FindORFS/out/%s.faa"%(rundir,rundir,PREFIX),"Abundance")
    blastfile = PREFIX+".blastx"
    blastc = BLAST + os.sep + "blastall"
    formatc = BLAST + os.sep + "formatdb"
-   run_process("%s  -p T -i %s/DB/markers.pfasta"%(formatc,METAMOS_UTILS),"Metaphyler")
-   #run_process("perl %s/perl/runblast.pl  %s/Metaphyler/in/%s.faa %s/Metaphyler/out/%s.blastx %s/DB/markers.fna"%(METAMOS_UTILS,rundir,PREFIX, rundir,PREFIX,METAMOS_UTILS))
+   run_process("%s  -p T -i %s/DB/markers.pfasta"%(formatc,METAMOS_UTILS),"Abundance")
+   #run_process("perl %s/perl/runblast.pl  %s/Abundance/in/%s.faa %s/Abundance/out/%s.blastx %s/DB/markers.fna"%(METAMOS_UTILS,rundir,PREFIX, rundir,PREFIX,METAMOS_UTILS))
 
 
-   run_process("%s -p blastp -i %s/Metaphyler/in/%s.faa -d %s/DB/markers.pfasta -m8 -b10 -v10 -a %s -o %s/Metaphyler/out/%s.blastp"%(blastc, rundir,PREFIX,METAMOS_UTILS,threads,rundir,PREFIX),"Metaphyler")
+   run_process("%s -p blastp -i %s/Abundance/in/%s.faa -d %s/DB/markers.pfasta -m8 -b10 -v10 -a %s -o %s/Abundance/out/%s.blastp"%(blastc, rundir,PREFIX,METAMOS_UTILS,threads,rundir,PREFIX),"Abundance")
 
-   run_process("perl %s/perl/metaphyler_contigs.pl %s/Metaphyler/out/%s.blastp %s %s/Metaphyler/in/%s.contig.cvg %s/Metaphyler/out %s"%(METAMOS_UTILS,rundir,PREFIX,PREFIX,rundir,PREFIX,rundir,METAMOS_UTILS),"Metaphyler")
+   run_process("perl %s/perl/metaphyler_contigs.pl %s/Abundance/out/%s.blastp %s %s/Abundance/in/%s.contig.cvg %s/Abundance/out %s"%(METAMOS_UTILS,rundir,PREFIX,PREFIX,rundir,PREFIX,rundir,METAMOS_UTILS),"Abundance")
 
    # finally add the GI numbers to the results where we can
-   parse_metaphyler("%s/DB/markers.toGI.txt"%(METAMOS_UTILS), "%s/Metaphyler/out/%s.blastp"%(rundir, PREFIX), "%s/Metaphyler/out/%s.gi.blastp"%(rundir, PREFIX))
-   run_process("cp %s/Metaphyler/out/%s.gi.blastp %s/Postprocess/in/%s.hits"%(rundir, PREFIX,rundir,PREFIX))
+   parse_metaphyler("%s/DB/markers.toGI.txt"%(METAMOS_UTILS), "%s/Abundance/out/%s.blastp"%(rundir, PREFIX), "%s/Abundance/out/%s.gi.blastp"%(rundir, PREFIX))
+   run_process("cp %s/Abundance/out/%s.gi.blastp %s/Postprocess/in/%s.hits"%(rundir, PREFIX,rundir,PREFIX))
 
    
 if "Scaffold" in forcesteps:
@@ -1803,13 +1815,13 @@ def FindScaffoldORFS(input,output):
    #run_process("ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.scaffolds.faa"%(rundir,rundir,PREFIX))
 
 if "Propagate" in forcesteps:
-    run_process("touch %s/Metaphyler/out/%s.classify.txt"%(rundir,PREFIX))
+    run_process("touch %s/Abundance/out/%s.classify.txt"%(rundir,PREFIX))
 @follows(FindScaffoldORFS, Annotate)
-@files("%s/Metaphyler/out/%s.classify.txt"%(rundir,PREFIX),"%s/Propagate/out/%s.clusters"%(rundir,PREFIX))
+@files("%s/Abundance/out/%s.classify.txt"%(rundir,PREFIX),"%s/Propagate/out/%s.clusters"%(rundir,PREFIX))
 def Propagate(input,output):
    #run propogate java script
    # create s12.annots from Metaphyler output
-   run_process("python %s/python/create_mapping.py %s/DB/class_key.tab %s/Metaphyler/out/%s.classify.txt %s/Propagate/in/%s.annots"%(METAMOS_UTILS,METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX),"Propagate")
+   run_process("python %s/python/create_mapping.py %s/DB/class_key.tab %s/Abundance/out/%s.classify.txt %s/Propagate/in/%s.annots"%(METAMOS_UTILS,METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX),"Propagate")
    # strip headers from file and contig name prefix
 
    run_process("cat %s/Propagate/in/%s.annots |sed s/contig_//g |grep -v contigID > %s/Propagate/in/%s.clusters"%(rundir,PREFIX,rundir,PREFIX),"Propagate")
@@ -1852,20 +1864,20 @@ def Postprocess(input,output):
    #command to open webbrowser?
    #try to open Krona output
    if openbrowser:
-       if os.path.exists("report.krona.html"):
+       if os.path.exists(os.getcwd() + os.sep + "report.krona.html"):
            webbrowser.open_new("report.krona.html")
        else:
            print "ERROR: No Krona html file available! skipping"
    #webbrowser.open_new(output.html)
    #webbrowser.open_new_tab(output.html)
-   run_process("cp %s/Metaphyler/out/%s.classify.txt %s/Postprocess/out/. "%(rundir,PREFIX,rundir),"Postprocess")
+   run_process("cp %s/Abundance/out/%s.classify.txt %s/Postprocess/out/. "%(rundir,PREFIX,rundir),"Postprocess")
    run_process("cp %s/Scaffold/out/%s.linearize.scaffolds.final %s/Postprocess/out/%s.scf.fa"%(rundir,PREFIX,rundir,PREFIX),"Postprocess")
    run_process("ln -t %s/Postprocess/out/ -s %s/Scaffold/in/%s.bnk "%(rundir,rundir,PREFIX),"Postprocess")
-   run_process("python %s/python/create_report.py %s/Metaphyler/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/ %s/Postprocess/out/%s.scf.fa %s %s"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX,rundir,rundir,PREFIX,METAMOS_UTILS,rundir),"Postprocess")   
+   run_process("python %s/python/create_report.py %s/Abundance/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/ %s/Postprocess/out/%s.scf.fa %s %s"%(METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX,rundir,rundir,PREFIX,METAMOS_UTILS,rundir),"Postprocess")   
    #webbrowser.open_new_tab(createreport.html)
    if openbrowser:
-       if os.path.exists("%s/Postprocess/summary.html"%(rundir)):
-           webbrowser.open_new_tab("%s/Postprocess/summary.html"%(rundir))
+       if os.path.exists("%s/Postprocess/out/summary.html"%(rundir)):
+           webbrowser.open_new_tab("%s/Postprocess/out/summary.html"%(rundir))
        else:
            print "ERROR: No Krona html file available! skipping"
 
@@ -2144,12 +2156,12 @@ if __name__ == "__main__":
     try:
        #files = os.listdir(".")
        dlist = []
-       pipeline_printout(sys.stdout,[Preprocess,Assemble, FindORFS, FindRepeats, Annotate, Metaphyler, Scaffold, FindScaffoldORFS, Propagate, Classify, Postprocess], verbose=1)
+       pipeline_printout(sys.stdout,[Preprocess,Assemble, FindORFS, FindRepeats, Annotate, Abundance, Scaffold, FindScaffoldORFS, Propagate, Classify, Postprocess], verbose=1)
        pipeline_printout_graph (   'flowchart.svg',
                             'svg',
                             [Postprocess],
                             no_key_legend = True)
-       pipeline_run([Preprocess,Assemble, FindORFS, FindRepeats, Annotate, Metaphyler, Scaffold, FindScaffoldORFS, Propagate, Classify, Postprocess], verbose = 1) 
+       pipeline_run([Preprocess,Assemble, FindORFS, FindRepeats, Annotate, Abundance, Scaffold, FindScaffoldORFS, Propagate, Classify, Postprocess], verbose = 1) 
        #multiprocess threads
        t2 = time.time()#clock()
        elapsed = float(t2)-float(t1)

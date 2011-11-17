@@ -34,9 +34,12 @@ $datestr .= ($timerval[4]+1);
 $datestr .= 0 if $timerval[3] < 9; 
 $datestr .= $timerval[3];
 
-`mv Amphora-2 amphora2_$datestr`;
-`tar cjf amphora2_$datestr.tar.bz2 amphora2_$datestr`;
-`rm -rf amphora2_$datestr`;
-`cp amphora2_$datestr.tar.bz2 ~/public_html/amphora2/amphora2_latest.tar.bz2`;
-`mv amphora2_$datestr.tar.bz2 ~/public_html/amphora2/`;
+`wget http://search.cpan.org/CPAN/authors/id/J/JE/JESSE/Locale-Maketext-Simple-0.21.tar.gz`;
+`tar xvzf Locale-Maketext-Simple-0.21.tar.gz`;
+`mv Locale-Maketext-Simple-0.21/lib/Locale/ Amphora-2/lib/`;
+`rm -rf Locale-Maketext-Simple-0.21.*`;
+`rm -rf Bio-Phylo-0.45*`;
+`rm -rf Math-Random-0.71*`;
+`rm -rf bioperl-live`;
 
+`tar cvzf amphora2-$datestr.tar.gz Amphora-2/`

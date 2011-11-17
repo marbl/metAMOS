@@ -39,6 +39,7 @@ if not os.path.exists("./AMOS"):
     if dl == 'y' or dl == 'Y':
         os.system("wget http://treangen.github.com/metAMOS/amos-binaries.tar.gz .")
         os.system("tar -xvf amos-binaries.tar.gz")
+        os.system("rm -rf amos-binaries.tar.gz")
 
 if not os.path.exists("./Amphora-2"):
    print "Amphora 2 binaries not found, optional for Annotate step, download now?"
@@ -47,6 +48,7 @@ if not os.path.exists("./Amphora-2"):
       #os.system("perl Utilities/perl/amphora_install.pl")
       os.system("wget http://treangen.github.com/metAMOS/amphora2-20111117.tar.gz")
       os.system("tar -xvzf amphora2-20111117.tar.gz")
+      os.system("rm -rf amphora2-20111117.tar.gz")
 
 #os.system("
 print "Run setup.py.."

@@ -27,6 +27,22 @@ chdir("Bio-Phylo-0.45");
 `mv blib/lib/Bio/Phylo* ../Amphora-2/lib/Bio/`;
 chdir("..");
 
+`wget http://search.cpan.org/CPAN/authors/id/J/JE/JESSE/Locale-Maketext-Simple-0.21.tar.gz`;
+`tar xvzf Locale-Maketext-Simple-0.21.tar.gz`;
+chdir("Locale-Maketext-Simple-0.21");
+`perl Makefile.PL`;
+`make`;
+`mv lib/Locale/ ../Amphora-2/lib/`;
+chdir("..");
+
+`wget http://search.cpan.org/CPAN/authors/id/J/JP/JPEACOCK/version-0.95.tar.gz`;
+`tar xvzf version-0.95.tar.gz`;
+chdir("version-0.95");
+`perl Makefile.PL --perl_only`;
+`make`;
+`mv blib/lib/version* ../Amphora-2/lib/`;
+chdir("..");
+
 my @timerval = localtime();
 my $datestr = (1900+$timerval[5]);
 $datestr .= 0 if $timerval[4] < 9; 
@@ -34,10 +50,8 @@ $datestr .= ($timerval[4]+1);
 $datestr .= 0 if $timerval[3] < 9; 
 $datestr .= $timerval[3];
 
-`wget http://search.cpan.org/CPAN/authors/id/J/JE/JESSE/Locale-Maketext-Simple-0.21.tar.gz`;
-`tar xvzf Locale-Maketext-Simple-0.21.tar.gz`;
-`mv Locale-Maketext-Simple-0.21/lib/Locale/ Amphora-2/lib/`;
-`rm -rf Locale-Maketext-Simple-0.21.*`;
+`rm -rf version-0.95*`;
+`rm -rf Locale-Maketext-Simple-0.21*`;
 `rm -rf Bio-Phylo-0.45*`;
 `rm -rf Math-Random-0.71*`;
 `rm -rf bioperl-live`;

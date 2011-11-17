@@ -149,7 +149,6 @@ foreach my $input (@ARGV)
 	my $ties;
 	my $taxID;
 	my $magnitude = 0;
-        my $score = 0;
 	
 	while ( 1 )
 	{
@@ -168,10 +167,9 @@ foreach my $input (@ARGV)
                 if ( defined $taxID )
 		{
 			# add the chosen hit
-			add($set, \%tree, $taxID, $magnitude, $score);
+			add($set, \%tree, $taxID, $magnitude);
                         $totalMagnitude += $magnitude;
 			$ties = 1;
-			if ($topScore < $score) { $topScore = $score; }
 		}
 		
 		if ( ! defined $taxID )
@@ -200,17 +198,13 @@ my @attributeNames =
 (
 	'taxon',
 	'rank',
-	'score',
 	'magnitude'
 );
-
-my $scoreName = 'N/A';
 
 my @attributeDisplayNames =
 (
 	'Taxon',
 	'Rank',
-	$scoreName,
 	'Total'
 );
 
@@ -225,9 +219,5 @@ writeTree
 	'magnitude',
 	\@attributeNames,
 	\@attributeDisplayNames,
-	\@datasetNames,
-	0,
-	'score',
-	0,
-	0
+	\@datasetNames
 );

@@ -74,6 +74,7 @@ class readLib:
     mmax = 0
     mated = True
     interleaved = False
+    innie = True
     linkerType = "titanium"
     frg = ""
     f1 = ""
@@ -82,7 +83,7 @@ class readLib:
     reads = []
     readDict = {}
     pairDict = {}
-    def __init__(self,format,mmin,mmax,f1,f2="",mated=True,interleaved=False):
+    def __init__(self,format,mmin,mmax,f1,f2="",mated=True,interleaved=False,innie=True):
         global libcounter
         self.id = libcounter
         self.sid = "lib"+str(libcounter)
@@ -90,6 +91,7 @@ class readLib:
         self.format = format
         self.mated=mated
         self.interleaved=interleaved
+        self.innie=innie
         self.mmin = mmin
         self.mmax = mmax
         self.f1 = f1
@@ -186,7 +188,7 @@ def getContigRepeats(contigFile,outFile):
     contig_file.close()
     contig_file = open(contigFile,'r')
     concatContig(contigFile)
-    run_process("%s --minreplen=200 --z=17 --sequence=%s.merged --xmfa=%s.xmfa"%(REPEATOIRE,contigFile,contigFile),"FINDREPEATS")
+    run_process("%s --minreplen=200 --z=17 --sequence=%s.merged --xmfa=%s.xmfa"%(REPEATOIRE,contigFile,contigFile),"FindRepeats")
     repeat_file = open(contigFile+".xmfa",'r')
     ctg_dict = {}
     seq_map = {}
@@ -475,13 +477,17 @@ def guessPaths():
     print "FCP:\t\t\t%s"%(FCP)
     print "PHMMER:\t\t\t%s"%(PHMMER)
     print "BLAST:\t\t\t%s"%(BLAST)
-    print "AMPHORA:\t\t\t%s"%(AMPHORA)
+    print "AMPHORA:\t\t%s"%(AMPHORA)
 
     print "REPEATOIRE:\t\t%s"%(REPEATOIRE)
 
 def run_process(command,step=""):
        outf = ""
+       workingDir = ""
        if step != "":
+           workingDir = "%s/%s/out"%(rundir, step)
+           if not os.path.exists(workingDir):
+              workingDir = ""
            step = string.upper(step)
            if not os.path.exists(rundir+"/Logs"):
                os.system("mkdir %s/Logs"%(rundir))
@@ -490,7 +496,10 @@ def run_process(command,step=""):
            print command
        stdout = ""
        stderr = ""
-       p = subprocess.Popen(command, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,close_fds=True,executable="/bin/bash")
+       if workingDir == "":
+           p = subprocess.Popen(command, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,close_fds=True,executable="/bin/bash")
+       else:
+           p = subprocess.Popen(command, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,close_fds=True,executable="/bin/bash", cwd=workingDir)
        fstdout,fstderr = p.communicate()
 
        if step == "":
@@ -682,6 +691,7 @@ mmin = 0
 mmax = 0
 mated = True
 interleaved = False
+innie = True
 linkerType = "titanium"
 frg = ""
 f1 = ""
@@ -708,7 +718,7 @@ for line in inf:
             nread1 = Read(format,f1,mated,interleaved)
             readobjs.append(nread1)
             nread2 = ""
-            nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved)
+            nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,innie)
             readlibs.append(nlib)
         libadded = False
         format = line.replace("\n","").split("\t")[-1]
@@ -716,6 +726,8 @@ for line in inf:
         mated = str2bool(line.replace("\n","").split("\t")[-1])
     elif "interleaved:" in line:
         interleaved = str2bool(line.replace("\n","").split("\t")[-1])
+    elif "innie:" in line:
+        innie = str2bool(line.replace("\n","").split("\t")[-1])
     elif "linker:" in line:
         linkerType = line.replace("\n","").split("\t")[-1]
     elif "f1:" in line:# or "f2:" in line:
@@ -747,7 +759,7 @@ for line in inf:
         readobjs.append(nread1)
         nread2 = Read(format,f2,mated,interleaved)
         readobjs.append(nread2)
-        nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved)
+        nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,innie)
         readlibs.append(nlib)
         libadded = True
     elif "frg" in line:
@@ -763,7 +775,7 @@ if f1 and not libadded:
     nread1 = Read(format,f1,mated,interleaved)
     readobjs.append(nread1)
     nread2 = ""
-    nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved)
+    nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,innie)
     readlibs.append(nlib)
     #libadded = True
 
@@ -1610,8 +1622,8 @@ if "FindORFS" in forcesteps:
 @files("%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX),"%s/FindORFS/out/%s.faa"%(rundir,PREFIX))
 def FindORFS(input,output):
    if "FindORFS" in skipsteps:
-      run_process("touch %s/FindRepeats/in/%s.fna"%(rundir, PREFIX),"Findorfs")
-      run_process("touch %s/FindORFS/out/%s.faa"%(rundir, PREFIX),"Findorfs")
+      run_process("touch %s/FindRepeats/in/%s.fna"%(rundir, PREFIX),"FindORFS")
+      run_process("touch %s/FindORFS/out/%s.faa"%(rundir, PREFIX),"FindORFS")
       return 0
 
    if asm == "soap":
@@ -1623,21 +1635,21 @@ def FindORFS(input,output):
        #run_process("ln -t %s/FindORFS/in/ -s %s/Assemble/out/%s.asm.scafSeq.contigs"%(rundir, rundir,PREFIX))
        #run_process("cp %s/FindORFS/in/%s.asm.scafSeq.contigs  %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX,rundir,PREFIX))
        #try using contigs instead of contigs extracted from scaffolds
-       run_process("cp %s/Assemble/out/%s.asm.contig  %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX,rundir,PREFIX),"Findorfs")
+       run_process("cp %s/Assemble/out/%s.asm.contig  %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX,rundir,PREFIX),"FindORFS")
    else:
 
-       run_process("unlink %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX),"Findorfs")
-       run_process("ln -t %s/FindORFS/in/ -s %s/Assemble/out/%s.asm.contig"%(rundir,rundir,PREFIX),"Findorfs")
+       run_process("unlink %s/FindORFS/in/%s.asm.contig"%(rundir,PREFIX),"FindORFS")
+       run_process("ln -t %s/FindORFS/in/ -s %s/Assemble/out/%s.asm.contig"%(rundir,rundir,PREFIX),"FindORFS")
 
 
    #run_process("ln -t %s/FindORFS/in/ -s %s/Assemble/out/%s.asm.scafSeq.contigs"%(rundir,rundir,PREFIX))
-   run_process("%s/gmhmmp -o %s/FindORFS/out/%s.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/FindORFS/in/%s.asm.contig"%(GMHMMP,rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX),"Findorfs")
+   run_process("%s/gmhmmp -o %s/FindORFS/out/%s.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/FindORFS/in/%s.asm.contig"%(GMHMMP,rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX),"FindORFS")
    parse_genemarkout("%s/FindORFS/out/%s.orfs"%(rundir,PREFIX))
-   run_process("unlink %s/Annotate/in/%s.faa"%(rundir,PREFIX),"Findorfs")
-   run_process("unlink %s/Annotate/in/%s.fna"%(rundir,PREFIX),"Findorfs")
-   run_process("unlink %s/FindRepeats/in/%s.fna"%(rundir,PREFIX),"Findorfs")
-   run_process("ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.faa"%(rundir,rundir,PREFIX),"Findorfs")
-   run_process("ln -t %s/FindRepeats/in/ -s %s/FindORFS/out/%s.fna"%(rundir,rundir,PREFIX),"Findorfs")
+   run_process("unlink %s/Annotate/in/%s.faa"%(rundir,PREFIX),"FindORFS")
+   run_process("unlink %s/Annotate/in/%s.fna"%(rundir,PREFIX),"FindORFS")
+   run_process("unlink %s/FindRepeats/in/%s.fna"%(rundir,PREFIX),"FindORFS")
+   run_process("ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.faa"%(rundir,rundir,PREFIX),"FindORFS")
+   run_process("ln -t %s/FindRepeats/in/ -s %s/FindORFS/out/%s.fna"%(rundir,rundir,PREFIX),"FindORFS")
 
 @follows(FindORFS)
 @files("%s/FindRepeats/in/%s.fna"%(rundir,PREFIX),"%s/FindRepeats/out/%s.repeats"%(rundir,PREFIX))
@@ -1670,7 +1682,7 @@ def Annotate(input,output):
 
        run_process("%s/phmmer --cpu %d -E 0.0000000000000001 -o %s/Annotate/out/%s.phm.out --tblout %s/Annotate/out/%s.phm.tbl --notextw %s/Annotate/in/%s.faa %s/DB/allprots.faa"%(PHMMER, threads,rundir,PREFIX,rundir,PREFIX,rundir,PREFIX,METAMOS_UTILS),"Annotate")
        parse_phmmerout("%s/Annotate/out/%s.phm.tbl"%(rundir,PREFIX))
-       run_process("cp %s/Annotate/out/%s.phm.tbl  %s/Postprocessin/%s.hits"%(rundir,PREFIX,rundir,PREFIX),"Annotate")
+       run_process("cp %s/Annotate/out/%s.phm.tbl  %s/Postprocess/in/%s.hits"%(rundir,PREFIX,rundir,PREFIX),"Annotate")
        run_process("mv %s/Annotate/out/%s.phm.tbl  %s/Annotate/out/%s.hits"%(rundir,PREFIX,rundir,PREFIX),"Annotate")
        #run_process("mv %s/Annotate/out/%s.phm.tbl  %s/Annotate/out/%s.annotate"%(rundir,PREFIX,rundir,PREFIX))
    elif cls == "blast":
@@ -1684,6 +1696,35 @@ def Annotate(input,output):
        run_process("%s/blastall -v 1 -b 1 -a %d -p blastp -m 8 -e 0.00001 -i %s/Annotate/in/%s.faa -d %s/DB/refseq_protein -o %s/Annotate/out/%s.blastout"%(BLAST, threads, rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX),"Annotate")
        run_process("cp %s/Annotate/out/%s.blastout  %s/Postprocess/in/%s.hits"%(rundir,PREFIX,rundir,PREFIX),"Annotate")
        run_process("mv %s/Annotate/out/%s.blastout  %s/Annotate/out/%s.hits"%(rundir,PREFIX,rundir,PREFIX),"Annotate")
+   elif cls == "amphora":
+       if AMPHORA == "" or not os.path.exists(AMPHORA + os.sep + "amphora2"):
+          print "Error: AMPHORA not found in %s. Please check your path and try again.\n"%(AMPHORA)
+          raise(JobSignalledBreak)
+
+       run_process("unlink %s/Annotate/in/%s.asm.contig"%(rundir, PREFIX), "Annotate")
+       run_process("ln -t %s/Annotate/in/ -s %s/Assemble/out/%s.asm.contig"%(rundir, rundir, PREFIX), "Annotate")
+
+       amphoraCmd =  "%s/amphora2 all --threaded=%d"%(AMPHORA, threads)
+       amphoraCmd += " %s"%(getProgramParams("amphora.spec", "", "--"))
+       # run on contigs for now
+       #for lib in readlibs:
+       #   if lib.mated:
+       #       if not lib.innie or lib.interleaved:
+       #          print "Warning: Amphora only supports innie non-interleaved libraries now, skipping library %d"%(lib.id)
+       #       else:
+       #          run_process("%s -paired %s/Preprocess/in/%s %s/Preprocess/in/%s"%(amphoraCmd,rundir,lib.f1.fname,rundir,lib.f2.fname), "Annotate")
+       #   else:
+       #      run_process("%s %s/Preprocess/out/lib%d.seq"%(amphoraCmd,rundir,lib.id), "Annotate")
+       run_process("%s %s/Annotate/in/%s.asm.contig"%(amphoraCmd, rundir, PREFIX), "Annotate")
+
+       # save the results
+       run_process("unlink %s/Annotate/out/%s.hits"%(rundir, PREFIX), "Annotate")
+       run_process("ln -s %s/Annotate/out/Amph_temp/%s.asm.contig/taxasummary.txt %s/Annotate/out/%s.hits"%(rundir, PREFIX, rundir, PREFIX), "Annotate") 
+       run_process("unlink %s/Postprocess/in/%s.hits"%(rundir, PREFIX), "Annotate")
+       run_process("unlink %s/Postprocess/out/%s.hits"%(rundir, PREFIX), "Annotate")
+       run_process("ln -s %s/Annotate/out/%s.hits %s/Postprocess/in/%s.hits"%(rundir, PREFIX, rundir, PREFIX), "Annotate")
+       run_process("cp %s/Annotate/out/%s.hits %s/Postprocess/out/%s.hits"%(rundir, PREFIX, rundir, PREFIX), "Annotate")
+       
    elif cls == "fcp":
        print "FCP not yet supported.. stay tuned"
    elif cls == "phymm":
@@ -1809,8 +1850,8 @@ def FindScaffoldORFS(input,output):
       run_process("touch %s/FindScaffoldORFS/out/%s.scaffolds.faa"%(rundir, PREFIX))
       return 0
 
-   run_process("%s/gmhmmp -o %s/FindScaffoldORFS/out/%s.scaffolds.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/Scaffold/out/%s.linearize.scaffolds.final"%(GMHMMP,rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX),"Findscaffoldorfs")
-   parse_genemarkout("%s/FindScaffoldORFS/out/%s.scaffolds.orfs"%(rundir,PREFIX),1, "Findscaffoldorfs")
+   run_process("%s/gmhmmp -o %s/FindScaffoldORFS/out/%s.scaffolds.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/Scaffold/out/%s.linearize.scaffolds.final"%(GMHMMP,rundir,PREFIX,METAMOS_UTILS,rundir,PREFIX),"FindScaffoldORFS")
+   parse_genemarkout("%s/FindScaffoldORFS/out/%s.scaffolds.orfs"%(rundir,PREFIX),1, "FindScaffoldORFS")
    #run_process("unlink %s/FindORFS/in/%s.scaffolds.faa"%(rundir,PREFIX))
    #run_process("ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.scaffolds.faa"%(rundir,rundir,PREFIX))
 
@@ -1851,21 +1892,27 @@ def Postprocess(input,output):
           raise(JobSignalledBreak)
        run_process("perl %s/ImportBLAST.pl -c -v -i %s/Postprocess/in/%s.hits"%(KRONA,rundir,PREFIX),"Postprocess")
    elif cls == 'fcp':
-       if not os.path.exists(KRONA + os.sep + "ImportFCP.pl"):
-          print "Error: Krona importer for FCP not found in %s. Please check your path and try again.\n"%(KRONA)
-          raise(JobSignalledBreak)
-       run_process("perl %s/ImportFCP.pl -c -v -i %s/Postprocess/in/%s.hits"%(KRONA,rundir,PREFIX),"Postprocess")
+       print "FCP not supported yet ... stay tuned\n"
+       #if not os.path.exists(KRONA + os.sep + "ImportFCP.pl"):
+       #   print "Error: Krona importer for FCP not found in %s. Please check your path and try again.\n"%(KRONA)
+       #   raise(JobSignalledBreak)
+       #run_process("perl %s/ImportFCP.pl -c -v -i %s/Postprocess/in/%s.hits"%(KRONA,rundir,PREFIX),"Postprocess")
    elif cls == 'phymm':
        if not os.path.exists(KRONA + os.sep + "ImportPHYMM.pl"):
           print "Error: Krona importer for PHYMM not found in %s. Please check your path and try again.\n"%(KRONA)
           raise(JobSignalledBreak)
        run_process("perl %s/ImportPhymmBL.pl -c -v -i %s/Postprocess/in/%s.hits"%(KRONA,rundir,PREFIX),"Postprocess")
+   elif cls == 'amphora':
+       if not os.path.exists(KRONA + os.sep + "ImportAmphora.pl"):
+           print "Error: Krona importer for Amphora 2 not found in %s. Please check your path and try again.\n"%(KRONA)
+           raise(JobSignalledBreak)
+       run_process("perl %s/ImportAmphora.pl -c -v -i %s/Postprocess/in/%s.hits"%(KRONA,rundir,PREFIX), "Postprocess") 
 
    #command to open webbrowser?
    #try to open Krona output
    if openbrowser:
-       if os.path.exists(os.getcwd() + os.sep + "report.krona.html"):
-           webbrowser.open_new("report.krona.html")
+       if os.path.exists(rundir + os.sep + "Postprocess" + os.sep + "out" + os.sep + "report.krona.html"):
+           webbrowser.open_new("%s%sPostprocess%sout%sreport.krona.html"%(rundir, os.sep, os.sep, os.sep))
        else:
            print "ERROR: No Krona html file available! skipping"
    #webbrowser.open_new(output.html)
@@ -1879,7 +1926,7 @@ def Postprocess(input,output):
        if os.path.exists("%s/Postprocess/out/summary.html"%(rundir)):
            webbrowser.open_new_tab("%s/Postprocess/out/summary.html"%(rundir))
        else:
-           print "ERROR: No Krona html file available! skipping"
+           print "ERROR: No Summary html file available! skipping"
 
 def parse_metaphyler(giMapping, toTranslate, output):
    giDictionary = {};
@@ -1906,7 +1953,7 @@ def parse_metaphyler(giMapping, toTranslate, output):
    GIs.close()
    outf.close()
 
-def parse_genemarkout(orf_file,is_scaff=False, error_stream="Findorfs"):
+def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
     coords = open(orf_file,'r')
     coords.readline()
 #    outf = open("proba.orfs",'w')

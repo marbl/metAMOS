@@ -245,7 +245,6 @@ while i < len(readlibs):
         cf.write("lib%dformat:\tsff\n"%(i+1))
         cf.write("lib%dlinker:\t%s\n"%(i+1,mylib.SFFLinkerType))
     else:
- 
         cf.write("lib%dformat:\tfasta\n"%(i+1))
         if mylib.interleaved or not mylib.mated:
             filen = os.path.basename(f1)
@@ -272,30 +271,34 @@ while i < len(readlibs):
         os.system("cp %s %s/Preprocess/in/. "%(f1,id))
 
     #os.system("ln -t %s -s %s/Preprocess/in/%s"%(frg,id,filen))
-    elif mylib.mated and not mylib.interleaved:
+    elif mylib.mated:
         cf.write("lib%dmated:\tTrue\n"%(i+1))
-        cf.write("lib%dinterleaved:\tFalse\n"%(i+1))
-        filen1 =  os.path.basename(f1)
-        filen2 =  os.path.basename(f2)
-        min = mylib.mmin
-        max = mylib.mmax
-        mean = mylib.mean
-        stdev = mylib.stdev
-        cf.write("lib%df1:\t%s,%d,%d,%d,%d\n"%(i+1,filen1,min,max,mean,stdev))
-        cf.write("lib%df2:\t%s,%d,%d,%d,%d\n"%(i+1,filen2,min,max,mean,stdev))
-        os.system("cp %s %s/Preprocess/in/. "%(f1,id))
-        os.system("cp %s  %s/Preprocess/in/. "%(f2,id))
+        if mylib.innie:
+            cf.write("lib%dinnie:\tTrue\n"%(i+1))
+        else:
+            cf.write("lib%dinnie:\tFalse\n"%(i+1))
 
-    elif mylib.mated and mylib.interleaved:
-        cf.write("lib%dmated:\tTrue\n"%(i+1))
-        cf.write("lib%dinterleaved:\tTrue\n"%(i+1))
-        filen1 =  os.path.basename(f1)
-        min = mylib.mmin
-        max = mylib.mmax
-        mean = mylib.mean
-        stdev = mylib.stdev
-        cf.write("lib%df1:\t%s,%d,%d,%d,%d\n"%(i+1,filen1,min,max,mean,stdev))
-        os.system("cp %s %s/Preprocess/in/. "%(f1,id))
+        if not mylib.interleaved:
+            cf.write("lib%dinterleaved:\tFalse\n"%(i+1))
+            filen1 =  os.path.basename(f1)
+            filen2 =  os.path.basename(f2)
+            min = mylib.mmin
+            max = mylib.mmax
+            mean = mylib.mean
+            stdev = mylib.stdev
+            cf.write("lib%df1:\t%s,%d,%d,%d,%d\n"%(i+1,filen1,min,max,mean,stdev))
+            cf.write("lib%df2:\t%s,%d,%d,%d,%d\n"%(i+1,filen2,min,max,mean,stdev))
+            os.system("cp %s %s/Preprocess/in/. "%(f1,id))
+            os.system("cp %s  %s/Preprocess/in/. "%(f2,id))
+        elif mylib.interleaved:
+            cf.write("lib%dinterleaved:\tTrue\n"%(i+1))
+            filen1 =  os.path.basename(f1)
+            min = mylib.mmin
+            max = mylib.mmax
+            mean = mylib.mean
+            stdev = mylib.stdev
+            cf.write("lib%df1:\t%s,%d,%d,%d,%d\n"%(i+1,filen1,min,max,mean,stdev))
+            os.system("cp %s %s/Preprocess/in/. "%(f1,id))
 
     if 1:
         soapf = open("%s/config.txt"%(id),'a')

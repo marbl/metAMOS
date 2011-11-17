@@ -28,8 +28,6 @@ my $totalMag;
 my $outFile = 'report.krona.html';
 my $include;
 my $random;
-my $colorIdentity;
-my $colorBitScore;
 my $combine;
 my $local;
 my $verbose;
@@ -38,8 +36,6 @@ GetOptions(
 	'o=s' => \$outFile,
 	'i'   => \$include,
 	'r'   => \$random,
-	'p'   => \$colorIdentity,
-	'b'   => \$colorBitScore,
 	'c'   => \$combine,
 	'l'   => \$local,
 	'v'   => \$verbose
@@ -71,14 +67,6 @@ Input:
                     locally, subject IDs in the local database must contain GI
                     numbers in "gi|12345" format.
    
-   [magnitue_file]  Optional file listing query IDs with magnitudes, separated
-                    by tabs.  The can be used to account for read length or
-                    contig depth to obtain a more accurate representation of
-                    abundance.  By default, query sequences without specified
-                    magnitudes will be assigned a magnitude of 1.  Magnitude
-                    files for Newbler or Celera Assembler assemblies can be
-                    created with getContigMagnitudesNewbler.pl or
-                    getContigMagnitudesCA.pl
 Options:
 
    [-o <string>]  Output file name.  Default is blast.krona.html.
@@ -160,7 +148,8 @@ foreach my $input (@ARGV)
 	my $topScore;
 	my $ties;
 	my $taxID;
-	my $score = 0;
+	my $magnitude = 0;
+        my $score = 0;
 	
 	while ( 1 )
 	{
@@ -168,56 +157,27 @@ foreach my $input (@ARGV)
 		
 		chomp $line;
                 #print "$line";
-		if ( $line =~ /^#/ )
-		{
 		my
 		(
 			$taxID,
                         $blank1,
 			$taxaName,
-			$n1,
-			$n2,
-			$n3,
-			$n4,
-			$n5,
-			$n6,
-			$n7
+			$magnitude
 
 		) = split /\s+/, $line; #split /\t/, $line;
                 if ( defined $taxID )
 		{
 			# add the chosen hit
-			my $magnitude = 1;
 			add($set, \%tree, $taxID, $magnitude, $score);
+                        $totalMagnitude += $magnitude;
 			$ties = 1;
+			if ($topScore < $score) { $topScore = $score; }
 		}
 		
 		if ( ! defined $taxID )
 		{
 			last; # EOF
 		}
-		
-		if ( $colorIdentity )
-		{
-			$score = 0;
-		}
-		elsif ( $colorBitScore )
-		{
-			$score = 0;
-		}
-		else
-		{
-			if ( $eVal > 0 )
-			{
-				$score = 0;
-			}
-			else
-			{
-				$score = 0;#"1e-500";
-				$zeroEVal = 1;
-			}
-		}
-        	if ($topScore < $score) { $topScore = $score; }
 	}
 	
 	if ( $include && $totalMagnitude )
@@ -244,20 +204,7 @@ my @attributeNames =
 	'magnitude'
 );
 
-my $scoreName;
-
-if ( $colorIdentity )
-{
-	$scoreName = 'Avg. % identity';
-}
-elsif ( $colorBitScore )
-{
-	$scoreName = 'Avg. bit score';
-}
-else
-{
-	$scoreName = 'Log avg. e-value';
-}
+my $scoreName = 'N/A';
 
 my @attributeDisplayNames =
 (
@@ -279,8 +226,8 @@ writeTree
 	\@attributeNames,
 	\@attributeDisplayNames,
 	\@datasetNames,
-	! ( $colorIdentity || $colorBitScore ),
+	0,
 	'score',
-	$colorBitScore || $colorIdentity ? 0 : 120,
-	$colorBitScore || $colorIdentity ? 120 : 0
+	0,
+	0
 );

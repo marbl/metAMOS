@@ -243,7 +243,7 @@ while i < len(readlibs):
 
     elif mylib.format == "sff":
         cf.write("lib%dformat:\tsff\n"%(i+1))
-        cf.write("lib%dlinker:\t%s\n"%(i+1,mylib.SFFLinkerType))
+        cf.write("lib%dlinker:\t%s\n"%(i+1,mylib.linkertype))
     else:
         cf.write("lib%dformat:\tfasta\n"%(i+1))
         if mylib.interleaved or not mylib.mated:

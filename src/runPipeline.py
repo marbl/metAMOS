@@ -589,7 +589,7 @@ reads = None
 quals = None
 format = None
 verbose = False
-bowtie_mapping = 0
+bowtie_mapping = 1
 startat = None
 stopat = None
 filter = False
@@ -784,7 +784,7 @@ if len(readlibs) > 1 and asm == "metaidba":
     print "ERROR: meta-IDBA only supports 1 library, please select different assembler or reduce libraries"
     sys.exit(1)
 
-def map2contig(fasta):
+def map2contig():
     #bowtie_mapping = 1
     
     readDir = ""
@@ -827,7 +827,7 @@ def map2contig(fasta):
 
 
             #trim to 25bp
-            trim = 1
+            trim = 0
             if trim:
                 f1 = open("%s/Preprocess/out/lib%d.seq"%(rundir,lib.id))
                 f2 = open("%s/Preprocess/out/lib%d.seq.trim"%(rundir,lib.id),'w')
@@ -843,12 +843,12 @@ def map2contig(fasta):
             if not os.path.exists("%s/Assemble/out/IDX.1.ebwt"%(rundir)):
                 run_process("%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(BOWTIE, rundir,PREFIX,rundir),"Scaffold")
             #run_process("%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(BOWTIE, rundir,PREFIX,rundir))
-            if "bowtie" not in skipsteps and fasta:
+            if "bowtie" not in skipsteps and lib.format == "fasta":
                 if trim:
                     run_process("%s/bowtie -p %d -f -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/%s.bout"%(BOWTIE,threads,rundir,rundir,lib.id,rundir,PREFIX),"Scaffold")
                 else:
                     run_process("%s/bowtie -p %d -f -l 28 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/%s.bout"%(BOWTIE,threads,rundir,rundir,lib.id,rundir,PREFIX))
-            elif "bowtie" not in skipsteps and not fasta:
+            elif "bowtie" not in skipsteps and lib.format != "fasta":
                 if trim:
                     run_process("%s/bowtie  -p %d -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/%s.bout"%(BOWTIE,threads,rundir,rundir,lib.id,rundir,PREFIX),"Scaffold")
                 else:
@@ -918,6 +918,7 @@ def map2contig(fasta):
     ctgsizes = []
     n50_size = 0
     n50_mid = 955,000
+    ctg_cvg_file = open("%s/Assemble/out/%s.contig.cvg"%(rundir,PREFIX),'w')
     for item in contig_data:
         if item == '':
             continue
@@ -950,6 +951,7 @@ def map2contig(fasta):
         tigr_file.write(cseq_fmt)#item[1])
         contigdict[ref].sort()
         #print contigdict[ref]
+        ctg_cvg_file.write("%s\t%.2f\n"%(ref,(float(len(contigdict[ref])*len(seqdict[contigdict[ref][0][-1]]))/float(ctgslen))))
         for read in contigdict[ref]:
             
             try:
@@ -975,7 +977,7 @@ def map2contig(fasta):
             new_matefile.write("%s\t%s\t%d\n"%(mate,matedict[lib.id][mate],lib.id))
             new_matefile.flush()
             continue
-    
+    ctg_cvg_file.close()
     tigr_file.close()
         
 def runVelvet(velvetPath, name):
@@ -1612,6 +1614,9 @@ def Assemble(input,output):
    elif asm == "velvet-sc":
       runVelvet(VELVET_SC, "velvet-sc")
 
+   if 1:
+       if "bowtie" not in skipsteps:
+           map2contig()
    #stop here, for now
    #sys.exit(0)
    #check if sucessfully completed   
@@ -1715,7 +1720,7 @@ def Annotate(input,output):
        #          run_process("%s -paired %s/Preprocess/in/%s %s/Preprocess/in/%s"%(amphoraCmd,rundir,lib.f1.fname,rundir,lib.f2.fname), "Annotate")
        #   else:
        #      run_process("%s %s/Preprocess/out/lib%d.seq"%(amphoraCmd,rundir,lib.id), "Annotate")
-       run_process("%s %s/Annotate/in/%s.asm.contig"%(amphoraCmd, rundir, PREFIX), "Annotate")
+       run_process("%s %s/Annotate/in/%s.asm.contig --coverage=%s/Assemble/out/%s.contig.cvg "%(amphoraCmd, rundir, PREFIX,rundir,PREFIX), "Annotate")
 
        # save the results
        run_process("unlink %s/Annotate/out/%s.hits"%(rundir, PREFIX), "Annotate")
@@ -1737,25 +1742,22 @@ if "Abundance" in forcesteps:
    run_process("rm %s/Abundance/out/%s.taxprof.pct.txt"%(rundir,PREFIX))
 
 @follows(FindORFS)
-@files("%s/FindORFS/out/%s.faa"%(rundir,PREFIX),"%s/Abundance/out/%s.taxprof.pct.txt"%(rundir,PREFIX))
+@files("%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX),"%s/Abundance/out/%s.taxprof.pct.txt"%(rundir,PREFIX))
 def Abundance(input,output):
    if "FindORFS" in skipsteps or "Abundance" in skipsteps:
       return 0
 
-   run_process("unlink %s/Abundance/in/%s.contig.cvg"%(rundir,PREFIX),"Abundance")
-   run_process("unlink %s/Abundance/in/%s.faa"%(rundir,PREFIX),"Abundance")
-   run_process("ln -t %s/Abundance/in/ -s %s/FindORFS/out/%s.contig.cvg"%(rundir,rundir,PREFIX),"Abundance")
-   run_process("ln -t %s/Abundance/in/ -s %s/FindORFS/out/%s.faa"%(rundir,rundir,PREFIX),"Abundance")
+   #run_process("unlink %s/Abundance/in/%s.gene.cvg"%(rundir,PREFIX),"Abundance")
+   #run_process("unlink %s/Abundance/in/%s.faa"%(rundir,PREFIX),"Abundance")
+   #run_process("ln -t %s/Abundance/in/ -s %s/FindORFS/out/%s.faa"%(rundir,rundir,PREFIX),"Abundance")
+   #run_process("ln -t %s/Abundance/in/ -s %s/FindORFS/out/%s.gene.cvg"%(rundir,rundir,PREFIX),"Abundance")
    blastfile = PREFIX+".blastx"
    blastc = BLAST + os.sep + "blastall"
    formatc = BLAST + os.sep + "formatdb"
    run_process("%s  -p T -i %s/DB/markers.pfasta"%(formatc,METAMOS_UTILS),"Abundance")
-   #run_process("perl %s/perl/runblast.pl  %s/Abundance/in/%s.faa %s/Abundance/out/%s.blastx %s/DB/markers.fna"%(METAMOS_UTILS,rundir,PREFIX, rundir,PREFIX,METAMOS_UTILS))
+   run_process("%s -p blastp -i %s/FindORFS/out/%s.faa -d %s/DB/markers.pfasta -m8 -b10 -v10 -a %s -o %s/Abundance/out/%s.blastp"%(blastc, rundir,PREFIX,METAMOS_UTILS,threads,rundir,PREFIX),"Abundance")
 
-
-   run_process("%s -p blastp -i %s/Abundance/in/%s.faa -d %s/DB/markers.pfasta -m8 -b10 -v10 -a %s -o %s/Abundance/out/%s.blastp"%(blastc, rundir,PREFIX,METAMOS_UTILS,threads,rundir,PREFIX),"Abundance")
-
-   run_process("perl %s/perl/metaphyler_contigs.pl %s/Abundance/out/%s.blastp %s %s/Abundance/in/%s.contig.cvg %s/Abundance/out %s"%(METAMOS_UTILS,rundir,PREFIX,PREFIX,rundir,PREFIX,rundir,METAMOS_UTILS),"Abundance")
+   run_process("perl %s/perl/metaphyler_contigs.pl %s/Abundance/out/%s.blastp %s %s/FindORFS/out/%s.gene.cvg %s/Abundance/out %s"%(METAMOS_UTILS,rundir,PREFIX,PREFIX,rundir,PREFIX,rundir,METAMOS_UTILS),"Abundance")
 
    # finally add the GI numbers to the results where we can
    parse_metaphyler("%s/DB/markers.toGI.txt"%(METAMOS_UTILS), "%s/Abundance/out/%s.blastp"%(rundir, PREFIX), "%s/Abundance/out/%s.gi.blastp"%(rundir, PREFIX))
@@ -1765,7 +1767,7 @@ def Abundance(input,output):
 if "Scaffold" in forcesteps:
     #run_process("touch %s/Assemble/out/%s.asm.contig"%(rundir,PREFIX))
     run_process("rm %s/Scaffold/out/%s.scaffolds.final"%(rundir,PREFIX))
-@follows(FindORFS)
+@follows(FindRepeats)
 @files(["%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX)],"%s/Scaffold/out/%s.scaffolds.final"%(rundir,PREFIX))
 def Scaffold(input,output):
    # check if we need to do scaffolding
@@ -1788,20 +1790,14 @@ def Scaffold(input,output):
            for lib in readlibs:
         
                if lib.format == "fasta":
-                   if "bowtie" not in skipsteps:
-                       map2contig(1)
                    run_process("%s/toAmos_new -s %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,lib.id,rundir, PREFIX,lib.id,rundir,PREFIX),"Scaffold")
 
                elif format == "fastq":
-                   if "bowtie" not in skipsteps:
-                       map2contig(0)
                    run_process("%s/toAmos_new -Q %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,lib.id,rundir,PREFIX, lib.id,rundir,PREFIX),"Scaffold")
 
            run_process("%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,PREFIX,rundir,PREFIX),"Scaffold")
        elif asm == "metaidba":
           for lib in readlibs:
-              bowtie_mapping = 1
-              map2contig(1)
               run_process("%s/toAmos_new -s %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,lib.id,rundir, PREFIX,lib.id,rundir,PREFIX),"Scaffold")
           run_process("%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -b %s/Scaffold/in/%s.bnk "%(AMOS,rundir,PREFIX,rundir,PREFIX),"Scaffold")
        elif asm == "newbler":
@@ -2103,18 +2099,21 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
     if is_scaff:
         outf = open("%s/FindScaffoldORFS/out/%s.faa"%(rundir,PREFIX),'w')
         outf2 = open("%s/FindScaffoldORFS/out/%s.fna"%(rundir,PREFIX),'w')
-        cvgf = open("%s/FindScaffoldORFS/out/%s.contig.cvg"%(rundir,PREFIX),'w')
+        #cvgf = open("%s/FindScaffoldORFS/out/%s.contig.cvg"%(rundir,PREFIX),'w')
+        cvgg = open("%s/FindScaffoldORFS/out/%s.gene.cvg"%(rundir,PREFIX),'w')
     else:
         outf = open("%s/FindORFS/out/%s.faa"%(rundir,PREFIX),'w')
         outf2 = open("%s/FindORFS/out/%s.fna"%(rundir,PREFIX),'w')
-        cvgf = open("%s/FindORFS/out/%s.contig.cvg"%(rundir,PREFIX),'w')
+        #cvgf = open("%s/FindORFS/out/%s.contig.cvg"%(rundir,PREFIX),'w')
+        cvgg = open("%s/FindORFS/out/%s.gene.cvg"%(rundir,PREFIX),'w')
     #print len(gene_dict.keys())
     orfs = {}
+
     for key in gene_dict.keys():
         genecnt = 1
 
         if not is_scaff:
-            cvgf.write("%s_gene%d\t%s\n"%(key,genecnt,cvg_dict[key])) 
+            cvgg.write("%s_gene%d\t%s\n"%(key,genecnt,cvg_dict[key])) 
         for gene in gene_dict[key]:
             #min aa length, read depth
             if len(gene) < 100:# or cvg_dict[key] < 5:
@@ -2134,7 +2133,7 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
             outf2.write(">%s_gene%d\n%s"%(key,genecnt,gene))
 #        print gene_dict[key][0]
     outf.close()
-    cvgf.close()
+    cvgg.close()
 def parse_phmmerout(phmmerout):
 
     hit_dict = {}

@@ -30,7 +30,7 @@ class readLib:
         self.mmax = 0 
         self.f1 = f1
         self.f2 = f2
-        self.linkertype = linkertype
+        self.linkerType = linkertype
         self.innie = innie
 
         if interleaved:
@@ -77,7 +77,6 @@ def usage():
     print "-o: reads are in outtie orientation (default innie)"
     print "-q: boolean, reads are in fastq format (default is fastq)"
     print "-s/--sff: boolean, reads are in SFF format (default is fastq)"
-    print "-sm/--sff-mated: boolean, reads are in SFF format and mated (default is fastq)"
     
 if len(sys.argv) < 2:
     usage()
@@ -89,7 +88,7 @@ today = datetime.datetime.now()
 timestamp = "P_"+today.isoformat().replace("-","_").replace(".","").replace(":","").replace("T","_")
 #print timestamp
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hfsq1:2:m:c:i:d:or", ["help", "fasta=","fastq=","sff=","f1=","f2=","matelib=","asmcontig=","insertlen=","dir=","outtie=","readlen="])
+    opts, args = getopt.getopt(sys.argv[1:], "hfsq1:2:m:c:i:d:or", ["help", "fasta","fastq","sff","f1=","f2=","matelib=","asmcontig=","insertlen=","dir=","outtie=","readlen="])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -119,19 +118,17 @@ for o, a in opts:
         sys.exit()
     elif o in ("-c"):
         contigs = a
-    elif o in ("-q"):
+    elif o in ("-q", "--fastq"):
         #reads = a
         format = "fastq"
     elif o in ("-r"):
         maxreadlen = int(a)
-    elif o in ("-f"):
+    elif o in ("-f", "--fasta"):
         #reads = a
         format = "fasta"
     # 454 specfic options
     elif o in ("-s", "--sff"):
         format = "sff"
-    elif o in ("-sm", "--sff-mated"):
-        format = "sff-mated"
     elif o in ("-l"):
         SFFLinkerType = a
 
@@ -140,10 +137,7 @@ for o, a in opts:
         i = 0
         lastLib = len(readlibs)
         while i < len(libs):
-           if format == "sff-mated":
-              nlib = readLib("sff", libs[i], "", innie, SFFLinkerType, True, False)
-           else:
-              nlib = readLib(format, libs[i], "", innie, SFFLinkerType)
+           nlib = readLib(format, libs[i], "", innie, SFFLinkerType)
            readlibs.append(nlib)
            i+= 1 
     elif o in ("-2"):
@@ -243,7 +237,7 @@ while i < len(readlibs):
 
     elif mylib.format == "sff":
         cf.write("lib%dformat:\tsff\n"%(i+1))
-        cf.write("lib%dlinker:\t%s\n"%(i+1,mylib.linkertype))
+        cf.write("lib%dlinker:\t%s\n"%(i+1,mylib.linkerType))
     else:
         cf.write("lib%dformat:\tfasta\n"%(i+1))
         if mylib.interleaved or not mylib.mated:
@@ -256,18 +250,9 @@ while i < len(readlibs):
             os.system("cp %s.qual %s/Preprocess/in/. "%(f2,id))
     if not mylib.mated:
         filen = os.path.basename(f1)
-        if mylib.format == "sff" and mylib.mated:
-            cf.write("lib%dmated:\tTrue\n"%(i+1))
-            cf.write("lib%dinterleaved:\tTrue\n"%(i+1))
-            min = mylib.mmin
-            max = mylib.mmax
-            mean = mylib.mean
-            stdev = mylib.stdev
-            cf.write("lib%df1:\t%s,%d,%d,%d,%d\n"%(i+1,filen,min,max,mean,stdev))
-        else:
-            cf.write("lib%dmated:\tFalse\n"%(i+1))
-            cf.write("lib%dinterleaved:\tFalse\n"%(i+1))
-            cf.write("lib%dfrg:\t%s\n"%(i+1,filen))
+        cf.write("lib%dmated:\tFalse\n"%(i+1))
+        cf.write("lib%dinterleaved:\tFalse\n"%(i+1))
+        cf.write("lib%dfrg:\t%s\n"%(i+1,filen))
         os.system("cp %s %s/Preprocess/in/. "%(f1,id))
 
     #os.system("ln -t %s -s %s/Preprocess/in/%s"%(frg,id,filen))

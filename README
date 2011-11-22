@@ -6,7 +6,7 @@ Last updated: November 22nd 2011
         * B/ SOFTWARE REQUIREMENTS
         * C/ INSTALLING metAMOS
         * D/ QUICK START
-        * E/ USER MANUAL
+        * E/ OUTPUT
         * F/ CONTACT
 
 ----------------------------------------------------------------------------------
@@ -125,7 +125,7 @@ as output, generates an HTML page with summary statistics and a few
 static plots.
 
 ----------------------------------------------------------------------------------
-E/ Example Krona output
+E/ Example output
 
 http://www.cbcb.umd.edu/software/metamos/report.krona.html
 

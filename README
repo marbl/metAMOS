@@ -42,29 +42,29 @@ D/ QUICK START
 
 Before you get started using metAMOS a brief review of its design will help clarify its intended use. metAMOS gas two main components:
 
-1) createProject.py
+1) initPipeline.py
 2) runPipeline.py
 
-The first component, createProject.py, is for creating new projects
+The first component, initPipeline.py, is for creating new projects
 and also initiliazing sequence libraries. Currently fasta, fastq, and
 SFF files are supported.
 
 usage info:
 
 (non-interleaved fastq, single library)
-createProject.py -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500 -q
+initPipeline.py -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500 -q
 
 (non-interleaved fasta, single library)
-createProject.py -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500 -f
+initPipeline.py -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500 -f
 
 (interleaved fastq, single library)
-createProject.py -m file.fastq.12  -d projectDir -i 300:500 -q
+initPipeline.py -m file.fastq.12  -d projectDir -i 300:500 -q
 
 (interleaved fastq, multiple libraries)
-createProject.py -m file.fastq.12,file2.fastq.12  -d projectDir -i 300:500,1000:2000 -q
+initPipeline.py -m file.fastq.12,file2.fastq.12  -d projectDir -i 300:500,1000:2000 -q
 
 (interleaved fastq, multiple libraries, existing assembly)
-createProject.py -m file.fastq.12,file2.fastq.12 -c file.contig.fa -d projectDir -i 300:500,1000:2000 -q
+initPipeline.py -m file.fastq.12,file2.fastq.12 -c file.contig.fa -d projectDir -i 300:500,1000:2000 -q
 
 
 The second component, runPipeline.py, takes a project directory as

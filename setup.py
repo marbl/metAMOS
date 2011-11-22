@@ -22,5 +22,5 @@ setup(
     classifiers=[
         "Development Status :: 3 - Alpha"
     ],
-    scripts=['src/createProject.py', 'src/runPipeline.py'],
+    scripts=['src/initPipeline.py', 'src/runPipeline.py'],
 )

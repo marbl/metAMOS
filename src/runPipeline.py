@@ -558,7 +558,7 @@ def usage():
     print "-h: help?"
     print "-r: retain the AMOS bank?  (default = NO)"
     print "-b: use bowtie for read mapping? (default = NO)"
-    print "-d = <project dir>: directory created by createProject"
+    print "-d = <project dir>: directory created by initPipeline"
     print "-s = <runPipeline step>: start at this step in the pipeline"
     print "-e = <runPipeline step>: end at this step in the pipeline"
     print "-o = <int>>: min overlap length"
@@ -1424,9 +1424,15 @@ def Preprocess(input,output):
                   raise(JobSignalledBreak)
 
                # generate the fasta files from the sff file
-               sffToCACmd = "%s/sffToCA -clear 454 -clear discard-n -trim chop -libraryname lib%d -output %s/Preprocess/out/%s"%(CA, lib.id,rundir, PREFIX)
+               run_process("rm -rf %s/Preprocess/out/%s.tmpStore"%(rundir, PREFIX), "Preprocess")
+               run_process("rm -rf %s/Preprocess/out/%s.gkpStore"%(rundir, PREFIX), "Preprocess")
+               run_process("unlink %s/Preprocess/out/%s.frg"%(rundir, PREFIX), "Preprocess")
+               sffToCACmd = "%s/sffToCA -clear discard-n "
+               if lib.linkerType != "flx":
+                  sffToCACmd += "-clear 454"
+               sffToCACmd += "-trim hard -libraryname lib%d -output %s/Preprocess/out/%s"%(CA, lib.id,rundir, PREFIX)
                if (read.mated == True):
-                   run_process("%s -linker %s -insertsize %d %d %s"%(sffToCACmd, read.linkerType, lib.mean, lib.stdev, read.path),"Preprocess")
+                   run_process("%s -linker %s -insertsize %d %d %s"%(sffToCACmd, lib.linkerType, lib.mean, lib.stdev, read.path),"Preprocess")
                else:
                    run_process("%s %s"%(sffToCACmd, read.path),"Preprocess")
                run_process("%s/gatekeeper -T -F -o %s/Preprocess/out/%s.gkpStore %s/Preprocess/out/%s.frg"%(CA, rundir, PREFIX, rundir, PREFIX),"Preprocess")

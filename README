@@ -1,5 +1,5 @@
-metAMOS README, v1.0
-July 18th, 2011
+metAMOS README
+Last updated: November 22nd 2011
 
 > SUMMARY
         * A/ HARDWARE REQUIREMENTS
@@ -125,7 +125,16 @@ as output, generates an HTML page with summary statistics and a few
 static plots.
 
 ----------------------------------------------------------------------------------
-E/ CONTACT
+E/ Example Krona output
+
+http://www.cbcb.umd.edu/software/metamos/report.krona.html
+
+Krona publication:
+Ondov BD, Bergman NH, Phillippy AM.. Interactive metagenomic visualization in a Web browser. BMC Bioinformatics. 2011 Sep 30;12:385.
+PMID: 21961884
+
+----------------------------------------------------------------------------------
+F/ CONTACT
 
 who to contact (for bugs, complaints, feature requests, etc):
 

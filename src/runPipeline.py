@@ -83,7 +83,7 @@ class readLib:
     reads = []
     readDict = {}
     pairDict = {}
-    def __init__(self,format,mmin,mmax,f1,f2="",mated=True,interleaved=False,innie=True):
+    def __init__(self,format,mmin,mmax,f1,f2="",mated=True,interleaved=False,innie=True,linkerType="titanium"):
         global libcounter
         self.id = libcounter
         self.sid = "lib"+str(libcounter)
@@ -92,6 +92,7 @@ class readLib:
         self.mated=mated
         self.interleaved=interleaved
         self.innie=innie
+        self.linkerType=linkerType
         self.mmin = mmin
         self.mmax = mmax
         self.f1 = f1
@@ -718,7 +719,7 @@ for line in inf:
             nread1 = Read(format,f1,mated,interleaved)
             readobjs.append(nread1)
             nread2 = ""
-            nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,innie)
+            nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,innie,linkerType)
             readlibs.append(nlib)
         libadded = False
         format = line.replace("\n","").split("\t")[-1]
@@ -759,7 +760,7 @@ for line in inf:
         readobjs.append(nread1)
         nread2 = Read(format,f2,mated,interleaved)
         readobjs.append(nread2)
-        nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,innie)
+        nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,innie,linkerType)
         readlibs.append(nlib)
         libadded = True
     elif "frg" in line:
@@ -775,7 +776,7 @@ if f1 and not libadded:
     nread1 = Read(format,f1,mated,interleaved)
     readobjs.append(nread1)
     nread2 = ""
-    nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,innie)
+    nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,innie,linkerType)
     readlibs.append(nlib)
     #libadded = True
 
@@ -979,7 +980,29 @@ def map2contig():
             continue
     ctg_cvg_file.close()
     tigr_file.close()
-        
+
+def extractNewblerReads():
+   run_process("unlink %s/Preprocess/out/all.seq.mates"%(rundir), "Assemble")
+
+   # prepare trim and pair information
+   run_process("cat %s/Assemble/out/assembly/454TrimStatus.txt |grep -v Trimpoints | grep -v left |grep -v right |awk '{print $0}' | awk '{print $1\" \"$2}' > %s/Assemble/out/454TrimNoPairs.txt"%(rundir, rundir), "Assemble")
+   run_process("cat %s/Assemble/out/assembly/454TrimStatus.txt |grep left |sed s/_left//g |awk '{print $0}' | awk '{print $1\" \"$2}' > %s/Assemble/out/454TrimLeftPairs.txt"%(rundir, rundir), "Assemble")
+   run_process("cat %s/Assemble/out/assembly/454TrimStatus.txt |grep right |sed s/_right//g | awk '{print $0}' | awk '{print $1\" \"$2}' > %s/Assemble/out/454TrimRightPairs.txt"%(rundir, rundir), "Assemble")
+
+   for lib in readlibs:
+       run_process("unlink %s/Preprocess/out/lib%d.seq"%(rundir, lib.id), "Assemble")
+       run_process("%s/sfffile -i %s/Assemble/out/454TrimNoPairs.txt -t %s/Assemble/out/454TrimNoPairs.txt -o %s/Preprocess/out/lib%d.noPairs.sff %s/Preprocess/out/lib%d.sff"%(NEWBLER, rundir, rundir, rundir, lib.id, rundir, lib.id), "Assemble")
+       run_process("%s/sffinfo -s %s/Preprocess/out/lib%d.noPairs.sff > %s/Preprocess/out/lib%d.seq"%(NEWBLER, rundir, lib.id, rundir, lib.id), "Assemble")
+       run_process("%s/sfffile -i %s/Assemble/out/454TrimLeftPairs.txt -t %s/Assemble/out/454TrimLeftPairs.txt -o %s/Preprocess/out/lib%d.noPairs.sff %s/Preprocess/out/lib%d.sff"%(NEWBLER, rundir, rundir, rundir, lib.id, rundir, lib.id), "Assemble")
+       run_process("%s/sffinfo -s %s/Preprocess/out/lib%d.noPairs.sff |awk '{if (match($1, \">\") == 1) { print $1\"_left\"; } else { print $0; }}' >> %s/Preprocess/out/lib%d.seq"%(NEWBLER, rundir, lib.id, rundir, lib.id), "Assemble")
+       run_process("%s/sfffile -i %s/Assemble/out/454TrimRightPairs.txt -t %s/Assemble/out/454TrimRightPairs.txt -o %s/Preprocess/out/lib%d.noPairs.sff %s/Preprocess/out/lib%d.sff"%(NEWBLER, rundir, rundir, rundir, lib.id, rundir, lib.id), "Assemble")
+       run_process("%s/sffinfo -s %s/Preprocess/out/lib%d.noPairs.sff |awk '{if (match($1, \">\") == 1) { print $1\"_right\"; } else { print $0; }}' >> %s/Preprocess/out/lib%d.seq"%(NEWBLER, rundir, lib.id, rundir, lib.id), "Assemble")
+
+       run_process("cat %s/Assemble/out/454TrimLeftPairs.txt |awk '{print $1\"_left\t\"$1\"_right\"}' > %s/Preprocess/out/lib%d.seq.mates"%(rundir, rundir, lib.id), "Assemble")
+       run_process("echo %s\t%d\t%d >> %s/Preprocess/out/all.seq.mates"%(lib.sid, lib.mmin, lib.mmax, rundir), "Assemble")
+       run_process("cat %s/Assemble/out/454TrimLeftPairs.txt |awk '{print $1\"_left\t\"$1\"_right %s\"}' >> %s/Preprocess/out/all.seq.mates"%(rundir, lib.sid, rundir), "Assemble")
+       run_process("rm %s/Preprocess/out/lib%d.noPairs.sff"%(rundir, lib.id), "Assemble")
+ 
 def runVelvet(velvetPath, name):
    if not os.path.exists(velvetPath + os.sep + "velvetg"):
       print "Error: %s not found in %s. Please check your path and try again.\n"%(name, velvetPath)
@@ -1419,32 +1442,38 @@ def Preprocess(input,output):
       if 1:
            #this means interleaved, single file
            if lib.format == "sff":
-               if not os.path.exists(CA + os.sep + "sffToCA"):
-                  print "Error: CA not found in %s. It is needed to process SFF files. Please check your path and try again.\n"%(CA)
-                  raise(JobSignalledBreak)
+               run_process("unlink %s/Preprocess/out/lib%d.sff"%(rundir, lib.id), "Preprocess")
+               run_process("ln -s %s %s/Preprocess/out/lib%d.sff"%(read.path, rundir, lib.id), "Preprocess")
 
-               # generate the fasta files from the sff file
-               run_process("rm -rf %s/Preprocess/out/%s.tmpStore"%(rundir, PREFIX), "Preprocess")
-               run_process("rm -rf %s/Preprocess/out/%s.gkpStore"%(rundir, PREFIX), "Preprocess")
-               run_process("unlink %s/Preprocess/out/%s.frg"%(rundir, PREFIX), "Preprocess")
-               sffToCACmd = "%s/sffToCA -clear discard-n "
-               if lib.linkerType != "flx":
-                  sffToCACmd += "-clear 454"
-               sffToCACmd += "-trim hard -libraryname lib%d -output %s/Preprocess/out/%s"%(CA, lib.id,rundir, PREFIX)
-               if (read.mated == True):
-                   run_process("%s -linker %s -insertsize %d %d %s"%(sffToCACmd, lib.linkerType, lib.mean, lib.stdev, read.path),"Preprocess")
+               if asm == "newbler":
+                  run_process("touch %s/Preprocess/out/lib%d.seq"%(rundir, lib.id), "Preprocess");
                else:
-                   run_process("%s %s"%(sffToCACmd, read.path),"Preprocess")
-               run_process("%s/gatekeeper -T -F -o %s/Preprocess/out/%s.gkpStore %s/Preprocess/out/%s.frg"%(CA, rundir, PREFIX, rundir, PREFIX),"Preprocess")
-               run_process("%s/gatekeeper -dumpnewbler %s/Preprocess/out/%s.%d %s/Preprocess/out/%s.gkpStore"%(CA, rundir, PREFIX, lib.id, rundir, PREFIX),"Preprocess")
-               run_process("%s/gatekeeper -dumplibraries -tabular %s/Preprocess/out/%s.gkpStore |awk '{if (match($3, \"U\") == 0 && match($1, \"UID\") == 0) print \"library\t\"$1\"\t\"$4-$5*3\"\t\"$4+$5*3}' > %s/Preprocess/out/lib%d.seq.mates"%(CA, rundir, PREFIX, rundir,lib.id),"Preprocess")
-               run_process("%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3\"\t\"$5}' >> %s/Preprocess/out/lib%d.seq.mates"%(CA, rundir, PREFIX, rundir,lib.id),"Preprocess")
-               run_process("unlink %s/Preprocess/out/lib%d.seq"%(rundir,lib.id),"Preprocess")
-               run_process("ln -s %s/Preprocess/out/%s.%d.fna %s/Preprocess/out/lib%d.seq"%(rundir,PREFIX,lib.id,rundir,lib.id),"Preprocess")
-               run_process("ln -s %s/Preprocess/out/%s.%d.fna.qual %s/Preprocess/out/lib%d.seq.qual"%(rundir,PREFIX,lib.id,rundir,lib.id),"Preprocess")
-               run_process("rm -rf %s/Preproces/out/%s.gkpStore"%(rundir, PREFIX),"Preprocess")
-               run_process("unlink %s/Preprocess/out/%s.frg"%(rundir, PREFIX),"Preprocess")
-               run_process("cat %s/Preprocess/out/lib%d.seq.mates >> %s/Preprocess/out/all.seq.mates"%(rundir, lib.id, rundir), "Preprocess")
+                  if not os.path.exists(CA + os.sep + "sffToCA"):
+                     print "Error: CA not found in %s. It is needed to convert SFF files to fasta.\n"%(CA)
+                     raise(JobSignalledBreak)
+
+                  # generate the fasta files from the sff file
+                  run_process("rm -rf %s/Preprocess/out/%s.tmpStore"%(rundir, PREFIX), "Preprocess")
+                  run_process("rm -rf %s/Preprocess/out/%s.gkpStore"%(rundir, PREFIX), "Preprocess")
+                  run_process("unlink %s/Preprocess/out/%s.frg"%(rundir, PREFIX), "Preprocess")
+                  sffToCACmd = "%s/sffToCA -clear discard-n "%(CA)
+                  if lib.linkerType != "flx":
+                     sffToCACmd += "-clear 454 "
+                  sffToCACmd += "-trim hard -libraryname lib%d -output %s/Preprocess/out/lib%d"%(lib.id, rundir, lib.id)
+                  if (read.mated == True):
+                      run_process("%s -linker %s -insertsize %d %d %s"%(sffToCACmd, lib.linkerType, lib.mean, lib.stdev, read.path),"Preprocess")
+                  else:
+                      run_process("%s %s"%(sffToCACmd, read.path),"Preprocess")
+                  run_process("%s/gatekeeper -T -F -o %s/Preprocess/out/%s.gkpStore %s/Preprocess/out/lib%d.frg"%(CA, rundir, PREFIX, rundir, lib.id),"Preprocess")
+                  run_process("%s/gatekeeper -dumpnewbler %s/Preprocess/out/%s.%d %s/Preprocess/out/%s.gkpStore"%(CA, rundir, PREFIX, lib.id, rundir, PREFIX),"Preprocess")
+                  run_process("%s/gatekeeper -dumplibraries -tabular %s/Preprocess/out/%s.gkpStore |awk '{if (match($3, \"U\") == 0 && match($1, \"UID\") == 0) print \"library\t\"$1\"\t\"$4-$5*3\"\t\"$4+$5*3}' >> %s/Preprocess/out/all.seq.mates"%(CA, rundir, PREFIX, rundir),"Preprocess")
+                  run_process("%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3\"\t\"$5}' >> %s/Preprocess/out/all.seq.mates"%(CA, rundir, PREFIX, rundir),"Preprocess")
+                  run_process("%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3}' > %s/Preprocess/out/lib%d.seq.mates"%(CA, rundir, PREFIX, rundir, lib.id), "Preprocess")
+                  run_process("unlink %s/Preprocess/out/lib%d.seq"%(rundir,lib.id),"Preprocess")
+                  run_process("ln -s %s/Preprocess/out/%s.%d.fna %s/Preprocess/out/lib%d.seq"%(rundir,PREFIX,lib.id,rundir,lib.id),"Preprocess")
+                  run_process("ln -s %s/Preprocess/out/%s.%d.fna.qual %s/Preprocess/out/lib%d.seq.qual"%(rundir,PREFIX,lib.id,rundir,lib.id),"Preprocess")
+                  run_process("rm -rf %s/Preproces/out/%s.gkpStore"%(rundir, PREFIX),"Preprocess")
+                  run_process("cat %s/Preprocess/out/lib%d.seq.mates >> %s/Preprocess/out/all.seq.mates"%(rundir, lib.id, rundir), "Preprocess")
            elif lib.format == "fasta" and not lib.mated:
                run_process("ln -s %s/Preprocess/in/%s %s/Preprocess/out/lib%d.seq"%(rundir,lib.f1.fname,rundir,lib.id),"Preprocess")
                run_process("ln -s %s/Preprocess/in/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(rundir,lib.f1.fname,rundir,lib.id),"Preprocess")
@@ -1567,8 +1596,10 @@ def Assemble(input,output):
             NEWBLER_VERSION = float(mymatch[0])
 
       for lib in readlibs:
-          if lib.format == "fasta" or lib.format == "sff":
+          if lib.format == "fasta":
               run_process("%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(NEWBLER, rundir, rundir,lib.id),"Assemble")
+          elif lib.format == "sff":
+              run_process("%s/addRun %s %s/Assemble/out %s/Preprocess/out/lib%d.sff"%(NEWBLER, ("-p" if lib.mated else ""), rundir, rundir, lib.id), "Assemble")
           elif lib.format == "fastq" and lib.interleaved:
               if (NEWBLER_VERSION < 2.6):
                  print "Error: FASTQ + Newbler only supported in Newbler version 2.6+. You are using version %s."%(NEWBLER_VERSION)
@@ -1582,6 +1613,9 @@ def Assemble(input,output):
       # read spec file to input to newbler parameters
       newblerCmd += getProgramParams("newbler.spec", "", "-")
       run_process("%s -cpu %d %s/Assemble/out"%(newblerCmd,threads,rundir),"Assemble")
+
+      # unlike other assemblers, we can only get the preprocess info for newbler after assembly (since it has to split sff files by mates)
+      extractNewblerReads()
 
       # convert to AMOS
       run_process("%s/toAmos -o %s/Assemble/out/%s.mates.afg -m %s/Preprocess/out/all.seq.mates -ace %s/Assemble/out/assembly/454Contigs.ace"%(AMOS,rundir, PREFIX, rundir, rundir),"Assemble")

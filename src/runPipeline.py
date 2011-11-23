@@ -1662,8 +1662,8 @@ def Assemble(input,output):
               frglist += "%s/Preprocess/out/lib%d.frg"%(rundir, lib.id)
       run_process("%s/runCA -p asm -d %s/Assemble/out/ -s %s/config/asm.spec %s"%(CA,rundir,METAMOS_UTILS,frglist),"Assemble")
       #convert CA to AMOS
-      run_process("%s/gatekeeper -dumpfrg -allreads -format2 asm.gkpStore > asm.frg bzip2 asm.frg"%(CA),"Assemble")
-      run_process("%s/terminator -g asm.gkpStore -t asm.tigStore/ 2 -o asm bzip2 asm.asm"%(CA),"Assemble")
+      run_process("%s/gatekeeper -dumpfrg -allreads asm.gkpStore > asm.frg"%(CA),"Assemble")
+      run_process("%s/terminator -g asm.gkpStore -t asm.tigStore/ 2 -o asm"%(CA),"Assemble")
       run_process("%s/toAmos_new -a asm.asm.bz2 -f asm.frg.bz2 -b asm.bnk -U "%(AMOS),"Assemble")
    elif asm == "velvet":
       runVelvet(VELVET, "velvet")

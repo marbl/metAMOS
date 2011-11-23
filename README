@@ -1,12 +1,18 @@
-metAMOS README, v1.0
-July 18th, 2011
+metAMOS README
+Last updated: November 22nd 2011
+
+NEWS:
+
+*Amphora2 now supported
+*meta-IDBA now supported
+*Velvet-SC now supported
 
 > SUMMARY
         * A/ HARDWARE REQUIREMENTS
         * B/ SOFTWARE REQUIREMENTS
         * C/ INSTALLING metAMOS
         * D/ QUICK START
-        * E/ USER MANUAL
+        * E/ OUTPUT
         * F/ CONTACT
 
 ----------------------------------------------------------------------------------
@@ -35,19 +41,28 @@ visit: http://exon.gatech.edu/license_download.cgi.
 ----------------------------------------------------------------------------------
 C/ INSTALLING metAMOS
 
-To download the software, go to  https://github.com/treangen/metAMOS and click on Downloads. Once downloaded, simply unpack the files and open the metAMOS directory.
+To download the software, go to https://github.com/treangen/metAMOS
+and click on Downloads. Once downloaded, simply unpack the files and
+open the metAMOS directory. Once inside the metAMOS directory, run:
+
+python INSTALL.py
+
+This will download and install any external dependencies (or they can
+be refused by answering NO), which may take minutes or hours to
+download depending on your connection speed.
 
 ----------------------------------------------------------------------------------
 D/ QUICK START
 
-Before you get started using metAMOS a brief review of its design will help clarify its intended use. metAMOS gas two main components:
+Before you get started using metAMOS a brief review of its design will
+help clarify its intended use. metAMOS gas two main components:
 
 1) initPipeline.py
 2) runPipeline.py
 
-The first component, initPipeline.py, is for creating new projects
-and also initiliazing sequence libraries. Currently fasta, fastq, and
-SFF files are supported.
+The first component, initPipeline.py, is for creating new projects and
+also initiliazing sequence libraries. Currently interleaved &
+non-interleaved fasta, fastq, and SFF files are supported.
 
 usage info:
 
@@ -66,6 +81,8 @@ initPipeline.py -m file.fastq.12,file2.fastq.12  -d projectDir -i 300:500,1000:2
 (interleaved fastq, multiple libraries, existing assembly)
 initPipeline.py -m file.fastq.12,file2.fastq.12 -c file.contig.fa -d projectDir -i 300:500,1000:2000 -q
 
+(interleaved fastq, multiple libraries, existing assembly)
+initPipeline.py -m file.fastq.12,file2.fastq.12 -c file.contig.fa -d projectDir -i 300:500,1000:2000 -q
 
 The second component, runPipeline.py, takes a project directory as
 input and runs the following steps by default:
@@ -74,11 +91,11 @@ input and runs the following steps by default:
 2. Assemble
 3. FindORFs
 4. FindRepeats
-5. Metaphyler (Phylum level)
+5. Annotate
 6. Scaffold
-7. Propagate (Phylum level)
+7. Propagate 
 8. FindScaffoldORFs
-9. Classify (Phylum level)
+9. Classify 
 10. Postprocess
 
 usage info:
@@ -86,10 +103,19 @@ usage info:
 usage: runPipeline.py [options] -d projectdir (required)
 options:  -a <assembler> -k <kmer size> -f (forcestep) -s (skipstep) -p <num threads>  -v (verbose?) -t (filter reads?)
 
+
+For example, to enable meta-IDBA as the assembler:
+
+-a metaidba
+
+And to use Amphora2 to annotate:
+
+-c amphora2
+
 Any single step in the pipeline can be skipped by passing the
 following parameter to runPipeline:
 
--s,--skipsteps=Step1,..
+-n,--skipsteps=Step1,..
 
 metAMOS reruns steps based on timestamp information, so if the input
 files for a step in the pipeline hasn't changed since the last run, it
@@ -105,9 +131,13 @@ as output, generates an HTML page with summary statistics and a few
 static plots.
 
 ----------------------------------------------------------------------------------
-E/ USER MANUAL
+E/ Example output
 
-on its way!
+http://www.cbcb.umd.edu/software/metamos/report.krona.html
+
+Krona publication:
+Ondov BD, Bergman NH, Phillippy AM.. Interactive metagenomic visualization in a Web browser. BMC Bioinformatics. 2011 Sep 30;12:385.
+PMID: 21961884
 
 ----------------------------------------------------------------------------------
 F/ CONTACT
@@ -115,3 +145,4 @@ F/ CONTACT
 who to contact (for bugs, complaints, feature requests, etc):
 
 Todd Treangen: treangen@gmail.com
+Sergey Koren: sergek@umd.edu

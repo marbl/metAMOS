@@ -24,6 +24,7 @@ use lib "$scriptPath/";
 use Getopt::Long;
 use Krona;
 
+my $AMPHORA_TAX_LEVEL = "species";
 my $totalMag;
 my $outFile = 'report.krona.html';
 my $include;
@@ -159,22 +160,23 @@ foreach my $input (@ARGV)
 		my
 		(
 			$taxID,
-                        $blank1,
+                        $taxLevel,
 			$taxaName,
 			$magnitude
 
 		) = split /\s+/, $line; #split /\t/, $line;
+                if ( ! defined $taxID )
+                {
+                        last; # EOF
+                }
                 if ( defined $taxID )
 		{
-			# add the chosen hit
-			add($set, \%tree, $taxID, $magnitude);
-                        $totalMagnitude += $magnitude;
-			$ties = 1;
-		}
-		
-		if ( ! defined $taxID )
-		{
-			last; # EOF
+                        if ($taxLevel eq $AMPHORA_TAX_LEVEL) {
+			   # add the chosen hit
+			   add($set, \%tree, $taxID, $magnitude);
+                           $totalMagnitude += $magnitude;
+			   $ties = 1;
+                        }
 		}
 	}
 	

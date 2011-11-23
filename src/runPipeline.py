@@ -1000,7 +1000,7 @@ def extractNewblerReads():
 
        run_process("cat %s/Assemble/out/454TrimLeftPairs.txt |awk '{print $1\"_left\t\"$1\"_right\"}' > %s/Preprocess/out/lib%d.seq.mates"%(rundir, rundir, lib.id), "Assemble")
        run_process("echo %s\t%d\t%d >> %s/Preprocess/out/all.seq.mates"%(lib.sid, lib.mmin, lib.mmax, rundir), "Assemble")
-       run_process("cat %s/Assemble/out/454TrimLeftPairs.txt |awk '{print $1\"_left\t\"$1\"_right %s\"}' >> %s/Preprocess/out/all.seq.mates"%(rundir, lib.sid, rundir), "Assemble")
+       run_process("cat %s/Assemble/out/454TrimLeftPairs.txt |awk '{print $1\"_left\t\"$1\"_right\t%s\"}' >> %s/Preprocess/out/all.seq.mates"%(rundir, lib.sid, rundir), "Assemble")
        run_process("rm %s/Preprocess/out/lib%d.noPairs.sff"%(rundir, lib.id), "Assemble")
  
 def runVelvet(velvetPath, name):
@@ -1465,15 +1465,26 @@ def Preprocess(input,output):
                   else:
                       run_process("%s %s"%(sffToCACmd, read.path),"Preprocess")
                   run_process("%s/gatekeeper -T -F -o %s/Preprocess/out/%s.gkpStore %s/Preprocess/out/lib%d.frg"%(CA, rundir, PREFIX, rundir, lib.id),"Preprocess")
-                  run_process("%s/gatekeeper -dumpnewbler %s/Preprocess/out/%s.%d %s/Preprocess/out/%s.gkpStore"%(CA, rundir, PREFIX, lib.id, rundir, PREFIX),"Preprocess")
+                  run_process("%s/gatekeeper -dumpnewbler %s/Preprocess/out/lib%d %s/Preprocess/out/%s.gkpStore"%(CA, rundir, lib.id, rundir, PREFIX),"Preprocess")
+                  run_process("%s/gatekeeper -dumpfastq   %s/Preprocess/out/lib%d %s/Preprocess/out/%s.gkpStore"%(CA, rundir, lib.id, rundir, PREFIX), "Preprocess")
                   run_process("%s/gatekeeper -dumplibraries -tabular %s/Preprocess/out/%s.gkpStore |awk '{if (match($3, \"U\") == 0 && match($1, \"UID\") == 0) print \"library\t\"$1\"\t\"$4-$5*3\"\t\"$4+$5*3}' >> %s/Preprocess/out/all.seq.mates"%(CA, rundir, PREFIX, rundir),"Preprocess")
                   run_process("%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3\"\t\"$5}' >> %s/Preprocess/out/all.seq.mates"%(CA, rundir, PREFIX, rundir),"Preprocess")
                   run_process("%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3}' > %s/Preprocess/out/lib%d.seq.mates"%(CA, rundir, PREFIX, rundir, lib.id), "Preprocess")
                   run_process("unlink %s/Preprocess/out/lib%d.seq"%(rundir,lib.id),"Preprocess")
-                  run_process("ln -s %s/Preprocess/out/%s.%d.fna %s/Preprocess/out/lib%d.seq"%(rundir,PREFIX,lib.id,rundir,lib.id),"Preprocess")
-                  run_process("ln -s %s/Preprocess/out/%s.%d.fna.qual %s/Preprocess/out/lib%d.seq.qual"%(rundir,PREFIX,lib.id,rundir,lib.id),"Preprocess")
+                  run_process("ln -s %s/Preprocess/out/lib%d.fna %s/Preprocess/out/lib%d.seq"%(rundir,lib.id,rundir,lib.id),"Preprocess")
+                  run_process("ln -s %s/Preprocess/out/lib%d.fna.qual %s/Preprocess/out/lib%d.seq.qual"%(rundir,lib.id,rundir,lib.id),"Preprocess")
                   run_process("rm -rf %s/Preproces/out/%s.gkpStore"%(rundir, PREFIX),"Preprocess")
                   run_process("cat %s/Preprocess/out/lib%d.seq.mates >> %s/Preprocess/out/all.seq.mates"%(rundir, lib.id, rundir), "Preprocess")
+
+                  if asm != "CA":
+                     #flip the type to fastq
+                     lib.format = "fastq"
+                     lib.interleaved = False
+                     if lib.mated:
+                        lib.f1 = Read(lib.format,"%s/Preprocess/out/lib%d.1.fastq"%(rundir, lib.id),lib.mated,lib.interleaved) 
+                        lib.f2 = Read(lib.format,"%s/Preprocess/out/lib%d.2.fastq"%(rundir, lib.id),lib.mated,lib.interleaved) 
+                     else:
+                        lib.f1 = Read(lib.format,"%s/Preprocess/out/lib%d.unmated.fastq"%(rundir, lib.id),lib.mated,lib.interleaved)  
            elif lib.format == "fasta" and not lib.mated:
                run_process("ln -s %s/Preprocess/in/%s %s/Preprocess/out/lib%d.seq"%(rundir,lib.f1.fname,rundir,lib.id),"Preprocess")
                run_process("ln -s %s/Preprocess/in/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(rundir,lib.f1.fname,rundir,lib.id),"Preprocess")
@@ -1634,17 +1645,22 @@ def Assemble(input,output):
 
    elif asm == "amos":
       run_process("%s/Minimus %s/Preprocess/out/bank"%(AMOS,rundir),"Assemble")
-   elif asm == "CA":
+   elif asm == "CA" or asm == "ca":
       #runCA script
       frglist = ""
+      matedString = ""
       for lib in readlibs:
           for read in lib.reads:
               if read.format == "fastq":
-                  run_process("%s/fastqToCA -insertsize %d %d -libraryname %s -t illumina -innie -fastq %s/Preprocess/in/%s"%(CA, lib.mean,lib.stdev, read.path, rundir,PREFIX),"Assemble")
+                  if lib.mated:
+                      matedString = "-insertsize %d %d -%s"%(lib.mean, lib.stdev, "innie" if lib.innie else "outtie") 
+                  run_process("%s/fastqToCA %s -libraryname %s -t illumina -fastq %s/Preprocess/in/%s > %/Preprocess/out/lib%d.frg"%(CA, matedString, lib.read.path, rundir, PREFIX, rundir, lib.id),"Assemble")
               elif read.format == "fasta":
-                  run_process("%s/convert-fasta-to-v2.pl -l %s -mean %d -stddev %d -s %s/Preprocess/in/%s -q %s/Preprocess/in/%s.qual -m matepairids %s/Preprocess/out/%s.mateids %s"%(CA,read.path, lib.mean, lib.stdev, rundir, read.fname, rundir, read.fname, rundir, read.fname,fff),"Assemble")
-              frglist += "%s.frg"%(lib)
-      run_process("%s/runCA -p asm -d %s/Assemble/out/ -s %/config/asm.spec %s"%(CA,rundir,METAMOS_UTILSPREFIX,frglist),"Assemble")
+                  if lib.mated:
+                      matedString = "-mean %d -stddev %d -m %s/Preprocess/out/lib%d.seq.mates"%(lib.mean, lib.stdev, lib.id)
+                  run_process("%s/convert-fasta-to-v2.pl -l %s %s -s %s/Preprocess/in/%s -q %s/Preprocess/in/%s.qual > %s/Preprocess/out/lib%d.frg"%(CA, lib.sid, matedString, rundir, read.fname, rundir, read.fname, rundir, read.fname,rundir),"Assemble")
+              frglist += "%s/Preprocess/out/lib%d.frg"%(rundir, lib.id)
+      run_process("%s/runCA -p asm -d %s/Assemble/out/ -s %s/config/asm.spec %s"%(CA,rundir,METAMOS_UTILS,frglist),"Assemble")
       #convert CA to AMOS
       run_process("%s/gatekeeper -dumpfrg -allreads -format2 asm.gkpStore > asm.frg bzip2 asm.frg"%(CA),"Assemble")
       run_process("%s/terminator -g asm.gkpStore -t asm.tigStore/ 2 -o asm bzip2 asm.asm"%(CA),"Assemble")
@@ -1653,6 +1669,9 @@ def Assemble(input,output):
       runVelvet(VELVET, "velvet")
    elif asm == "velvet-sc":
       runVelvet(VELVET_SC, "velvet-sc")
+   else:
+      print "Error: %s is an unknown assembler. No valid assembler specified."%(asm)
+      raise(JobSignalledBreak)
 
    if 1:
        if "bowtie" not in skipsteps:

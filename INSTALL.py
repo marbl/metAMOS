@@ -50,6 +50,15 @@ if not os.path.exists("./Amphora-2"):
       os.system("tar -xvzf amphora2-20111117.tar.gz")
       os.system("rm -rf amphora2-20111117.tar.gz")
 
+if not os.path.exists("./CA"):
+   print "Celera Assembler binaries not found, optional for Assemble step, download now?"
+   dl = raw_input("Enter Y/N: ")
+   if dl == 'y' or dl == 'Y':
+      os.system("wget http://treangen.github.com/metAMOS/wgs-assembler-112211.tar.gz")
+      os.system("tar -xvzf wgs-assembler-112211.tar.gz")
+      os.system("rm -rf wgs-assembler-112211.tar.gz")
+
+
 #os.system("
 print "Run setup.py.."
 os.system("python setup.py install_scripts --install-dir=`pwd`")

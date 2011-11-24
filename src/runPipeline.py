@@ -999,7 +999,7 @@ def extractNewblerReads():
        run_process("%s/sffinfo -s %s/Preprocess/out/lib%d.noPairs.sff |awk '{if (match($1, \">\") == 1) { print $1\"_right\"; } else { print $0; }}' >> %s/Preprocess/out/lib%d.seq"%(NEWBLER, rundir, lib.id, rundir, lib.id), "Assemble")
 
        run_process("cat %s/Assemble/out/454TrimLeftPairs.txt |awk '{print $1\"_left\t\"$1\"_right\"}' > %s/Preprocess/out/lib%d.seq.mates"%(rundir, rundir, lib.id), "Assemble")
-       run_process("echo %s\t%d\t%d >> %s/Preprocess/out/all.seq.mates"%(lib.sid, lib.mmin, lib.mmax, rundir), "Assemble")
+       run_process("echo \"library\t%s\t%d\t%d\" >> %s/Preprocess/out/all.seq.mates"%(lib.sid, lib.mmin, lib.mmax, rundir), "Assemble")
        run_process("cat %s/Assemble/out/454TrimLeftPairs.txt |awk '{print $1\"_left\t\"$1\"_right\t%s\"}' >> %s/Preprocess/out/all.seq.mates"%(rundir, lib.sid, rundir), "Assemble")
        run_process("rm %s/Preprocess/out/lib%d.noPairs.sff"%(rundir, lib.id), "Assemble")
  
@@ -1629,10 +1629,11 @@ def Assemble(input,output):
       extractNewblerReads()
 
       # convert to AMOS
-      run_process("%s/toAmos -o %s/Assemble/out/%s.mates.afg -m %s/Preprocess/out/all.seq.mates -ace %s/Assemble/out/assembly/454Contigs.ace"%(AMOS,rundir, PREFIX, rundir, rundir),"Assemble")
+      run_process("cat %s/Assemble/out/assembly/454Contigs.ace |awk '{if (match($2, \"\\..*-\")) {STR= $1\" \"substr($2, 1, index($2, \".\")-1); for (i = 3; i <=NF; i++) STR= STR\" \"$i; print STR} else { print $0} }' > %s/Assemble/out/%s.ace"%(rundir, rundir,PREFIX), "Assemble") 
+      run_process("%s/toAmos -o %s/Assemble/out/%s.mates.afg -m %s/Preprocess/out/all.seq.mates -ace %s/Assemble/out/%s.ace"%(AMOS,rundir, PREFIX, rundir, rundir, PREFIX),"Assemble")
       # get info on EID/IIDs for contigs
       run_process("cat %s/Assemble/out/%s.mates.afg | grep -A 3 \"{CTG\" |awk '{if (match($1, \"iid\") != 0) {IID = $1} else if (match($1, \"eid\") != 0) {print $1\" \"IID; } }'|sed s/eid://g |sed s/iid://g > %s/Assemble/out/454eidToIID"%(rundir, PREFIX, rundir),"Assemble")
-      run_process("java -cp %s convert454GraphToCTL %s/Assemble/out/454eidToIID %s/Assemble/out/assembly/454ContigGraph.txt > %s/Assemble/out/%s.graph.cte"%(METAMOS_JAVA, rundir, rundir, rundir, PREFIX),"Assemble")
+      run_process("java -cp %s convert454GraphToCTL %s/Assemble/out/454eidToIID %s/Assemble/out/assembly/454Contigs.ace > %s/Assemble/out/%s.graph.cte"%(METAMOS_JAVA, rundir, rundir, rundir, PREFIX),"Assemble")
       run_process("cat %s/Assemble/out/%s.mates.afg %s/Assemble/out/%s.graph.cte > %s/Assemble/out/%s.afg"%(rundir, PREFIX, rundir, PREFIX, rundir, PREFIX),"Assemble")
     
       # make symlink for subsequent steps
@@ -1660,11 +1661,12 @@ def Assemble(input,output):
                       matedString = "-mean %d -stddev %d -m %s/Preprocess/out/lib%d.seq.mates"%(lib.mean, lib.stdev, lib.id)
                   run_process("%s/convert-fasta-to-v2.pl -l %s %s -s %s/Preprocess/in/%s -q %s/Preprocess/in/%s.qual > %s/Preprocess/out/lib%d.frg"%(CA, lib.sid, matedString, rundir, read.fname, rundir, read.fname, rundir, read.fname,rundir),"Assemble")
               frglist += "%s/Preprocess/out/lib%d.frg"%(rundir, lib.id)
-      run_process("%s/runCA -p asm -d %s/Assemble/out/ -s %s/config/asm.spec %s"%(CA,rundir,METAMOS_UTILS,frglist),"Assemble")
+      run_process("%s/runCA -p %s -d %s/Assemble/out/ -s %s/config/asm.spec %s"%(CA,PREFIX,rundir,METAMOS_UTILS,frglist),"Assemble")
       #convert CA to AMOS
-      run_process("%s/gatekeeper -dumpfrg -allreads asm.gkpStore > asm.frg"%(CA),"Assemble")
-      run_process("%s/terminator -g asm.gkpStore -t asm.tigStore/ 2 -o asm"%(CA),"Assemble")
-      run_process("%s/toAmos_new -a asm.asm.bz2 -f asm.frg.bz2 -b asm.bnk -U "%(AMOS),"Assemble")
+      run_process("%s/gatekeeper -dumpfrg -allreads %s.gkpStore > %s.frg"%(CA, PREFIX, PREFIX),"Assemble")
+      run_process("%s/terminator -g %s.gkpStore -t %s.tigStore/ 2 -o %s"%(CA, PREFIX, PREFIX, PREFIX),"Assemble")
+      run_process("%s/asmOutputFasta -p %s < %s.asm"%(CA, PREFIX, PREFIX), "Assemble")
+      run_process("ln -s %s.utg.fasta %s.asm.contig"%(PREFIX, PREFIX), "Assemble")
    elif asm == "velvet":
       runVelvet(VELVET, "velvet")
    elif asm == "velvet-sc":
@@ -1866,6 +1868,9 @@ def Scaffold(input,output):
        elif asm == "velvet" or asm == "velvet-sc":
           run_process("rm -rf %s/Scaffold/in/%s.bnk"%(rundir, PREFIX), "Scaffold")
           run_process("%s/bank-transact -b %s/Scaffold/in/%s.bnk -c -m %s/Assemble/out/%s.afg"%(AMOS, rundir, PREFIX, rundir, PREFIX), "Scaffold")
+       elif asm == "ca" or asm == "CA":
+          run_process("%s/toAmos_new -a %s/Assemble/out/%sasm.asm -f %s/Assemble/out/%s.frg -b %s/Scaffold/in/%s.bnk -U "%(AMOS, rundir, PREFIX, rundir, PREFIX, rundir, PREFIX),"Scaffold")
+
 
    else:
        run_process("%s/bank-unlock %s/Scaffold/in/%s.bnk"%(AMOS,rundir,PREFIX))
@@ -2009,6 +2014,13 @@ def parse_metaphyler(giMapping, toTranslate, output):
    outf.close()
 
 def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
+    coverageFile = open("%s/Assemble/out/%s.contig.cvg"%(rundir, PREFIX), 'r')
+    cvg_dict = {} 
+    for line in coverageFile:
+        data = line.split()
+        cvg_dict[data[0]] = float(data[1])
+    coverageFile.close()
+
     coords = open(orf_file,'r')
     coords.readline()
 #    outf = open("proba.orfs",'w')
@@ -2022,7 +2034,6 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
     reads = {}
     gene_dict = {}
     fna_dict = {}
-    cvg_dict = {}
     for line in coords:
         if ">gene" in line[0:10]:
             if "_nt|" in line:
@@ -2074,60 +2085,6 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
                 curcontig = data.split("\t")[0]
             curcontig = curcontig.strip()
             #print curcontig, len(curcontig)
-            cvg = data.split(" ")[-1]
-            if asm == "soap":
-                try:
-                    cvg = float(cvg.split("_")[1])
-                    cvg_dict[curcontig] = cvg
-                except IndexError:
-                    #print "Coverage not found, skip?"
-                    cvg = 1.0
-                    cvg_dict[curcontig] = cvg
-                except ValueError:
-                    #print "Coverage not found, skip?"
-                    cvg = 1.0
-                    cvg_dict[curcontig] = cvg
-            elif asm == "newbler":
-                try:
-                    run_process("cat %s/Assemble/out/assembly/454ContigGraph.txt | grep %s | awk \'{print $4}\' > %s/Assemble/out/cvg1.out"%(rundir,curcontig,rundir), error_stream)
-                    #print "cat %s/%s/Assemble/out/assembly/454ContigGraph.txt | grep %s | awk \'{print $4}\' > %s/%s/cvg1.out"%(METAMOSDIR,rundir, curcontig, METAMOSDIR,rundir)
-                    #run_process("cat %s/%s/Assemble/out/assembly/454ContigGraph.txt | grep %s  > %s/%s/cvg1.out"%(METAMOSDIR,rundir, curcontig, METAMOSDIR,rundir))
-                    fin = open("%s/Assemble/out/cvg1.out"%(rundir),'r')
-                    cvg = fin.readline().replace("\n","")
-                    cvg = float(cvg)
-                    #print cvg
-                    cvg_dict[curcontig] = cvg
-                except ValueError:
-                    #print "Coverage not found, skip?"
-                    cvg = 1.0
-                    cvg_dict[curcontig] = cvg                
-            elif asm == "metaidba":
-                try:
-                    cvg = cvg.replace("\n","")
-                    cvg = float(cvg.split("_")[-1])
-                    cvg_dict[curcontig] = cvg
-                except IndexError:
-                    #print "Coverage not found, skip?"
-                    cvg = 1.0
-                    cvg_dict[curcontig] = cvg
-                except ValueError:
-                    #print "Coverage not found, skip?"
-                    cvg = 1.0
-                    cvg_dict[curcontig] = cvg
-            elif asm == "velvet" or asm == "velvet-sc":
-                try:
-                    cvg = cvg.replace("\n", "")
-                    cvg_split = cvg.split("_")
-                    cvg = float(cvg_split[len(cvg_split)-1])
-                    cvg_dict[curcontig] = cvg
-                except IndexError:
-                    #print "Coverage not found, skip?"
-                    cvg = 1.0
-                    cvg_dict[curcontig] = cvg
-                except ValueError:
-                    #print "Coverage not found, skip?"
-                    cvg = 1.0
-                    cvg_dict[curcontig] = cvg
             prevhdr = 1
 
         elif len(line) > 2 and prevhdraa == 1 and prevhdr:
@@ -2172,7 +2129,10 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
         genecnt = 1
 
         if not is_scaff:
-            cvgg.write("%s_gene%d\t%s\n"%(key,genecnt,cvg_dict[key])) 
+            if key in cvg_dict:
+                cvgg.write("%s_gene%d\t%s\n"%(key,genecnt,cvg_dict[key])) 
+            else:
+                cvgg.write("%s_gene%d\t%s\n"%(key,genecnt, 1.0))
         for gene in gene_dict[key]:
             #min aa length, read depth
             if len(gene) < 100:# or cvg_dict[key] < 5:

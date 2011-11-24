@@ -1629,11 +1629,12 @@ def Assemble(input,output):
       extractNewblerReads()
 
       # convert to AMOS
-      run_process("cat %s/Assemble/out/assembly/454Contigs.ace |awk '{if (match($2, \"\\..*-\")) {STR= $1\" \"substr($2, 1, index($2, \".\")-1); for (i = 3; i <=NF; i++) STR= STR\" \"$i; print STR} else { print $0} }' > %s/Assemble/out/%s.ace"%(rundir, rundir,PREFIX), "Assemble") 
+      run_process("cat %s/Assemble/out/assembly/454Contigs.ace |awk '{if (match($2, \"\\\\.\")) {STR= $1\" \"substr($2, 1, index($2, \".\")-1); for (i = 3; i <=NF; i++) STR= STR\" \"$i; print STR} else { print $0} }' > %s/Assemble/out/%s.ace"%(rundir, rundir,PREFIX), "Assemble") 
+      print "Ran command cat %s/Assemble/out/assembly/454Contigs.ace |awk '{if (match($2, \"\\\.\")) {STR= $1\" \"substr($2, 1, index($2, \".\")-1); for (i = 3; i <=NF; i++) STR= STR\" \"$i; print STR} else { print $0} }' > %s/Assemble/out/%s.ace"%(rundir, rundir,PREFIX)
       run_process("%s/toAmos -o %s/Assemble/out/%s.mates.afg -m %s/Preprocess/out/all.seq.mates -ace %s/Assemble/out/%s.ace"%(AMOS,rundir, PREFIX, rundir, rundir, PREFIX),"Assemble")
       # get info on EID/IIDs for contigs
       run_process("cat %s/Assemble/out/%s.mates.afg | grep -A 3 \"{CTG\" |awk '{if (match($1, \"iid\") != 0) {IID = $1} else if (match($1, \"eid\") != 0) {print $1\" \"IID; } }'|sed s/eid://g |sed s/iid://g > %s/Assemble/out/454eidToIID"%(rundir, PREFIX, rundir),"Assemble")
-      run_process("java -cp %s convert454GraphToCTL %s/Assemble/out/454eidToIID %s/Assemble/out/assembly/454Contigs.ace > %s/Assemble/out/%s.graph.cte"%(METAMOS_JAVA, rundir, rundir, rundir, PREFIX),"Assemble")
+      run_process("java -cp %s convert454GraphToCTL %s/Assemble/out/454eidToIID %s/Assemble/out/assembly/454ContigGraph.txt > %s/Assemble/out/%s.graph.cte"%(METAMOS_JAVA, rundir, rundir, rundir, PREFIX),"Assemble")
       run_process("cat %s/Assemble/out/%s.mates.afg %s/Assemble/out/%s.graph.cte > %s/Assemble/out/%s.afg"%(rundir, PREFIX, rundir, PREFIX, rundir, PREFIX),"Assemble")
     
       # make symlink for subsequent steps
@@ -1869,7 +1870,7 @@ def Scaffold(input,output):
           run_process("rm -rf %s/Scaffold/in/%s.bnk"%(rundir, PREFIX), "Scaffold")
           run_process("%s/bank-transact -b %s/Scaffold/in/%s.bnk -c -m %s/Assemble/out/%s.afg"%(AMOS, rundir, PREFIX, rundir, PREFIX), "Scaffold")
        elif asm == "ca" or asm == "CA":
-          run_process("%s/toAmos_new -a %s/Assemble/out/%sasm.asm -f %s/Assemble/out/%s.frg -b %s/Scaffold/in/%s.bnk -U "%(AMOS, rundir, PREFIX, rundir, PREFIX, rundir, PREFIX),"Scaffold")
+          run_process("%s/toAmos_new -a %s/Assemble/out/%s.asm -f %s/Assemble/out/%s.frg -b %s/Scaffold/in/%s.bnk -U "%(AMOS, rundir, PREFIX, rundir, PREFIX, rundir, PREFIX),"Scaffold")
 
 
    else:

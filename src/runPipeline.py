@@ -844,7 +844,7 @@ def map2contig():
             if not os.path.exists("%s/Assemble/out/IDX.1.ebwt"%(rundir)):
                 run_process("%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(BOWTIE, rundir,PREFIX,rundir),"Scaffold")
             #run_process("%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(BOWTIE, rundir,PREFIX,rundir))
-            if "bowtie" not in skipsteps and lib.format == "fasta":
+            if "bowtie" not in skipsteps and (lib.format == "fasta" or lib.format == "sff"):
                 if trim:
                     run_process("%s/bowtie -p %d -f -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/%s.bout"%(BOWTIE,threads,rundir,rundir,lib.id,rundir,PREFIX),"Scaffold")
                 else:

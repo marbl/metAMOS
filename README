@@ -1,4 +1,4 @@
-metAMOS README
+metAMOS v0.34 README
 Last updated: November 22nd 2011
 
 NEWS:
@@ -135,14 +135,19 @@ E/ Example output
 
 http://www.cbcb.umd.edu/software/metamos/report.krona.html
 
-Krona publication:
-Ondov BD, Bergman NH, Phillippy AM.. Interactive metagenomic visualization in a Web browser. BMC Bioinformatics. 2011 Sep 30;12:385.
-PMID: 21961884
+Krona publication: Ondov BD, Bergman NH, Phillippy AM.. Interactive
+metagenomic visualization in a Web browser. BMC Bioinformatics. 2011
+Sep 30;12:385.  PMID: 21961884
 
 ----------------------------------------------------------------------------------
 F/ CONTACT
 
-who to contact (for bugs, complaints, feature requests, etc):
+Who to contact to report bugs, forward complaints, feature requests:
 
 Todd Treangen: treangen@gmail.com
 Sergey Koren: sergek@umd.edu
+
+----------------------------------------------------------------------------------
+G/ CITE
+
+Coming soon!

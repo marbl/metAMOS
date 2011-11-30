@@ -37,7 +37,7 @@ if not os.path.exists("./AMOS"):
     print "AMOS binaries not found, needed for all steps, download now?"
     dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
-        os.system("wget http://treangen.github.com/metAMOS/amos-binaries.tar.gz .")
+        os.system("wget http://dl.dropbox.com/u/51616170/amos-binaries.tar.gz .")
         os.system("tar -xvf amos-binaries.tar.gz")
         os.system("rm -rf amos-binaries.tar.gz")
 
@@ -46,15 +46,15 @@ if not os.path.exists("./Amphora-2"):
    dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':
       #os.system("perl Utilities/perl/amphora_install.pl")
-      os.system("wget http://treangen.github.com/metAMOS/amphora2-20111117.tar.gz")
-      os.system("tar -xvzf amphora2-20111117.tar.gz")
-      os.system("rm -rf amphora2-20111117.tar.gz")
+      os.system("wget http://dl.dropbox.com/u/51616170/amphora2-20111130.tar.gz")
+      os.system("tar -xvzf amphora2-20111130.tar.gz")
+      os.system("rm -rf amphora2-20111130.tar.gz")
 
 if not os.path.exists("./CA"):
    print "Celera Assembler binaries not found, optional for Assemble step, download now?"
    dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':
-      os.system("wget http://treangen.github.com/metAMOS/wgs-assembler-112211.tar.gz")
+      os.system("wget http://dl.dropbox.com/u/51616170/wgs-assembler-112211.tar.gz")
       os.system("tar -xvzf wgs-assembler-112211.tar.gz")
       os.system("rm -rf wgs-assembler-112211.tar.gz")
 

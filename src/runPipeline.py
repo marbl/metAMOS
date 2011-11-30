@@ -1630,7 +1630,6 @@ def Assemble(input,output):
 
       # convert to AMOS
       run_process("cat %s/Assemble/out/assembly/454Contigs.ace |awk '{if (match($2, \"\\\\.\")) {STR= $1\" \"substr($2, 1, index($2, \".\")-1); for (i = 3; i <=NF; i++) STR= STR\" \"$i; print STR} else { print $0} }' > %s/Assemble/out/%s.ace"%(rundir, rundir,PREFIX), "Assemble") 
-      print "Ran command cat %s/Assemble/out/assembly/454Contigs.ace |awk '{if (match($2, \"\\\.\")) {STR= $1\" \"substr($2, 1, index($2, \".\")-1); for (i = 3; i <=NF; i++) STR= STR\" \"$i; print STR} else { print $0} }' > %s/Assemble/out/%s.ace"%(rundir, rundir,PREFIX)
       run_process("%s/toAmos -o %s/Assemble/out/%s.mates.afg -m %s/Preprocess/out/all.seq.mates -ace %s/Assemble/out/%s.ace"%(AMOS,rundir, PREFIX, rundir, rundir, PREFIX),"Assemble")
       # get info on EID/IIDs for contigs
       run_process("cat %s/Assemble/out/%s.mates.afg | grep -A 3 \"{CTG\" |awk '{if (match($1, \"iid\") != 0) {IID = $1} else if (match($1, \"eid\") != 0) {print $1\" \"IID; } }'|sed s/eid://g |sed s/iid://g > %s/Assemble/out/454eidToIID"%(rundir, PREFIX, rundir),"Assemble")
@@ -1786,7 +1785,7 @@ def Annotate(input,output):
 
        # save the results
        run_process("unlink %s/Annotate/out/%s.hits"%(rundir, PREFIX), "Annotate")
-       run_process("ln -s %s/Annotate/out/Amph_temp/%s.asm.contig/taxasummary.txt %s/Annotate/out/%s.hits"%(rundir, PREFIX, rundir, PREFIX), "Annotate") 
+       run_process("ln -s %s/Annotate/out/Amph_temp/%s.asm.contig/sequence_taxa_summary.txt %s/Annotate/out/%s.hits"%(rundir, PREFIX, rundir, PREFIX), "Annotate") 
        run_process("unlink %s/Postprocess/in/%s.hits"%(rundir, PREFIX), "Annotate")
        run_process("unlink %s/Postprocess/out/%s.hits"%(rundir, PREFIX), "Annotate")
        run_process("ln -s %s/Annotate/out/%s.hits %s/Postprocess/in/%s.hits"%(rundir, PREFIX, rundir, PREFIX), "Annotate")
@@ -1967,7 +1966,7 @@ def Postprocess(input,output):
        if not os.path.exists(KRONA + os.sep + "ImportAmphora.pl"):
            print "Error: Krona importer for Amphora 2 not found in %s. Please check your path and try again.\n"%(KRONA)
            raise(JobSignalledBreak)
-       run_process("perl %s/ImportAmphora.pl -c -v -i %s/Postprocess/in/%s.hits"%(KRONA,rundir,PREFIX), "Postprocess") 
+       run_process("perl %s/ImportAmphora.pl -c -v -i %s/Postprocess/in/%s.hits:%s/Assemble/out/%s.contig.cvg"%(KRONA,rundir,PREFIX,rundir,PREFIX), "Postprocess") 
 
    #command to open webbrowser?
    #try to open Krona output

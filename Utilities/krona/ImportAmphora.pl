@@ -24,7 +24,32 @@ use lib "$scriptPath/";
 use Getopt::Long;
 use Krona;
 
-my $AMPHORA_TAX_LEVEL = "species";
+my $AMPHORA_MIN_CONFIDENCE = 0.15;
+my %TAXONOMIC_ORDERING = ( 
+		"no rank" => 0,
+		"domain" => 1,
+		"superkingdom" => 1.9,
+		"kingdom" => 2,
+		"subkingdom" => 2.5,
+		"superphylum" => 2.9,
+		"phylum" => 3,
+		"subphylum" => 3.5,
+		"superclass" => 3.9,
+		"class" => 4,
+		"subclass" => 4.5,
+		"superorder" => 4.9,
+		"order" => 5,
+		"suborder" => 5.5,
+		"superfamily" => 5.9,
+		"family" => 6,
+		"subfamily" => 6.5,
+		"supergenus" => 6.9,
+		"genus" => 7.0,
+		"subgenus" => 7.5,
+		"superspecies" => 7.9,
+		"species" => 8.5,
+		"subspecies" => 9,
+);
 my $totalMag;
 my $outFile = 'report.krona.html';
 my $include;
@@ -148,8 +173,11 @@ foreach my $input (@ARGV)
 	
 	my $topScore;
 	my $ties;
-	my $taxID;
+        my $taxID = undef;
+        my $currCtg = undef;
 	my $magnitude = 0;
+        my %bestTaxa;
+        my %bestScores;
 	
 	while ( 1 )
 	{
@@ -159,24 +187,50 @@ foreach my $input (@ARGV)
                 #print "$line";
 		my
 		(
+                        $contigID,
 			$taxID,
                         $taxLevel,
 			$taxaName,
-			$magnitude
+			$confidence
 
-		) = split /\s+/, $line; #split /\t/, $line;
+		) = split /\t/, $line; #split /\t/, $line;
+                if (defined($currCtg) && $currCtg != $contigID) {
+                   my $magnitude = 1;
+                   if (defined($magnitudes{$currCtg})) {
+                      $magnitude = $magnitudes{$currCtg}
+                    }
+                    # pick the best level to use
+                    my $bestTaxon;
+                    my $bestName;
+
+                    foreach my $taxa (keys %bestScores) {
+                       if ($bestScores{$taxa} > $AMPHORA_MIN_CONFIDENCE) {
+                          if (!defined($bestTaxon)) {
+                             $bestTaxon = $bestTaxa{$taxa};
+                             $bestName = $taxa;
+                          } else {
+                             if ($TAXONOMIC_ORDERING{$bestName} < $TAXONOMIC_ORDERING{$taxa}) {
+                                   $bestTaxon = $bestTaxa{$taxa};
+                                   $bestName = $taxa;
+                             }
+                          }
+                       }
+                    }
+                    add($set, \%tree, $bestTaxon, $magnitude, $confidence);
+                    $totalMagnitude += $magnitude;
+                }
+
                 if ( ! defined $taxID )
                 {
                         last; # EOF
                 }
                 if ( defined $taxID )
 		{
-                        if ($taxLevel eq $AMPHORA_TAX_LEVEL) {
-			   # add the chosen hit
-			   add($set, \%tree, $taxID, $magnitude);
-                           $totalMagnitude += $magnitude;
-			   $ties = 1;
+                        if (!defined($bestScores{$taxLevel}) || $bestScores{$taxLevel} < $confidence) {
+                           $bestScores{$taxLevel} = $confidence;
+                           $bestTaxa{$taxLevel} = $taxID;
                         }
+                        $currCtg = $contigID; 
 		}
 	}
 	
@@ -200,6 +254,7 @@ my @attributeNames =
 (
 	'taxon',
 	'rank',
+        'score',
 	'magnitude'
 );
 
@@ -207,6 +262,7 @@ my @attributeDisplayNames =
 (
 	'Taxon',
 	'Rank',
+        'Confidence',
 	'Total'
 );
 
@@ -221,5 +277,6 @@ writeTree
 	'magnitude',
 	\@attributeNames,
 	\@attributeDisplayNames,
-	\@datasetNames
+	\@datasetNames,
+        'score'
 );

@@ -191,7 +191,7 @@ foreach my $input (@ARGV)
 			$taxID,
                         $taxLevel,
 			$taxaName,
-			$confidence
+			$score
 
 		) = split /\t/, $line; #split /\t/, $line;
                 if (defined($currCtg) && $currCtg != $contigID) {
@@ -216,7 +216,7 @@ foreach my $input (@ARGV)
                           }
                        }
                     }
-                    add($set, \%tree, $bestTaxon, $magnitude, $confidence);
+                    add($set, \%tree, $bestTaxon, $magnitude, $bestScores{$bestName});
                     $totalMagnitude += $magnitude;
                 }
 
@@ -226,8 +226,8 @@ foreach my $input (@ARGV)
                 }
                 if ( defined $taxID )
 		{
-                        if (!defined($bestScores{$taxLevel}) || $bestScores{$taxLevel} < $confidence) {
-                           $bestScores{$taxLevel} = $confidence;
+                        if (!defined($bestScores{$taxLevel}) || $bestScores{$taxLevel} < $score) {
+                           $bestScores{$taxLevel} = $score;
                            $bestTaxa{$taxLevel} = $taxID;
                         }
                         $currCtg = $contigID; 
@@ -278,5 +278,8 @@ writeTree
 	\@attributeNames,
 	\@attributeDisplayNames,
 	\@datasetNames,
-        'score'
+        0,
+        'score',
+        0,
+	1
 );

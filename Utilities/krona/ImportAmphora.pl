@@ -194,7 +194,7 @@ foreach my $input (@ARGV)
 			$score
 
 		) = split /\t/, $line; #split /\t/, $line;
-                if (defined($currCtg) && $currCtg != $contigID) {
+                if (!defined($contigID) || (defined($currCtg) && $currCtg != $contigID)) {
                    my $magnitude = 1;
                    if (defined($magnitudes{$currCtg})) {
                       $magnitude = $magnitudes{$currCtg}

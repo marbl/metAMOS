@@ -600,7 +600,7 @@ run_metaphyler = False
 runfast = False
 cls = None
 retainBank = False
-asm = "none"
+asm = "soap"
 rundir = ""
 fff = ""
 threads = 16
@@ -1934,8 +1934,10 @@ def Propagate(input,output):
    # create s12.annots from Metaphyler output
    if cls == "metaphyler":
        run_process("python %s/python/create_mapping.py %s/DB/class_key.tab %s/Abundance/out/%s.classify.txt %s/Propagate/in/%s.annots"%(METAMOS_UTILS,METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX),"Propagate")
+   if cls == "amphora2" or cls == "Amphora2" or cls == "amphora":
+       run_process("cp %s/Assemble/out/%s.annots %s/Propagate/in/%s.annots"%(rundir,PREFIX,rundir,PREFIX),"Propagate")
    # strip headers from file and contig name prefix
-
+   
    run_process("cat %s/Propagate/in/%s.annots |sed s/contig_//g |grep -v contigID > %s/Propagate/in/%s.clusters"%(rundir,PREFIX,rundir,PREFIX),"Propagate")
    run_process("%s/FilterEdgesByCluster -b %s/Scaffold/in/%s.bnk -clusters %s/Propagate/in/%s.clusters -noRemoveEdges > %s/Propagate/out/%s.clusters"%(AMOS,rundir,PREFIX,rundir,PREFIX,rundir,PREFIX),"Propagate")
 

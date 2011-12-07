@@ -1945,10 +1945,10 @@ def Propagate(input,output):
 @files("%s/Propagate/out/%s.clusters"%(rundir,PREFIX),"%s/Classify/out/sorted.txt"%(rundir))
 def Classify(input,output):
    if cls == "amphora2" or cls == "Amphora2" or cls == "amphora":
-       run_process("python %s/python/sort_contigs.py %s/Propagate/out/%s.clusters %s/DB/tax_key.tab %s/Classify/out %s/Scaffold/in/%s.bnk"%(METAMOS_UTILS, rundir, PREFIX, METAMOS_UTILS,rundir, rundir, PREFIX),"Classify")
+       run_process("python %s/python/sort_contigs.py %s/Propagate/out/%s.clusters %s/DB/tax_key.tab %s/Classify/out %s/Scaffold/in/%s.bnk %s"%(METAMOS_UTILS, rundir, PREFIX, METAMOS_UTILS,rundir, rundir, PREFIX,AMOS),"Classify")
 
    else:
-       run_process("python %s/python/sort_contigs.py %s/Propagate/out/%s.clusters %s/DB/class_key.tab %s/Classify/out %s/Scaffold/in/%s.bnk"%(METAMOS_UTILS, rundir, PREFIX, METAMOS_UTILS,rundir, rundir, PREFIX),"Classify")
+       run_process("python %s/python/sort_contigs.py %s/Propagate/out/%s.clusters %s/DB/class_key.tab %s/Classify/out %s/Scaffold/in/%s.bnk %s"%(METAMOS_UTILS, rundir, PREFIX, METAMOS_UTILS,rundir, rundir, PREFIX,AMOS),"Classify")
 
 @follows(Classify)
 @files("%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX),"%s/Postprocess/%s.scf.fa"%(rundir,PREFIX))

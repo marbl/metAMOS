@@ -1986,6 +1986,7 @@ def Postprocess(input,output):
        #    print "Error: Krona importer for Amphora 2 not found in %s. Please check your path and try again.\n"%(KRONA)
        #    raise(JobSignalledBreak)
        #run_process("perl %s/ImportAmphora.pl -c -v -i %s/Postprocess/in/%s.hits:%s/Assemble/out/%s.contig.cvg"%(KRONA,rundir,PREFIX,rundir,PREFIX), "Postprocess") 
+       run_process("ln -s %s/Annotate/out/report.krona.html %s/Postprocess/out/report.krona.html"%(rundir, rundir), "Postprocess")
 
    #command to open webbrowser?
    #try to open Krona output

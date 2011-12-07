@@ -208,8 +208,16 @@ foreach my $input (@ARGV)
                     # pick the best level to use
                     my $bestTaxon;
                     my $bestName;
+                    my $printed = 0;
 
                     foreach my $taxa (keys %bestScores) {
+                       print "$taxa\n";
+                       if ($printed == 0 && $taxa eq "class")
+                       {
+                           $printed = 1;
+                           print ANNOTS "$currCtg\t$bestTaxa{$taxa}\n";
+                       }
+
                        if ($bestScores{$taxa} > $AMPHORA_MIN_CONFIDENCE) {
                           if (!defined($bestTaxon)) {
                              $bestTaxon = $bestTaxa{$taxa};
@@ -224,11 +232,6 @@ foreach my $input (@ARGV)
                        }
                     }
                     add($set, \%tree, $bestTaxon, $magnitude, $bestScores{$bestName});
-   		    print "$bestName\n";
-                    if ($bestName == "class")
-                    {
-   		        print ANNOTS "$currCtg\t$bestTaxon\n";
-		    }
                     $totalMagnitude += $magnitude;
                 }
 

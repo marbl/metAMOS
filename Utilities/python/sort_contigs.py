@@ -42,19 +42,18 @@ for line in class_file:
         
     else:
         contigs_by_class[fields[1]] = [fields[0]]
-        contigs_by_class[fields[1]].append(fields[0])
 
 
 for key in contigs_by_class:
     class_name = id_class[key]
-    path = out_dir + class_name + "/"
+    path = out_dir + os.sep + class_name + os.sep
     if not os.path.exists(path):
         os.mkdir(path)
 
     f = open(path + class_name + ".iid", 'w')
-    f.write("\n".join(contigs_by_class[key]))
+    f.write("\n".join(contigs_by_class[key]) + "\n")
     f.close()
-    ret = os.system("%s/bank2fasta -b %s -i "%(amos_dir,amos_bnk) + path + class_name + ".iid > " + path + class_name + ".fasta")
+    ret = os.system("%s/bank2fasta -b %s -iid -I %s%s%s.iid > %s%s%s.fasta"%(amos_dir,amos_bnk,path,os.sep,class_name,path,os.sep,class_name))
     
     
 

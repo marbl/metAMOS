@@ -34,7 +34,7 @@ if __name__ == "__main__":
         rdata.append(line)
        
     if not os.path.exists(prefix+"covstats.out"):
-        os.system("%s/analyze-read-depth -i %s -x 10 -l 500 > %scovstats.out"%(rund,sys.argv[2],prefix))
+        os.system("%s/analyze-read-depth %s > %scovstats.out"%(rund,sys.argv[2],prefix))
     ff = open(prefix+"covstats.out",'r')
     covdata = []
     #covdata = ff.readlines()

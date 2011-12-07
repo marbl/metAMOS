@@ -168,9 +168,14 @@ foreach my $input (@ARGV)
 	}
 	
 	print "Importing $fileName...\n";
-	
+	 
 	open BLAST, "<$fileName";
-	
+        my $annotFile = $magFile;
+        #print "$annotFile\n";
+        $annotFile =~ s/contig.cvg/annots/;
+        #print "$annotFile\n";
+        open ANNOTS, ">$annotFile" or die $!;
+
 	my $topScore;
 	my $ties;
         my $taxID = undef;
@@ -178,7 +183,8 @@ foreach my $input (@ARGV)
 	my $magnitude = 0;
         my %bestTaxa;
         my %bestScores;
-	
+
+        print ANNOTS "contigID\tclassID\n";
 	while ( 1 )
 	{
 		my $line = <BLAST>;
@@ -212,11 +218,17 @@ foreach my $input (@ARGV)
                              if ($TAXONOMIC_ORDERING{$bestName} < $TAXONOMIC_ORDERING{$taxa}) {
                                    $bestTaxon = $bestTaxa{$taxa};
                                    $bestName = $taxa;
+                        
                              }
                           }
                        }
                     }
                     add($set, \%tree, $bestTaxon, $magnitude, $bestScores{$bestName});
+   		    print "$bestName\n";
+                    if ($bestName == "class")
+                    {
+   		        print ANNOTS "$currCtg\t$bestTaxon\n";
+		    }
                     $totalMagnitude += $magnitude;
                 }
 

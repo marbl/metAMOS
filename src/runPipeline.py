@@ -600,7 +600,7 @@ run_metaphyler = False
 runfast = False
 cls = None
 retainBank = False
-asm = "soap"
+asm = "none"
 rundir = ""
 fff = ""
 threads = 16
@@ -657,6 +657,8 @@ for o, a in opts:
         #blast,fcp,etc 
         #default: fcp?
         cls = a#"phmmer"
+        if cls == "amphora2" or cls == "Amphora2":
+            cls = "amphora"
     elif o in ("-a","--assembler"):
         #maximus,CA,soap
         #default: maximus?
@@ -711,7 +713,8 @@ for line in inf:
         if len(asmc) <= 2:
             continue
         run_process("mv %s %s/Assemble/out/%s"%(asmc,rundir,"proba.asm.contig"))
-        skipsteps.append("Assemble")
+        #skipsteps.append("Assemble")
+        asm = "none"
         bowtie_mapping = 1
     elif "format:" in line:
 
@@ -1671,7 +1674,9 @@ def Assemble(input,output):
       runVelvet(VELVET, "velvet")
    elif asm == "velvet-sc":
       runVelvet(VELVET_SC, "velvet-sc")
-   else:
+   elif asm == "none":
+      pass
+   else:  
       print "Error: %s is an unknown assembler. No valid assembler specified."%(asm)
       raise(JobSignalledBreak)
 
@@ -1791,6 +1796,11 @@ def Annotate(input,output):
        run_process("ln -s %s/Annotate/out/%s.hits %s/Postprocess/in/%s.hits"%(rundir, PREFIX, rundir, PREFIX), "Annotate")
        run_process("cp %s/Annotate/out/%s.hits %s/Postprocess/out/%s.hits"%(rundir, PREFIX, rundir, PREFIX), "Annotate")
        
+       if not os.path.exists(KRONA + os.sep + "ImportAmphora.pl"):
+           print "Error: Krona importer for Amphora 2 not found in %s. Please check your path and try again.\n"%(KRONA)
+           raise(JobSignalledBreak)
+       run_process("perl %s/ImportAmphora.pl -c -v -i %s/Annotate/out/%s.hits:%s/Assemble/out/%s.contig.cvg"%(KRONA,rundir,PREFIX,rundir,PREFIX), "Annotate")
+
    elif cls == "fcp":
        print "FCP not yet supported.. stay tuned"
    elif cls == "phymm":
@@ -1916,22 +1926,23 @@ def FindScaffoldORFS(input,output):
    #run_process("ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.scaffolds.faa"%(rundir,rundir,PREFIX))
 
 if "Propagate" in forcesteps:
-    run_process("touch %s/Abundance/out/%s.classify.txt"%(rundir,PREFIX))
+    run_process("touch %s/DB/class_key.tab"%(METAMOS_UTILS))
 @follows(FindScaffoldORFS, Annotate)
-@files("%s/Abundance/out/%s.classify.txt"%(rundir,PREFIX),"%s/Propagate/out/%s.clusters"%(rundir,PREFIX))
+@files("%s/DB/class_key.tab"%(METAMOS_UTILS),"%s/Propagate/out/%s.clusters"%(rundir,PREFIX))
 def Propagate(input,output):
    #run propogate java script
    # create s12.annots from Metaphyler output
-   run_process("python %s/python/create_mapping.py %s/DB/class_key.tab %s/Abundance/out/%s.classify.txt %s/Propagate/in/%s.annots"%(METAMOS_UTILS,METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX),"Propagate")
+   if cls == "metaphyler":
+       run_process("python %s/python/create_mapping.py %s/DB/class_key.tab %s/Abundance/out/%s.classify.txt %s/Propagate/in/%s.annots"%(METAMOS_UTILS,METAMOS_UTILS,rundir,PREFIX,rundir,PREFIX),"Propagate")
    # strip headers from file and contig name prefix
 
    run_process("cat %s/Propagate/in/%s.annots |sed s/contig_//g |grep -v contigID > %s/Propagate/in/%s.clusters"%(rundir,PREFIX,rundir,PREFIX),"Propagate")
-   run_process("%s/FilterEdgesByCluster -b %s/Scaffold/in/%s.bnk -clusters in/s12.clusters -noRemoveEdges > %s/Propagate/out/%s.clusters"%(AMOS,rundir,PREFIX,rundir,PREFIX),"Propagate")
+   run_process("%s/FilterEdgesByCluster -b %s/Scaffold/in/%s.bnk -clusters %s/Propagate/in/%s.clusters -noRemoveEdges > %s/Propagate/out/%s.clusters"%(AMOS,rundir,PREFIX,rundir,PREFIX,rundir,PREFIX),"Propagate")
 
 @follows(Propagate)
 @files("%s/Propagate/out/%s.clusters"%(rundir,PREFIX),"%s/Classify/out/sorted.txt"%(rundir))
 def Classify(input,output):
-   run_process("python %s/python/sort_contigs.py %s/Propagate/in/%s.clusters %s/DB/class_key.tab %s/Classify/out %s/Scaffold/in/%s.bnk"%(METAMOS_UTILS, rundir, PREFIX, METAMOS_UTILS,rundir, rundir, PREFIX),"Classify")
+   run_process("python %s/python/sort_contigs.py %s/Propagate/out/%s.clusters %s/DB/class_key.tab %s/Classify/out %s/Scaffold/in/%s.bnk"%(METAMOS_UTILS, rundir, PREFIX, METAMOS_UTILS,rundir, rundir, PREFIX),"Classify")
 
 @follows(Classify)
 @files("%s/Assemble/out/%s.asm.contig"%(rundir,PREFIX),"%s/Postprocess/%s.scf.fa"%(rundir,PREFIX))
@@ -1963,10 +1974,12 @@ def Postprocess(input,output):
           raise(JobSignalledBreak)
        run_process("perl %s/ImportPhymmBL.pl -c -v -i %s/Postprocess/in/%s.hits"%(KRONA,rundir,PREFIX),"Postprocess")
    elif cls == 'amphora':
-       if not os.path.exists(KRONA + os.sep + "ImportAmphora.pl"):
-           print "Error: Krona importer for Amphora 2 not found in %s. Please check your path and try again.\n"%(KRONA)
-           raise(JobSignalledBreak)
-       run_process("perl %s/ImportAmphora.pl -c -v -i %s/Postprocess/in/%s.hits:%s/Assemble/out/%s.contig.cvg"%(KRONA,rundir,PREFIX,rundir,PREFIX), "Postprocess") 
+       #now ran in Annotate step to generate file for Propogate/Classsify
+       pass
+       #if not os.path.exists(KRONA + os.sep + "ImportAmphora.pl"):
+       #    print "Error: Krona importer for Amphora 2 not found in %s. Please check your path and try again.\n"%(KRONA)
+       #    raise(JobSignalledBreak)
+       #run_process("perl %s/ImportAmphora.pl -c -v -i %s/Postprocess/in/%s.hits:%s/Assemble/out/%s.contig.cvg"%(KRONA,rundir,PREFIX,rundir,PREFIX), "Postprocess") 
 
    #command to open webbrowser?
    #try to open Krona output

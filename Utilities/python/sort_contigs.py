@@ -15,9 +15,10 @@ out_dir = sys.argv[3]
 #pass AMOS bank as argument
 amos_bnk = sys.argv[4]
 # parse in key file
+amos_dir = sys.argv[5]
 for line in class_key:
     line = line.strip()
-    fields = line.split()
+    fields = line.split("\t")
     # f1 is id, f2 is class name
 
     if len(fields) != 2:
@@ -53,7 +54,7 @@ for key in contigs_by_class:
     f = open(path + class_name + ".iid", 'w')
     f.write("\n".join(contigs_by_class[key]))
     f.close()
-    ret = os.system("bank2fasta -b %s -i "%(amos_bnk) + path + class_name + ".iid > " + path + class_name + ".fasta")
+    ret = os.system("%s/bank2fasta -b %s -i "%(amos_dir,amos_bnk) + path + class_name + ".iid > " + path + class_name + ".fasta")
     
     
 

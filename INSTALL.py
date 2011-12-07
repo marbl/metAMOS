@@ -41,7 +41,7 @@ if not os.path.exists("./AMOS"):
         os.system("tar -xvf amos-binaries.tar.gz")
         os.system("rm -rf amos-binaries.tar.gz")
 
-if not os.path.exists("./Amphora-2"):
+if 1 or not os.path.exists("./Amphora-2"):
    print "Amphora 2 binaries not found, optional for Annotate step, download now?"
    dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':

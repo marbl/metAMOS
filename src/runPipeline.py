@@ -1677,7 +1677,7 @@ def Assemble(input,output):
    elif asm == "none":
       pass
    else:  
-       print "Error: %s is an unknown assembler. No valid assembler specified."%(asm)
+      print "Error: %s is an unknown assembler. No valid assembler specified."%(asm)
       raise(JobSignalledBreak)
 
    if 1:

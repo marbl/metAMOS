@@ -1926,9 +1926,9 @@ def FindScaffoldORFS(input,output):
    #run_process("ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.scaffolds.faa"%(rundir,rundir,PREFIX))
 
 if "Propagate" in forcesteps:
-    run_process("touch %s/DB/class_key.tab"%(rundir))
+    run_process("touch %s/DB/class_key.tab"%(METAMOS_UTILS))
 @follows(FindScaffoldORFS, Annotate)
-@files("%s/DB/class_key.tab"%(rundir),"%s/Propagate/out/%s.clusters"%(rundir,PREFIX))
+@files("%s/DB/class_key.tab"%(METAMOS_UTILS),"%s/Propagate/out/%s.clusters"%(rundir,PREFIX))
 def Propagate(input,output):
    #run propogate java script
    # create s12.annots from Metaphyler output

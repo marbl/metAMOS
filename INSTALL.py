@@ -58,6 +58,10 @@ if not os.path.exists("./CA"):
       os.system("tar -xvzf wgs-assembler-112211.tar.gz")
       os.system("rm -rf wgs-assembler-112211.tar.gz")
 
+# make sure we have setuptools available
+sys.path.append(sys.path[0] + os.sep + "Utilities" + os.sep + "python")
+from get_setuptools import use_setuptools
+use_setuptools()
 
 #os.system("
 print "Run setup.py.."

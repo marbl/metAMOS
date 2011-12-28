@@ -789,7 +789,7 @@ if len(readlibs) > 1 and asm == "metaidba":
     sys.exit(1)
 
 def map2contig():
-    #bowtie_mapping = 1
+    bowtie_mapping = 1
     
     readDir = ""
     asmDir = ""
@@ -875,12 +875,12 @@ def map2contig():
                     contigdict[contig].append([int(spos), int(epos), strand, read,len(read_seq)])
                 except KeyError:
                     contigdict[contig] = [[int(spos),int(epos),strand,read,len(read_seq)]]
-            
+                #print contig
                 seqdict[read] = read_seq
                 seqfile.write(">%s\n%s\n"%(read,read_seq))
                 seqfile.flush()
     else:
-        if 1:
+        if 0:
  
             #open soap ReadOnContig
             #some contigs are missing!
@@ -955,7 +955,11 @@ def map2contig():
         tigr_file.write(cseq_fmt)#item[1])
         contigdict[ref].sort()
         #print contigdict[ref]
-        ctg_cvg_file.write("%s\t%.2f\n"%(ref,(float(len(contigdict[ref])*len(seqdict[contigdict[ref][0][-1]]))/float(ctgslen))))
+        try:
+            ctg_cvg_file.write("%s\t%.2f\n"%(ref,(float(len(contigdict[ref])*len(seqdict[contigdict[ref][0][3]]))/float(ctgslen))))
+        except KeyError:
+            #no reads map to this contig, skip?
+            continue
         for read in contigdict[ref]:
             
             try:
@@ -965,10 +969,10 @@ def map2contig():
             except KeyError:
                 pass
             if read[2] == "-":
-                tigr_file.write("#%s(%d) [RC] %d bases, 00000000 checksum. {%d 1} <%d %d>\n"%(read[-1],read[0]-1, len(seqdict[read[-1]]), read[-1], read[0], read[1]))
+                tigr_file.write("#%s(%d) [RC] %d bases, 00000000 checksum. {%d 1} <%d %d>\n"%(read[3],read[0]-1, read[-1], read[-1], read[0], read[1]))
             else:
-                tigr_file.write("#%s(%d) [] %d bases, 00000000 checksum. {1 %d} <%d %d>\n"%(read[-1],read[0]-1, len(seqdict[read[-1]]), read[-1], read[0], read[1]))
-            tigr_file.write(seqdict[read[-1]]+"\n")
+                tigr_file.write("#%s(%d) [] %d bases, 00000000 checksum. {1 %d} <%d %d>\n"%(read[3],read[0]-1, read[-1], read[-1], read[0], read[1]))
+            tigr_file.write(seqdict[read[3]]+"\n")
 
    
 

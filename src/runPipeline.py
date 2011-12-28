@@ -872,9 +872,9 @@ def map2contig():
                 read = read.split(" ")[0]
                 epos = int(spos)+len(read_seq)
                 try:
-                    contigdict[contig].append([int(spos), int(spos)+epos, strand, read])
+                    contigdict[contig].append([int(spos), int(epos), strand, read,len(read_seq)])
                 except KeyError:
-                    contigdict[contig] = [[int(spos),int(spos)+epos,strand,read]]
+                    contigdict[contig] = [[int(spos),int(epos),strand,read,len(read_seq)]]
             
                 seqdict[read] = read_seq
                 seqfile.write(">%s\n%s\n"%(read,read_seq))
@@ -965,9 +965,9 @@ def map2contig():
             except KeyError:
                 pass
             if read[2] == "-":
-                tigr_file.write("#%s(%d) [RC] %d bases, 00000000 checksum. {%d 1} <%d %s>\n"%(read[-1],read[0]-1, len(seqdict[read[-1]]), len(read[-1]), read[0], read[1]))
+                tigr_file.write("#%s(%d) [RC] %d bases, 00000000 checksum. {%d 1} <%d %d>\n"%(read[-1],read[0]-1, len(seqdict[read[-1]]), read[-1], read[0], read[1]))
             else:
-                tigr_file.write("#%s(%d) [] %d bases, 00000000 checksum. {1 %d} <%d %s>\n"%(read[-1],read[0]-1, len(seqdict[read[-1]]), len(read[-1]), read[0], read[1]))
+                tigr_file.write("#%s(%d) [] %d bases, 00000000 checksum. {1 %d} <%d %d>\n"%(read[-1],read[0]-1, len(seqdict[read[-1]]), read[-1], read[0], read[1]))
             tigr_file.write(seqdict[read[-1]]+"\n")
 
    
@@ -1557,11 +1557,12 @@ def Assemble(input,output):
           elif lib.format == "fastq"  and lib.mated and lib.interleaved:
               #this is NOT supported by SOAP, make sure files are split into two..
               #need to update lib.f2 path
-              run_process("perl spilt_fastq.pl %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/%s"%(lib.f1.fname,lib.f1.fname,lib.f2.fname),"Assemble")
-              soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(rundir,lib.f1.fname))
-              soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(rundir,lib.f2.fname))
+              run_process("perl  %s/perl/split_fastq.pl %s/Preprocess/out/%s %s/Assemble/in/%s %s/Assemble/in/%s.f2"%(METAMOS_UTILS,lib.f1.fname,lib.f1.fname,lib.f1.fname),"Assemble")
+              lib.f2.fname = lib.f1.fname+".f2"
+              soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Assemble/in/%s"%(rundir,lib.f1.fname))
+              soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Assemble/in/%s"%(rundir,lib.f2.fname))
 
-          elif format == "fasta"  and mated and interleaved:
+          elif lib.format == "fasta"  and lib.mated and lib.interleaved:
               soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(rundir,lib.f1.fname))
           else:
               soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(rundir,lib.f1.fname))

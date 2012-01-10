@@ -1,6 +1,11 @@
 import sys
 import os
 from setuptools import setup
+from distutils.core import setup
+from distutils.extension import Extension
+from Cython.Distutils import build_ext
+
+ext_modules = [Extension("preprocess", ["./src/preprocess.py"]),Extension("scaffold",["./src/scaffold.py"])]
 
 # Utility function to read the README file.
 # Used for the long_description.  It's nice, because now 1) we have a top level
@@ -23,4 +28,6 @@ setup(
         "Development Status :: 3 - Alpha"
     ],
     scripts=['src/initPipeline.py', 'src/runPipeline.py'],
+    ext_modules = ext_modules,
+    cmdclass = {'build_ext': build_ext}
 )

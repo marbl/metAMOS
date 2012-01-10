@@ -21,6 +21,7 @@ def init(reads, skipsteps, retainBank, asm):
    global _skipsteps
    global _retainBank
    global _asm
+   global _mated
 
    _readlibs = reads
    _skipsteps = skipsteps
@@ -28,7 +29,7 @@ def init(reads, skipsteps, retainBank, asm):
    _asm = asm
 
    for lib in _readlibs:
-      if lib.mated:
+      if lib.mated == True:
          _mated = True
          break
 
@@ -37,6 +38,7 @@ def init(reads, skipsteps, retainBank, asm):
 def Scaffold(input,output):
    # check if we need to do scaffolding
    numMates = 0
+
    if not _retainBank:
        run_process(_settings, "rm -rf %s/Scaffold/in/%s.bnk"%(_settings.rundir,_settings.PREFIX),"Scaffold")
        if _asm == "newbler":
@@ -57,7 +59,7 @@ def Scaffold(input,output):
                if lib.format == "fasta":
                    run_process(_settings, "%s/toAmos_new -s %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(_settings.AMOS,_settings.rundir,lib.id,_settings.rundir, _settings.PREFIX,lib.id,_settings.rundir,_settings.PREFIX),"Scaffold")
 
-               elif format == "fastq":
+               elif lib.format == "fastq":
                    run_process(_settings, "%s/toAmos_new -Q %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(_settings.AMOS,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX, lib.id,_settings.rundir,_settings.PREFIX),"Scaffold")
 
            run_process(_settings, "%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -b %s/Scaffold/in/%s.bnk "%(_settings.AMOS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")

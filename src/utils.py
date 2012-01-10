@@ -371,6 +371,8 @@ def initConfig(kmer, threads, theRundir):
     conf = open("%s/pipeline.conf"%(Settings.rundir),'w')
 
     conf.write("#Configuration summary\n")
+    conf.write("THREADS:\t\t\t%d\n"%(Settings.threads))
+    conf.write("KMER:\t\t\t%d\n"%(Settings.kmer))
     conf.write("PREFIX:\t\t\t%s\n"%(Settings.PREFIX))
     conf.write("VERBOSE:\t\t%s\n"%(Settings.VERBOSE)) 
     conf.write("OS:\t\t\t%s\nOS Version:\t\t%s\nMachine:\t\t%s\n"%(Settings.OSTYPE, Settings.OSVERSION, Settings.MACHINETYPE))

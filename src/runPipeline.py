@@ -292,7 +292,6 @@ if "Abundance" in forcesteps:
 
 if "Scaffold" in forcesteps:
     #utils.run_process(settings, "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX))
-    print "Scaffold being forced %s %s\n"%(settings.rundir, settings.PREFIX)
     utils.run_process(settings, "rm %s/Scaffold/out/%s.scaffolds.final"%(settings.rundir,settings.PREFIX))
 
 if "FindScaffoldORFS" in forcesteps:

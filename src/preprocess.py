@@ -11,14 +11,17 @@ from ruffus import *
 _readlibs = []
 _readpaths = []
 _skipsteps = []
+_asm = None
 _settings = Settings() 
 
-def init(reads, skipsteps):
+def init(reads, skipsteps, asm):
    global _readlibs
    global _skipsteps
+   global _asm
 
    _readlibs = reads
    _skipsteps = skipsteps
+   _asm = asm
 
    global _readpaths
    filtreadpaths = []
@@ -427,18 +430,18 @@ def Preprocess(input,output):
                run_process(_settings, "unlink %s/Preprocess/out/lib%d.sff"%(_settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "ln -s %s %s/Preprocess/out/lib%d.sff"%(read.path, _settings.rundir, lib.id), "Preprocess")
 
-               if asm == "newbler":
+               if _asm == "newbler":
                   run_process(_settings, "touch %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.id), "Preprocess");
                else:
-                  if not os.path.exists(CA + os.sep + "sffToCA"):
-                     print "Error: CA not found in %s. It is needed to convert SFF files to fasta.\n"%(CA)
+                  if not os.path.exists(_settings.CA + os.sep + "sffToCA"):
+                     print "Error: CA not found in %s. It is needed to convert SFF files to fasta.\n"%(_settings.CA)
                      raise(JobSignalledBreak)
 
                   # generate the fasta files from the sff file
                   run_process(_settings, "rm -rf %s/Preprocess/out/%s.tmpStore"%(_settings.rundir, _settings.PREFIX), "Preprocess")
                   run_process(_settings, "rm -rf %s/Preprocess/out/%s.gkpStore"%(_settings.rundir, _settings.PREFIX), "Preprocess")
                   run_process(_settings, "unlink %s/Preprocess/out/%s.frg"%(_settings.rundir, settings.PREFIX), "Preprocess")
-                  sffToCACmd = "%s/sffToCA -clear discard-n "%(CA)
+                  sffToCACmd = "%s/sffToCA -clear discard-n "%(_settings.CA)
                   if lib.linkerType != "flx":
                      sffToCACmd += "-clear 454 "
                   sffToCACmd += "-trim hard -libraryname lib%d -output %s/Preprocess/out/lib%d"%(lib.id, _settings.rundir, lib.id)
@@ -446,19 +449,19 @@ def Preprocess(input,output):
                       run_process(_settings, "%s -linker %s -insertsize %d %d %s"%(sffToCACmd, lib.linkerType, lib.mean, lib.stdev, read.path),"Preprocess")
                   else:
                       run_process(_settings, "%s %s"%(sffToCACmd, read.path),"Preprocess")
-                  run_process(_settings, "%s/gatekeeper -T -F -o %s/Preprocess/out/%s.gkpStore %s/Preprocess/out/lib%d.frg"%(CA, _settings.rundir, _settings.PREFIX, rundir, lib.id),"Preprocess")
-                  run_process(_settings, "%s/gatekeeper -dumpnewbler %s/Preprocess/out/lib%d %s/Preprocess/out/%s.gkpStore"%(CA, _settings.rundir, lib.id, rundir, _settings.PREFIX),"Preprocess")
-                  run_process(_settings, "%s/gatekeeper -dumpfastq   %s/Preprocess/out/lib%d %s/Preprocess/out/%s.gkpStore"%(CA, _settings.rundir, lib.id, rundir, PREFIX), "Preprocess")
-                  run_process(_settings, "%s/gatekeeper -dumplibraries -tabular %s/Preprocess/out/%s.gkpStore |awk '{if (match($3, \"U\") == 0 && match($1, \"UID\") == 0) print \"library\t\"$1\"\t\"$4-$5*3\"\t\"$4+$5*3}' >> %s/Preprocess/out/all.seq.mates"%(CA, _settings.rundir, PREFIX, rundir),"Preprocess")
-                  run_process(_settings, "%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3\"\t\"$5}' >> %s/Preprocess/out/all.seq.mates"%(CA, _settings.rundir, PREFIX, rundir),"Preprocess")
-                  run_process(_settings, "%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3}' > %s/Preprocess/out/lib%d.seq.mates"%(CA, _settings.rundir, PREFIX, rundir, lib.id), "Preprocess")
+                  run_process(_settings, "%s/gatekeeper -T -F -o %s/Preprocess/out/%s.gkpStore %s/Preprocess/out/lib%d.frg"%(_settings.CA, _settings.rundir, _settings.PREFIX, _settings.rundir, lib.id),"Preprocess")
+                  run_process(_settings, "%s/gatekeeper -dumpnewbler %s/Preprocess/out/lib%d %s/Preprocess/out/%s.gkpStore"%(_settings.CA, _settings.rundir, lib.id, _settings.rundir, _settings.PREFIX),"Preprocess")
+                  run_process(_settings, "%s/gatekeeper -dumpfastq   %s/Preprocess/out/lib%d %s/Preprocess/out/%s.gkpStore"%(_settings.CA, _settings.rundir, lib.id, _settings.rundir, PREFIX), "Preprocess")
+                  run_process(_settings, "%s/gatekeeper -dumplibraries -tabular %s/Preprocess/out/%s.gkpStore |awk '{if (match($3, \"U\") == 0 && match($1, \"UID\") == 0) print \"library\t\"$1\"\t\"$4-$5*3\"\t\"$4+$5*3}' >> %s/Preprocess/out/all.seq.mates"%(_settings.CA, _settings.rundir, PREFIX, _settings.rundir),"Preprocess")
+                  run_process(_settings, "%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3\"\t\"$5}' >> %s/Preprocess/out/all.seq.mates"%(_settings.CA, _settings.rundir, PREFIX, _settings.rundir),"Preprocess")
+                  run_process(_settings, "%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3}' > %s/Preprocess/out/lib%d.seq.mates"%(_settings.CA, _settings.rundir, PREFIX, _settings.rundir, lib.id), "Preprocess")
                   run_process(_settings, "unlink %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.id),"Preprocess")
                   run_process(_settings, "ln -s %s/Preprocess/out/lib%d.fna %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.id,rundir,lib.id),"Preprocess")
                   run_process(_settings, "ln -s %s/Preprocess/out/lib%d.fna.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.rundir,lib.id,rundir,lib.id),"Preprocess")
                   run_process(_settings, "rm -rf %s/Preproces/out/%s.gkpStore"%(_settings.rundir, PREFIX),"Preprocess")
-                  run_process(_settings, "cat %s/Preprocess/out/lib%d.seq.mates >> %s/Preprocess/out/all.seq.mates"%(_settings.rundir, lib.id, rundir), "Preprocess")
+                  run_process(_settings, "cat %s/Preprocess/out/lib%d.seq.mates >> %s/Preprocess/out/all.seq.mates"%(_settings.rundir, lib.id, _settings.rundir), "Preprocess")
 
-                  if asm != "CA":
+                  if _asm != "CA":
                      #flip the type to fastq
                      lib.format = "fastq"
                      lib.interleaved = False
@@ -472,17 +475,17 @@ def Preprocess(input,output):
                run_process(_settings, "ln -s %s/Preprocess/in/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.rundir,lib.f1.fname,rundir,lib.id),"Preprocess")
                run_process(_settings, "touch %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir,lib.id),"Preprocess")
            elif lib.format == "fastq" and not lib.mated:
-               run_process(_settings, "ln -s %s/Preprocess/in/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.fq, fname, rundir, lib.id), "Preprocess")
+               run_process(_settings, "ln -s %s/Preprocess/in/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.fq, fname, _settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "touch %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir, lib.id), "Preprocess")
            elif lib.format == "fasta" and lib.mated and not lib.interleaved:
                #FIXME, make me faster!
-               run_process(_settings, "perl %s/perl/shuffleSequences_fasta.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname, rundir,lib.f2.fname,rundir,lib.id),"Preprocess")
+               run_process(_settings, "perl %s/perl/shuffleSequences_fasta.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname, _settings.rundir,lib.f2.fname,rundir,lib.id),"Preprocess")
                run_process(_settings, "python %s/python/extract_mates_from_fasta.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
                run_process(_settings, "unlink %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir, lib.id),"Preprocess")
                run_process(_settings, "ln -t %s/Preprocess/out/ -s %s/Preprocess/in/lib%d.seq.mates"%(_settings.rundir,rundir,lib.id),"Preprocess")
            elif lib.format == "fastq" and lib.mated and not lib.interleaved:
                #extract mates from fastq
-               run_process(_settings, "perl %s/perl/shuffleSequences_fastq.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname, rundir,lib.f2.fname,rundir,lib.id),"Preprocess")
+               run_process(_settings, "perl %s/perl/shuffleSequences_fastq.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname, _settings.rundir,lib.f2.fname,_settings.rundir,lib.id),"Preprocess")
                run_process(_settings, "python %s/python/extract_mates_from_fastq.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
            elif lib.mated and lib.interleaved:
                run_process(_settings, "cp %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.f1.fname,_settings.rundir,lib.id),"Preprocess")
@@ -491,11 +494,11 @@ def Preprocess(input,output):
                else:
                    run_process(_settings, "python %s/python/extract_mates_from_fasta.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
            #update_soap_config()
-           #elif asm == "ca":
+           #elif _asm == "ca":
            #    #useful for 454, need to get SFF to FRG?
            #    #/fs/wrenhomes/sergek/wgs-assembler/Linux-amd64/bin/sffToCA
            #    pass
-           #elif asm == "amos":
+           #elif _asm == "amos":
            #    #call toAmos_new              
            #    pass
    run_process(_settings, "touch %s/Preprocess/out/preprocess.success"%(_settings.rundir),"Preprocess")

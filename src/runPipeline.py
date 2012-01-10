@@ -60,19 +60,16 @@ runfast = False
 cls = None
 retainBank = False
 asm = "soap"
-rundir = ""
 fff = ""
-threads = 16
 readlen = 75
-kmer = 31
 fqlibs = {}
 fqfrags = []
 rlibs = []
-settings = utils.Settings(kmer, threads, os.getcwd())
+settings = utils.Settings(31, 16, "")
 
 for o, a in opts:
     if o in ("-v","--verbose"):
-        utils.globalSettings.VERBOSE = True
+        utils.Settings.VERBOSE = True
     elif o in ("-h", "--help"):
         usage()
         sys.exit()
@@ -88,7 +85,7 @@ for o, a in opts:
     elif o in ("-o", "--minoverlap"):
         pass
     elif o in ("-k", "--kmersize"):
-        kmer = int(a)
+        utils.Settings.kmer = int(a)
     elif o in ("-4", "--454"):
         fff = "-454"
     elif o in ("-f", "--forcesteps"):
@@ -100,11 +97,11 @@ for o, a in opts:
         skipsteps = a.split(",")
         #print skipsteps
     elif o in ("-p", "--threads"):
-        threads = int(a)
+        utils.Settings.threads = int(a)
     elif o in ("-d", "--projectdir"):
-        rundir = os.path.abspath(a)
+        utils.Settings.rundir = os.path.abspath(a)
         if not os.path.exists(a):
-          print "project dir %s does not exist!"%(rundir)
+          print "project dir %s does not exist!"%(settings.rundir)
           usage()
           sys.exit(1)
     elif o in ("-t", "--filter"):
@@ -136,13 +133,13 @@ for o, a in opts:
 
     #sys.exit(2)
 
-if not os.path.exists(rundir) or rundir == "":
-    print "project dir %s does not exist!"%(rundir)
+if not os.path.exists(settings.rundir) or settings.rundir == "":
+    print "project dir %s does not exist!"%(settings.rundir)
     usage()
     sys.exit(1)
 
 #parse frag/libs out of pipeline.ini out of rundir
-inifile = rundir+os.sep+"pipeline.ini"
+inifile = settings.rundir+os.sep+"pipeline.ini"
 inf = open(inifile,'r')
 libs = []
 readlibs = []
@@ -173,7 +170,7 @@ for line in inf:
         asmc = line.replace("\n","").split("\t")[-1]
         if len(asmc) <= 2:
             continue
-        utils.run_process(settings, "mv %s %s/Assemble/out/%s"%(asmc,rundir,"proba.asm.contig"))
+        utils.run_process(settings, "mv %s %s/Assemble/out/%s"%(asmc,settings.rundir,"proba.asm.contig"))
         #skipsteps.append("Assemble")
         asm = "none"
         bowtie_mapping = 1
@@ -200,7 +197,7 @@ for line in inf:
 
         fqlibs[data[0]] = data[1]
         #f1 = data[1].split(",")[0]
-        f1 = "%s/Preprocess/in/%s"%(rundir,data[1].split(",")[0])
+        f1 = "%s/Preprocess/in/%s"%(settings.rundir,data[1].split(",")[0])
         inf = data[1].split(",")
         mean = int(inf[3])
         stdev = int(inf[4])
@@ -212,7 +209,7 @@ for line in inf:
         data = line.split("\t")
 
         fqlibs[data[0]] = data[1]
-        f2 = "%s/Preprocess/in/%s"%(rundir,data[1].split(",")[0])
+        f2 = "%s/Preprocess/in/%s"%(settings.rundir,data[1].split(",")[0])
         inf = data[1].split(",")
         mean = int(inf[3])
         stdev = int(inf[4])
@@ -276,37 +273,38 @@ for lib in readlibs:
     #print "touch"
     if "Assemble" in forcesteps:
         #print lib.id
-        utils.run_process(settings, "touch %s/Preprocess/out/lib%d.seq"%(rundir,lib.id))
+        utils.run_process(settings, "touch %s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id))
 
-    asmfiles.append("%s/Preprocess/out/lib%d.seq"%(rundir,lib.id))
+    asmfiles.append("%s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id))
 
 if "Assemble" not in skipsteps and "Assemble" in forcesteps:
-    utils.run_process(settings, "rm %s/Assemble/out/%s.asm.contig"%(rundir,PREFIX))
+    utils.run_process(settings, "rm %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX))
 
 if "FindORFS" in forcesteps:
-   utils.run_process(settings, "rm %s/FindORFS/out/%s.faa"%(rundir,PREFIX))
+   utils.run_process(settings, "rm %s/FindORFS/out/%s.faa"%(settings.rundir,settings.PREFIX))
 
 if "Annotate" in forcesteps:
-   utils.run_process(settings, "rm %s/Annotate/out/%s.hits"%(rundir,PREFIX))
+   utils.run_process(settings, "rm %s/Annotate/out/%s.hits"%(settings.rundir,settings.PREFIX))
 
 if "Abundance" in forcesteps:
-   utils.run_process(settings, "touch %s/FindORFS/out/%s.faa"%(rundir,PREFIX))
-   utils.run_process(settings, "rm %s/Abundance/out/%s.taxprof.pct.txt"%(rundir,PREFIX))
+   utils.run_process(settings, "touch %s/FindORFS/out/%s.faa"%(settings.rundir,settings.PREFIX))
+   utils.run_process(settings, "rm %s/Abundance/out/%s.taxprof.pct.txt"%(settings.rundir,settings.PREFIX))
 
 if "Scaffold" in forcesteps:
-    #utils.run_process(settings, "touch %s/Assemble/out/%s.asm.contig"%(rundir,PREFIX))
-    utils.run_process(settings, "rm %s/Scaffold/out/%s.scaffolds.final"%(rundir,PREFIX))
+    #utils.run_process(settings, "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX))
+    print "Scaffold being forced %s %s\n"%(settings.rundir, settings.PREFIX)
+    utils.run_process(settings, "rm %s/Scaffold/out/%s.scaffolds.final"%(settings.rundir,settings.PREFIX))
 
 if "FindScaffoldORFS" in forcesteps:
-    utils.run_process(settings, "touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(rundir,PREFIX))
+    utils.run_process(settings, "touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(settings.rundir,settings.PREFIX))
 
 if "Propagate" in forcesteps:
-    utils.run_process(settings, "touch %s/DB/class_key.tab"%(METAMOS_UTILS))
+    utils.run_process(settings, "touch %s/DB/class_key.tab"%(settings.METAMOS_UTILS))
 
 if __name__ == "__main__":
     #pid = start_http()
     print "Starting metAMOS pipeline"
-    settings = utils.initConfig(kmer, threads, rundir)
+    settings = utils.initConfig(settings.kmer, settings.threads, settings.rundir)
 
     import preprocess
     import assemble
@@ -321,7 +319,7 @@ if __name__ == "__main__":
     import postprocess
 
     # initialize submodules
-    preprocess.init(readlibs, skipsteps)
+    preprocess.init(readlibs, skipsteps, asm)
     assemble.init(readlibs, skipsteps, asmfiles, asm)
     findorfs.init(readlibs, skipsteps, asm)
     findreps.init(readlibs, skipsteps)

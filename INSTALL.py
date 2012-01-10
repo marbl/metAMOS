@@ -41,7 +41,7 @@ if not os.path.exists("./AMOS"):
         os.system("tar -xvf amos-binaries.tar.gz")
         os.system("rm -rf amos-binaries.tar.gz")
 
-if 1 or not os.path.exists("./Amphora-2"):
+if 0 or not os.path.exists("./Amphora-2"):
    print "Amphora 2 binaries not found, optional for Annotate step, download now?"
    dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':
@@ -65,7 +65,7 @@ use_setuptools()
 
 #os.system("
 print "Run setup.py.."
-os.system("python setup.py install_scripts --install-dir=`pwd`")
+os.system("python setup.py install_scripts --install-dir=`pwd` build_ext")
 #print "Compile & optimize"
 #distutils.util.byte_compile(['./runPipeline.py'],optimize=2,force=True)
 #os.system("chmod a+wrx runPipeline.pyo")

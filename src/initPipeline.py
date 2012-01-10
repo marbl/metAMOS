@@ -300,7 +300,7 @@ while i < len(readlibs):
             soaplib += "reverse_seq=1\n"
         soaplib += "asm_flags=3\n"
         soaplib += "rank=1\n"
-        if mylib.format == "fastq" and mylib.mated and not mylib.interleaved:
+        if mylib.format == "fastq" and mylib.mated:
             soaplib += "q1=LIB%dQ1REPLACE\n"%(i+1)
             soaplib += "q2=LIB%dQ2REPLACE\n"%(i+1)
         elif mylib.format == "fasta" and mylib.mated and not mylib.interleaved:

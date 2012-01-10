@@ -9,6 +9,9 @@ _METAMOSDIR    = sys.path[0]
 INITIAL_UTILS = "%s%sUtilities"%(_METAMOSDIR, os.sep)
 
 class Settings:
+   asmfiles = []
+   runfiles = []
+
    kmer = 55
    threads = 16
    rundir = ""

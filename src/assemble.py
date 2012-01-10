@@ -12,18 +12,15 @@ from ruffus import *
 _readlibs = []
 _skipsteps = []
 _settings = Settings()
-_asmfiles = []
 _asm = None
 
-def init(reads, skipsteps, asms, asm):
+def init(reads, skipsteps, asm):
    global _readlibs
-   global _asmfiles
    global _asm
    global _skipsteps
 
    _readlibs = reads
    _skipsteps = skipsteps
-   _asmfiles = asms
    _asm = asm
 
 def map2contig():
@@ -314,7 +311,7 @@ def runVelvet(velvetPath, name):
    run_process(_settings, "ln -s %s/Assemble/out/contigs.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
 
         
-@files(_asmfiles,["%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX)])
+@files(_settings.asmfiles,["%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX)])
 #@posttask(create_symlink,touch_file("completed.flag"))
 @follows(Preprocess)
 def Assemble(input,output):
@@ -337,10 +334,9 @@ def Assemble(input,output):
           elif lib.format == "fastq"  and lib.mated and lib.interleaved:
               #this is NOT supported by SOAP, make sure files are split into two..
               #need to update lib.f2 path
-              run_process(_settings, "perl  %s/perl/split_fastq.pl %s/Preprocess/out/%s %s/Assemble/in/%s %s/Assemble/in/%s.f2"%(_settings.METAMOS_UTILS,lib.f1.fname,lib.f1.fname,lib.f1.fname),"Assemble")
-              lib.f2.fname = lib.f1.fname+".f2"
+              run_process(_settings, "perl %s/perl/split_fastq.pl %s/Preprocess/out/%s %s/Assemble/in/%s %s/Assemble/in/%s.f2"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname,_settings.rundir,lib.f1.fname,_settings.rundir,lib.f1.fname),"Assemble")
               soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Assemble/in/%s"%(_settings.rundir,lib.f1.fname))
-              soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Assemble/in/%s"%(_settings.rundir,lib.f2.fname))
+              soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Assemble/in/%s"%(_settings.rundir,lib.f1.fname+".f2"))
 
           elif lib.format == "fasta"  and lib.mated and lib.interleaved:
               soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(_settings.rundir,lib.f1.fname))

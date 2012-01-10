@@ -9,12 +9,11 @@ sys.path.append(INITIAL_UTILS)
 from ruffus import *
 
 _readlibs = []
-_readpaths = []
 _skipsteps = []
 _asm = None
 _settings = Settings() 
 
-def init(reads, skipsteps, forcesteps, asm):
+def init(reads, skipsteps, asm):
    global _readlibs
    global _skipsteps
    global _asm
@@ -22,19 +21,6 @@ def init(reads, skipsteps, forcesteps, asm):
    _readlibs = reads
    _skipsteps = skipsteps
    _asm = asm
-
-   global _readpaths
-   filtreadpaths = []
-   for lib in _readlibs:
-      for read in lib.reads:
-         _readpaths.append("%s/Preprocess/in/"%(_settings.rundir)+read.fname)
-         filtreadpaths.append("%s/Preprocess/out/"%(_settings.rundir)+read.fname)
-
-   #if asm == "soap":
-   if "Preprocess" in forcesteps:
-      for path in _readpaths:
-         run_process(_settings, "touch %s"%path)
-
 
 def LCS(S1, S2):
     M = [[0]*(1+len(S2)) for i in xrange(1+len(S1))]
@@ -129,7 +115,7 @@ def parseInterleaved(rf,wf,fastq=True):
                    read.path = read.path.replace("/in/","/out/")            
 
 #@transform(readpaths,["%s/Preprocess/out/all.seq"%(_settings.rundir),"%s/Preprocess/out/all.seq.mates"%(_settings.rundir)])
-@files(_readpaths,"%s/Preprocess/out/preprocess.success"%(_settings.rundir))
+@files(_settings.readpaths,"%s/Preprocess/out/preprocess.success"%(_settings.rundir))
 #filtreadpaths)
 def Preprocess(input,output):
    #move input files into Preprocess ./in dir

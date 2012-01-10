@@ -170,7 +170,7 @@ for line in inf:
         asmc = line.replace("\n","").split("\t")[-1]
         if len(asmc) <= 2:
             continue
-        utils.run_process(settings, "mv %s %s/Assemble/out/%s"%(asmc,settings.rundir,"proba.asm.contig"))
+        utils.run_process(settings, "cp %s %s/Assemble/out/%s"%(asmc,settings.rundir,"proba.asm.contig"))
         #skipsteps.append("Assemble")
         asm = "none"
         bowtie_mapping = 1
@@ -261,6 +261,19 @@ elif format == "sff":
     else:
        infile = frg
 
+readpaths = []
+filtreadpaths = []
+for lib in readlibs:
+   for read in lib.reads:
+      readpaths.append("%s/Preprocess/in/"%(settings.rundir)+read.fname)
+      filtreadpaths.append("%s/Preprocess/out/"%(settings.rundir)+read.fname)
+
+#if asm == "soap":
+if "Preprocess" in forcesteps:
+   for path in readpaths:
+      utils.run_process(settings, "touch %s"%(path))
+utils.Settings.readpaths = readpaths
+
 asmfiles = []
 #if asm == "soap"
 
@@ -271,6 +284,7 @@ for lib in readlibs:
         utils.run_process(settings, "touch %s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id))
 
     asmfiles.append("%s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id))
+utils.Settings.asmfiles = asmfiles
 
 if "Assemble" not in skipsteps and "Assemble" in forcesteps:
     utils.run_process(settings, "rm %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX))
@@ -313,8 +327,8 @@ if __name__ == "__main__":
     import postprocess
 
     # initialize submodules
-    preprocess.init(readlibs, skipsteps, forcesteps, asm)
-    assemble.init(readlibs, skipsteps, asmfiles, asm)
+    preprocess.init(readlibs, skipsteps, asm)
+    assemble.init(readlibs, skipsteps, asm)
     findorfs.init(readlibs, skipsteps, asm)
     findreps.init(readlibs, skipsteps)
     annotate.init(readlibs, skipsteps, cls)

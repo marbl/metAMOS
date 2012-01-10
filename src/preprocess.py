@@ -14,7 +14,7 @@ _skipsteps = []
 _asm = None
 _settings = Settings() 
 
-def init(reads, skipsteps, asm):
+def init(reads, skipsteps, forcesteps, asm):
    global _readlibs
    global _skipsteps
    global _asm
@@ -29,6 +29,12 @@ def init(reads, skipsteps, asm):
       for read in lib.reads:
          _readpaths.append("%s/Preprocess/in/"%(_settings.rundir)+read.fname)
          filtreadpaths.append("%s/Preprocess/out/"%(_settings.rundir)+read.fname)
+
+   #if asm == "soap":
+   if "Preprocess" in forcesteps:
+      for path in _readpaths:
+         run_process(_settings, "touch %s"%path)
+
 
 def LCS(S1, S2):
     M = [[0]*(1+len(S2)) for i in xrange(1+len(S1))]

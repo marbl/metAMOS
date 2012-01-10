@@ -261,11 +261,6 @@ elif format == "sff":
     else:
        infile = frg
 
-#if asm == "soap":
-if "Preprocess" in forcesteps:
-    for path in readpaths:
-        utils.run_process(settings, "touch %s"%path)
-
 asmfiles = []
 #if asm == "soap"
 
@@ -318,7 +313,7 @@ if __name__ == "__main__":
     import postprocess
 
     # initialize submodules
-    preprocess.init(readlibs, skipsteps, asm)
+    preprocess.init(readlibs, skipsteps, forcesteps, asm)
     assemble.init(readlibs, skipsteps, asmfiles, asm)
     findorfs.init(readlibs, skipsteps, asm)
     findreps.init(readlibs, skipsteps)

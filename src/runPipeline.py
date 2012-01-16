@@ -27,6 +27,7 @@ def usage():
     print "-a = <assembler>: genome assembler to use"
     print "-n = <runPipeline step>: step to skip in pipeline"
     print "-p = <int>: number of threads to use (be greedy!)"
+    print "-q: produce FastQC quality report for reads? (default = NO)"
     print "-t: filter input reads? (default = NO)"
     print "-f = <runPipeline step>: force this step to be run"
     print "-v: verbose output? (default = NO)"
@@ -55,6 +56,7 @@ stopat = None
 filter = False
 forcesteps = []
 skipsteps = []
+run_fastqc = False
 run_metaphyler = False
 runfast = False
 cls = None
@@ -104,6 +106,8 @@ for o, a in opts:
           print "project dir %s does not exist!"%(settings.rundir)
           usage()
           sys.exit(1)
+    elif o in ("-q", "--fastqc"):
+        run_fastqc = True
     elif o in ("-t", "--filter"):
         filter = True
 

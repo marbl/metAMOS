@@ -25,6 +25,7 @@ class Settings:
    METAMOS_UTILS = ""
    METAMOS_JAVA = ""
 
+   FASTQC = ""
    AMOS = ""
 
    SOAP = ""
@@ -278,6 +279,12 @@ def initConfig(kmer, threads, theRundir):
 
        Settings.METAMOS_JAVA  = "%s%sjava:%s"%(Settings.METAMOS_UTILS, os.sep, os.curdir)
 
+    # FastQC
+    Settings.FASTQC = "%s%sFastQC"%(Settings.METAMOSDIR, os.sep)
+    if not os.path.exists(Settings.FASTQC + os.sep + "fastqc"):
+       Settings.FASTQC = getFromPath("fastqc", "FastQC")
+    fastqcMD5 = getMD5Sum(Settings.FASTQC + os.sep + "fastqc")
+    
     # now check for assemblers
     # 1. AMOS
     Settings.AMOS = "%s%sAMOS%s%s-%s%sbin"%(Settings.METAMOSDIR, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
@@ -392,6 +399,7 @@ def initConfig(kmer, threads, theRundir):
     conf.write("PHMMER:\t\t\t%s\t%s\n"%(Settings.PHMMER, phmmerMD5))
     conf.write("BLAST:\t\t\t%s\t%s\n"%(Settings.BLAST, blastMD5))
     conf.write("AMPHORA:\t\t%s\t%s\n"%(Settings.AMPHORA, amphoraMD5))
+    conf.write("FASTQC:\t\t%s\t%s\n"%(Settings.FASTQC, fastqcMD5))
 
     conf.write("REPEATOIRE:\t\t%s\t%s\n"%(Settings.REPEATOIRE, repeatoireMD5))
     conf.close()

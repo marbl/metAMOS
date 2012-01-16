@@ -493,4 +493,15 @@ def Preprocess(input,output):
            #elif _asm == "amos":
            #    #call toAmos_new              
            #    pass
+   if run_fastqc == True:
+       if not os.path.exists(_settings.FASTQC + os.sep + "fastqc"):
+           print "Error: FastQC not found in %s. Please check your path and try again.\n"%(_settings.FASTQC)
+           raise(JobSignalledBreak)
+
+       fastqFiles = ''
+       for lib in _readlibs:
+           if lib.format == "fastq":
+               for read in lib.reads:
+                   fastqFiles += " %s"%(read.path)
+       run_process(_settings, "%s%s%s%s"%(_settings.FASTQC, os.sep, "fastqc", fastqFiles), "Preprocess")
    run_process(_settings, "touch %s/Preprocess/out/preprocess.success"%(_settings.rundir),"Preprocess")

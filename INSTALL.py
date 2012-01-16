@@ -7,6 +7,16 @@ if (sys.version_info[0] < 2) or (sys.version_info[0] == 2 and sys.version_info[1
   sys.exit(1)
 
 #check for DBs, etc
+
+if not os.path.exists("./FastQC"):
+    print "FastQC not found, optional for Preprocess, download now?"
+    dl = raw_input("Enter Y/N: ")
+    if dl == 'y' or dl == 'Y':
+        archive = "fastqc_v0.10.0.zip"
+        os.system("wget http://www.bioinformatics.bbsrc.ac.uk/projects/fastqc/%s" % archive)
+        os.system("unzip %s" % archive)
+        os.system("rm %s" % archive)
+
 if not os.path.exists("./Utilities/DB/refseq_protein.pal"):
     print "refseq protein DB not found, needed for Annotate step, download now?"
     dl = raw_input("Enter Y/N: ")

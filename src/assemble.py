@@ -96,6 +96,8 @@ def map2contig():
             for line1 in infile.xreadlines():
                 line1 = line1.replace("\n","")
                 ldata = line1.split("\t")
+                if "Warning" in line1 or "warning" in line1:
+                    continue 
                 if len(ldata) < 6:
                     continue
                 read = ldata[0]

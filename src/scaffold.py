@@ -53,7 +53,7 @@ def Scaffold(input,output):
           _skipsteps.append("FindScaffoldORFS")
           return 0
 
-       if _asm == "soap":
+       if _asm == "soap" or _asm == "none":
            for lib in _readlibs:
         
                if lib.format == "fasta":

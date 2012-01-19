@@ -101,10 +101,12 @@ def Postprocess(input,output):
            print "ERROR: No Krona html file available! skipping"
    #webbrowser.open_new(output.html)
    #webbrowser.open_new_tab(output.html)
+   run_process(_settings, "cp -r %s/Preprocess/out/*.fastqc %s/Postprocess/out"%(_settings.rundir, _settings.rundir), "Postprocess")
    run_process(_settings, "cp %s/Abundance/out/%s.classify.txt %s/Postprocess/out/. "%(_settings.rundir,_settings.PREFIX,_settings.rundir),"Postprocess")
    run_process(_settings, "cp %s/Scaffold/out/%s.linearize.scaffolds.final %s/Postprocess/out/%s.scf.fa"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Postprocess")
    run_process(_settings, "ln -t %s/Postprocess/out/ -s %s/Scaffold/in/%s.bnk "%(_settings.rundir,_settings.rundir,_settings.PREFIX),"Postprocess")
-   run_process(_settings, "python %s/python/create_report.py %s/Abundance/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/ %s/Postprocess/out/%s.scf.fa %s %s"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.AMOS),"Postprocess")   
+#   print "python %s/python/create_report.py %s/Abundance/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/ %s/Postprocess/out/%s.scf.fa %s %s %d"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.AMOS, len(_readlibs))
+   run_process(_settings, "python %s/python/create_report.py %s/Abundance/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/ %s/Postprocess/out/%s.scf.fa %s %s %d"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.AMOS, len(_readlibs)),"Postprocess")
    #webbrowser.open_new_tab(createreport.html)
    if openbrowser:
        if os.path.exists("%s/Postprocess/out/summary.html"%(_settings.rundir)):

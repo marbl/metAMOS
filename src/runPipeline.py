@@ -27,7 +27,7 @@ def usage():
     print "-a = <assembler>: genome assembler to use"
     print "-n = <runPipeline step>: step to skip in pipeline"
     print "-p = <int>: number of threads to use (be greedy!)"
-    print "-q: produce FastQC quality report for reads? (default = NO)"
+    print "-q: produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)"
     print "-t: filter input reads? (default = NO)"
     print "-f = <runPipeline step>: force this step to be run"
     print "-v: verbose output? (default = NO)"
@@ -37,7 +37,7 @@ def usage():
     #print "options: annotate, stopafter, startafter, fq, fa"
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hrbd:s:e:o:k:c:a:n:p:tf:vm4", ["help", "retainBank""bowtie","projectdir","startat","endat", "minoverlap","kmersize","classifier","assembler","skipsteps","threads","filter","forcesteps","verbose","metaphyler","454"])
+    opts, args = getopt.getopt(sys.argv[1:], "hrbd:s:e:o:k:c:a:n:p:qtf:vm4", ["help", "retainBank""bowtie","projectdir","startat","endat", "minoverlap","kmersize","classifier","assembler","skipsteps","threads","filter","forcesteps","verbose","metaphyler","454"])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -331,7 +331,7 @@ if __name__ == "__main__":
     import postprocess
 
     # initialize submodules
-    preprocess.init(readlibs, skipsteps, asm)
+    preprocess.init(readlibs, skipsteps, asm, run_fastqc)
     assemble.init(readlibs, skipsteps, asm)
     findorfs.init(readlibs, skipsteps, asm)
     findreps.init(readlibs, skipsteps)

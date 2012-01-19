@@ -17,13 +17,14 @@ import helper
 
 if __name__ == "__main__":
     if len(sys.argv) < 5:
-        print "usage: create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm> <Utils dir> <run dir>"
+        print "usage: create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm> <Utils dir> <run dir> <# of libs>"
         sys.exit(0)
     rund = sys.argv[6]
     utils = sys.argv[5]
     prefix = sys.argv[3]
     ref_asm = sys.argv[4]
     mp = open(sys.argv[1],'r')
+    nLibs = int(sys.argv[7])
     #mp2 = open(sys.argv[1].replace("s12","s3"),'r')    
     if not os.path.exists(prefix+"asmstats.out"):
         os.system("perl %s/perl/statistics.pl %s > %sasmstats.out"%(utils,sys.argv[4],prefix))        
@@ -106,7 +107,10 @@ if __name__ == "__main__":
 #    chart2.set_axis_labels(Axis.BOTTOM, ids)
 
     # Download the chart
-    chart2.download(prefix+'abund.png')
+    try:
+        chart2.download(prefix+'abund.png')
+    except:
+        print "Warning: could not download abund.png"
 
     chart = GroupedHorizontalBarChart(600, 500, x_range=(0,100))
     chart.set_bar_width(30)
@@ -131,7 +135,11 @@ if __name__ == "__main__":
     index = chart.set_axis_labels(Axis.LEFT, ['Phylum'])
     chart.set_axis_style(index, '202020', font_size=10, alignment=0)
     chart.set_axis_positions(index, [50])
-    chart.download(prefix+'bar-phylum.png')
+    
+    try:
+        chart.download(prefix+'bar-phylum.png')
+    except:
+        print "Warning: could not download bar-phylum.png"
     
     dt = datetime.now()
     ds = dt.strftime("%A, %d. %B %Y %I:%M%p")
@@ -166,6 +174,38 @@ if __name__ == "__main__":
 #    page.li( items[1] )
     page.ul.close( )
     page.div.close()
+    
+    nQC = 0
+    for i in range(1, nLibs + 1):
+        if os.path.exists("%s/lib%d.1.fastqc/fastqc_report.html"%(prefix, i)):
+            nQC = nQC + 1
+    
+    if nQC > 0:
+        page.p("FastQC quality reports")
+        page.table()
+        page.tr()
+        page.th("Library")
+        page.th("First")
+        page.th("Second")
+        page.tr.close()
+        for i in range(1, nLibs + 1):
+#            print "%s/lib%d.1.fastqc.html"%(prefix, i)
+            if os.path.exists("%s/lib%d.1.fastqc/fastqc_report.html"%(prefix, i)):
+                page.tr()
+                page.td(i)
+                page.td('<a target="_blank" href="%s/lib%d.1.fastqc/fastqc_report.html">report</a>'%(prefix, i))
+                if os.path.exists("%s/lib%d.2.fastqc/fastqc_report.html"%(prefix, i)):
+                    page.td('<a target="_blank" href="%s/lib%d.2.fastqc/fastqc_report.html">report</a>'%(prefix, i))
+                else:
+                    page.td()
+                page.tr.close()
+        page.table.close()
+        page.br()
+    
+    # TODO: do we want this? also, test -BDO
+    #if os.path.exists("%s/Annotate/out/report.krona.html"%prefix):
+    #    page.iframe(src="%s/Annotate/out/report.krona.html"%prefix, width="100%", height="600px")
+    
     page.div( id_='wrapper')
     #page.div( id_="content")
     

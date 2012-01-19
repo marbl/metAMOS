@@ -11,16 +11,19 @@ from ruffus import *
 _readlibs = []
 _skipsteps = []
 _asm = None
+_run_fastqc = False
 _settings = Settings() 
 
-def init(reads, skipsteps, asm):
+def init(reads, skipsteps, asm, run_fastqc):
    global _readlibs
    global _skipsteps
    global _asm
+   global _run_fastqc
 
    _readlibs = reads
    _skipsteps = skipsteps
    _asm = asm
+   _run_fastqc = run_fastqc
 
 def LCS(S1, S2):
     M = [[0]*(1+len(S2)) for i in xrange(1+len(S1))]
@@ -422,7 +425,7 @@ def Preprocess(input,output):
                run_process(_settings, "unlink %s/Preprocess/out/lib%d.sff"%(_settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "ln -s %s %s/Preprocess/out/lib%d.sff"%(read.path, _settings.rundir, lib.id), "Preprocess")
 
-               if _asm == "newbler":
+               if _asm == "newbler" and not _run_fastqc:
                   run_process(_settings, "touch %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.id), "Preprocess");
                else:
                   if not os.path.exists(_settings.CA + os.sep + "sffToCA"):
@@ -432,7 +435,7 @@ def Preprocess(input,output):
                   # generate the fasta files from the sff file
                   run_process(_settings, "rm -rf %s/Preprocess/out/%s.tmpStore"%(_settings.rundir, _settings.PREFIX), "Preprocess")
                   run_process(_settings, "rm -rf %s/Preprocess/out/%s.gkpStore"%(_settings.rundir, _settings.PREFIX), "Preprocess")
-                  run_process(_settings, "unlink %s/Preprocess/out/%s.frg"%(_settings.rundir, settings.PREFIX), "Preprocess")
+                  run_process(_settings, "unlink %s/Preprocess/out/%s.frg"%(_settings.rundir, _settings.PREFIX), "Preprocess")
                   sffToCACmd = "%s/sffToCA -clear discard-n "%(_settings.CA)
                   if lib.linkerType != "flx":
                      sffToCACmd += "-clear 454 "
@@ -443,17 +446,17 @@ def Preprocess(input,output):
                       run_process(_settings, "%s %s"%(sffToCACmd, read.path),"Preprocess")
                   run_process(_settings, "%s/gatekeeper -T -F -o %s/Preprocess/out/%s.gkpStore %s/Preprocess/out/lib%d.frg"%(_settings.CA, _settings.rundir, _settings.PREFIX, _settings.rundir, lib.id),"Preprocess")
                   run_process(_settings, "%s/gatekeeper -dumpnewbler %s/Preprocess/out/lib%d %s/Preprocess/out/%s.gkpStore"%(_settings.CA, _settings.rundir, lib.id, _settings.rundir, _settings.PREFIX),"Preprocess")
-                  run_process(_settings, "%s/gatekeeper -dumpfastq   %s/Preprocess/out/lib%d %s/Preprocess/out/%s.gkpStore"%(_settings.CA, _settings.rundir, lib.id, _settings.rundir, PREFIX), "Preprocess")
-                  run_process(_settings, "%s/gatekeeper -dumplibraries -tabular %s/Preprocess/out/%s.gkpStore |awk '{if (match($3, \"U\") == 0 && match($1, \"UID\") == 0) print \"library\t\"$1\"\t\"$4-$5*3\"\t\"$4+$5*3}' >> %s/Preprocess/out/all.seq.mates"%(_settings.CA, _settings.rundir, PREFIX, _settings.rundir),"Preprocess")
-                  run_process(_settings, "%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3\"\t\"$5}' >> %s/Preprocess/out/all.seq.mates"%(_settings.CA, _settings.rundir, PREFIX, _settings.rundir),"Preprocess")
-                  run_process(_settings, "%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3}' > %s/Preprocess/out/lib%d.seq.mates"%(_settings.CA, _settings.rundir, PREFIX, _settings.rundir, lib.id), "Preprocess")
+                  run_process(_settings, "%s/gatekeeper -dumpfastq   %s/Preprocess/out/lib%d %s/Preprocess/out/%s.gkpStore"%(_settings.CA, _settings.rundir, lib.id, _settings.rundir, _settings.PREFIX), "Preprocess")
+                  run_process(_settings, "%s/gatekeeper -dumplibraries -tabular %s/Preprocess/out/%s.gkpStore |awk '{if (match($3, \"U\") == 0 && match($1, \"UID\") == 0) print \"library\t\"$1\"\t\"$4-$5*3\"\t\"$4+$5*3}' >> %s/Preprocess/out/all.seq.mates"%(_settings.CA, _settings.rundir, _settings.PREFIX, _settings.rundir),"Preprocess")
+                  run_process(_settings, "%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3\"\t\"$5}' >> %s/Preprocess/out/all.seq.mates"%(_settings.CA, _settings.rundir, _settings.PREFIX, _settings.rundir),"Preprocess")
+                  run_process(_settings, "%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3}' > %s/Preprocess/out/lib%d.seq.mates"%(_settings.CA, _settings.rundir, _settings.PREFIX, _settings.rundir, lib.id), "Preprocess")
                   run_process(_settings, "unlink %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.id),"Preprocess")
-                  run_process(_settings, "ln -s %s/Preprocess/out/lib%d.fna %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.id,rundir,lib.id),"Preprocess")
-                  run_process(_settings, "ln -s %s/Preprocess/out/lib%d.fna.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.rundir,lib.id,rundir,lib.id),"Preprocess")
-                  run_process(_settings, "rm -rf %s/Preproces/out/%s.gkpStore"%(_settings.rundir, PREFIX),"Preprocess")
+                  run_process(_settings, "ln -s %s/Preprocess/out/lib%d.fna %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.id,_settings.rundir,lib.id),"Preprocess")
+                  run_process(_settings, "ln -s %s/Preprocess/out/lib%d.fna.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.rundir,lib.id,_settings.rundir,lib.id),"Preprocess")
+                  run_process(_settings, "rm -rf %s/Preproces/out/%s.gkpStore"%(_settings.rundir, _settings.PREFIX),"Preprocess")
                   run_process(_settings, "cat %s/Preprocess/out/lib%d.seq.mates >> %s/Preprocess/out/all.seq.mates"%(_settings.rundir, lib.id, _settings.rundir), "Preprocess")
 
-                  if _asm != "CA":
+                  if _asm != "CA" and _asm != "newbler":
                      #flip the type to fastq
                      lib.format = "fastq"
                      lib.interleaved = False
@@ -467,10 +470,10 @@ def Preprocess(input,output):
                run_process(_settings, "ln -s %s/Preprocess/in/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.rundir,lib.f1.fname,rundir,lib.id),"Preprocess")
                run_process(_settings, "touch %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir,lib.id),"Preprocess")
            elif lib.format == "fastq" and not lib.mated:
-               run_process(_settings, "ln -s %s/Preprocess/in/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.fq, fname, _settings.rundir, lib.id), "Preprocess")
+               run_process(_settings, "ln -s %s/Preprocess/in/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "touch %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir, lib.id), "Preprocess")
            elif lib.format == "fasta" and lib.mated and not lib.interleaved:
-               #FIXME, make me faster!
+               #FIXME, make me faster!filter
                run_process(_settings, "perl %s/perl/shuffleSequences_fasta.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname, _settings.rundir,lib.f2.fname,rundir,lib.id),"Preprocess")
                run_process(_settings, "python %s/python/extract_mates_from_fasta.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
                run_process(_settings, "unlink %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir, lib.id),"Preprocess")
@@ -493,15 +496,42 @@ def Preprocess(input,output):
            #elif _asm == "amos":
            #    #call toAmos_new              
            #    pass
-   if run_fastqc == True:
+#   print "%s\n"%filter;
+   if _run_fastqc:
        if not os.path.exists(_settings.FASTQC + os.sep + "fastqc"):
            print "Error: FastQC not found in %s. Please check your path and try again.\n"%(_settings.FASTQC)
            raise(JobSignalledBreak)
-
-       fastqFiles = ''
+       fastqFiles = []
+       reportNames = []
+#       print "format: %s"%lib.format
        for lib in _readlibs:
            if lib.format == "fastq":
-               for read in lib.reads:
-                   fastqFiles += " %s"%(read.path)
-       run_process(_settings, "%s%s%s%s"%(_settings.FASTQC, os.sep, "fastqc", fastqFiles), "Preprocess")
+               fastqFiles.append("%s/Preprocess/out/%s"%(_settings.rundir, lib.f1.fname))
+               if lib.mated == True and not lib.interleaved:
+                   fastqFiles.append("%s/Preprocess/out/%s"%(_settings.rundir, lib.f2.fname))
+           elif lib.format == "sff":
+               # fastq files will have been generated but not assigned to f1 and f2
+               if lib.mated == True:
+                   fastqFiles.append("%s/Preprocess/out/lib%d.1.fastq"%(_settings.rundir, lib.id))
+                   fastqFiles.append("%s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir, lib.id))
+               else:
+                   fastqFiles.append("%s/Preprocess/out/lib%d.unmated.fastq"%(_settings.rundir, lib.id))
+           if lib.format == "fastq" or lib.format == "sff":
+               reportNames.append("lib%d.1"%(lib.id))
+               if lib.mated == True and not lib.interleaved:
+                   reportNames.append("lib%d.2"%(lib.id))
+       if len(fastqFiles) == 0:
+           print "Warning: no fastq files found in libs; FastQC will not run.\n"
+       else:
+           fastQCCmd = "%s%s%s -t %s %s\n"%(_settings.FASTQC, os.sep, "fastqc", _settings.threads, ' '.join(fastqFiles))
+           #print "%s\n"%fastQCCmd
+           run_process(_settings, fastQCCmd, "Preprocess")
+           for i, fastqFile in enumerate(fastqFiles):
+               reportFile = "%s_fastqc"%fastqFile.replace(".fastq", "")
+               if os.path.exists(reportFile):
+                   run_process(_settings, "mv %s %s/Preprocess/out/%s.fastqc"%(reportFile, _settings.rundir, reportNames[i]), "Preprocess")
+               else:
+                   print "Warning: FastQC did not generate %s.\n"%reportFile
+                   #raise(JobSignalledBreak)
+
    run_process(_settings, "touch %s/Preprocess/out/preprocess.success"%(_settings.rundir),"Preprocess")

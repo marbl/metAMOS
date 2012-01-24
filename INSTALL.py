@@ -16,6 +16,7 @@ if not os.path.exists("./FastQC"):
         os.system("wget http://www.bioinformatics.bbsrc.ac.uk/projects/fastqc/%s" % archive)
         os.system("unzip %s" % archive)
         os.system("rm %s" % archive)
+        os.system("chmod u+x FastQC/fastqc")
 
 if not os.path.exists("./Utilities/DB/refseq_protein.pal"):
     print "refseq protein DB not found, needed for Annotate step, download now?"
@@ -64,9 +65,11 @@ if not os.path.exists("./CA"):
    print "Celera Assembler binaries not found, optional for Assemble step, download now?"
    dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':
-      os.system("wget http://dl.dropbox.com/u/51616170/wgs-assembler-112211.tar.gz")
-      os.system("tar -xvzf wgs-assembler-112211.tar.gz")
-      os.system("rm -rf wgs-assembler-112211.tar.gz")
+      os.system("wget http://sourceforge.net/projects/wgs-assembler/files/wgs-assembler/wgs-7.0/wgs-7.0-PacBio-Linux-amd64.tar.bz2/download")
+      os.system("bunzip2 wgs-7.0-PacBio-Linux-amd64.tar.bz2")
+      os.system("tar xvf wgs-7.0-PacBio-Linux-amd64.tar")
+      os.system("rm -rf wgs-7.0-PacBio-Linux-amd64.tar")
+      os.system("mv wgs-7.0 CA")
 
 # make sure we have setuptools available
 sys.path.append(sys.path[0] + os.sep + "Utilities" + os.sep + "python")

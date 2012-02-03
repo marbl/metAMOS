@@ -37,7 +37,7 @@ def usage():
     #print "options: annotate, stopafter, startafter, fq, fa"
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hrbd:s:e:o:k:c:a:n:p:qtf:vm4", ["help", "retainBank""bowtie","projectdir","startat","endat", "minoverlap","kmersize","classifier","assembler","skipsteps","threads","filter","forcesteps","verbose","metaphyler","454"])
+    opts, args = getopt.getopt(sys.argv[1:], "hrbd:s:e:o:k:c:a:n:p:qtf:vm4g:", ["help", "retainBank""bowtie","projectdir","startat","endat", "minoverlap","kmersize","classifier","assembler","skipsteps","threads","filter","forcesteps","verbose","metaphyler","454","genecaller"])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -62,6 +62,7 @@ runfast = False
 cls = None
 retainBank = False
 asm = "soap"
+orf = "metagenemark"
 fff = ""
 readlen = 75
 fqlibs = {}
@@ -127,6 +128,9 @@ for o, a in opts:
         asm = a
         if asm == "metaidba":
             bowtie_mapping = 1
+
+    elif o in ("-g","--genecaller"):
+        orf = a
     elif o in ("-f","--fastest"):
         #tweak all parameters to run fast
         #bambus2, use SOAP, etc
@@ -333,7 +337,7 @@ if __name__ == "__main__":
     # initialize submodules
     preprocess.init(readlibs, skipsteps, asm, run_fastqc)
     assemble.init(readlibs, skipsteps, asm)
-    findorfs.init(readlibs, skipsteps, asm)
+    findorfs.init(readlibs, skipsteps, asm, orf)
     findreps.init(readlibs, skipsteps)
     annotate.init(readlibs, skipsteps, cls)
     abundance.init(readlibs, skipsteps)

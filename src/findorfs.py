@@ -13,15 +13,17 @@ _readlibs = []
 _skipsteps = []
 _asm = None
 _settings = Settings()
+_orf = None 
 
-def init(reads, skipsteps, asm):
+def init(reads, skipsteps, asm, orf):
    global _readlibs
    global _skipsteps
    global _asm
-
+   global _orf
    _readlibs = reads
    _skipsteps = skipsteps
    _asm = asm
+   _orf = orf
 
 def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
     coverageFile = open("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, _settings.PREFIX), 'r')
@@ -139,7 +141,7 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
         genecnt = 1
 
         if not is_scaff:
-            if key in cvg_dict:
+            if key in cvg_dict.keys():
                 cvgg.write("%s_gene%d\t%s\n"%(key,genecnt,cvg_dict[key])) 
             else:
                 cvgg.write("%s_gene%d\t%s\n"%(key,genecnt, 1.0))
@@ -162,6 +164,44 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
             outf2.write(">%s_gene%d\n%s"%(key,genecnt,gene))
 #        print gene_dict[key][0]
     outf.close()
+    cvgg.close()
+
+def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS"):
+    coverageFile = open("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, _settings.PREFIX), 'r')
+    cvg_dict = {} 
+
+    for line in coverageFile:
+        data = line.split()
+        cvg_dict[data[0]] = float(data[1])
+    coverageFile.close()
+    genefile = ""
+    if is_scaff:
+        genefile = open("%s/FindScaffoldORFS/out/%s.orfs.ffn"%(_settings.rundir,_settings.PREFIX),'r')
+        cvgg = open("%s/FindScaffoldORFS/out/%s.gene.cvg"%(_settings.rundir,_settings.PREFIX),'w')
+    else:
+        genefile = open("%s/FindORFS/out/%s.orfs.ffn"%(_settings.rundir,_settings.PREFIX),'r')
+        cvgg = open("%s/FindORFS/out/%s.gene.cvg"%(_settings.rundir,_settings.PREFIX),'w')
+    orfs = {}
+  
+    data = genefile.read()
+    seqs = data.split(">")[1:]
+    gene_ids = []    
+    for seq in seqs:
+        hdr,gene = seq.split("\n",1)
+        hdr = hdr.split("\n")[0]
+        gene_ids.append(hdr)
+    for key in gene_ids:
+        genecnt = 1
+        gkey = ""
+        if not is_scaff:
+            for ckey in cvg_dict.keys():
+                if ckey in key:
+                    gkey = ckey
+            
+            if gkey != "":
+                cvgg.write("%s\t%s\n"%(key,cvg_dict[gkey])) 
+            else:
+                cvgg.write("%s\t%s\n"%(key,1.0))
     cvgg.close()
 
 @follows(Assemble)
@@ -189,11 +229,23 @@ def FindORFS(input,output):
 
 
    #run_process(_settings, "ln -t %s/FindORFS/in/ -s %s/Assemble/out/%s.asm.scafSeq.contigs"%(_settings.rundir,_settings.rundir,_settings.PREFIX))
-   run_process(_settings, "%s/gmhmmp -o %s/FindORFS/out/%s.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/FindORFS/in/%s.asm.contig"%(_settings.GMHMMP,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX),"FindORFS")
-   parse_genemarkout("%s/FindORFS/out/%s.orfs"%(_settings.rundir,_settings.PREFIX))
-   run_process(_settings, "unlink %s/Annotate/in/%s.faa"%(_settings.rundir,_settings.PREFIX),"FindORFS")
-   run_process(_settings, "unlink %s/Annotate/in/%s.fna"%(_settings.rundir,_settings.PREFIX),"FindORFS")
-   run_process(_settings, "unlink %s/FindRepeats/in/%s.fna"%(_settings.rundir,_settings.PREFIX),"FindORFS")
-   run_process(_settings, "ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
-   run_process(_settings, "ln -t %s/FindRepeats/in/ -s %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
-
+   if _orf == "metagenemark":
+       run_process(_settings, "%s/gmhmmp -o %s/FindORFS/out/%s.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/FindORFS/in/%s.asm.contig"%(_settings.GMHMMP,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX),"FindORFS")
+       parse_genemarkout("%s/FindORFS/out/%s.orfs"%(_settings.rundir,_settings.PREFIX))
+       run_process(_settings, "unlink %s/Annotate/in/%s.faa"%(_settings.rundir,_settings.PREFIX),"FindORFS")
+       run_process(_settings, "unlink %s/Annotate/in/%s.fna"%(_settings.rundir,_settings.PREFIX),"FindORFS")
+       run_process(_settings, "unlink %s/FindRepeats/in/%s.fna"%(_settings.rundir,_settings.PREFIX),"FindORFS")
+       run_process(_settings, "ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
+       run_process(_settings, "ln -t %s/FindRepeats/in/ -s %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
+   elif _orf == "fraggenescan":
+       run_process(_settings,"%s/FragGeneScan -s %s/FindORFS/in/%s.asm.contig -o %s/FindORFS/out/%s.orfs -w 0 -t complete"%(_settings.FRAGGENESCAN,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX))
+       parse_fraggenescanout("%s/FindORFS/out/%s.orfs"%(_settings.rundir,_settings.PREFIX))
+       run_process(_settings,"cp %s/FindORFS/out/%s.orfs.ffn %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")
+       run_process(_settings,"cp %s/FindORFS/out/%s.orfs.faa %s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")
+       run_process(_settings,"cp %s/FindORFS/out/%s.orfs.ffn %s/Annotate/in/%s.fna"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")
+       run_process(_settings,"cp %s/FindORFS/out/%s.orfs.faa %s/Annotate/in/%s.faa"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")
+       run_process(_settings,"cp %s/FindORFS/out/%s.orfs.ffn %s/FindRepeats/in/%s.fna"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")
+       run_process(_settings,"cp %s/FindORFS/out/%s.orfs.faa %s/FindRepeats/in/%s.faa"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")
+   else:
+       #not recognized
+       return 1

@@ -38,7 +38,7 @@ class Settings:
    BOWTIE = ""
 
    GMHMMP = ""
-
+   FRAGGENESCAN = ""
    FCP = ""
    PHMMER = ""
    BLAST = ""
@@ -83,6 +83,7 @@ class Settings:
       Settings.BOWTIE        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
 
       Settings.GMHMMP        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.FRAGGENESCAN      = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
 
       Settings.FCP           = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.PHMMER        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
@@ -352,6 +353,11 @@ def initConfig(kmer, threads, theRundir):
        Settings.GMHMMP = getFromPath("gmhmmp", "GeneMark.hmm")
     gmhmmpMD5 = getMD5Sum(Settings.GMHMMP + os.sep + "gmhmmp")
 
+    Settings.FRAGGENESCAN = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+    if not os.path.exists(Settings.FRAGGENESCAN + os.sep + "FragGeneScan"):
+       Settings.FRAGGENESCAN = getFromPath("FragGeneScan","FragGeneScan")
+    fraggenescanMD5 = getMD5Sum(Settings.FRAGGENESCAN + os.sep + "FragGeneScan")
+
     Settings.FCP = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
     if not os.path.exists(Settings.FCP + os.sep + "fcp"):
        Settings.FCP = getFromPath("fcp", "FCP")
@@ -395,6 +401,7 @@ def initConfig(kmer, threads, theRundir):
     conf.write("Velvet:\t\t\t%s\t%s\nVelvet-SC:\t\t%s\t%s\n"%(Settings.VELVET, velvetMD5, Settings.VELVET_SC, velvetSCMD5))
     conf.write("Bowtie:\t\t\t%s\t%s\n"%(Settings.BOWTIE, bowtieMD5))
     conf.write("GMHMMP:\t\t\t%s\t%s\n"%(Settings.GMHMMP, gmhmmpMD5))
+    conf.write("FRAGGENESCAN:\t\t\t%s\t%s\n"%(Settings.FRAGGENESCAN, fraggenescanMD5))
     conf.write("FCP:\t\t\t%s\t%s\n"%(Settings.FCP, fcpMD5))
     conf.write("PHMMER:\t\t\t%s\t%s\n"%(Settings.PHMMER, phmmerMD5))
     conf.write("BLAST:\t\t\t%s\t%s\n"%(Settings.BLAST, blastMD5))

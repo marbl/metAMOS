@@ -362,7 +362,7 @@ def Assemble(input,output):
       #if OK, convert output to AMOS
    elif _asm == "metaidba":
       bowtie_mapping = 1
-      for lib in readlibs:
+      for lib in _readlibs:
           if lib.format != "fasta"  or (lib.mated and not lib.interleaved):
               print "ERROR: meta-IDBA requires reads to be in (interleaved) fasta format, cannot run"
               sys.exit(1)
@@ -388,7 +388,7 @@ def Assemble(input,output):
          if (len(mymatch) == 1 and mymatch[0] != None):
             NEWBLER_VERSION = float(mymatch[0])
 
-      for lib in readlibs:
+      for lib in _readlibs:
           if lib.format == "fasta":
               run_process(_settings, "%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(_settings.NEWBLER, _settings.rundir, _settings.rundir,lib.id),"Assemble")
           elif lib.format == "sff":
@@ -432,7 +432,7 @@ def Assemble(input,output):
       #runCA script
       frglist = ""
       matedString = ""
-      for lib in readlibs:
+      for lib in _readlibs:
           for read in lib.reads:
               if read.format == "fastq":
                   if lib.mated:

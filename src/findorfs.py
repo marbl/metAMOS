@@ -5,6 +5,7 @@ from operator import itemgetter
 
 from utils import *
 from assemble import Assemble
+from mapreads import MapReads
 
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
@@ -204,7 +205,7 @@ def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS"):
                 cvgg.write("%s\t%s\n"%(key,1.0))
     cvgg.close()
 
-@follows(Assemble)
+@follows(MapReads)
 @files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.PREFIX))
 def FindORFS(input,output):
    if "FindORFS" in _skipsteps:

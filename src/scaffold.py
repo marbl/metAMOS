@@ -5,6 +5,7 @@ from operator import itemgetter
 
 from utils import *
 from findreps import FindRepeats
+from annotate import Annotate
 
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
@@ -33,7 +34,7 @@ def init(reads, skipsteps, retainBank, asm):
          _mated = True
          break
 
-@follows(FindRepeats)
+@follows(FindRepeats,Annotate)
 @files(["%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX)],"%s/Scaffold/out/%s.scaffolds.final"%(_settings.rundir,_settings.PREFIX))
 def Scaffold(input,output):
    # check if we need to do scaffolding

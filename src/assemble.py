@@ -5,7 +5,6 @@ from operator import itemgetter
 
 from utils import *
 from preprocess import Preprocess
-
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
 
@@ -13,218 +12,19 @@ _readlibs = []
 _skipsteps = []
 _settings = Settings()
 _asm = None
+_usecontigs = False
 
-def init(reads, skipsteps, asm):
+def init(reads, skipsteps, asm, usecontigs):
    global _readlibs
    global _asm
    global _skipsteps
-
+   global _usecontigs
    _readlibs = reads
    _skipsteps = skipsteps
    _asm = asm
-
-def map2contig():
-    bowtie_mapping = 1
-    
-    readDir = ""
-    asmDir = ""
-    #threads = 0
-    #run_process(_settings, "cp %s/Assemble/out/%s.asm.contig2 %s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX))
-    tigr_file = open("%s/Assemble/out/%s.asm.tigr"%(_settings.rundir,_settings.PREFIX),'w')
-    contigfile = open("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),'r')
-
-    seqdict = {}
-    hdr = ""
-    cnt = 0
-    contigdict = {}
-    contigdict2 = {}
-    readdict = {}
-    matedict = {}
-    ctgmates = 0
-    matectgdict = {}
-    mateotdict = {}
-    read_lookup = {}
-    readcnt = 1
-
-    for lib in _readlibs:
-         
-
-        matefile = open("%s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir,lib.id),'r')
-        matedict[lib.id] = {}
-        for line in matefile.xreadlines():
-            line = line.replace("\n","")
-            mate1, mate2 = line.split("\t")
-            mate1 = mate1.replace("@","").replace(">","")
-            mate2 = mate2.replace("@","").replace(">","")
-            matedict[lib.id][mate2] = mate1
-            #matedict[lib.id][mate1] = mate2
-            read_lookup[readcnt] = mate1
-            read_lookup[readcnt+1] = mate2
-            readcnt += 2
-    if bowtie_mapping == 1:
-        for lib in _readlibs:
-            seqfile = open("%s/Preprocess/out/lib%d.seq.btfilt"%(_settings.rundir,lib.id),'w')
-
-
-            #trim to 25bp
-            trim = 0
-            if trim:
-                f1 = open("%s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.id))
-                f2 = open("%s/Preprocess/out/lib%d.seq.trim"%(_settings.rundir,lib.id),'w')
-                linecnt = 1
-                for line in f1.xreadlines():
-                    if linecnt % 2 == 0:
-                        f2.write(line[0:25]+"\n")
-                    else:
-                        f2.write(line)
-                    linecnt +=1
-                f1.close()
-                f2.close()
-            if not os.path.exists("%s/Assemble/out/IDX.1.ebwt"%(_settings.rundir)):
-                run_process(_settings, "%s/bowtie-build -o 2 %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir),"Scaffold")
-            #run_process(_settings, "%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir))
-            if "bowtie" not in _skipsteps and (lib.format == "fasta" or lib.format == "sff"):
-                if trim:
-                    run_process(_settings, "%s/bowtie -p %d -f -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/%s.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX),"Scaffold")
-                else:
-                    run_process(_settings, "%s/bowtie -p %d -f -l 25 -e 140 --best --strata -m 10 -k 1 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/%s.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX))
-            elif "bowtie" not in _skipsteps and lib.format != "fasta":
-                if trim:
-                    run_process(_settings, "%s/bowtie  -p %d -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/%s.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX),"Scaffold")
-                else:
-                    run_process(_settings, "%s/bowtie  -p %d -l 25 -e 140 --best --strata -m 10 -k 1 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/%s.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX),"Scaffold")
-            infile = open("%s/Assemble/out/%s.bout"%(_settings.rundir,_settings.PREFIX),'r')
-            for line1 in infile.xreadlines():
-                line1 = line1.replace("\n","")
-                ldata = line1.split("\t")
-                if "Warning" in line1 or "warning" in line1:
-                    continue 
-                if len(ldata) < 6:
-                    continue
-                read = ldata[0]
-                strand = ldata[1]
-                contig = ldata[2]
-                spos = ldata[3] 
-                read_seq = ldata[4]
-                read_qual = ldata[5]
-                read = read.split(" ")[0]
-                epos = int(spos)+len(read_seq)
-                try:
-                    contigdict[contig].append([int(spos), int(epos), strand, read,len(read_seq)])
-                except KeyError:
-                    contigdict[contig] = [[int(spos),int(epos),strand,read,len(read_seq)]]
-                #print contig
-                seqdict[read] = read_seq
-                seqfile.write(">%s\n%s\n"%(read,read_seq))
-                seqfile.flush()
-    else:
-        if 0:
- 
-            #open soap ReadOnContig
-            #some contigs are missing!
-            infile = open("%s/Assemble/out/%s.asm.readOnContig"%(_settings.rundir,_settings.PREFIX),'r')
-            #readID, ContigID, startpos, strand
-            hdr = infile.readline()
-            linecnt = 1
-            for line in infile.xreadlines():
-                if linecnt % 100000 == 0:
-                    #print linecnt,
-                    sys.stdout.flush()
-                data = line.replace("\n","").split("\t")
-                #print data
-                if len(data) < 4:
-                    continue
-                contig = data[1]
-                spos = int(data[2])
-                if spos < 0:
-                    spos = 0
-                epos = spos+readlen
-                strand = data[3]
-                read = int(data[0])
-
-                try:
-                    contigdict[contig].append([int(spos), int(spos)+epos, strand, read_lookup[read]])
-                except KeyError:
-                    contigdict[contig] = [[int(spos),int(spos)+epos,strand,read_lookup[read]]]
-                read_seq = "TEST"
-            
-                seqdict[read_lookup[read]] = read_seq
-                linecnt +=1
-        
-    contig_data = contigfile.read()
-    contig_data = contig_data.split(">")
-    errfile = open("%s/Assemble/out/contigs_wo_location_info.txt"%(_settings.rundir),'w')
-    new_ctgfile = open("%s/Assemble/out/%s.seq100.contig"%(_settings.rundir,_settings.PREFIX),'w')
-    ctgcnt = 1
-    ctgseq = 0
-    ctgsizes = []
-    n50_size = 0
-    n50_mid = 955,000
-    ctg_cvg_file = open("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir,_settings.PREFIX),'w')
-    for item in contig_data:
-        if item == '':
-            continue
-
-        item = item.split("\n",1)
-        ref = item[0].split(" ")[0]
-        ref = ref.replace("\n","")
-        cseq = item[1].replace("\n","")
-        ctgseq+=len(cseq)
-        ctgsizes.append(len(cseq))
-        i = 0
-        cpos = 0
-        width = 70
-        cseq_fmt = ""
-        while i+width < len(cseq):
-            cseq_fmt += cseq[i:i+width]+"\n"
-            i+= width
-        cseq_fmt += cseq[i:]+"\n"
-        ctgslen = len(item[1])
-        #contigdict2[ref] = item[1]
-        try:
-            tigr_file.write("##%s %d %d bases, 00000000 checksum.\n"%(ref.replace(">",""),len(contigdict[ref]), len(item[1])))
-            tigr_file.flush()
-        except KeyError:
-            #print "oops, not in mapping file\n"
-            errfile.write("%s\n"%ref)
-            continue
-        new_ctgfile.write(">%d\n%s"%(ctgcnt,cseq_fmt))#item[1]))
-        ctgcnt +=1
-        tigr_file.write(cseq_fmt)#item[1])
-        contigdict[ref].sort()
-        #print contigdict[ref]
-        try:
-            ctg_cvg_file.write("%s\t%.2f\n"%(ref,(float(len(contigdict[ref])*len(seqdict[contigdict[ref][0][3]]))/float(ctgslen))))
-        except KeyError:
-            #no reads map to this contig, skip?
-            continue
-        for read in contigdict[ref]:
-            
-            try:
-                #if read[0] <= 500 and ctgslen - (int(read[1])) <= 500:
-                matectgdict[read[-1]] = ref
-                mateotdict[read[-1]] = read[2]
-            except KeyError:
-                pass
-            if read[2] == "-":
-                tigr_file.write("#%s(%d) [RC] %d bases, 00000000 checksum. {%d 1} <%d %d>\n"%(read[3],read[0]-1, read[-1], read[-1], read[0], read[1]))
-            else:
-                tigr_file.write("#%s(%d) [] %d bases, 00000000 checksum. {1 %d} <%d %d>\n"%(read[3],read[0]-1, read[-1], read[-1], read[0], read[1]))
-            tigr_file.write(seqdict[read[3]]+"\n")
-
-   
-
-    for lib in _readlibs:
-        new_matefile = open("%s/Assemble/out/%s.lib%d.mappedmates"%(_settings.rundir,_settings.PREFIX,lib.id),'w')
-        new_matefile.write("library\t%d\t%d\t%d\n"%(lib.id,lib.mmin,lib.mmax))
-        #    for lib in _readlibs:
-        linked_contigs = {}
-        for mate in matedict[lib.id].keys():
-            new_matefile.write("%s\t%s\t%d\n"%(mate,matedict[lib.id][mate],lib.id))
-            new_matefile.flush()
-            continue
-    ctg_cvg_file.close()
-    tigr_file.close()
+   _usecontigs = usecontigs
+   if _usecontigs:
+       _asm = None
 
 def extractNewblerReads():
    run_process(_settings, "unlink %s/Preprocess/out/all.seq.mates"%(_settings.rundir), "Assemble")
@@ -465,10 +265,8 @@ def Assemble(input,output):
       print "Error: %s is an unknown assembler. No valid assembler specified."%(_asm)
       raise(JobSignalledBreak)
 
-   if 1:
-        
-       if "bowtie" not in _skipsteps:
-           map2contig()
+   #if _usecontigs:
+   #     map2contig()
    #stop here, for now
    #sys.exit(0)
    #check if sucessfully completed   

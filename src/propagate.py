@@ -5,6 +5,7 @@ from operator import itemgetter
 
 from utils import *
 from annotate import Annotate
+from scaffold import Scaffold
 from findscforfs import FindScaffoldORFS
 
 sys.path.append(INITIAL_UTILS)
@@ -23,7 +24,7 @@ def init(reads, skipsteps, cls):
    _skipsteps = skipsteps
    _cls = cls
 
-@follows(FindScaffoldORFS, Annotate)
+@follows(Scaffold)
 @files("%s/DB/class_key.tab"%(_settings.METAMOS_UTILS),"%s/Propagate/out/%s.clusters"%(_settings.rundir,_settings.PREFIX))
 def Propagate(input,output):
    #run propogate java script

@@ -17,7 +17,7 @@ def usage():
     print "options:  -a <assembler> -k <kmer size> -c <classification method> -m <enable metaphyler?> -p <num threads>  "
     print "-h: help?"
     print "-r: retain the AMOS bank?  (default = NO)"
-    print "-b: use bowtie for read mapping? (default = NO)"
+    print "-m: read mapper to use? (default = bowtie)"
     print "-d = <project dir>: directory created by initPipeline"
     print "-s = <runPipeline step>: start at this step in the pipeline"
     print "-e = <runPipeline step>: end at this step in the pipeline"
@@ -31,13 +31,12 @@ def usage():
     print "-t: filter input reads? (default = NO)"
     print "-f = <runPipeline step>: force this step to be run"
     print "-v: verbose output? (default = NO)"
-    print "-m: use metaphyler? (default = YES)"
     print "-4: 454 data? (default = NO)"
     
     #print "options: annotate, stopafter, startafter, fq, fa"
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hrbd:s:e:o:k:c:a:n:p:qtf:vm4g:", ["help", "retainBank""bowtie","projectdir","startat","endat", "minoverlap","kmersize","classifier","assembler","skipsteps","threads","filter","forcesteps","verbose","metaphyler","454","genecaller"])
+    opts, args = getopt.getopt(sys.argv[1:], "hrbd:s:e:o:k:c:a:n:p:qtf:vm:4g:", ["help", "retainBank""bowtie","projectdir","startat","endat", "minoverlap","kmersize","classifier","assembler","skipsteps","threads","filter","forcesteps","verbose","mapper","454","genecaller"])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -68,6 +67,7 @@ readlen = 75
 fqlibs = {}
 fqfrags = []
 rlibs = []
+mapper = "bowtie"
 settings = utils.Settings(31, 16, "")
 
 for o, a in opts:
@@ -112,8 +112,8 @@ for o, a in opts:
     elif o in ("-t", "--filter"):
         filter = True
 
-    elif o in ("-m", "--metaphyler"):
-        run_metaphyler = True
+    elif o in ("-m", "--mapper"):
+        mapper = a
     elif o in ("-r", "--retainBank"):
         retainBank = True
     elif o in ("-c", "--classifier"):
@@ -167,6 +167,7 @@ f1 = ""
 f2 = ""
 currlibno = 0
 newlib = ""
+usecontigs = False
 libadded = False
 for line in inf:
     line = line.replace("\n","")
@@ -180,6 +181,7 @@ for line in inf:
             continue
         utils.run_process(settings, "cp %s %s/Assemble/out/%s"%(asmc,settings.rundir,"proba.asm.contig"))
         #skipsteps.append("Assemble")
+        usecontigs = True
         asm = "none"
         bowtie_mapping = 1
     elif "format:" in line:
@@ -324,6 +326,7 @@ if __name__ == "__main__":
 
     import preprocess
     import assemble
+    import mapreads
     import findorfs
     import findreps
     import abundance
@@ -336,7 +339,8 @@ if __name__ == "__main__":
 
     # initialize submodules
     preprocess.init(readlibs, skipsteps, asm, run_fastqc,filter)
-    assemble.init(readlibs, skipsteps, asm)
+    assemble.init(readlibs, skipsteps, asm, usecontigs)
+    mapreads.init(readlibs, skipsteps, asm, mapper)
     findorfs.init(readlibs, skipsteps, asm, orf)
     findreps.init(readlibs, skipsteps)
     annotate.init(readlibs, skipsteps, cls)

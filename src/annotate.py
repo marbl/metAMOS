@@ -5,6 +5,7 @@ from operator import itemgetter
 
 from utils import *
 from findreps import FindRepeats
+#from findorfs import FindORFS
 
 sys.path.append(INITIAL_UTILS)
 from ruffus import *

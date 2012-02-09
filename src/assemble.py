@@ -29,6 +29,7 @@ def map2contig():
     readDir = ""
     asmDir = ""
     #threads = 0
+    #run_process(_settings, "cp %s/Assemble/out/%s.asm.contig2 %s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX))
     tigr_file = open("%s/Assemble/out/%s.asm.tigr"%(_settings.rundir,_settings.PREFIX),'w')
     contigfile = open("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),'r')
 
@@ -80,18 +81,18 @@ def map2contig():
                 f1.close()
                 f2.close()
             if not os.path.exists("%s/Assemble/out/IDX.1.ebwt"%(_settings.rundir)):
-                run_process(_settings, "%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir),"Scaffold")
+                run_process(_settings, "%s/bowtie-build -o 2 %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir),"Scaffold")
             #run_process(_settings, "%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir))
             if "bowtie" not in _skipsteps and (lib.format == "fasta" or lib.format == "sff"):
                 if trim:
                     run_process(_settings, "%s/bowtie -p %d -f -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/%s.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX),"Scaffold")
                 else:
-                    run_process(_settings, "%s/bowtie -p %d -f -l 28 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/%s.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX))
+                    run_process(_settings, "%s/bowtie -p %d -f -l 25 -e 140 --best --strata -m 10 -k 1 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/%s.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX))
             elif "bowtie" not in _skipsteps and lib.format != "fasta":
                 if trim:
                     run_process(_settings, "%s/bowtie  -p %d -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/%s.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX),"Scaffold")
                 else:
-                    run_process(_settings, "%s/bowtie  -p %d -l 28 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/%s.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX),"Scaffold")
+                    run_process(_settings, "%s/bowtie  -p %d -l 25 -e 140 --best --strata -m 10 -k 1 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/%s.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX),"Scaffold")
             infile = open("%s/Assemble/out/%s.bout"%(_settings.rundir,_settings.PREFIX),'r')
             for line1 in infile.xreadlines():
                 line1 = line1.replace("\n","")
@@ -278,7 +279,7 @@ def runVelvet(velvetPath, name):
       if lib.mated:
          velvethCommandLine += " -shortPaired%s "%(currLibString)
       else:
-         velvethCommandLine += " -short%s "(currLibString)
+         velvethCommandLine += " -short%s "%(currLibString)
       velvethCommandLine += "%s/Preprocess/out/lib%d.seq "%(_settings.rundir, lib.id)
       currLibID += 1
       if (currLibID > 1):
@@ -357,7 +358,12 @@ def Assemble(input,output):
       print "Running SOAPdenovo on input reads..."
       soapOptions = getProgramParams(_settings.METAMOS_UTILS, "soap.spec", "", "-") 
       #start stopwatch
-      run_process(_settings, "%s/soap63 all -p %d -K %d %s -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(_settings.SOAP, _settings.threads, _settings.kmer, soapOptions, _settings.rundir,_settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
+      if _settings.kmer > 63:
+          
+          run_process(_settings, "%s/soap127 all -p %d -R -d -K %d %s -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(_settings.SOAP, _settings.threads, _settings.kmer, soapOptions, _settings.rundir,_settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
+      else:
+          
+          run_process(_settings, "%s/soap63 all -p %d -R -d -K %d %s -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(_settings.SOAP, _settings.threads, _settings.kmer, soapOptions, _settings.rundir,_settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
 
       #if OK, convert output to AMOS
    elif _asm == "metaidba":
@@ -460,6 +466,7 @@ def Assemble(input,output):
       raise(JobSignalledBreak)
 
    if 1:
+        
        if "bowtie" not in _skipsteps:
            map2contig()
    #stop here, for now

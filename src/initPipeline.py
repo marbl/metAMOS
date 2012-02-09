@@ -39,7 +39,8 @@ class readLib:
 
     def initLib(self):
         self.mean = (self.mmin+self.mmax)/2.0
-        self.stdev = 0.1*self.mean
+        self.stdev = ((self.mean-self.mmin)+(self.mmax-self.mean))/2#0.1*self.mean
+        
 
     def validateLib(self):
         pass

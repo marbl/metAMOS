@@ -288,7 +288,7 @@ def map2contig():
         print "Old insert length min: ", lib.mmin
         print "New insert length min: ", lmin
         print "Old insert length max: ", lib.mmax
-        print "New insert length max: ", lmas
+        print "New insert length max: ", lmax
         mateheader.write("library\t%d\t%d\t%d\n"%(lib.id,lmin,lmax))
         new_matefile.close()
         badmatefile.close()

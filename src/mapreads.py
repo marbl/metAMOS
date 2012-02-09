@@ -1,6 +1,6 @@
 #!python
 
-import os, sys, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser
+import os, sys, math, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser
 from operator import itemgetter
 
 from utils import *
@@ -22,6 +22,16 @@ def init(reads, skipsteps, asm,mapper):
    _readlibs = reads
    _skipsteps = skipsteps
    _asm = asm
+
+def meanstdv(x):
+    n, mean, std = len(x), 0, 0
+    for a in x:
+       mean = mean + a
+    mean = mean / float(n)
+    for a in x:
+        std = std + (a - mean)**2
+    std = math.sqrt(std / float(n-1))
+    return mean, std
 
 def map2contig():
     bowtie_mapping = 1
@@ -45,7 +55,10 @@ def map2contig():
     mateotdict = {}
     read_lookup = {}
     readcnt = 1
-
+    mapped_reads = []
+    readcontig_dict  = {}
+    strand_dict = {}
+    fiveprimeend_dict = {}
     for lib in _readlibs:
          
 
@@ -109,6 +122,13 @@ def map2contig():
                 read_qual = ldata[5]
                 read = read.split(" ")[0]
                 epos = int(spos)+len(read_seq)
+                mapped_reads.append(read)
+                strand_dict[read] = strand
+                readcontig_dict[read] = contig
+                if strand == "+":
+                    fiveprimeend_dict[read] = int(spos)
+                else:
+                    fiveprimeend_dict[read] = int(epos)
                 try:
                     contigdict[contig].append([int(spos), int(epos), strand, read,len(read_seq)])
                 except KeyError:
@@ -215,14 +235,66 @@ def map2contig():
    
 
     for lib in _readlibs:
+        mateheader = open("%s/Assemble/out/%s.lib%d.hdr"%(_settings.rundir,_settings.PREFIX,lib.id),'w')
         new_matefile = open("%s/Assemble/out/%s.lib%d.mappedmates"%(_settings.rundir,_settings.PREFIX,lib.id),'w')
-        new_matefile.write("library\t%d\t%d\t%d\n"%(lib.id,lib.mmin,lib.mmax))
+        badmatefile = open("%s/Assemble/out/%s.lib%d.badmates"%(_settings.rundir,_settings.PREFIX,lib.id),'w')
+        ctgmatefile = open("%s/Assemble/out/%s.lib%d.mates_in_diff_contigs"%(_settings.rundir,_settings.PREFIX,lib.id),'w')
+
         #    for lib in _readlibs:
         linked_contigs = {}
+        insertlens = []
+        oldstdev = 0
         for mate in matedict[lib.id].keys():
-            new_matefile.write("%s\t%s\t%d\n"%(mate,matedict[lib.id][mate],lib.id))
+            matepair = matedict[lib.id][mate]
+            oldstdev = (lib.mmin+lib.mmax)/6
+            oldmean = (lib.mmin+lib.mmax)/2
+            oldmax = oldmean+oldstdev
+            oldmin = oldmean-oldstdev
+            if oldmin < 0:
+                oldmin = 0
+
+            if mate not in mapped_reads or matepair not in mapped_reads:
+                continue
+            if readcontig_dict[mate] != readcontig_dict[matepair]:
+                new_matefile.write("%s\t%s\t%d\n"%(mate,matepair,lib.id))
+                ctgmatefile.write("%s\t%s\t%d\n"%(mate,matepair,lib.id))
+            elif strand_dict[mate] == "+" and strand_dict[matepair] == "-":
+                new_matefile.write("%s\t%s\t%d\n"%(mate,matepair,lib.id))
+                ilen = fiveprimeend_dict[matepair]-fiveprimeend_dict[mate]
+                if ilen < oldmax and ilen > oldmin:
+                    insertlens.append(ilen)
+            elif strand_dict[mate] == "-" and strand_dict[matepair] == "+":
+                new_matefile.write("%s\t%s\t%d\n"%(matepair,mate,lib.id))
+                ilen = fiveprimeend_dict[matepair]-fiveprimeend_dict[mate]
+                if ilen < oldmax and ilen > oldmin:
+                    insertlens.append(ilen)
+
+            elif strand_dict[mate] == "+" and strand_dict[matepair] == "+":
+                #output to file
+                badmatefile.write("%s\t%s\t%d\n"%(mate,matepair,lib.id))
+            elif strand_dict[mate] == "-" and strand_dict[matepair] == "-":
+                #output to file
+                badmatefile.write("%s\t%s\t%d\n"%(mate,matepair,lib.id))
             new_matefile.flush()
+            badmatefile.flush()
+            ctgmatefile.flush()
             continue
+        lmin = min(insertlens)
+        lmax = max(insertlens)
+        lavg = sum(insertlens)/len(insertlens)
+        lmean,lstdev = meanstdv(insertlens)
+        #if lavg * 1.2 < lmax or lavg * 0.8 > lmin:
+        #    lmin = 
+        print "Old insert length min: ", lib.mmin
+        print "New insert length min: ", lmin
+        print "Old insert length max: ", lib.mmax
+        print "New insert length max: ", lmas
+        mateheader.write("library\t%d\t%d\t%d\n"%(lib.id,lmin,lmax))
+        new_matefile.close()
+        badmatefile.close()
+        mateheader.close()
+        run_process(_settings, "cat %s/Assemble/out/%s.lib%d.hdr >> %s/Assemble/out/%s.lib%d.mappedmates "%(_settings.rundir,_settings.PREFIX, lib.id,_settings.rundir,_settings.PREFIX,lib.id))
+
     ctg_cvg_file.close()
     tigr_file.close()
 

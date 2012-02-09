@@ -472,7 +472,7 @@ def Preprocess(input,output):
                         lib.f1 = Read(lib.format,"%s/Preprocess/out/lib%d.unmated.fastq"%(_settings.rundir, lib.id),lib.mated,lib.interleaved)  
            elif lib.format == "fasta" and not lib.mated:
                run_process(_settings, "ln -s %s/Preprocess/in/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.f1.fname,rundir,lib.id),"Preprocess")
-               run_process(_settings, "ln -s %s/Preprocess/in/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.rundir,lib.f1.fname,rundir,lib.id),"Preprocess")
+               run_process(_settings, "ln -s %s/Preprocess/in/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.rundir,lib.f1.fname,_settings.rundir,lib.id),"Preprocess")
                run_process(_settings, "touch %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir,lib.id),"Preprocess")
            elif lib.format == "fastq" and not lib.mated:
                run_process(_settings, "ln -s %s/Preprocess/in/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")

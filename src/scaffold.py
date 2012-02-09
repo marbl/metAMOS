@@ -53,20 +53,16 @@ def Scaffold(input,output):
           _skipsteps.append("FindScaffoldORFS")
           return 0
 
-       if _asm == "soap" or _asm == "none":
+       if _asm == "soap" or _asm == "metaidba" or _asm == "none":
            for lib in _readlibs:
         
                if lib.format == "fasta":
                    run_process(_settings, "%s/toAmos_new -s %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(_settings.AMOS,_settings.rundir,lib.id,_settings.rundir, _settings.PREFIX,lib.id,_settings.rundir,_settings.PREFIX),"Scaffold")
 
                elif lib.format == "fastq":
-                   run_process(_settings, "%s/toAmos_new -Q %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(_settings.AMOS,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX, lib.id,_settings.rundir,_settings.PREFIX),"Scaffold")
+                   run_process(_settings, "%s/toAmos_new -Q %s/Preprocess/out/lib%d.seq -i --libname lib%d --min %d --max %d -b %s/Scaffold/in/%s.bnk "%(_settings.AMOS,_settings.rundir,lib.id,lib.id,lib.mean,lib.stdev,_settings.rundir,_settings.PREFIX),"Scaffold")
 
            run_process(_settings, "%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -b %s/Scaffold/in/%s.bnk "%(_settings.AMOS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
-       elif _asm == "metaidba":
-          for lib in _readlibs:
-              run_process(_settings, "%s/toAmos_new -s %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(_settings.AMOS,_settings.rundir,lib.id,_settings.rundir, _settings.PREFIX,lib.id,_settings.rundir,_settings.PREFIX),"Scaffold")
-          run_process(_settings, "%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -b %s/Scaffold/in/%s.bnk "%(_settings.AMOS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
        elif _asm == "newbler":
           run_process(_settings, "rm -rf %s/Scaffold/in/%s.bnk"%(_settings.rundir, _settings.PREFIX),"Scaffold")
           # build the bank for amos

@@ -121,6 +121,8 @@ def parseInterleaved(rf,wf,fastq=True):
 @files(_settings.readpaths,"%s/Preprocess/out/preprocess.success"%(_settings.rundir))
 #filtreadpaths)
 def Preprocess(input,output):
+   global _run_fastqc
+
    #move input files into Preprocess ./in dir
    #output will either be split fastq files in out, or AMOS bank
    if "Preprocess" in _skipsteps or "preprocess" in _skipsteps:
@@ -425,7 +427,10 @@ def Preprocess(input,output):
                run_process(_settings, "unlink %s/Preprocess/out/lib%d.sff"%(_settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "ln -s %s %s/Preprocess/out/lib%d.sff"%(read.path, _settings.rundir, lib.id), "Preprocess")
 
-               if _asm == "newbler" and not _run_fastqc:
+               if _asm == "newbler":
+                  if _run_fastqc:
+                     print "Warning: FastQC cannot run on SFF files, skipping.";
+                     _run_fastqc = false
                   run_process(_settings, "touch %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.id), "Preprocess");
                else:
                   if not os.path.exists(_settings.CA + os.sep + "sffToCA"):

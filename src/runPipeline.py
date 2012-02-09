@@ -335,7 +335,7 @@ if __name__ == "__main__":
     import postprocess
 
     # initialize submodules
-    preprocess.init(readlibs, skipsteps, asm, run_fastqc)
+    preprocess.init(readlibs, skipsteps, asm, run_fastqc,filter)
     assemble.init(readlibs, skipsteps, asm)
     findorfs.init(readlibs, skipsteps, asm, orf)
     findreps.init(readlibs, skipsteps)

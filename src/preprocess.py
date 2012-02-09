@@ -8,23 +8,24 @@ from utils import *
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
 
+_filter = True
 _readlibs = []
 _skipsteps = []
 _asm = None
 _run_fastqc = False
 _settings = Settings() 
 
-def init(reads, skipsteps, asm, run_fastqc):
+def init(reads, skipsteps, asm, run_fastqc,filter):
    global _readlibs
    global _skipsteps
    global _asm
    global _run_fastqc
-
+   global _filter
    _readlibs = reads
    _skipsteps = skipsteps
    _asm = asm
    _run_fastqc = run_fastqc
-
+   _filter = filter
 def LCS(S1, S2):
     M = [[0]*(1+len(S2)) for i in xrange(1+len(S1))]
     longest, x_longest = 0, 0
@@ -131,7 +132,7 @@ def Preprocess(input,output):
                run_process(_settings, "ln -s -t %s/Preprocess/out/ %s/Preprocess/in/%s"%(_settings.rundir,_settings.rundir,read.fname),"Preprocess")
        return 0
    run_process(_settings, "rm %s/Preprocess/out/all.seq.mates"%(_settings.rundir), "Preprocess")
-   if filter == True:
+   if _filter == True:
        #print "filtering.."
      
        #for reads+libs

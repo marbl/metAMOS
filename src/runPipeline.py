@@ -289,6 +289,8 @@ asmfiles = []
 
 for lib in readlibs:
     #print "touch"
+    if "MapReads" in forcesteps:
+        utils.run_process(settings, "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX))
     if "Assemble" in forcesteps:
         #print lib.id
         utils.run_process(settings, "touch %s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id))
@@ -346,7 +348,7 @@ if __name__ == "__main__":
     annotate.init(readlibs, skipsteps, cls)
     abundance.init(readlibs, skipsteps)
     scaffold.init(readlibs, skipsteps, retainBank, asm)
-    findscforfs.init(readlibs, skipsteps)
+    findscforfs.init(readlibs, skipsteps, orf)
     propagate.init(readlibs, skipsteps, cls)
     classify.init(readlibs, skipsteps, cls)
     postprocess.init(readlibs, skipsteps, cls)

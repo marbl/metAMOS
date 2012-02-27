@@ -55,7 +55,7 @@ def map2contig():
     mateotdict = {}
     read_lookup = {}
     readcnt = 1
-    mapped_reads = []
+    mapped_reads = {}
     readcontig_dict  = {}
     strand_dict = {}
     fiveprimeend_dict = {}
@@ -122,7 +122,7 @@ def map2contig():
                 read_qual = ldata[5]
                 read = read.split(" ")[0]
                 epos = int(spos)+len(read_seq)
-                mapped_reads.append(read)
+                mapped_reads[read] = 1
                 strand_dict[read] = strand
                 readcontig_dict[read] = contig
                 if strand == "+":
@@ -244,17 +244,20 @@ def map2contig():
         linked_contigs = {}
         insertlens = []
         oldstdev = 0
+        oldstdev = (lib.mmin+lib.mmax)/6
+        oldmean = (lib.mmin+lib.mmax)/2
+        oldmax = oldmean+oldstdev
+        oldmin = oldmean-oldstdev
+        if oldmin < 0:
+           oldmin = 0
         for mate in matedict[lib.id].keys():
             matepair = matedict[lib.id][mate]
-            oldstdev = (lib.mmin+lib.mmax)/6
-            oldmean = (lib.mmin+lib.mmax)/2
-            oldmax = oldmean+oldstdev
-            oldmin = oldmean-oldstdev
-            if oldmin < 0:
-                oldmin = 0
-
-            if mate not in mapped_reads or matepair not in mapped_reads:
+            try:
+                mapped_reads[mate]
+                mapped_reads[matepair]
+            except KeyError:
                 continue
+
             if readcontig_dict[mate] != readcontig_dict[matepair]:
                 new_matefile.write("%s\t%s\t%d\n"%(mate,matepair,lib.id))
                 ctgmatefile.write("%s\t%s\t%d\n"%(mate,matepair,lib.id))

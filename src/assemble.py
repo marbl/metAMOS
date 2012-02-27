@@ -163,7 +163,7 @@ def Assemble(input,output):
           run_process(_settings, "%s/soap127 all -p %d -R -d -K %d %s -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(_settings.SOAP, _settings.threads, _settings.kmer, soapOptions, _settings.rundir,_settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
       else:
           
-          run_process(_settings, "%s/soap63 all -p %d -R -d -K %d %s -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(_settings.SOAP, _settings.threads, _settings.kmer, soapOptions, _settings.rundir,_settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
+          run_process(_settings, "%s/SOAPdenovo-63mer all -p %d -R -d -K %d %s -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(_settings.SOAP, _settings.threads, _settings.kmer, soapOptions, _settings.rundir,_settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
 
       #if OK, convert output to AMOS
    elif _asm == "metaidba":

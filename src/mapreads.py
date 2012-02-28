@@ -279,16 +279,21 @@ def map2contig():
             badmatefile.flush()
             ctgmatefile.flush()
             continue
-        lmin = min(insertlens)
-        lmax = max(insertlens)
-        lavg = sum(insertlens)/len(insertlens)
-        lmean,lstdev = meanstdv(insertlens)
-        #if lavg * 1.2 < lmax or lavg * 0.8 > lmin:
-        #    lmin = 
-        print "Old insert length min: ", lib.mmin
-        print "New insert length min: ", lmin
-        print "Old insert length max: ", lib.mmax
-        print "New insert length max: ", lmax
+
+        if len(insertlens) > 0:
+           lmin = min(insertlens)
+           lmax = max(insertlens)
+           lavg = sum(insertlens)/len(insertlens)
+           lmean,lstdev = meanstdv(insertlens)
+           #if lavg * 1.2 < lmax or lavg * 0.8 > lmin:
+           #    lmin = 
+           print "Old insert length min: ", lib.mmin
+           print "New insert length min: ", lmin
+           print "Old insert length max: ", lib.mmax
+           print "New insert length max: ", lmax
+        else:
+           lmin = lib.mmin
+           lmax = lib.mmax
         mateheader.write("library\t%d\t%d\t%d\n"%(lib.id,lmin,lmax))
         new_matefile.close()
         badmatefile.close()

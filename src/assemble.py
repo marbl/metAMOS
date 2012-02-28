@@ -35,18 +35,19 @@ def extractNewblerReads():
    run_process(_settings, "cat %s/Assemble/out/assembly/454TrimStatus.txt |grep right |sed s/_right//g | awk '{print $0}' | awk '{print $1\" \"$2}' > %s/Assemble/out/454TrimRightPairs.txt"%(_settings.rundir, _settings.rundir), "Assemble")
 
    for lib in _readlibs:
-       run_process(_settings, "unlink %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.id), "Assemble")
-       run_process(_settings, "%s/sfffile -i %s/Assemble/out/454TrimNoPairs.txt -t %s/Assemble/out/454TrimNoPairs.txt -o %s/Preprocess/out/lib%d.noPairs.sff %s/Preprocess/out/lib%d.sff"%(_settings.NEWBLER, _settings.rundir, _settings.rundir, _settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
-       run_process(_settings, "%s/sffinfo -s %s/Preprocess/out/lib%d.noPairs.sff > %s/Preprocess/out/lib%d.seq"%(_settings.NEWBLER, _settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
-       run_process(_settings, "%s/sfffile -i %s/Assemble/out/454TrimLeftPairs.txt -t %s/Assemble/out/454TrimLeftPairs.txt -o %s/Preprocess/out/lib%d.noPairs.sff %s/Preprocess/out/lib%d.sff"%(_settings.NEWBLER, _settings.rundir, _settings.rundir, _settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
-       run_process(_settings, "%s/sffinfo -s %s/Preprocess/out/lib%d.noPairs.sff |awk '{if (match($1, \">\") == 1) { print $1\"_left\"; } else { print $0; }}' >> %s/Preprocess/out/lib%d.seq"%(_settings.NEWBLER, _settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
-       run_process(_settings, "%s/sfffile -i %s/Assemble/out/454TrimRightPairs.txt -t %s/Assemble/out/454TrimRightPairs.txt -o %s/Preprocess/out/lib%d.noPairs.sff %s/Preprocess/out/lib%d.sff"%(_settings.NEWBLER, _settings.rundir, _settings.rundir, _settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
-       run_process(_settings, "%s/sffinfo -s %s/Preprocess/out/lib%d.noPairs.sff |awk '{if (match($1, \">\") == 1) { print $1\"_right\"; } else { print $0; }}' >> %s/Preprocess/out/lib%d.seq"%(_settings.NEWBLER, _settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
+       if lib.format == "sff":
+          run_process(_settings, "unlink %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.id), "Assemble")
+          run_process(_settings, "%s/sfffile -i %s/Assemble/out/454TrimNoPairs.txt -t %s/Assemble/out/454TrimNoPairs.txt -o %s/Preprocess/out/lib%d.noPairs.sff %s/Preprocess/out/lib%d.sff"%(_settings.NEWBLER, _settings.rundir, _settings.rundir, _settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
+          run_process(_settings, "%s/sffinfo -s %s/Preprocess/out/lib%d.noPairs.sff > %s/Preprocess/out/lib%d.seq"%(_settings.NEWBLER, _settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
+          run_process(_settings, "%s/sfffile -i %s/Assemble/out/454TrimLeftPairs.txt -t %s/Assemble/out/454TrimLeftPairs.txt -o %s/Preprocess/out/lib%d.noPairs.sff %s/Preprocess/out/lib%d.sff"%(_settings.NEWBLER, _settings.rundir, _settings.rundir, _settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
+          run_process(_settings, "%s/sffinfo -s %s/Preprocess/out/lib%d.noPairs.sff |awk '{if (match($1, \">\") == 1) { print $1\"_left\"; } else { print $0; }}' >> %s/Preprocess/out/lib%d.seq"%(_settings.NEWBLER, _settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
+          run_process(_settings, "%s/sfffile -i %s/Assemble/out/454TrimRightPairs.txt -t %s/Assemble/out/454TrimRightPairs.txt -o %s/Preprocess/out/lib%d.noPairs.sff %s/Preprocess/out/lib%d.sff"%(_settings.NEWBLER, _settings.rundir, _settings.rundir, _settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
+          run_process(_settings, "%s/sffinfo -s %s/Preprocess/out/lib%d.noPairs.sff |awk '{if (match($1, \">\") == 1) { print $1\"_right\"; } else { print $0; }}' >> %s/Preprocess/out/lib%d.seq"%(_settings.NEWBLER, _settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
 
-       run_process(_settings, "cat %s/Assemble/out/454TrimLeftPairs.txt |awk '{print $1\"_left\t\"$1\"_right\"}' > %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir, _settings.rundir, lib.id), "Assemble")
-       run_process(_settings, "echo \"library\t%s\t%d\t%d\" >> %s/Preprocess/out/all.seq.mates"%(lib.sid, lib.mmin, lib.mmax, _settings.rundir), "Assemble")
-       run_process(_settings, "cat %s/Assemble/out/454TrimLeftPairs.txt |awk '{print $1\"_left\t\"$1\"_right\t%s\"}' >> %s/Preprocess/out/all.seq.mates"%(_settings.rundir, lib.sid, _settings.rundir), "Assemble")
-       run_process(_settings, "rm %s/Preprocess/out/lib%d.noPairs.sff"%(_settings.rundir, lib.id), "Assemble")
+          run_process(_settings, "cat %s/Assemble/out/454TrimLeftPairs.txt |awk '{print $1\"_left\t\"$1\"_right\"}' > %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir, _settings.rundir, lib.id), "Assemble")
+          run_process(_settings, "echo \"library\t%s\t%d\t%d\" >> %s/Preprocess/out/all.seq.mates"%(lib.sid, lib.mmin, lib.mmax, _settings.rundir), "Assemble")
+          run_process(_settings, "cat %s/Assemble/out/454TrimLeftPairs.txt |awk '{print $1\"_left\t\"$1\"_right\t%s\"}' >> %s/Preprocess/out/all.seq.mates"%(_settings.rundir, lib.sid, _settings.rundir), "Assemble")
+          run_process(_settings, "rm %s/Preprocess/out/lib%d.noPairs.sff"%(_settings.rundir, lib.id), "Assemble")
  
 def runVelvet(velvetPath, name):
    if not os.path.exists(velvetPath + os.sep + "velvetg"):
@@ -112,6 +113,43 @@ def runVelvet(velvetPath, name):
    run_process(_settings, "ln -s %s/Assemble/out/velvet_asm.afg %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
    run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")
    run_process(_settings, "ln -s %s/Assemble/out/contigs.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
+
+def runSparseAssembler(sparsePath, name):
+   if not os.path.exists(sparsePath + os.sep + "SparseAssembler"):
+      print "Error: %s not found in %s. Please check your path and try again.\n"%(name, sparsePath)
+      raise(JobSignalledBreak)
+
+   sparseLibLine = ""
+   libsAdded = 0
+   currLibString = "";
+   for lib in _readlibs:
+      if lib.format == "fasta":
+         print "Warning: sparse assembler requires fastq files, skipping fasta library %d\n"%(lib.id)
+      elif lib.format == "fastq":
+         libsAdded += 1
+         if lib.mated:
+            sparseLibLine += "p1 %s/Preprocess/out/lib%d.1.fastq p2 %s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir, lib.id, _settings.rundir, lib.id)
+         else:
+            sparseLibLine += "f %s/Preprocess/out/lib%d.seq"%(_settings.rundir)
+  
+   if libsAdded == 0:
+      print "Error: SparseAssembler was selected but no libraries are in fastq format. Cannot run assembly\n"
+      raise(JobSignalledBreak)
+ 
+   # now we can run the program, we start with a two-step correction
+   print "Running command %s/ReadsDenoiser %s %s"%(sparsePath, getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(name), "ReadDenoiser", ""), sparseLibLine)
+   run_process(_settings, "%s/ReadsDenoiser %s %s"%(sparsePath, getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(name), "ReadDenoiser", ""), sparseLibLine), "Assemble")
+   sparseLibLine = sparseLibLine.replace("%s/Preprocess/out/lib"%(_settings.rundir), "%s/Assemble/out/Denoised_lib"%(_settings.rundir));
+   print "Running command %s/ReadsDenoiser %s %s"%(sparsePath, getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(name), "ReadDenoiser", ""), sparseLibLine)
+   run_process(_settings, "%s/ReadsDenoiser %s %s"%(sparsePath, getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(name), "ReadDenoiserStep2", ""), sparseLibLine), "Assemble")
+   sparseLibLine = sparseLibLine.replace("lib", "Denoised_lib");
+
+   # now run the actual assembler
+   print "Running command %s/SparseAssembler %s %s"%(sparsePath, getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(name), "SparseAssembler", ""), sparseLibLine)
+   run_process(_settings, "%s/SparseAssembler %s %s"%(sparsePath, getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(name), "SparseAssembler", ""), sparseLibLine), "Assemble")
+   exit(1)
+
+   # create symlinks
 
         
 @files(_settings.asmfiles,["%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX)])
@@ -194,7 +232,11 @@ def Assemble(input,output):
          if (len(mymatch) == 1 and mymatch[0] != None):
             NEWBLER_VERSION = float(mymatch[0])
 
+      mated = False;
       for lib in _readlibs:
+          if lib.mated:
+             mated = True;
+
           if lib.format == "fasta":
               run_process(_settings, "%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(_settings.NEWBLER, _settings.rundir, _settings.rundir,lib.id),"Assemble")
           elif lib.format == "sff":
@@ -218,7 +260,7 @@ def Assemble(input,output):
 
       # convert to AMOS
       run_process(_settings, "cat %s/Assemble/out/assembly/454Contigs.ace |awk '{if (match($2, \"\\\\.\")) {STR= $1\" \"substr($2, 1, index($2, \".\")-1); for (i = 3; i <=NF; i++) STR= STR\" \"$i; print STR} else { print $0} }' > %s/Assemble/out/%s.ace"%(_settings.rundir, _settings.rundir,_settings.PREFIX), "Assemble") 
-      run_process(_settings, "%s/toAmos -o %s/Assemble/out/%s.mates.afg -m %s/Preprocess/out/all.seq.mates -ace %s/Assemble/out/%s.ace"%(AMOS,_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
+      run_process(_settings, "%s/toAmos -o %s/Assemble/out/%s.mates.afg -m %s/Preprocess/out/all.seq.mates -ace %s/Assemble/out/%s.ace"%(_settings.AMOS,_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
       # get info on EID/IIDs for contigs
       run_process(_settings, "cat %s/Assemble/out/%s.mates.afg | grep -A 3 \"{CTG\" |awk '{if (match($1, \"iid\") != 0) {IID = $1} else if (match($1, \"eid\") != 0) {print $1\" \"IID; } }'|sed s/eid://g |sed s/iid://g > %s/Assemble/out/454eidToIID"%(_settings.rundir, _settings.PREFIX, _settings.rundir),"Assemble")
       run_process(_settings, "java -cp %s convert454GraphToCTL %s/Assemble/out/454eidToIID %s/Assemble/out/assembly/454ContigGraph.txt > %s/Assemble/out/%s.graph.cte"%(_settings.METAMOS_JAVA, _settings.rundir, _settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
@@ -233,8 +275,17 @@ def Assemble(input,output):
          run_process(_settings, "ln -s %s/Assemble/out/assembly/454AllContigs.fna %s/Assemble/out/%s.asm.scafSeq"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
 
    elif _asm == "amos":
-      run_process(_settings, "%s/Minimus %s/Preprocess/out/bank"%(AMOS,_settings.rundir),"Assemble")
-   elif _asm == "CA" or _asm == "ca":
+      run_process(_settings, "rm -rf %s/Assemble/in/%s.bnk"%(_settings.rundir, _settings.PREFIX), "Assemble")
+      for lib in _readlibs:
+         if lib.format == "fasta":
+            run_process(_settings, "%s/toAmos_new -s %s/Preprocess/out/lib%d.seq -b %s/Assemble/in/%s.bnk "%(_settings.AMOS,_settings.rundir,lib.id,_settings.rundir, _settings.PREFIX),"Assemble")
+         elif lib.format == "fastq":
+            run_process(_settings, "%s/toAmos_new -Q %s/Preprocess/out/lib%d.seq -i --libname lib%d --min %d --max %d -b %s/Assemble/in/%s.bnk "%(_settings.AMOS,_settings.rundir,lib.id,lib.id,lib.mean,lib.stdev,_settings.rundir,_settings.PREFIX),"Assemble")
+      run_process(_settings, "%s/hash-overlap -B %s/Assemble/in/%s.bnk"%(_settings.AMOS, _settings.rundir, _settings.PREFIX), "Assemble")
+      run_process(_settings, "%s/tigger -b %s/Assemble/in/%s.bnk"%(_settings.AMOS, _settings.rundir, _settings.PREFIX), "Assemble")
+      run_process(_settings, "%s/make-consensus -B -b %s/Assemble/in/%s.bnk"%(_settings.AMOS, _settings.rundir, _settings.PREFIX), "Assemble")
+      run_process(_settings, "%s/bank2fasta -b %s/Assemble/in/%s.bnk > %s.asm.contig"%(_settings.AMOS, _settings.rundir, _settings.PREFIX, _settings.PREFIX), "Assemble")
+   elif _asm.lower() == "ca":
       #runCA script
       frglist = ""
       matedString = ""
@@ -259,6 +310,10 @@ def Assemble(input,output):
       runVelvet(_settings.VELVET, "velvet")
    elif _asm == "velvet-sc":
       runVelvet(_settings.VELVET_SC, "velvet-sc")
+   elif _asm.lower() == "spades":
+      print "Warning: SPades is not yet supported. Stay Tuned!"
+   elif _asm.lower() == "sparseassembler":
+      runSparseAssembler(_settings.SPARSE_ASSEMBLER, "SparseAssembler");
    elif _asm == "none":
       pass
    else:  

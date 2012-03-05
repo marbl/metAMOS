@@ -50,10 +50,10 @@ for key in contigs_by_class:
     if not os.path.exists(path):
         os.mkdir(path)
 
-    f = open(path + class_name + ".iid", 'w')
+    f = open(path + class_name + ".eid", 'w')
     f.write("\n".join(contigs_by_class[key]) + "\n")
     f.close()
-    ret = os.system("%s/bank2fasta -b %s -iid -I %s%s%s.iid > %s%s%s.fasta"%(amos_dir,amos_bnk,path,os.sep,class_name,path,os.sep,class_name))
+    ret = os.system("%s/bank2fasta -b %s -eid -E %s%s%s.eid > %s%s%s.fasta"%(amos_dir,amos_bnk,path,os.sep,class_name,path,os.sep,class_name))
     
     
 

@@ -2,7 +2,7 @@
 g 5
 k 17
 LD 0
-GS 1000000000
+GS 4000000
 NodeCovTh 2
 EdgeCovTh 1
 CorrTh 5
@@ -12,7 +12,7 @@ CovTh 5
 g 15
 k 31
 LD 0
-GS 1000000000
+GS 4000000
 NodeCovTh 2
 EdgeCovTh 1
 #CorrTh 5
@@ -23,7 +23,7 @@ CovTh 1
 [SparseAssembler]
 g 10
 LD 0
-GS 500000000
+GS 2000000
 NodeCovTh 1
 EdgeCovTh 0
 BFS 1

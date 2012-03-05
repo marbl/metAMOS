@@ -40,7 +40,6 @@ def LCS(S1, S2):
                 M[x][y] = 0
     return S1[x_longest-longest: x_longest]
 
-
 def parseInterleaved(rf,wf,fastq=True):
     if 1:
         if 1:
@@ -124,6 +123,34 @@ def parseInterleaved(rf,wf,fastq=True):
 def Preprocess(input,output):
    global _run_fastqc
 
+   # update file names if necessary to avoid conflicts and create qual files
+   for lib in _readlibs:
+      for read in lib.reads:
+         if lib.format == "fasta" and not os.path.isfile("%s/Preprocess/in/read.fname"):
+            run_process(_settings, "java -cp %s:. outputDefaultQuality %s/Preprocess/in/%s > %s/Preprocess/%s.qual"%(_settings.METAMOS_JAVA, _settings.rundir, read.fname, _settings.rundir, read.fname), "Assemble")
+            if lib.mated and not lib.interleaved:
+                readpair = lib.getPair(read.id)
+                if readpair == -1:
+                    #not interleaved and mated, yet do not have 2nd file..
+                    continue
+                run_process(_settings, "java -cp %s:. outputDefaultQuality %s/Preprocess/in/%s > %s/Preprocess/%s.qual"%(_settings.METAMOS_JAVA, _settings.rundir, readpair.fname, _settings.rundir, readpair.fname), "Assemble")
+
+         if "lib%d"%(lib.id) in read.path:
+            if lib.mated and not lib.interleaved:
+                readpair = lib.getPair(read.id)
+                if readpair == -1:
+                    #not interleaved and mated, yet do not have 2nd file..
+                    continue
+                npath = readpair.path.replace("lib%d"%(lib.id), "inputLib%d"%(lib.id))
+                run_process(_settings, "mv %s %s"%(readpair.path, npath), "Preprocess")
+                readpair.path = npath
+                readpair.fname = os.path.basename(readpair.path)
+
+            npath = read.path.replace("lib%d"%(lib.id), "inputLib%d"%(lib.id))
+            run_process(_settings, "mv %s %s"%(read.path, npath), "Preprocess")
+            read.path = npath
+            read.fname = os.path.basename(read.path)
+
    #move input files into Preprocess ./in dir
    #output will either be split fastq files in out, or AMOS bank
    if "Preprocess" in _skipsteps or "preprocess" in _skipsteps:
@@ -132,6 +159,7 @@ def Preprocess(input,output):
                run_process(_settings, "ln -s -t %s/Preprocess/out/ %s/Preprocess/in/%s"%(_settings.rundir,_settings.rundir,read.fname),"Preprocess")
        return 0
    run_process(_settings, "rm %s/Preprocess/out/all.seq.mates"%(_settings.rundir), "Preprocess")
+
    if _filter == True:
        #print "filtering.."
      
@@ -189,7 +217,7 @@ def Preprocess(input,output):
                                s2hdr = line
                                rlcs = LCS(s1hdr,s2hdr)
                                #these should almost identical
-                               if float(len(rlcs))/float(len(s1hdr)) < 0.9:
+                               if len(rlcs)+2 != len(s1hdr) and float(len(rlcs))/float(len(s1hdr)) < 0.9:
                                    #missing record somewhere, start over with this one
                                    s1hdr = line
                                    record = [line]
@@ -209,6 +237,7 @@ def Preprocess(input,output):
                    read.path = read.path.replace("/in/","/out/")            
                    #read.fname = "lib%d"%(lib.id)
                    read.filtered = True
+                   wf.close()
                elif not read.filtered and read.format == "fastq" and read.mated and not read.interleaved:
                    readpair = lib.getPair(read.id)
                    if readpair == -1:
@@ -275,6 +304,8 @@ def Preprocess(input,output):
                    read.filtered = True
                    read.path = read.path.replace("/in/","/out/")
                    readpair.path = readpair.path.replace("/in/","/out/")
+                   wf1.close()
+                   wf2.close()
                elif not read.filtered and read.format == "fastq" and not read.mated:
                    #this is easy, just throw out reads with Ns
                    rf = open(read.path,'r')
@@ -295,6 +326,8 @@ def Preprocess(input,output):
                        wf.writelines(rs3)
                        wf.writelines(rs4)
                    read.path = read.path.replace("/in/","/out/")
+                   read.filtered = True
+                   wf.close()
                elif not read.filtered and read.format == "fasta" and read.mated and read.interleaved:
                    #this means we have this entire lib in one file
                    #parse out paired record (4 lines), rename header to be filename + "/1" or "/2", and remove reads with N
@@ -347,9 +380,8 @@ def Preprocess(input,output):
 
                    #update to new path
                    read.path = read.path.replace("/in/","/out/")            
-
-                   #read.path = newpath#read.path.replace("/in/","/out/")            
-                   #read.fname = "lib%d"%(lib.id)
+                   read.filtered = True
+                   wf.close()
                elif not read.filtered and read.format == "fasta" and read.mated and not read.interleaved:
                    readpair = lib.getPair(read.id)
                    if readpair == -1:
@@ -399,6 +431,8 @@ def Preprocess(input,output):
                    read.filtered = True
                    read.path = read.path.replace("/in/","/out/")
                    readpair.path = readpair.path.replace("/in/","/out/")
+                   wf1.close()
+                   wf2.close()
                elif not read.filtered and read.format == "fasta" and not read.mated:
                    #easiest case, check for Ns
                    rf = open(read.path,'r')
@@ -415,6 +449,8 @@ def Preprocess(input,output):
                        wf.writelines(rs1)
                        wf.writelines(rs2)
                    read.path = read.path.replace("/in/","/out/")
+                   read.filtered = True
+                   wf.close()
            cnt +=1
    else:
        for lib in _readlibs:

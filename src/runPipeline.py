@@ -126,7 +126,7 @@ for o, a in opts:
     elif o in ("-a","--assembler"):
         #maximus,CA,soap
         #default: maximus?
-        asm = a
+        asm = a.lower()
         if asm == "metaidba":
             bowtie_mapping = 1
 

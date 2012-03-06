@@ -117,7 +117,12 @@ def map2contig():
                 read = ldata[0]
                 strand = ldata[1]
                 contig = ldata[2]
-                spos = ldata[3] 
+                spos = ldata[3]
+                try:
+                    int(spos)
+                except ValueError:
+                    #bowtie output for this line malformed, skip
+                    continue 
                 read_seq = ldata[4]
                 read_qual = ldata[5]
                 read = read.split(" ")[0]

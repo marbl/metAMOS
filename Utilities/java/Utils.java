@@ -168,10 +168,55 @@ public class Utils {
         } else if (fileName.endsWith(postfix)){
            bf = new BufferedReader(new FileReader(fileName));
         } else {
-           System.err.println("Unknown fiile format " + fileName + " Skipping!");
         }
 
         return bf;
+   }
+
+   public static String encodeQualRecord(BufferedReader bf, int length, char offsetChar) throws Exception {
+      StringBuilder encodedQual = new StringBuilder();
+      if (bf == null) {
+         for (int i = 0; i < length; i++) {
+            encodedQual.append((char)(40 + (int)offsetChar));
+         }
+         return encodedQual.toString();
+      }
+
+      String line = null;
+      StringBuilder qual = new StringBuilder();
+
+      while ((line = bf.readLine()) != null) {
+         if (line.startsWith(">")) { if (qual.length() > 0) { break; } }
+         else { qual.append(line + " "); }
+      }
+
+      String[] quals = qual.toString().trim().split("\\s+");
+      for (int i = 0; i < quals.length; i++) {
+         int val = Integer.parseInt(quals[i]);
+         encodedQual.append((char)(val + (int)offsetChar));
+      }
+
+      return encodedQual.toString();
+   }
+
+
+   public static String decodeQualRecord(String qual, int length, char offsetChar) throws Exception {
+      StringBuilder decodedQual = new StringBuilder();
+      if (qual == null) {
+         for (int i = 0; i < length - 1; i++) {
+            decodedQual.append("40 ");
+         }
+         decodedQual.append("40");
+         return decodedQual.toString();
+      }
+
+      String line = null;
+      for (int i = 0; i < qual.length() - 1; i++) {
+         decodedQual.append(((int)qual.charAt(i) - (int)offsetChar) + " "); 
+      }
+      decodedQual.append(((int)qual.charAt(qual.length()-1) - (int)offsetChar));
+   
+      return decodedQual.toString();
    }
 
    // add new line breaks every FASTA_LINE_LENGTH characters

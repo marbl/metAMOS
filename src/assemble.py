@@ -28,6 +28,7 @@ def init(reads, skipsteps, asm, usecontigs):
 
 def extractNewblerReads():
    run_process(_settings, "unlink %s/Preprocess/out/all.seq.mates"%(_settings.rundir), "Assemble")
+   run_process(_settings, "touch %s/Preprocess/out/all.seq.mates"%(_settings.rundir), "Assemble")
 
    # prepare trim and pair information
    run_process(_settings, "cat %s/Assemble/out/assembly/454TrimStatus.txt |grep -v Trimpoints | grep -v left |grep -v right |awk '{print $0}' | awk '{print $1\" \"$2}' > %s/Assemble/out/454TrimNoPairs.txt"%(_settings.rundir, _settings.rundir), "Assemble")
@@ -48,6 +49,8 @@ def extractNewblerReads():
           run_process(_settings, "echo \"library\t%s\t%d\t%d\" >> %s/Preprocess/out/all.seq.mates"%(lib.sid, lib.mmin, lib.mmax, _settings.rundir), "Assemble")
           run_process(_settings, "cat %s/Assemble/out/454TrimLeftPairs.txt |awk '{print $1\"_left\t\"$1\"_right\t%s\"}' >> %s/Preprocess/out/all.seq.mates"%(_settings.rundir, lib.sid, _settings.rundir), "Assemble")
           run_process(_settings, "rm %s/Preprocess/out/lib%d.noPairs.sff"%(_settings.rundir, lib.id), "Assemble")
+       elif lib.mated:
+          run_process(_settings, "cat %s/Preprocess/out/lib%d.mates >> %s/Preprocess/out/all.seq.mates"%(_settings.rundir, lib.id, _settings.rundir), "Assemble")
  
 def runVelvet(velvetPath, name):
    if not os.path.exists(velvetPath + os.sep + "velvetg"):
@@ -123,33 +126,40 @@ def runSparseAssembler(sparsePath, name):
    libsAdded = 0
    currLibString = "";
    for lib in _readlibs:
+      format = lib.format
       if lib.format == "fasta":
-         print "Warning: sparse assembler requires fastq files, skipping fasta library %d\n"%(lib.id)
-      elif lib.format == "fastq":
+         print "Warning: sparse assembler requires fastq files, processing library %d as fastq\n"%(lib.id)
+         format = "fastq"
+
+      if format == "fastq":
          libsAdded += 1
          if lib.mated:
-            sparseLibLine += "p1 %s/Preprocess/out/lib%d.1.fastq p2 %s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir, lib.id, _settings.rundir, lib.id)
+            run_process(_settings, "ln -s %s/Preprocess/out/lib%d.1.fastq %s/Assemble/out/lib%d.1.fastq"%(_settings.rundir,
+ lib.id, _settings.rundir, lib.id), "Assemble")
+            run_process(_settings, "ln -s %s/Preprocess/out/lib%d.2.fastq %s/Assemble/out/lib%d.2.fastq"%(_settings.rundir,
+ lib.id, _settings.rundir, lib.id), "Assemble")
+            sparseLibLine += "p1 lib%d.1.fastq p2 lib%d.2.fastq"%(lib.id, lib.id)
          else:
-            sparseLibLine += "f %s/Preprocess/out/lib%d.seq"%(_settings.rundir)
-  
+            run_process(_settings, "ln -s %s/Preprocess/out/lib%d.seq %s/Assemble/out/lib%d.seq"%(_settings,rundir, lib.id, settings_rundir, lib.id), "Assemble")
+            sparseLibLine += "f lib%d.fastq"%(lib.id)
+
    if libsAdded == 0:
       print "Error: SparseAssembler was selected but no libraries are in fastq format. Cannot run assembly\n"
       raise(JobSignalledBreak)
  
    # now we can run the program, we start with a two-step correction
-   print "Running command %s/ReadsDenoiser %s %s"%(sparsePath, getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(name), "ReadDenoiser", ""), sparseLibLine)
    run_process(_settings, "%s/ReadsDenoiser %s %s"%(sparsePath, getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(name), "ReadDenoiser", ""), sparseLibLine), "Assemble")
-   sparseLibLine = sparseLibLine.replace("%s/Preprocess/out/lib"%(_settings.rundir), "%s/Assemble/out/Denoised_lib"%(_settings.rundir));
-   print "Running command %s/ReadsDenoiser %s %s"%(sparsePath, getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(name), "ReadDenoiser", ""), sparseLibLine)
+   sparseLibLine = sparseLibLine.replace("lib", "Denoised_lib");
    run_process(_settings, "%s/ReadsDenoiser %s %s"%(sparsePath, getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(name), "ReadDenoiserStep2", ""), sparseLibLine), "Assemble")
    sparseLibLine = sparseLibLine.replace("lib", "Denoised_lib");
 
    # now run the actual assembler
-   print "Running command %s/SparseAssembler %s %s"%(sparsePath, getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(name), "SparseAssembler", ""), sparseLibLine)
    run_process(_settings, "%s/SparseAssembler %s %s"%(sparsePath, getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(name), "SparseAssembler", ""), sparseLibLine), "Assemble")
-   exit(1)
 
    # create symlinks
+   run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")
+   run_process(_settings, "ln -s %s/Assemble/out/Contigs.txt %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
+
 
         
 @files(_settings.asmfiles,["%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX)])
@@ -208,11 +218,10 @@ def Assemble(input,output):
       bowtie_mapping = 1
       for lib in _readlibs:
           if lib.format != "fasta"  or (lib.mated and not lib.interleaved):
-              print "ERROR: meta-IDBA requires reads to be in (interleaved) fasta format, cannot run"
-              sys.exit(1)
+              print "Warning: meta-IDBA requires reads to be in (interleaved) fasta format, converting library"
           #apparently connect = scaffold? need to convert fastq to interleaved fasta to run, one lib per run??
-          #print "%s/metaidba --read %s/Preprocess/out/%s --output  %s/Assemble/out/%s.asm --mink 21 --maxk %d --cover 1 --connect"%(_settings.METAIDBA,_settings.rundir,lib.f1.fname,_settings.rundir,_settings.PREFIX,_settings.kmer)
-          run_process(_settings, "%s/metaidba --read %s/Preprocess/out/%s --output  %s/Assemble/out/%s.asm --mink 21 --maxk %d --cover 1 --connect"%(_settings.METAIDBA,_settings.rundir,lib.f1.fname,_settings.rundir,_settings.PREFIX,_settings.kmer),"Assemble")
+          #print "%s/metaidba --read %s/Preprocess/out/lib%d.fasta --output  %s/Assemble/out/%s.asm --mink 21 --maxk %d --cover 1 --connect"%(_settings.METAIDBA,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX,_settings.kmer)
+          run_process(_settings, "%s/metaidba --read %s/Preprocess/out/lib%d.fasta --output  %s/Assemble/out/%s.asm --mink 21 --maxk %d --cover 1 --connect"%(_settings.METAIDBA,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX,_settings.kmer),"Assemble")
           run_process(_settings, "mv %s/Assemble/out/%s.asm-contig.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Assemble")
 
    elif _asm == "newbler":
@@ -293,12 +302,14 @@ def Assemble(input,output):
           for read in lib.reads:
               if read.format == "fastq":
                   if lib.mated:
-                      matedString = "-insertsize %d %d -%s"%(lib.mean, lib.stdev, "innie" if lib.innie else "outtie") 
-                  run_process(_settings, "%s/fastqToCA %s -libraryname %s -t illumina -fastq %s/Preprocess/in/%s > %/Preprocess/out/lib%d.frg"%(CA, matedString, lib.read.path, _settings.rundir, _settings.PREFIX, _settings.rundir, lib.id),"Assemble")
+                      matedString = "-insertsize %d %d -%s -mates"%(lib.mean, lib.stdev, "innie" if lib.innie else "outtie") 
+                  else:
+                     matedString = "-reads"
+                  run_process(_settings, "%s/fastqToCA -libraryname %s -technology illumina %s %s/Preprocess/out/lib%d.seq > %s/Preprocess/out/lib%d.frg"%(_settings.CA, lib.sid, matedString, _settings.rundir, lib.id, _settings.rundir, lib.id),"Assemble")
               elif read.format == "fasta":
                   if lib.mated:
-                      matedString = "-mean %d -stddev %d -m %s/Preprocess/out/lib%d.seq.mates"%(lib.mean, lib.stdev, lib.id)
-                  run_process(_settings, "%s/convert-fasta-to-v2.pl -l %s %s -s %s/Preprocess/in/%s -q %s/Preprocess/in/%s.qual > %s/Preprocess/out/lib%d.frg"%(_settings.CA, lib.sid, matedString, _settings.rundir, read.fname, _settings.rundir, read.fname, _settings.rundir, read.fname,_settings.rundir),"Assemble")
+                      matedString = "-mean %d -stddev %d -m %s/Preprocess/out/lib%d.seq.mates"%(lib.mean, lib.stdev, _settings.rundir, lib.id)
+                  run_process(_settings, "%s/convert-fasta-to-v2.pl -l %s %s -s %s/Preprocess/out/lib%d.seq -q %s/Preprocess/out/lib%d.seq.qual > %s/Preprocess/out/lib%d.frg"%(_settings.CA, lib.sid, matedString, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id),"Assemble")
               frglist += "%s/Preprocess/out/lib%d.frg"%(_settings.rundir, lib.id)
       run_process(_settings, "%s/runCA -p %s -d %s/Assemble/out/ -s %s/config/asm.spec %s"%(_settings.CA,_settings.PREFIX,_settings.rundir,_settings.METAMOS_UTILS,frglist),"Assemble")
       #convert CA to AMOS

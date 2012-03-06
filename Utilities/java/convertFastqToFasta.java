@@ -14,14 +14,16 @@ public class convertFastqToFasta {
   private static final NumberFormat nf = new DecimalFormat("############.#");
   private static char OFFSET_CHAR = '!';
   public static final Pattern splitBySpaces = Pattern.compile("\\s+");
+  public static final String[] FILE_SUFFIX = {"seq", "fastq", "fq"};
  
    public convertFastqToFasta() {
    }
 
    public void processFasta(String inputFile, String outputFasta, String outputQual) throws Exception {
-      BufferedReader bf = Utils.getFile(inputFile, "fastq");
-      if (bf == null) {
-         Utils.getFile(inputFile, "fq");
+      BufferedReader bf = null;
+      for (int i = 0; i < FILE_SUFFIX.length; i++) {
+         bf = Utils.getFile(inputFile, FILE_SUFFIX[i]);
+         if (bf != null ) { break; }
       }
       PrintStream fastaOut = new PrintStream(new File(outputFasta));
       PrintStream qualOut = new PrintStream(new File(outputQual));

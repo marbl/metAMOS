@@ -126,21 +126,23 @@ def runSparseAssembler(sparsePath, name):
    libsAdded = 0
    currLibString = "";
    for lib in _readlibs:
-      if lib.mated:
-         run_process(_settings, "ln -s %s/Preprocess/out/lib%d.1.fastq %s/Assemble/out/lib%d.1.fastq"%(_settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
-         run_process(_settings, "ln -s %s/Preprocess/out/lib%d.2.fastq %s/Assemble/out/lib%d.2.fastq"%(_settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
-      else:
-         run_process(_settings, "ln -s %s/Preprocess/out/lib%d.seq %s/Assemble/out/lib%d.seq"%(_settings,rundir, lib.id, settings_rundir, lib.id), "Assemble")
-
+      format = lib.format
       if lib.format == "fasta":
-         print "Warning: sparse assembler requires fastq files, skipping fasta library %d\n"%(lib.id)
-      elif lib.format == "fastq":
+         print "Warning: sparse assembler requires fastq files, processing library %d as fastq\n"%(lib.id)
+         format = "fastq"
+
+      if format == "fastq":
          libsAdded += 1
          if lib.mated:
+            run_process(_settings, "ln -s %s/Preprocess/out/lib%d.1.fastq %s/Assemble/out/lib%d.1.fastq"%(_settings.rundir,
+ lib.id, _settings.rundir, lib.id), "Assemble")
+            run_process(_settings, "ln -s %s/Preprocess/out/lib%d.2.fastq %s/Assemble/out/lib%d.2.fastq"%(_settings.rundir,
+ lib.id, _settings.rundir, lib.id), "Assemble")
             sparseLibLine += "p1 lib%d.1.fastq p2 lib%d.2.fastq"%(lib.id, lib.id)
          else:
-            sparseLibLine += "f lib%d.seq"%(lib.id)
-  
+            run_process(_settings, "ln -s %s/Preprocess/out/lib%d.seq %s/Assemble/out/lib%d.seq"%(_settings,rundir, lib.id, settings_rundir, lib.id), "Assemble")
+            sparseLibLine += "f lib%d.fastq"%(lib.id)
+
    if libsAdded == 0:
       print "Error: SparseAssembler was selected but no libraries are in fastq format. Cannot run assembly\n"
       raise(JobSignalledBreak)
@@ -216,11 +218,10 @@ def Assemble(input,output):
       bowtie_mapping = 1
       for lib in _readlibs:
           if lib.format != "fasta"  or (lib.mated and not lib.interleaved):
-              print "ERROR: meta-IDBA requires reads to be in (interleaved) fasta format, cannot run"
-              sys.exit(1)
+              print "Warning: meta-IDBA requires reads to be in (interleaved) fasta format, converting library"
           #apparently connect = scaffold? need to convert fastq to interleaved fasta to run, one lib per run??
-          #print "%s/metaidba --read %s/Preprocess/out/%s --output  %s/Assemble/out/%s.asm --mink 21 --maxk %d --cover 1 --connect"%(_settings.METAIDBA,_settings.rundir,lib.f1.fname,_settings.rundir,_settings.PREFIX,_settings.kmer)
-          run_process(_settings, "%s/metaidba --read %s/Preprocess/out/%s --output  %s/Assemble/out/%s.asm --mink 21 --maxk %d --cover 1 --connect"%(_settings.METAIDBA,_settings.rundir,lib.f1.fname,_settings.rundir,_settings.PREFIX,_settings.kmer),"Assemble")
+          #print "%s/metaidba --read %s/Preprocess/out/lib%d.fasta --output  %s/Assemble/out/%s.asm --mink 21 --maxk %d --cover 1 --connect"%(_settings.METAIDBA,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX,_settings.kmer)
+          run_process(_settings, "%s/metaidba --read %s/Preprocess/out/lib%d.fasta --output  %s/Assemble/out/%s.asm --mink 21 --maxk %d --cover 1 --connect"%(_settings.METAIDBA,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX,_settings.kmer),"Assemble")
           run_process(_settings, "mv %s/Assemble/out/%s.asm-contig.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Assemble")
 
    elif _asm == "newbler":

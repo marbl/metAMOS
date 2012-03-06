@@ -1,0 +1,86 @@
+#!/Users/treangen/dev/amos/bin/runAmos -C
+#? minimus2-blat - The AMOS Pipeline for merging 2 assemblies faster using BLAT
+
+#? Usage:       
+#?     minimus2-blat prefix [options]
+#? Options:
+#?     -D REFCOUNT=<n>   Number of sequences in the 1st assembly (Required)
+#?     -D OVERLAP=<n> 		\       # Assembly 1 vs 2 minimum overlap (Default 40bp)
+#?     -D CONSERR=<f>    Maximum consensus error (0..1) (Default: 0.06)
+#?     -D MINID=<n>      Minimum overlap percent identity for alignments (Default: 98)
+#?     -D MAXTRIM=<n>    Maximum sequence trimming length (Default: 20bp)
+
+#--------------------------------------- USER DEFINED VALUES ------------------#
+
+REFCOUNT= 0
+CONSERR = 0.06
+OVERLAP	= 40
+MINID   = 98
+MAXTRIM = 20
+WIGGLE  = 15
+
+#------------------------------------------------------------------------------#
+
+TGT     = $(PREFIX).afg
+BANK    = $(PREFIX).bnk
+REFSEQ  = $(PREFIX).ref.seq
+QRYSEQ  = $(PREFIX).qry.seq
+BLATOUT = $(PREFIX).psl
+COORDS  = $(PREFIX).coords
+OVLTAB  = $(PREFIX).ovl
+OVLAMOS = $(PREFIX).OVL
+CONTIG  = $(PREFIX).contig
+FASTA   = $(PREFIX).fasta
+
+SINGLETONS    = $(PREFIX).singletons
+SINGLETONSEQ  = $(PREFIX).singletons.seq
+
+#------------------------------------------------------------------------------#
+
+# Declare which files are input, temporary and output files
+INPUTS  = $(TGT) $(REFCOUNT)
+TEMPS   = $(BLATOUT) $(COORDS) $(OVLTAB)
+OUTPUTS = $(CONTIG) $(FASTA)
+
+#------------------------------------------------------------------------------#
+
+BINDIR=/Users/treangen/dev/amos/bin
+BLAT    = /usr/local/bin/blat
+
+#------------------------------------------------------------------------------#
+
+## Building AMOS bank & Dumping reads
+10: rm -fr $(BANK)
+11: $(BINDIR)/bank-transact -c -z -b $(BANK) -m $(TGT)
+12: $(BINDIR)/dumpreads $(BANK) -M $(REFCOUNT) > $(REFSEQ)
+13: $(BINDIR)/dumpreads $(BANK) -m $(REFCOUNT) > $(QRYSEQ)
+
+## Getting overlaps 
+20: $(BLAT) $(REFSEQ) $(QRYSEQ) $(BLATOUT) -fastMap -noHead -minIdentity=$(MINID) -minMatch=1 -tileSize=$(OVERLAP)
+21: $(BINDIR)/blat2nucmer -i $(BLATOUT) | $(BINDIR)/nucmerAnnotate | egrep 'BEGIN|END|CONTAIN|IDENTITY' > $(COORDS) 
+22: $(BINDIR)/nucmer2ovl -ignore $(MAXTRIM) -tab $(COORDS) | $(BINDIR)/sort2 > $(OVLTAB)
+
+## Converting overlaps
+23: $(BINDIR)/ovl2OVL $(OVLTAB)  > $(OVLAMOS)
+
+## Loading overlaps to the bank
+24: rm -f $(BANK)/OVL.* 
+25: $(BINDIR)/bank-transact -z -b $(BANK) -m $(OVLAMOS)
+
+## Running contigger
+30: rm -f $(BANK)/LAY.*
+31: $(BINDIR)/tigger -b $(BANK)
+
+## Running consensus
+40: rm -f $(BANK)/CTG.*
+41: $(BINDIR)/make-consensus -B -e $(CONSERR) -b $(BANK) -w $(WIGGLE) 
+
+## Outputting contigs
+50: $(BINDIR)/bank2contig $(BANK) > $(CONTIG)
+
+## Converting to FastA file
+60: $(BINDIR)/bank2fasta -b $(BANK) > $(FASTA)
+
+## Getting singletons
+70: $(BINDIR)/listReadPlacedStatus -S -E $(BANK) > $(SINGLETONS)
+71: $(BINDIR)/dumpreads -e -E $(SINGLETONS) $(BANK) > $(SINGLETONSEQ)

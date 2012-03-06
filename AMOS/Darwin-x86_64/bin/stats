@@ -1,0 +1,268 @@
+#!/opt/local/bin/perl
+use lib "/Users/treangen/dev/amos/lib";
+
+use strict;
+use Getopt::Long;
+use Statistics::Descriptive;
+
+my $genomelen     = undef;
+my $bigcutoffs    = undef;
+my $computemedian = undef;
+my $trimmean      = undef;
+my $hist          = undef;
+my $cdf           = undef;
+my $percentiles   = undef;
+my $fields        = undef;
+
+my $helpflag = 0;
+my $result = GetOptions(
+ "h"              => \$helpflag,
+ "n50=s"          => \$genomelen,
+ "big=s"          => \$bigcutoffs,
+ "median"         => \$computemedian,
+ "trimmean=s"     => \$trimmean,
+ "hist=s"         => \$hist,
+ "cdf=s"          => \$cdf,
+ "percentiles=s"  => \$percentiles,
+ "fields=s"       => \$fields,
+);
+
+
+if ($helpflag)
+{
+   die "stats.pl [-f f1,f2,fn] [-n50 int] [-big s1,s2,sn] [-median] [-trimmean frac] [-hist buckets] [-cdf t1,t2,t3] [-percentiles p1,p2,p3]\n";
+}
+
+my @stats;
+my @f2s;
+
+my %bigstats;
+
+if (defined $fields)
+{
+  foreach my $f (split /,/, $fields)
+  {
+    push @f2s, ($f-1); ## accept 1 based fields, convert to 0-based internally
+  }
+}
+
+if (defined $bigcutoffs)
+{
+  foreach my $s (split /,/, $bigcutoffs)
+  {
+    $bigstats{$s}->{sum} = 0;
+    $bigstats{$s}->{cnt} = 0;
+  }
+}
+
+while (<>)
+{
+  chomp;
+  my @vals = split /\s+/;
+
+  if (defined $fields)
+  {
+    for(my $i = 0; $i < scalar @f2s; $i++)
+    {
+      if (!defined $stats[$i])
+      {
+        $stats[$i] = Statistics::Descriptive::Full->new();
+      }
+
+      $stats[$i]->add_data($vals[$f2s[$i]]);
+    }
+  }
+  else
+  {
+    for (my $i = 0; $i < scalar @vals; $i++)
+    {
+      if (!defined $stats[$i])
+      {
+        $stats[$i] = Statistics::Descriptive::Full->new();
+      }
+
+      $stats[$i]->add_data($vals[$i]);
+    }
+  }
+}
+
+for (my $i = 0; $i < scalar @stats; $i++)
+{
+  my $num    = $stats[$i]->count();
+  my $min    = $stats[$i]->min();
+  my $max    = $stats[$i]->max();
+  my $mean   = sprintf("%0.01f", $stats[$i]->mean());
+  my $stdev  = sprintf("%0.01f", $stats[$i]->standard_deviation());
+
+  my $idx = $i+1;
+
+  if (defined $fields)
+  {
+    $idx = $f2s[$i]+1;
+  }
+
+  print "$idx: n=$num [$min, $max] $mean +/- $stdev";
+
+  if (defined $computemedian)
+  {
+    my $median=$stats[$i]->median();
+    print " median=$median";
+  }
+
+  if (defined $trimmean)
+  {
+    my $trim = sprintf("%0.01f", $stats[$i]->trimmed_mean($trimmean));
+    print " trimmean=$trim";
+  }
+
+  my @arr = sort {$b <=> $a} $stats[$i]->get_data();
+
+  my $n50target = $stats[$i]->sum()/2;
+
+  if (defined $genomelen)
+  {
+    $n50target = $genomelen / 2;
+  }
+
+  my $sum = 0;
+  my $sumsq = 0;
+  my $n50 = undef;
+  my $n50cnt = undef;
+  my $j = 0;
+
+  my $numbig = 0;
+  my $sumbig = 0;
+  foreach my $s (@arr)
+  {
+    #if ($j < 5) { print " $s"; }
+    $j++;
+
+    $sumsq += ($s * $s);
+    $sum += $s;
+
+    if (($sum >= $n50target) && (!defined $n50))
+    {
+      $n50 = $s;
+      $n50cnt = $j;
+    }
+
+    if (defined $bigcutoffs)
+    {
+      foreach my $c (keys %bigstats)
+      {
+        if ($s >= $c)
+        {
+          $bigstats{$c}->{sum} += $s;
+          $bigstats{$c}->{cnt}++;
+        }
+      }
+    }
+  }
+
+  print " sum=",$stats[$i]->sum();
+  print " n50=$n50 n50cnt=$n50cnt";
+
+  if (defined $genomelen)
+  {
+    my $f = sprintf("%0.02f", $sumsq / $genomelen);
+    print " f=$f";
+
+    my $cov = sprintf("%0.02f", $stats[$i]->sum() / $genomelen);
+    print " cov=$cov";
+  }
+  else
+  {
+    my $f = sprintf("%0.02f", $sumsq / $stats[$i]->sum());
+    print " f=$f";
+  }
+
+  if (defined $bigcutoffs)
+  {
+    foreach my $t (sort {$a <=> $b} keys %bigstats)
+    {
+      my $s = $bigstats{$t}->{sum};
+      my $c = $bigstats{$t}->{cnt};
+
+      if (defined $genomelen)
+      {
+        my $cov = sprintf("%0.02f", $s / $genomelen);
+        print " #>$t=$c s>$t=$s c>$t=$cov";
+      }
+      else
+      {
+        print " #>$t=$c s>$t=$s";
+      }
+    }
+  }
+
+  print "\n";
+
+  if (defined $hist)
+  {
+    my %f = $stats[$i]->frequency_distribution($hist);
+    my $num = $stats[$i]->count();
+
+    print "Histogram with $hist bins of $num elements\n";
+
+    my @cutoffs = sort {$a <=> $b} keys %f;
+
+    for(my $j = 0; $j < scalar @cutoffs; $j++)
+    {
+      my $cutoff = $cutoffs[$j];
+      my $freq = $f{$cutoff};
+      my $perc = sprintf("%0.01f", 100*$freq/$num);
+      print "$j\t$cutoff\t$freq\t$perc\n";
+    }
+
+    print "\n";
+  }
+
+  if (defined $cdf)
+  {
+    my @breakpoints = sort {$a <=> $b} split /,/,$cdf;
+    my $num = $stats[$i]->count();
+
+    my $numbreakpoints = scalar @breakpoints;
+
+    print "CDF\n";
+
+    my $cnt = 0;
+    my $threshold = shift @breakpoints;
+    foreach my $val (sort {$a <=> $b} $stats[$i]->get_data())
+    {
+      if ($val > $threshold)
+      {
+        my $perc = sprintf("%0.01f", 100*$cnt/$num);
+        print "$threshold\t$cnt\t$perc\n";
+
+        if (scalar @breakpoints)
+        {
+          $threshold = shift @breakpoints;
+        }
+        else
+        {
+          $threshold = $stats[$i]->max();
+        }
+      }
+
+      $cnt++;
+    }
+
+    my $perc = sprintf("%0.01f", 100*$cnt/$num);
+    print "$threshold\t$cnt\t$perc\n";
+    print "\n";
+  }
+
+  if (defined $percentiles)
+  {
+    my @percentiles = sort {$a <=> $b} split /,/, $percentiles;
+
+    print "Percentiles\n";
+
+    foreach my $p (@percentiles)
+    {
+      my ($x,$index) = $stats[$i]->percentile($p);
+      print "$p\%\t$x\t$index\n";
+    }
+  }
+}

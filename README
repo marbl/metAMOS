@@ -3,7 +3,7 @@ Last updated: November 22nd 2011
 
 NEWS:
 
-*Amphora2 now supported
+*PhyloSift now supported
 *meta-IDBA now supported
 *Velvet-SC now supported
 
@@ -108,9 +108,9 @@ For example, to enable meta-IDBA as the assembler:
 
 -a metaidba
 
-And to use Amphora2 to annotate:
+And to use PhyloSift to annotate:
 
--c amphora2
+-c phylosift
 
 Any single step in the pipeline can be skipped by passing the
 following parameter to runPipeline:

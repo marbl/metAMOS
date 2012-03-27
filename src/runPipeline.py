@@ -121,8 +121,8 @@ for o, a in opts:
         #blast,fcp,etc 
         #default: fcp?
         cls = a#"phmmer"
-        if cls == "amphora2" or cls == "Amphora2":
-            cls = "amphora"
+        if cls == "phylosift" or cls == "PhyloSift":
+            cls = "phylosift"
     elif o in ("-a","--assembler"):
         #maximus,CA,soap
         #default: maximus?

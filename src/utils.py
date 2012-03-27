@@ -43,7 +43,7 @@ class Settings:
    FCP = ""
    PHMMER = ""
    BLAST = ""
-   AMPHORA = ""
+   PHYLOSIFT = ""
 
    KRONA = ""
    REPEATOIRE = ""
@@ -90,7 +90,7 @@ class Settings:
       Settings.FCP           = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.PHMMER        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.BLAST         = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
-      Settings.AMPHORA       = "%s%sAmphora-2"%(Settings.METAMOSDIR, os.sep)
+      Settings.PHYLOSIFT     = "%s%sPhyloSift"%(Settings.METAMOSDIR, os.sep)
 
       Settings.KRONA         = "%s%skrona"%(Settings.METAMOS_UTILS,os.sep)
       Settings.REPEATOIRE    = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
@@ -383,14 +383,14 @@ def initConfig(kmer, threads, theRundir):
     blastMD5 = getMD5Sum(Settings.BLAST + os.sep + "blastall")
 
     # currently only supported on Linux 64-bit and only from one location
-    Settings.AMPHORA = "%s%sAmphora-2"%(Settings.METAMOSDIR, os.sep)
-    if not os.path.exists(Settings.AMPHORA + os.sep + "amphora2"):
-       print "Warning: Amphora 2 was not found, will not be available\n";
-       Settings.AMPHORA = ""
-    if Settings.AMPHORA != "" and (Settings.OSTYPE != "Linux" or Settings.MACHINETYPE != "x86_64"):
-       print "Warning: Amphora 2 not compatible with %s-%s. It requires Linux-x86_64\n"%(Settings.OSTYPE, Settings.MACHINETYPE)
-       Settings.AMPHORA = "" 
-    amphoraMD5 = getMD5Sum(Settings.AMPHORA + os.sep + "amphora2")
+    Settings.PHYLOSIFT = "%s%sphylosift"%(Settings.METAMOSDIR, os.sep)
+    if not os.path.exists(Settings.PHYLOSIFT + os.sep + "bin" + os.sep + "phylosift"):
+       print "Warning: PhyloSift was not found, will not be available\n";
+       Settings.PHYLOSIFT = ""
+    if Settings.PHYLOSIFT != "" and (Settings.OSTYPE != "Linux" or Settings.MACHINETYPE != "x86_64"):
+       print "Warning: PhyloSift not compatible with %s-%s. It requires Linux-x86_64\n"%(Settings.OSTYPE, Settings.MACHINETYPE)
+       Settings.PHYLOSIFT = "" 
+    phylosiftMD5 = getMD5Sum(Settings.PHYLOSIFT + os.sep + "bin" + os.sep + "phylosift")
 
     # finally store the configuration 
     conf = open("%s/pipeline.conf"%(Settings.rundir),'w')
@@ -415,7 +415,7 @@ def initConfig(kmer, threads, theRundir):
     conf.write("FCP:\t\t\t%s\t%s\n"%(Settings.FCP, fcpMD5))
     conf.write("PHMMER:\t\t\t%s\t%s\n"%(Settings.PHMMER, phmmerMD5))
     conf.write("BLAST:\t\t\t%s\t%s\n"%(Settings.BLAST, blastMD5))
-    conf.write("AMPHORA:\t\t%s\t%s\n"%(Settings.AMPHORA, amphoraMD5))
+    conf.write("PHYLOSIFT:\t\t%s\t%s\n"%(Settings.PHYLOSIFT, phylosiftMD5))
     conf.write("FASTQC:\t\t\t%s\t%s\n"%(Settings.FASTQC, fastqcMD5))
 
     conf.write("REPEATOIRE:\t\t%s\t%s\n"%(Settings.REPEATOIRE, repeatoireMD5))

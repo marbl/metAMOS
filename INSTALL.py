@@ -86,14 +86,14 @@ if not os.path.exists("./AMOS"):
         os.system("tar -xvf amos-binaries.tar.gz")
         os.system("rm -rf amos-binaries.tar.gz")
 
-if 0 or not os.path.exists("./Amphora-2"):
-   print "Amphora 2 binaries not found, optional for Annotate step, download now?"
+if 0 or not os.path.exists("./phylosift"):
+   print "PhyloSift binaries not found, optional for Annotate step, download now?"
    dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':
-      #os.system("perl Utilities/perl/amphora_install.pl")
-      os.system("wget http://dl.dropbox.com/u/51616170/amphora2-%s-%s.20111130.tar.gz -O ./amphora2-20111130.tar.gz"%(OSTYPE, MACHINETYPE))
-      os.system("tar -xvzf amphora2-20111130.tar.gz")
-      os.system("rm -rf amphora2-20111130.tar.gz")
+      os.system("wget http://edhar.genomecenter.ucdavis.edu/~koadman/phylosift/phylosift_20120327.tar.bz2 -O ./phylosift_20120327.tar.bz2"%(OSTYPE, MACHINETYPE))
+      os.system("tar -xvjf phylosift_20120327.tar.bz2")
+      os.system("rm -rf phylosift_20120327.tar.bz2")
+      os.system("mv phylosift_20120327 phylosift")
 
 if not os.path.exists("./CA"):
    print "Celera Assembler binaries not found, optional for Assemble step, download now?"

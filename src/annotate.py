@@ -119,7 +119,7 @@ def Annotate(input,output):
        run_process(_settings, "cp %s/Annotate/out/%s.blastout  %s/Postprocess/in/%s.hits"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Annotate")
        run_process(_settings, "mv %s/Annotate/out/%s.blastout  %s/Annotate/out/%s.hits"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Annotate")
    elif _cls == "phylosift":
-       if _settings.PHYLOSIFT == "" or not os.path.exists(_settings.PHYLOSIFT + os.sep + "phylosift"):
+       if _settings.PHYLOSIFT == "" or not os.path.exists(_settings.PHYLOSIFT + os.sep + "bin" + os.sep + "phylosift"):
           print "Error: PhyloSift not found in %s. Please check your path and try again.\n"%(_settings.PHYLOSIFT)
           raise(JobSignalledBreak)
 

@@ -90,10 +90,10 @@ if 0 or not os.path.exists("./phylosift"):
    print "PhyloSift binaries not found, optional for Annotate step, download now?"
    dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':
-      os.system("wget http://edhar.genomecenter.ucdavis.edu/~koadman/phylosift/phylosift_20120327.tar.bz2 -O ./phylosift_20120327.tar.bz2")
-      os.system("tar -xvjf phylosift_20120327.tar.bz2")
-      os.system("rm -rf phylosift_20120327.tar.bz2")
-      os.system("mv phylosift_20120327 phylosift")
+      os.system("wget http://edhar.genomecenter.ucdavis.edu/~koadman/phylosift/phylosift_20120328.tar.bz2 -O ./phylosift_20120328.tar.bz2")
+      os.system("tar -xvjf phylosift_20120328.tar.bz2")
+      os.system("rm -rf phylosift_20120328.tar.bz2")
+      os.system("mv phylosift_20120328 phylosift")
 
 if not os.path.exists("./CA"):
    print "Celera Assembler binaries not found, optional for Assemble step, download now?"

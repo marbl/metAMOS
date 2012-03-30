@@ -27,7 +27,7 @@ def init(reads, skipsteps, retainBank, asm):
    _readlibs = reads
    _skipsteps = skipsteps
    _retainBank = retainBank
-   _asm = asm
+   _asm = asm.lower()
 
    for lib in _readlibs:
       if lib.mated == True:
@@ -47,21 +47,17 @@ def Scaffold(input,output):
           (checkStdout, checkStderr) = p.communicate()
           numMates = int(checkStdout.strip())
 
-       if _mated == False and numMates == 0:
-
-          print "No mate pair info available for scaffolding, skipping"
-          run_process(_settings, "touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX), "Scaffold")
-          _skipsteps.append("FindScaffoldORFS")
-          return 0
-
-       if _asm == "soap" or _asm == "metaidba" or _asm == "none":
+       if _asm == "soap" or _asm == "metaidba" or _asm == "amos" or _asm == "sparseassembler" or _asm == "none":
            for lib in _readlibs:
         
                if lib.format == "fasta":
                    run_process(_settings, "%s/toAmos_new -s %s/Preprocess/out/lib%d.seq -m %s/Assemble/out/%s.lib%d.mappedmates -b %s/Scaffold/in/%s.bnk "%(_settings.AMOS,_settings.rundir,lib.id,_settings.rundir, _settings.PREFIX,lib.id,_settings.rundir,_settings.PREFIX),"Scaffold")
 
                elif lib.format == "fastq":
-                   run_process(_settings, "%s/toAmos_new -Q %s/Preprocess/out/lib%d.seq -i --libname lib%d --min %d --max %d -b %s/Scaffold/in/%s.bnk "%(_settings.AMOS,_settings.rundir,lib.id,lib.id,lib.mean,lib.stdev,_settings.rundir,_settings.PREFIX),"Scaffold")
+                   matedStr = ""
+                   if lib.mated:
+                      matedStr = "-i --min %d --max %d --libname lib%d"%(lib.mean, lib.stdev, lib.id) 
+                   run_process(_settings, "%s/toAmos_new -Q %s/Preprocess/out/lib%d.seq %s -b %s/Scaffold/in/%s.bnk "%(_settings.AMOS,_settings.rundir,lib.id,matedStr,_settings.rundir,_settings.PREFIX),"Scaffold")
 
            run_process(_settings, "%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -b %s/Scaffold/in/%s.bnk "%(_settings.AMOS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
        elif _asm == "newbler":
@@ -81,6 +77,14 @@ def Scaffold(input,output):
        run_process(_settings, "rm %s/Scaffold/in/%s.bnk/CTL.*"%(_settings.rundir,_settings.PREFIX),"SCAFFOLD")
        run_process(_settings, "rm %s/Scaffold/in/%s.bnk/MTF.*"%(_settings.rundir,_settings.PREFIX),"SCAFFOLD")
        run_process(_settings, "rm %s/Scaffold/in/%s.bnk/SCF.*"%(_settings.rundir,_settings.PREFIX),"SCAFFOLD")
+
+   # after the banks are created, skip the scaffolding when we have no mates
+   if _mated == False and numMates == 0:
+       print "No mate pair info available for scaffolding, skipping"
+       run_process(_settings, "touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX), "Scaffold")
+       _skipsteps.append("FindScaffoldORFS")
+       _skipsteps.append("Propagate")
+       return 0
 
    #use asmQC to update mate insert lens
    run_process(_settings, "%s/asmQC -b %s/Scaffold/in/%s.bnk -scaff -recompute -update -numsd 2"%(_settings.AMOS,_settings.rundir,_settings.PREFIX))

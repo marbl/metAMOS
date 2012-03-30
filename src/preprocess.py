@@ -26,6 +26,7 @@ def init(reads, skipsteps, asm, run_fastqc,filter):
    _asm = asm
    _run_fastqc = run_fastqc
    _filter = filter
+
 def LCS(S1, S2):
     M = [[0]*(1+len(S2)) for i in xrange(1+len(S1))]
     longest, x_longest = 0, 0
@@ -40,6 +41,20 @@ def LCS(S1, S2):
                 M[x][y] = 0
     return S1[x_longest-longest: x_longest]
 
+def convertFastaToFastq(libID, mated):
+   run_process(_settings, "ln -s %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.fasta"%(_settings.rundir, libID, _settings.rundir, libID), "Preprocess")
+   run_process(_settings, "java -cp %s convertFastaAndQualToFastq %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.seq.qual > %s/Preprocess/out/lib%d.fastq"%(_settings.METAMOS_JAVA, _settings.rundir, libID, _settings.rundir, libID, _settings.rundir, libID), "Preprocess")
+   if mated:
+      run_process(_settings, "java -cp %s convertFastaAndQualToFastq %s/Preprocess/out/lib%d.1.fasta %s/Preprocess/out/lib%d.1.fasta.qual > %s/Preprocess/out/lib%d.1.fastq"%(_settings.METAMOS_JAVA, _settings.rundir, libID, _settings.rundir, libID, _settings.rundir, libID), "Preprocess")
+      run_process(_settings, "java -cp %s convertFastaAndQualToFastq %s/Preprocess/out/lib%d.2.fasta %s/Preprocess/out/lib%d.2.fasta.qual > %s/Preprocess/out/lib%d.2.fastq"%(_settings.METAMOS_JAVA, _settings.rundir, libID, _settings.rundir,libID, _settings.rundir, libID), "Preprocess")
+
+def convertFastqToFasta(libID, mated):
+   # convert to fasta
+   run_process(_settings, "ln -s %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.fastq"%(_settings.rundir, libID, _settings.rundir, libID), "Preprocess")
+   run_process(_settings, "java -cp %s convertFastqToFasta %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.fasta %s/Preprocess/out/lib%d.fasta.qual"%(_settings.METAMOS_JAVA, _settings.rundir, libID, _settings.rundir, libID, _settings.rundir, libID), "Preprocess")
+   if mated:
+      run_process(_settings, "java -cp %s convertFastqToFasta %s/Preprocess/out/lib%d.1.fastq %s/Preprocess/out/lib%d.1.fasta %s/Preprocess/out/lib%d.1.fasta.qual"%(_settings.METAMOS_JAVA, _settings.rundir, libID, _settings.rundir, libID, _settings.rundir, libID), "Preprocess")
+      run_process(_settings, "java -cp %s convertFastqToFasta %s/Preprocess/out/lib%d.2.fastq %s/Preprocess/out/lib%d.2.fasta %s/Preprocess/out/lib%d.2.fasta.qual"%(_settings.METAMOS_JAVA, _settings.rundir, libID, _settings.rundir, libID, _settings.rundir, libID), "Preprocess")
 
 def parseInterleaved(rf,wf,fastq=True):
     if 1:
@@ -124,6 +139,34 @@ def parseInterleaved(rf,wf,fastq=True):
 def Preprocess(input,output):
    global _run_fastqc
 
+   # update file names if necessary to avoid conflicts and create qual files
+   for lib in _readlibs:
+      for read in lib.reads:
+         if lib.format == "fasta" and not os.path.isfile("%s/Preprocess/in/%s.qual"%(_settings.rundir, read.fname)):
+            run_process(_settings, "java -cp %s:. outputDefaultQuality %s/Preprocess/in/%s > %s/Preprocess/in/%s.qual"%(_settings.METAMOS_JAVA, _settings.rundir, read.fname, _settings.rundir, read.fname), "Assemble")
+            if lib.mated and not lib.interleaved:
+                readpair = lib.getPair(read.id)
+                if readpair == -1:
+                    #not interleaved and mated, yet do not have 2nd file..
+                    continue
+                run_process(_settings, "java -cp %s:. outputDefaultQuality %s/Preprocess/in/%s > %s/Preprocess/in/%s.qual"%(_settings.METAMOS_JAVA, _settings.rundir, readpair.fname, _settings.rundir, readpair.fname), "Assemble")
+
+         if "lib%d"%(lib.id) in read.path:
+            if lib.mated and not lib.interleaved:
+                readpair = lib.getPair(read.id)
+                if readpair == -1:
+                    #not interleaved and mated, yet do not have 2nd file..
+                    continue
+                npath = readpair.path.replace("lib%d"%(lib.id), "inputLib%d"%(lib.id))
+                run_process(_settings, "mv %s %s"%(readpair.path, npath), "Preprocess")
+                readpair.path = npath
+                readpair.fname = os.path.basename(readpair.path)
+
+            npath = read.path.replace("lib%d"%(lib.id), "inputLib%d"%(lib.id))
+            run_process(_settings, "mv %s %s"%(read.path, npath), "Preprocess")
+            read.path = npath
+            read.fname = os.path.basename(read.path)
+
    #move input files into Preprocess ./in dir
    #output will either be split fastq files in out, or AMOS bank
    if "Preprocess" in _skipsteps or "preprocess" in _skipsteps:
@@ -132,6 +175,7 @@ def Preprocess(input,output):
                run_process(_settings, "ln -s -t %s/Preprocess/out/ %s/Preprocess/in/%s"%(_settings.rundir,_settings.rundir,read.fname),"Preprocess")
        return 0
    run_process(_settings, "rm %s/Preprocess/out/all.seq.mates"%(_settings.rundir), "Preprocess")
+
    if _filter == True:
        #print "filtering.."
      
@@ -189,7 +233,7 @@ def Preprocess(input,output):
                                s2hdr = line
                                rlcs = LCS(s1hdr,s2hdr)
                                #these should almost identical
-                               if float(len(rlcs))/float(len(s1hdr)) < 0.9:
+                               if len(rlcs)+2 != len(s1hdr) and float(len(rlcs))/float(len(s1hdr)) < 0.9:
                                    #missing record somewhere, start over with this one
                                    s1hdr = line
                                    record = [line]
@@ -209,6 +253,7 @@ def Preprocess(input,output):
                    read.path = read.path.replace("/in/","/out/")            
                    #read.fname = "lib%d"%(lib.id)
                    read.filtered = True
+                   wf.close()
                elif not read.filtered and read.format == "fastq" and read.mated and not read.interleaved:
                    readpair = lib.getPair(read.id)
                    if readpair == -1:
@@ -275,6 +320,8 @@ def Preprocess(input,output):
                    read.filtered = True
                    read.path = read.path.replace("/in/","/out/")
                    readpair.path = readpair.path.replace("/in/","/out/")
+                   wf1.close()
+                   wf2.close()
                elif not read.filtered and read.format == "fastq" and not read.mated:
                    #this is easy, just throw out reads with Ns
                    rf = open(read.path,'r')
@@ -295,15 +342,19 @@ def Preprocess(input,output):
                        wf.writelines(rs3)
                        wf.writelines(rs4)
                    read.path = read.path.replace("/in/","/out/")
+                   read.filtered = True
+                   wf.close()
                elif not read.filtered and read.format == "fasta" and read.mated and read.interleaved:
                    #this means we have this entire lib in one file
                    #parse out paired record (4 lines), rename header to be filename + "/1" or "/2", and remove reads with N
                    rf = open(read.path,'r')
+                   rq = open(read.path+".qual", 'r')
                    npath = read.path.replace("/in/","/out/")
                    #print npath
                    #readpath,base = os.path.split(npath)
                    #newpath = readpath+"lib%d"%(lib.id)
                    wf = open(npath,'w')
+                   wq = open(npath+".qual", 'w')
                    #wf = open(read.path.replace("/in/","/out/"),'w')
                    start = 1
                    rcnt = 0
@@ -311,6 +362,7 @@ def Preprocess(input,output):
                    record = []
                    shdr = ""
                    reads = rf.read().split(">")[1:]
+                   quals = rq.read().split(">")[1:]
                    if len(reads) % 2 != 0:
                        print "Read file corrupted, please fix and restart!"
                        sys.exit(1)
@@ -319,8 +371,10 @@ def Preprocess(input,output):
                    first = True
                    second = False
                    prevseq = ""
+                   prevqual = ""
                    readcnt = 1
-                   for rd in reads:
+                   currIndex = 0
+                   for currIndex, rd in enumerate(reads):
                        if first:
                            hdr,seq = rd.split("\n",1)
                            if "N" in string.upper(seq) or len(seq) < 2:
@@ -328,6 +382,7 @@ def Preprocess(input,output):
                            else: 
                                prevok = True
                                prevseq = seq
+                               prevqual = quals[currIndex].split("\n",1)[1]
 
                            second = True
                            first = False
@@ -341,28 +396,49 @@ def Preprocess(input,output):
                                wf.writelines(prevseq)
                                wf.writelines(">"+hdr+"2\n")
                                wf.writelines(seq)
+
+                               wq.writelines(">"+hdr+"1\n")
+                               wq.writelines(prevqual)
+                               wq.writelines(">"+hdr+"2\n")
+                               wq.writelines(quals[currIndex].split("\n",1)[1])
+
                                readcnt +=1
                            second = False
                            first = True
 
                    #update to new path
                    read.path = read.path.replace("/in/","/out/")            
-
-                   #read.path = newpath#read.path.replace("/in/","/out/")            
-                   #read.fname = "lib%d"%(lib.id)
+                   read.filtered = True
+                   wf.close()
+                   wq.close()
                elif not read.filtered and read.format == "fasta" and read.mated and not read.interleaved:
                    readpair = lib.getPair(read.id)
                    if readpair == -1:
                        #not interleaved and mated, yet do not have 2nd file..
                        continue
                    rf1 = open(read.path,'r')
+                   qf1 = open(read.path+".qual",'r')
                    wf1 = open(read.path.replace("/in/","/out/"),'w')
+                   wq1 = open(read.path.replace("/in/","/out/")+".qual", 'w')
                    rf2 = open(readpair.path,'r')
+                   qf2 = open(readpair.path+".qual", 'r')
                    wf2 = open(readpair.path.replace("/in/","/out/"),'w')
+                   wq2 = open(readpair.path.replace("/in/","/out/")+".qual", 'w')
+
                    recordcnt = 0
                    while 1:                   
                        rs1 = rf1.readline()
-                       rs2 = rf1.readline()
+                       rs2 = ""
+                       for line in rf1:
+                          if ">" in line:
+                             break
+                          rs2.append(line.rstrip())
+                       qs1 = qf1.readline()
+                       qs2 = ""
+                       for line in qf1:
+                          if ">" in line:
+                             break;
+                          qs2.append(line.rstrip()) 
 
                        if rs1 == "" or rs2 == "":
                            #EOF or something went wrong, break
@@ -371,7 +447,17 @@ def Preprocess(input,output):
                        if "N" in rseq:
                            continue
                        rp1 = rf2.readline()
-                       rp2 = rf2.readline()
+                       rp2 = ""
+                       for line in rf2:
+                          if ">" in line:
+                             break
+                          rp2.append(line.rstrip()) 
+                       qp1 = qf2.readline()
+                       qp2 = ""
+                       for line in qf2:
+                          if ">" in line:
+                             break;
+                          qs2.append(line.rstrip())
 
                        if rp1 == "" or rp2 == "":
                            #EOF or something went wrong, break
@@ -392,34 +478,56 @@ def Preprocess(input,output):
                            hdr = read.sid+"r"+str(recordcnt)+"/"
                            wf1.writelines(">"+hdr+"1\n")
                            wf1.writelines(rs2)
+                           wq1.writelines(">"+hdr+"1\n")
+                           wq2.writelines(qs2)
                            wf2.writelines(">"+hdr+"2\n")
                            wf2.writelines(rp2)
+                           wq2.writelines(">"+hdr+"2\n")
+                           wq2.writelines(qp2)
 
                    readpair.filtered = True
                    read.filtered = True
                    read.path = read.path.replace("/in/","/out/")
                    readpair.path = readpair.path.replace("/in/","/out/")
+                   wf1.close()
+                   wf2.close()
+                   wq1.close()
+                   wq2.close()
                elif not read.filtered and read.format == "fasta" and not read.mated:
                    #easiest case, check for Ns
                    rf = open(read.path,'r')
+                   rq = open(read.path+".qual", 'r')
                    wf = open(read.path.replace("/in/","/out/"),'w')
-                   while 1:
-                       rs1 = rf.readline()
-                       rs2 = rf.readline()
-                       if rs1 == "" or rs2 == "":
-                           #EOF or something went wrong, break
-                           break
-                       rseq = string.upper(rs2)                               
-                       if "N" in rseq:
-                           continue
-                       wf.writelines(rs1)
-                       wf.writelines(rs2)
+                   wq = open(read.path.replace("/in/","/out/")+".qual", 'w')
+
+                   reads = rf.read().split(">")[1:]
+                   quals = rq.read().split(">")[1:]
+                   if len(reads) % 2 != 0:
+                       print "Read file corrupted, please fix and restart!"
+                       sys.exit(1)
+
+                   readcnt = 1
+                   for currIndex, rd in enumerate(reads):
+                      hdr,seq = rd.split("\n",1)
+                      if "N" in seq:
+                         continue
+                      hdr = read.sid+"r"+str(readcnt)
+                      wf.writelines(">"+hdr+"\n")
+                      wf.writelines(seq)
+                      wq.writelines(">"+hdr+"\n")
+                      wq.writelines(quals[currIndex].split("\n",1)[1])
+                      readcnt += 1
                    read.path = read.path.replace("/in/","/out/")
+                   read.filtered = True
+                   wf.close()
+                   wq.close()
            cnt +=1
    else:
        for lib in _readlibs:
            for read in lib.reads:
                run_process(_settings, "ln -s -t %s/Preprocess/out/ %s/Preprocess/in/%s"%(_settings.rundir,_settings.rundir,read.fname),"Preprocess")
+               if (lib.format == "fasta"): 
+                  run_process(_settings, "ln -s -t %s/Preprocess/out/ %s/Preprocess/in/%s.qual"%(_settings.rundir,_settings.rundir,read.fname),"Preprocess")
    #PUNT HERE
    for lib in _readlibs:
       if 1:
@@ -457,8 +565,8 @@ def Preprocess(input,output):
                   run_process(_settings, "%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3\"\t\"$5}' >> %s/Preprocess/out/all.seq.mates"%(_settings.CA, _settings.rundir, _settings.PREFIX, _settings.rundir),"Preprocess")
                   run_process(_settings, "%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3}' > %s/Preprocess/out/lib%d.seq.mates"%(_settings.CA, _settings.rundir, _settings.PREFIX, _settings.rundir, lib.id), "Preprocess")
                   run_process(_settings, "unlink %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.id),"Preprocess")
-                  run_process(_settings, "ln -s %s/Preprocess/out/lib%d.fna %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.id,_settings.rundir,lib.id),"Preprocess")
-                  run_process(_settings, "ln -s %s/Preprocess/out/lib%d.fna.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.rundir,lib.id,_settings.rundir,lib.id),"Preprocess")
+                  run_process(_settings, "ln -s %s/Preprocess/out/lib%d.fna %s/Preprocess/out/lib%d.fasta"%(_settings.rundir,lib.id,_settings.rundir,lib.id),"Preprocess")
+                  run_process(_settings, "ln -s %s/Preprocess/out/lib%d.fna.qual %s/Preprocess/out/lib%d.fasta.qual"%(_settings.rundir,lib.id,_settings.rundir,lib.id),"Preprocess")
                   run_process(_settings, "rm -rf %s/Preproces/out/%s.gkpStore"%(_settings.rundir, _settings.PREFIX),"Preprocess")
                   run_process(_settings, "cat %s/Preprocess/out/lib%d.seq.mates >> %s/Preprocess/out/all.seq.mates"%(_settings.rundir, lib.id, _settings.rundir), "Preprocess")
 
@@ -471,36 +579,55 @@ def Preprocess(input,output):
                         lib.f2 = Read(lib.format,"%s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir, lib.id),lib.mated,lib.interleaved) 
                         run_process(_settings, "perl %s/perl/shuffleSequences_fasta.pl  %s/Preprocess/out/lib%d.1.fastq %s/Preprocess/out/lib%d.2.fastq %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id, _settings.rundir,lib.id,_settings.rundir, lib.id), "Preprocess")
                      else:
-                        lib.f1 = Read(lib.format,"%s/Preprocess/out/lib%d.unmated.fastq"%(_settings.rundir, lib.id),lib.mated,lib.interleaved)  
+                        run_process(_settings, "ln -s %s/Preprocess/out/lib%d.unmated.fastq %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.id, _settings.rundir, lib.id), "Preproces")
+                        run_process(_settings, "ln -s %s/Preprocess/out/lib%d.unmated.fastq %s/Preprocess/out/lib%d.fastq"%(_settings.rundir, lib.id, _settings.rundir, lib.id), "Preprocess")
+                        lib.f1 = Read(lib.format,"%s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.id),lib.mated,lib.interleaved)  
+
            elif lib.format == "fasta" and not lib.mated:
-               run_process(_settings, "ln -s %s/Preprocess/in/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.f1.fname,_settings.rundir,lib.id),"Preprocess")
-               run_process(_settings, "ln -s %s/Preprocess/in/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.rundir,lib.f1.fname,_settings.rundir,lib.id),"Preprocess")
+               run_process(_settings, "ln -s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.f1.fname,_settings.rundir,lib.id),"Preprocess")
+               run_process(_settings, "ln -s %s/Preprocess/out/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.rundir,lib.f1.fname,_settings.rundir,lib.id),"Preprocess")
                run_process(_settings, "touch %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir,lib.id),"Preprocess")
+               convertFastaToFastq(lib.id, lib.mated)
+
            elif lib.format == "fastq" and not lib.mated:
-               run_process(_settings, "ln -s %s/Preprocess/in/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")
+               run_process(_settings, "ln -s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "touch %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir, lib.id), "Preprocess")
+               convertFastqToFasta(lib.id, lib.mated)
+
            elif lib.format == "fasta" and lib.mated and not lib.interleaved:
                #FIXME, make me faster!filter
                run_process(_settings, "perl %s/perl/shuffleSequences_fasta.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname, _settings.rundir,lib.f2.fname,_settings.rundir,lib.id),"Preprocess")
+               run_process(_settings, "perl %s/perl/shuffleSequences_fasta.pl  %s/Preprocess/out/%s.qual %s/Preprocess/out/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname, _settings.rundir,lib.f2.fname,_settings.rundir,lib.id),"Preprocess")
                run_process(_settings, "ln -s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.1.fasta"%(_settings.rundir, lib.f1.name, _settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "ln -s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.2.fasta"%(_settings.rundir, lib.f2.name, _settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "python %s/python/extract_mates_from_fasta.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
                run_process(_settings, "unlink %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir, lib.id),"Preprocess")
                run_process(_settings, "ln -t %s/Preprocess/out/ -s %s/Preprocess/in/lib%d.seq.mates"%(_settings.rundir,_settings.rundir,lib.id),"Preprocess")
+               convertFastaToQual(lib.id, lib.mated)
+
            elif lib.format == "fastq" and lib.mated and not lib.interleaved:
                #extract mates from fastq
                run_process(_settings, "perl %s/perl/shuffleSequences_fastq.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname, _settings.rundir,lib.f2.fname,_settings.rundir,lib.id),"Preprocess")
                run_process(_settings, "ln -s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.1.fastq"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "ln -s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir, lib.f2.fname, _settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "python %s/python/extract_mates_from_fastq.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
+               convertFastqToFasta(lib.id, lib.mated)
+
            elif lib.mated and lib.interleaved:
                run_process(_settings, "cp %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.f1.fname,_settings.rundir,lib.id),"Preprocess")
                if lib.format == "fastq":
                    run_process(_settings, "python %s/python/extract_mates_from_fastq.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
                    # unshuffle the sequences
                    run_process(_settings, "perl %s/perl/split_fastq.pl %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.1.fastq %s/Preprocess/out/lib%d.2.fastq"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id), "Preprocess")
+                   convertFastqToFasta(lib.id, lib.mated)
                else:
+                   run_process(_settings, "cp %s/Preprocess/out/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.rundir,lib.f1.fname,_settings.rundir,lib.id),"Preprocess")
                    run_process(_settings, "python %s/python/extract_mates_from_fasta.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
+                   # unshuffle the sequences
+                   run_process(_settings, "perl %s/perl/split_fasta.pl %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.1.fasta %s/Preprocess/out/lib%d.2.fasta"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id), "Preprocess")
+                   run_process(_settings, "perl %s/perl/split_fasta.pl %s/Preprocess/out/lib%d.seq.qual %s/Preprocess/out/lib%d.1.fasta.qual %s/Preprocess/out/lib%d.2.fasta.qual"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id), "Preprocess")
+                   convertFastaToFastq(lib.id, lib.mated)
+
            #update_soap_config()
            #elif _asm == "ca":
            #    #useful for 454, need to get SFF to FRG?

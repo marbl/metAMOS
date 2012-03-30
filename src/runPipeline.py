@@ -1,9 +1,10 @@
 #!python
 
-import os, sys, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser
+import os, sys, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser, multiprocessing
 from operator import itemgetter
 
 INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
+DEFAULT_KMER  = 31
 
 sys.path.append(INITIAL_SRC)
 import utils
@@ -68,7 +69,7 @@ fqlibs = {}
 fqfrags = []
 rlibs = []
 mapper = "bowtie"
-settings = utils.Settings(31, 16, "")
+settings = utils.Settings(DEFAULT_KMER, multiprocessing.cpu_count() - 1, "")
 
 for o, a in opts:
     if o in ("-v","--verbose"):
@@ -120,12 +121,12 @@ for o, a in opts:
         #blast,fcp,etc 
         #default: fcp?
         cls = a#"phmmer"
-        if cls == "amphora2" or cls == "Amphora2":
-            cls = "amphora"
+        if cls == "phylosift" or cls == "PhyloSift":
+            cls = "phylosift"
     elif o in ("-a","--assembler"):
         #maximus,CA,soap
         #default: maximus?
-        asm = a
+        asm = a.lower()
         if asm == "metaidba":
             bowtie_mapping = 1
 
@@ -237,7 +238,8 @@ for line in inf:
     elif "frg" in line:
 
         data = line.split("\t")
-        frg = data[1]
+        #frg = data[1]
+        frg = "%s/Preprocess/in/%s"%(settings.rundir,data[1].split(",")[0])
         mated = False
         f1 = frg
         #fqfrags[data[0]] = data[1]

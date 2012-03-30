@@ -1,6 +1,40 @@
-import os, sys, string, distutils.util
+import os, sys, string, subprocess, distutils.util
 
 print "<<Weclome to metAMOS install>>"
+
+ALLOW_FAST=True
+OSTYPE="Linux"
+OSVERSION="1"
+MACHINETYPE="x86_64"
+
+#identify machine type
+p = subprocess.Popen("echo `uname`", shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+(checkStdout, checkStderr) = p.communicate()
+if checkStderr != "":
+   print "Warning: Cannot determine OS, defaulting to %s"%(OSTYPE)
+else:
+    OSTYPE = checkStdout.strip()
+
+p = subprocess.Popen("echo `uname -r`", shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+(checkStdout, checkStderr) = p.communicate()
+if checkStderr != "":
+   print "Warning: Cannot determine OS version, defaulting to %s"%(OSVERSION)
+else:
+   OSVERSION = checkStdout.strip()
+
+p = subprocess.Popen("echo `uname -m`", shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+(checkStdout, checkStderr) = p.communicate()
+if checkStderr != "":
+   print "Warning: Cannot determine system type, defaulting to %s"%(MACHINETYPE)
+else:
+   MACHINETYPE = checkStdout.strip()
+
+if OSTYPE == "Darwin":
+   p = subprocess.Popen("echo `gcc --version`", shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   (checkStdout, checkStderr) = p.communicate()
+   if "Apple" not in checkStdout:
+      ALLOW_FAST=False
+
 #check for python version
 if (sys.version_info[0] < 2) or (sys.version_info[0] == 2 and sys.version_info[1] < 6):
   print "Python version is %s. metAMOS requires at least 2.6"%(sys.version)
@@ -48,27 +82,41 @@ if not os.path.exists("./AMOS"):
     print "AMOS binaries not found, needed for all steps, download now?"
     dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
-        os.system("wget http://dl.dropbox.com/u/51616170/amos-binaries.tar.gz .")
+        os.system("wget http://dl.dropbox.com/u/51616170/amos-%s-%s.binaries.tar.gz -O ./amos-binaries.tar.gz"%(OSTYPE, MACHINETYPE))
         os.system("tar -xvf amos-binaries.tar.gz")
         os.system("rm -rf amos-binaries.tar.gz")
 
-if 0 or not os.path.exists("./Amphora-2"):
-   print "Amphora 2 binaries not found, optional for Annotate step, download now?"
+if 0 or not os.path.exists("./phylosift"):
+   print "PhyloSift binaries not found, optional for Annotate step, download now?"
    dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':
-      #os.system("perl Utilities/perl/amphora_install.pl")
-      os.system("wget http://dl.dropbox.com/u/51616170/amphora2-20111130.tar.gz")
-      os.system("tar -xvzf amphora2-20111130.tar.gz")
-      os.system("rm -rf amphora2-20111130.tar.gz")
+      os.system("wget http://edhar.genomecenter.ucdavis.edu/~koadman/phylosift/phylosift_20120328.tar.bz2 -O ./phylosift_20120328.tar.bz2")
+      os.system("tar -xvjf phylosift_20120328.tar.bz2")
+      os.system("rm -rf phylosift_20120328.tar.bz2")
+      os.system("mv phylosift_20120328 phylosift")
 
 if not os.path.exists("./CA"):
    print "Celera Assembler binaries not found, optional for Assemble step, download now?"
    dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':
-      os.system("wget http://sourceforge.net/projects/wgs-assembler/files/wgs-assembler/wgs-7.0/wgs-7.0-PacBio-Linux-amd64.tar.bz2/download")
-      os.system("bunzip2 wgs-7.0-PacBio-Linux-amd64.tar.bz2")
-      os.system("tar xvf wgs-7.0-PacBio-Linux-amd64.tar")
-      os.system("rm -rf wgs-7.0-PacBio-Linux-amd64.tar")
+      if OSTYPE == 'Linux' and MACHINETYPE == "x86_64":
+         os.system("wget http://sourceforge.net/projects/wgs-assembler/files/wgs-assembler/wgs-7.0/wgs-7.0-PacBio-Linux-amd64.tar.bz2")
+         os.system("bunzip2 wgs-7.0-PacBio-Linux-amd64.tar.bz2")
+         os.system("tar xvf wgs-7.0-PacBio-Linux-amd64.tar")
+         os.system("rm -rf wgs-7.0-PacBio-Linux-amd64.tar")
+      else:
+         os.system("wget http://sourceforge.net/projects/wgs-assembler/files/wgs-assembler/wgs-7.0/wgs-7.0.tar.bz2 -O wgs-7.0.tar.bz2")
+         os.system("bunzip2 wgs-7.0.tar.bz2")
+         os.system("tar xvf wgs-7.0.tar")
+         os.system("rm -rf wgs-7.0.tar")
+         # patch CA to support PacBio sequences and non-apple compilers on OSX
+         if not ALLOW_FAST:
+            os.system("cd wgs-7.0/kmer/ && cp configure.sh configure.original")
+            os.system("cd wgs-7.0/kmer/ && cat configure.original |sed s/\-fast//g > configure.sh")
+         os.system("cd wgs-7.0/src/ && cp AS_global.h AS_global.original")
+         os.system("cd wgs-7.0/src/ && cat AS_global.original | sed 's/AS_READ_MAX_NORMAL_LEN_BITS.*11/AS_READ_MAX_NORMAL_LEN_BITS      15/g' > AS_global.h")
+         os.system("cd wgs-7.0/kmer && ./configure.sh && gmake install")
+         os.system("cd wgs-7.0/src && gmake")
       os.system("mv wgs-7.0 CA")
 
 # make sure we have setuptools available

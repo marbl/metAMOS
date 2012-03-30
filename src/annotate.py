@@ -87,7 +87,7 @@ def parse_phmmerout(phmmerout):
 @follows(FindRepeats)
 @files("%s/Annotate/in/%s.faa"%(_settings.rundir,_settings.PREFIX),"%s/Annotate/out/%s.hits"%(_settings.rundir,_settings.PREFIX))
 def Annotate(input,output):
-   if "Annotate" in _skipsteps or "FindORFS" in _skipsteps:
+   if "Annotate" in _skipsteps:
       run_process(_settings, "touch %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")
       return 0
 
@@ -118,39 +118,39 @@ def Annotate(input,output):
        run_process(_settings, "%s/blastall -v 1 -b 1 -a %d -p blastp -m 8 -e 0.00001 -i %s/Annotate/in/%s.faa -d %s/DB/refseq_protein -o %s/Annotate/out/%s.blastout"%(_settings.BLAST, _settings.threads, _settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX),"Annotate")
        run_process(_settings, "cp %s/Annotate/out/%s.blastout  %s/Postprocess/in/%s.hits"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Annotate")
        run_process(_settings, "mv %s/Annotate/out/%s.blastout  %s/Annotate/out/%s.hits"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Annotate")
-   elif _cls == "amphora":
-       if _settings.AMPHORA == "" or not os.path.exists(_settings.AMPHORA + os.sep + "amphora2"):
-          print "Error: AMPHORA not found in %s. Please check your path and try again.\n"%(_settings.AMPHORA)
+   elif _cls == "phylosift":
+       if _settings.PHYLOSIFT == "" or not os.path.exists(_settings.PHYLOSIFT + os.sep + "bin" + os.sep + "phylosift"):
+          print "Error: PhyloSift not found in %s. Please check your path and try again.\n"%(_settings.PHYLOSIFT)
           raise(JobSignalledBreak)
 
        run_process(_settings, "unlink %s/Annotate/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "Annotate")
        run_process(_settings, "ln -t %s/Annotate/in/ -s %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
 
-       amphoraCmd =  "%s/amphora2 all --threaded=%d"%(_settings.AMPHORA, _settings.threads)
-       amphoraCmd += " %s"%(getProgramParams("amphora.spec", "", "--"))
+       phylosiftCmd =  "%s/bin/phylosift all --threaded=%d"%(_settings.PHYLOSIFT, _settings.threads)
+       phylosiftCmd += " %s"%(getProgramParams("phylosift.spec", "", "--"))
        # run on contigs for now
        #for lib in readlibs:
        #   if lib.mated:
        #       if not lib.innie or lib.interleaved:
-       #          print "Warning: Amphora only supports innie non-interleaved libraries now, skipping library %d"%(lib.id)
+       #          print "Warning: PhyloSift only supports innie non-interleaved libraries now, skipping library %d"%(lib.id)
        #       else:
-       #          run_process(_settings, "%s -paired %s/Preprocess/in/%s %s/Preprocess/in/%s"%(amphoraCmd,_settings.rundir,lib.f1.fname,_settings.rundir,lib.f2.fname), "Annotate")
+       #          run_process(_settings, "%s -paired %s/Preprocess/in/%s %s/Preprocess/in/%s"%(phylosiftCmd,_settings.rundir,lib.f1.fname,_settings.rundir,lib.f2.fname), "Annotate")
        #   else:
-       #      run_process(_settings, "%s %s/Preprocess/out/lib%d.seq"%(amphoraCmd,_settings.rundir,lib.id), "Annotate")
-       run_process(_settings, "%s %s/Annotate/in/%s.asm.contig --coverage=%s/Assemble/out/%s.contig.cvg "%(amphoraCmd, _settings.rundir, _settings.PREFIX,_settings.rundir,_settings.PREFIX), "Annotate")
+       #      run_process(_settings, "%s %s/Preprocess/out/lib%d.seq"%(phylosiftCmd,_settings.rundir,lib.id), "Annotate")
+       run_process(_settings, "%s %s/Annotate/in/%s.asm.contig --coverage=%s/Assemble/out/%s.contig.cvg "%(phylosiftCmd, _settings.rundir, _settings.PREFIX,_settings.rundir,_settings.PREFIX), "Annotate")
 
        # save the results
        run_process(_settings, "unlink %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")
-       run_process(_settings, "ln -s %s/Annotate/out/Amph_temp/%s.asm.contig/sequence_taxa_summary.txt %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Annotate") 
+       run_process(_settings, "ln -s %s/Annotate/out/PS_temp/%s.asm.contig/sequence_taxa_summary.txt %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Annotate") 
        run_process(_settings, "unlink %s/Postprocess/in/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")
        run_process(_settings, "unlink %s/Postprocess/out/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")
        run_process(_settings, "ln -s %s/Annotate/out/%s.hits %s/Postprocess/in/%s.hits"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Annotate")
        run_process(_settings, "cp %s/Annotate/out/%s.hits %s/Postprocess/out/%s.hits"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Annotate")
        
-       if not os.path.exists(_settings.KRONA + os.sep + "ImportAmphora.pl"):
-           print "Error: Krona importer for Amphora 2 not found in %s. Please check your path and try again.\n"%(_settings.KRONA)
+       if not os.path.exists(_settings.KRONA + os.sep + "ImportPhyloSift.pl"):
+           print "Error: Krona importer for PhyloSift not found in %s. Please check your path and try again.\n"%(_settings.KRONA)
            raise(JobSignalledBreak)
-       run_process(_settings, "perl %s/ImportAmphora.pl -c -v -i %s/Annotate/out/%s.hits:%s/Assemble/out/%s.contig.cvg"%(_settings.KRONA,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX), "Annotate")
+       run_process(_settings, "perl %s/ImportPhyloSift.pl -c -v -i %s/Annotate/out/%s.hits:%s/Assemble/out/%s.contig.cvg"%(_settings.KRONA,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX), "Annotate")
 
    elif _cls == "fcp":
        print "FCP not yet supported.. stay tuned"

@@ -34,6 +34,7 @@ class Settings:
    NEWBLER = ""
    VELVET = ""
    VELVET_SC = ""
+   SPARSE_ASSEMBLER = ""
 
    BOWTIE = ""
 
@@ -42,7 +43,7 @@ class Settings:
    FCP = ""
    PHMMER = ""
    BLAST = ""
-   AMPHORA = ""
+   PHYLOSIFT = ""
 
    KRONA = ""
    REPEATOIRE = ""
@@ -79,6 +80,7 @@ class Settings:
       Settings.NEWBLER       = "%s%snewbler%s%s-%s"%(Settings.METAMOSDIR, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.VELVET        = "%s%scpp%s%s-%s%svelvet"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
       Settings.VELVET_SC     = "%s%scpp%s%s-%s%svelvet-sc"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
+      Settings.SPARSE_ASSEMBLER = "%s%scpp%s%s-%s%sSparseAssembler"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
 
       Settings.BOWTIE        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
 
@@ -88,7 +90,7 @@ class Settings:
       Settings.FCP           = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.PHMMER        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.BLAST         = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
-      Settings.AMPHORA       = "%s%sAmphora-2"%(Settings.METAMOSDIR, os.sep)
+      Settings.PHYLOSIFT     = "%s%sPhyloSift"%(Settings.METAMOSDIR, os.sep)
 
       Settings.KRONA         = "%s%skrona"%(Settings.METAMOS_UTILS,os.sep)
       Settings.REPEATOIRE    = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
@@ -333,6 +335,13 @@ def initConfig(kmer, threads, theRundir):
        Settings.VELVET_SC = ""
     velvetSCMD5 = getMD5Sum(Settings.VELVET_SC + os.sep + "velvetg")
 
+    # 8. SparseAssembler
+    Settings.SPARSE_ASSEMBLER = "%s%scpp%s%s-%s%sSparseAssembler"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
+    if not os.path.exists(Settings.SPARSE_ASSEMBLER + os.sep + "SparseAssembler"):
+       Settings.SPARSE_ASSEMBLER = getFromPath("SparseAssembler", "SparseAssembler")
+    sparseAssemblerMD5 = getMD5Sum(Settings.SPARSE_ASSEMBLER + os.sep + "SparseAssembler")
+
+
     # now for repeatoire
     Settings.REPEATOIRE = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
     if not os.path.exists(Settings.REPEATOIRE + os.sep + "repeatoire"):
@@ -374,20 +383,20 @@ def initConfig(kmer, threads, theRundir):
     blastMD5 = getMD5Sum(Settings.BLAST + os.sep + "blastall")
 
     # currently only supported on Linux 64-bit and only from one location
-    Settings.AMPHORA = "%s%sAmphora-2"%(Settings.METAMOSDIR, os.sep)
-    if not os.path.exists(Settings.AMPHORA + os.sep + "amphora2"):
-       print "Warning: Amphora 2 was not found, will not be available\n";
-       Settings.AMPHORA = ""
-    if Settings.AMPHORA != "" and (Settings.OSTYPE != "Linux" or Settings.MACHINETYPE != "x86_64"):
-       print "Warning: Amphora 2 not compatible with %s-%s. It requires Linux-x86_64\n"%(Settings.OSTYPE, Settings.MACHINETYPE)
-       Settings.AMPHORA = "" 
-    amphoraMD5 = getMD5Sum(Settings.AMPHORA + os.sep + "amphora2")
+    Settings.PHYLOSIFT = "%s%sphylosift"%(Settings.METAMOSDIR, os.sep)
+    if not os.path.exists(Settings.PHYLOSIFT + os.sep + "bin" + os.sep + "phylosift"):
+       print "Warning: PhyloSift was not found, will not be available\n";
+       Settings.PHYLOSIFT = ""
+    if Settings.PHYLOSIFT != "" and (Settings.OSTYPE != "Linux" or Settings.MACHINETYPE != "x86_64"):
+       print "Warning: PhyloSift not compatible with %s-%s. It requires Linux-x86_64\n"%(Settings.OSTYPE, Settings.MACHINETYPE)
+       Settings.PHYLOSIFT = "" 
+    phylosiftMD5 = getMD5Sum(Settings.PHYLOSIFT + os.sep + "bin" + os.sep + "phylosift")
 
     # finally store the configuration 
     conf = open("%s/pipeline.conf"%(Settings.rundir),'w')
 
     conf.write("#Configuration summary\n")
-    conf.write("THREADS:\t\t\t%d\n"%(Settings.threads))
+    conf.write("THREADS:\t\t%d\n"%(Settings.threads))
     conf.write("KMER:\t\t\t%d\n"%(Settings.kmer))
     conf.write("PREFIX:\t\t\t%s\n"%(Settings.PREFIX))
     conf.write("VERBOSE:\t\t%s\n"%(Settings.VERBOSE)) 
@@ -399,14 +408,15 @@ def initConfig(kmer, threads, theRundir):
     conf.write("Celera Assembler:\t%s\t%s\n"%(Settings.CA, CAMD5))
     conf.write("NEWBLER:\t\t%s\t%s\n"%(Settings.NEWBLER, newblerMD5))
     conf.write("Velvet:\t\t\t%s\t%s\nVelvet-SC:\t\t%s\t%s\n"%(Settings.VELVET, velvetMD5, Settings.VELVET_SC, velvetSCMD5))
+    conf.write("SparseAssembler:\t%s\t%s\n"%(Settings.SPARSE_ASSEMBLER, sparseAssemblerMD5))
     conf.write("Bowtie:\t\t\t%s\t%s\n"%(Settings.BOWTIE, bowtieMD5))
     conf.write("GMHMMP:\t\t\t%s\t%s\n"%(Settings.GMHMMP, gmhmmpMD5))
-    conf.write("FRAGGENESCAN:\t\t\t%s\t%s\n"%(Settings.FRAGGENESCAN, fraggenescanMD5))
+    conf.write("FRAGGENESCAN:\t\t%s\t%s\n"%(Settings.FRAGGENESCAN, fraggenescanMD5))
     conf.write("FCP:\t\t\t%s\t%s\n"%(Settings.FCP, fcpMD5))
     conf.write("PHMMER:\t\t\t%s\t%s\n"%(Settings.PHMMER, phmmerMD5))
     conf.write("BLAST:\t\t\t%s\t%s\n"%(Settings.BLAST, blastMD5))
-    conf.write("AMPHORA:\t\t%s\t%s\n"%(Settings.AMPHORA, amphoraMD5))
-    conf.write("FASTQC:\t\t%s\t%s\n"%(Settings.FASTQC, fastqcMD5))
+    conf.write("PHYLOSIFT:\t\t%s\t%s\n"%(Settings.PHYLOSIFT, phylosiftMD5))
+    conf.write("FASTQC:\t\t\t%s\t%s\n"%(Settings.FASTQC, fastqcMD5))
 
     conf.write("REPEATOIRE:\t\t%s\t%s\n"%(Settings.REPEATOIRE, repeatoireMD5))
     conf.close()

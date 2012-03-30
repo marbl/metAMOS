@@ -121,7 +121,10 @@ def map2contig():
                 read_seq = ldata[4]
                 read_qual = ldata[5]
                 read = read.split(" ")[0]
-                epos = int(spos)+len(read_seq)
+                try:
+                    epos = int(spos)+len(read_seq)
+                except ValueError:
+                    continue
                 mapped_reads[read] = 1
                 strand_dict[read] = strand
                 readcontig_dict[read] = contig

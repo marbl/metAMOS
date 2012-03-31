@@ -34,6 +34,7 @@ class Settings:
    NEWBLER = ""
    VELVET = ""
    VELVET_SC = ""
+   METAVELVET = ""
    SPARSE_ASSEMBLER = ""
 
    BOWTIE = ""
@@ -80,6 +81,7 @@ class Settings:
       Settings.NEWBLER       = "%s%snewbler%s%s-%s"%(Settings.METAMOSDIR, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.VELVET        = "%s%scpp%s%s-%s%svelvet"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
       Settings.VELVET_SC     = "%s%scpp%s%s-%s%svelvet-sc"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
+      Settings.METAVELVET    = "%s%scpp%s%s-%s%sMetaVelvet"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
       Settings.SPARSE_ASSEMBLER = "%s%scpp%s%s-%s%sSparseAssembler"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
 
       Settings.BOWTIE        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
@@ -335,6 +337,12 @@ def initConfig(kmer, threads, theRundir):
        Settings.VELVET_SC = ""
     velvetSCMD5 = getMD5Sum(Settings.VELVET_SC + os.sep + "velvetg")
 
+    #8. metavelvet
+    Settings.METAVELVET = "%s%scpp%s%s-%s%sMetaVelvet"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep);
+    if not os.path.exists(Settings.METAVELVET + os.sep + "meta-velvetg"):
+       Settings.METAVELVET = getFromPath("meta-velvetg", "METAVELVET")
+    metaVelvetMD5 = getMD5Sum(Settings.SOAP + os.sep + "meta-velvetg")
+
     # 8. SparseAssembler
     Settings.SPARSE_ASSEMBLER = "%s%scpp%s%s-%s%sSparseAssembler"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
     if not os.path.exists(Settings.SPARSE_ASSEMBLER + os.sep + "SparseAssembler"):
@@ -408,6 +416,7 @@ def initConfig(kmer, threads, theRundir):
     conf.write("Celera Assembler:\t%s\t%s\n"%(Settings.CA, CAMD5))
     conf.write("NEWBLER:\t\t%s\t%s\n"%(Settings.NEWBLER, newblerMD5))
     conf.write("Velvet:\t\t\t%s\t%s\nVelvet-SC:\t\t%s\t%s\n"%(Settings.VELVET, velvetMD5, Settings.VELVET_SC, velvetSCMD5))
+    conf.write("MetaVelvet:\t\t%s\t%s\n"%(Settings.METAVELVET, metaVelvetMD5))
     conf.write("SparseAssembler:\t%s\t%s\n"%(Settings.SPARSE_ASSEMBLER, sparseAssemblerMD5))
     conf.write("Bowtie:\t\t\t%s\t%s\n"%(Settings.BOWTIE, bowtieMD5))
     conf.write("GMHMMP:\t\t\t%s\t%s\n"%(Settings.GMHMMP, gmhmmpMD5))

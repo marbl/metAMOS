@@ -64,7 +64,7 @@ def Scaffold(input,output):
           run_process(_settings, "rm -rf %s/Scaffold/in/%s.bnk"%(_settings.rundir, _settings.PREFIX),"Scaffold")
           # build the bank for amos
           run_process(_settings, "%s/bank-transact -b %s/Scaffold/in/%s.bnk -c -m %s/Assemble/out/%s.afg"%(_settings.AMOS,_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX),"Scaffold")
-       elif _asm == "velvet" or _asm == "velvet-sc":
+       elif _asm == "velvet" or _asm == "velvet-sc" or _asm == "metavelvet":
           run_process(_settings, "rm -rf %s/Scaffold/in/%s.bnk"%(_settings.rundir, _settings.PREFIX), "Scaffold")
           run_process(_settings, "%s/bank-transact -b %s/Scaffold/in/%s.bnk -c -m %s/Assemble/out/%s.afg"%(_settings.AMOS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
        elif _asm == "ca" or _asm == "CA":

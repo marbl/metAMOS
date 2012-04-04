@@ -92,7 +92,7 @@ if not os.path.exists("./AMOS"):
     print "AMOS binaries not found, needed for all steps, download now?"
     dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
-        os.system("wget http://dl.dropbox.com/u/51616170/amos-%s-%s.binaries.tar.gz -O ./amos-binaries.tar.gz"%(OSTYPE, MACHINETYPE))
+        os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/amos-%s-%s.binaries.tar.gz -O ./amos-binaries.tar.gz"%(OSTYPE, MACHINETYPE))
         os.system("tar -xvf amos-binaries.tar.gz")
         os.system("rm -rf amos-binaries.tar.gz")
 
@@ -100,10 +100,9 @@ if 0 or not os.path.exists("./phylosift"):
    print "PhyloSift binaries not found, optional for Annotate step, download now?"
    dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':
-      os.system("wget http://edhar.genomecenter.ucdavis.edu/~koadman/phylosift/phylosift_20120328.tar.bz2 -O ./phylosift_20120328.tar.bz2")
-      os.system("tar -xvjf phylosift_20120328.tar.bz2")
-      os.system("rm -rf phylosift_20120328.tar.bz2")
-      os.system("mv phylosift_20120328 phylosift")
+      os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/phylosift-%s-%s-20120404.tar.bz2 -O ./phylosift.tar.bz2"%(OSTYPE, MACHINETYPE))
+      os.system("tar -xvjf phylosift.tar.bz2")
+      os.system("rm -rf phylosift.tar.bz2")
 
 if not os.path.exists("./CA"):
    print "Celera Assembler binaries not found, optional for Assemble step, download now?"

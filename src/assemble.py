@@ -220,7 +220,9 @@ def Assemble(input,output):
    #pick assembler
    if "Assemble" in _skipsteps or "assemble" in _skipsteps:
       return 0
-   if _asm == "soap":
+   if _asm == "none" or _asm == None:
+      pass
+   elif _asm == "soap":
       #open & update config
       soapf = open("%s/config.txt"%(_settings.rundir),'r')
       soapd = soapf.read()
@@ -378,8 +380,6 @@ def Assemble(input,output):
       print "Warning: SPades is not yet supported. Stay Tuned!"
    elif _asm.lower() == "sparseassembler":
       runSparseAssembler(_settings.SPARSE_ASSEMBLER, "SparseAssembler");
-   elif _asm == "none":
-      pass
    else:  
       print "Error: %s is an unknown assembler. No valid assembler specified."%(_asm)
       raise(JobSignalledBreak)

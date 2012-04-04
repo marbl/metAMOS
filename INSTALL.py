@@ -57,8 +57,8 @@ if not os.path.exists("./Utilities/DB/models"):
     dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         archive = "fcp_models.tar.gz"
-        os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s" % archive)
-        os.system("mv % ./Utilities/DB/." % archive)
+        os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -O %s" %(archive, archive))
+        os.system("mv %s ./Utilities/DB/." % archive)
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/%s" % archive)
         #os.system("chmod u+x Utlities/DB/models")
 

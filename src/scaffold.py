@@ -47,7 +47,7 @@ def Scaffold(input,output):
           (checkStdout, checkStderr) = p.communicate()
           numMates = int(checkStdout.strip())
 
-       if _asm == "soap" or _asm == "metaidba" or _asm == "amos" or _asm == "sparseassembler" or _asm == "none":
+       if _asm == "soap" or _asm == "metaidba" or _asm == "amos" or _asm == "sparseassembler" or _asm == "velvet" or _asm == "velvet-sc" or _asm == "metavelvet" or _asm == "none":
            for lib in _readlibs:
         
                if lib.format == "fasta":
@@ -64,9 +64,9 @@ def Scaffold(input,output):
           run_process(_settings, "rm -rf %s/Scaffold/in/%s.bnk"%(_settings.rundir, _settings.PREFIX),"Scaffold")
           # build the bank for amos
           run_process(_settings, "%s/bank-transact -b %s/Scaffold/in/%s.bnk -c -m %s/Assemble/out/%s.afg"%(_settings.AMOS,_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX),"Scaffold")
-       elif _asm == "velvet" or _asm == "velvet-sc":
-          run_process(_settings, "rm -rf %s/Scaffold/in/%s.bnk"%(_settings.rundir, _settings.PREFIX), "Scaffold")
-          run_process(_settings, "%s/bank-transact -b %s/Scaffold/in/%s.bnk -c -m %s/Assemble/out/%s.afg"%(_settings.AMOS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
+       #elif _asm == "velvet" or _asm == "velvet-sc" or _asm == "metavelvet":
+       #   run_process(_settings, "rm -rf %s/Scaffold/in/%s.bnk"%(_settings.rundir, _settings.PREFIX), "Scaffold")
+       #   run_process(_settings, "%s/bank-transact -b %s/Scaffold/in/%s.bnk -c -m %s/Assemble/out/%s.afg"%(_settings.AMOS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
        elif _asm == "ca" or _asm == "CA":
           run_process(_settings, "%s/toAmos_new -a %s/Assemble/out/%s.asm -f %s/Assemble/out/%s.frg -b %s/Scaffold/in/%s.bnk -U "%(_settings.AMOS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX),"Scaffold")
 

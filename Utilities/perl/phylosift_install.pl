@@ -65,6 +65,15 @@ chdir("Locale-Maketext-1.19");
 `mv blib/lib/Locale/ ../PhyloSift/lib/`;
 chdir("..");
 
+# add Locale::Maketext::Simple
+`wget http://search.cpan.org/CPAN/authors/id/J/JE/JESSE/Locale-Maketext-Simple-0.21.tar.gz`;
+`tar xvzf Locale-Maketext-Simple-0.21.tar.gz`;
+chdir("Locale-Maketext-Simple-0.21");
+`perl Makefile.PL`;
+`make`;
+`mv blib/lib/Locale/Maketext/* ../PhyloSift/lib/Locale/Maketext/`;
+chdir("..");
+
 # XML::Writer
 `wget http://search.cpan.org/CPAN/authors/id/J/JO/JOSEPHW/XML-Writer-0.615.tar.gz`;
 `tar xzf XML-Writer-0.615.tar.gz`;
@@ -95,7 +104,7 @@ chdir("..");
 `wget http://search.cpan.org/CPAN/authors/id/J/JP/JPEACOCK/version-0.95.tar.gz`;
 `tar xzf version-0.95.tar.gz`;
 chdir("version-0.95");
-`perl Makefile.PL`;
+`perl Makefile.PL --perl_only`;
 `make`;
 
 # put these in "legacy" because we only want to use them if the perl version is ancient -- including them breaks newer perls
@@ -111,8 +120,19 @@ $datestr .= 0 if $timerval[4] < 9;
 $datestr .= ( $timerval[4] + 1 );
 $datestr .= 0 if $timerval[3] < 9;
 $datestr .= $timerval[3];
-`mv PhyloSift phylosift_$datestr`;
-`tar cjf phylosift_$datestr.tar.bz2 phylosift_$datestr`;
-`rm -rf phylosift_$datestr`;
-`cp phylosift_$datestr.tar.bz2 ~/public_html/phylosift/phylosift_latest.tar.bz2`;
-`mv phylosift_$datestr.tar.bz2 ~/public_html/phylosift/`;
+`mv PhyloSift phylosift`;
+`tar cjf phylosift_$datestr.tar.bz2 phylosift`;
+`rm -rf phylosift`;
+
+# clean up
+`rm -rf version-0.95*`;
+`rm -rf Encode-Locale-0.04*`;
+`rm -rf Locale-Maketext-1.19*`;
+`rm -rf Locale-Maketext-Simple-0.21*`;
+`rm -rf HTTP-Message-6.03*`;
+`rm -rf JSON-2.53*`;
+`rm -rf libwww-perl-6.04*`;
+`rm -rf Bio-Phylo-0.45*`;
+`rm -rf Math-Random-0.71*`;
+`rm -rf bioperl-live*`;
+`rm -rf XML-Writer-0.615*`;

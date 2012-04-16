@@ -138,14 +138,14 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
     #print len(gene_dict.keys())
     orfs = {}
 
+    genecnt = 1
     for key in gene_dict.keys():
-        genecnt = 1
-
         if not is_scaff:
             if key in cvg_dict.keys():
                 cvgg.write("%s_gene%d\t%s\n"%(key,genecnt,cvg_dict[key])) 
             else:
                 cvgg.write("%s_gene%d\t%s\n"%(key,genecnt, 1.0))
+        genecnt = 1
         for gene in gene_dict[key].keys():
             #min aa length, read depth
             if len(gene) < 100:# or cvg_dict[key] < 5:
@@ -158,8 +158,8 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
             outf.write(">%s_gene%d\n%s"%(key,genecnt,gene))
 
             genecnt +=1
-    genecnt = 1
     for key in fna_dict.keys():
+        genecnt = 1
         for gene in fna_dict[key].keys():
             #gene = fna_dict[key][gkey]
             if len(gene) < 300:# or cvg_dict[key] < 5:

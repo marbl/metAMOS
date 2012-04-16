@@ -156,9 +156,10 @@ def Annotate(input,output):
        run_process(_settings, "mkdir %s/models/genomes/nb-temp-results"%(_settings.METAMOS_UTILS))
        print "%s/nb-classify -q %s/Annotate/in/%s.fna -m %s/models/models.txt -r %s/Annotate/out/%s.nb_results.txt"%(_settings.FCP,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX)
        run_process(_settings, "ln -s %s/models"%(_settings.METAMOS_UTILS), "Annotate")
+       run_process(_settings, "ln -s %s/models/taxonomy.txt"%(_settings.METAMOS_UTILS), "Annotate")
        run_process(_settings, "mkdir %s/Annotate/out/nb-temp-results"%(_settings.rundir), "Annotate")
-       run_process(_settings, "%s/nb-classify -q %s/Annotate/in/%s.fna -m %s/models/models.txt -r %s/Annotate/out/%s.nb_results.txt"%(_settings.FCP,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX),"Annotate")
-       run_process(_settings, "python %s/python/Epsilon-NB.py %s/Annotate/out/%s.nb_results.txt 1E5 %s/Annotate/out/%s.epsilon-nb_results.txt %s/models"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS),"Annotate")
+       run_process(_settings, "%s/nb-classify -q %s/Assemble/out/%s.asm.contig -m %s/models/models.txt -r %s/Annotate/out/%s.nb_results.txt"%(_settings.FCP,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX),"Annotate")
+       run_process(_settings, "python %s/python/Epsilon-NB.py %s/Annotate/out/%s.nb_results.txt 1E10 %s/Annotate/out/%s.epsilon-nb_results.txt"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Annotate")
        #need python TaxonomicSummary.py test.fasta nb_topModels.txt nb_taxonomicSummary.txt
        #run_process(_settings, "python %s/python/TaxonomicSummary.py %s/Annotate/in/%s.fna %s/Annotate/out/%s.nb_results.txt %s/Annotate/out/%s.epsilon-nb_results.txt"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Annotate")
        #print "FCP not yet supported.. stay tuned"

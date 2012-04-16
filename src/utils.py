@@ -376,9 +376,9 @@ def initConfig(kmer, threads, theRundir):
     fraggenescanMD5 = getMD5Sum(Settings.FRAGGENESCAN + os.sep + "FragGeneScan")
 
     Settings.FCP = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
-    if not os.path.exists(Settings.FCP + os.sep + "fcp"):
-       Settings.FCP = getFromPath("fcp", "FCP")
-    fcpMD5 = getMD5Sum(Settings.FCP + os.sep + "fcp")
+    if not os.path.exists(Settings.FCP + os.sep + "nb-classify"):
+       Settings.FCP = getFromPath("nb-classify", "FCP")
+    fcpMD5 = getMD5Sum(Settings.FCP + os.sep + "nb-classify")
 
     Settings.PHMMER = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
     if not os.path.exists(Settings.PHMMER + os.sep + "phmmer"):

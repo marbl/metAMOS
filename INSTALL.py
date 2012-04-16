@@ -52,14 +52,15 @@ if not os.path.exists("./FastQC"):
         os.system("rm %s" % archive)
         os.system("chmod u+x FastQC/fastqc")
 
-if not os.path.exists("./Utilities/DB/models"):
+if not os.path.exists("./Utilities/modelsxx"):
     print "Genome models not found, optional for FCP/NB, download now?"
     dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         archive = "fcp_models.tar.gz"
         os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -O %s" %(archive, archive))
-        os.system("mv %s ./Utilities/DB/." % archive)
-        os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/%s" % archive)
+        #os.system("mv %s ./Utilities/models/." % archive)
+        os.system("tar -C ./Utilities/ -xvf %s" % archive)
+        os.system("rm %s"%archive)
         #os.system("chmod u+x Utlities/DB/models")
 
 if not os.path.exists("./Utilities/DB/refseq_protein.pal"):

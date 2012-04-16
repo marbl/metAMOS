@@ -153,7 +153,12 @@ def Annotate(input,output):
        run_process(_settings, "perl %s/ImportPhyloSift.pl -c -v -i %s/Annotate/out/%s.hits:%s/Assemble/out/%s.contig.cvg"%(_settings.KRONA,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX), "Annotate")
 
    elif _cls == "fcp":
-       print "FCP not yet supported.. stay tuned"
+       print "%s/nb-classify -q %s/Annotate/in/%s.fna -m %s/models/models.txt -r %s/Annotate/out/%s.nb_results.txt"%(_settings.FCP,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX)
+       run_process(_settings, "%s/nb-classify -q %s/Annotate/in/%s.fna -g %s/models/genomes/ -m %s/models/models.txt -r %s/Annotate/out/%s.nb_results.txt"%(_settings.FCP,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX),"Annotate")
+       run_process(_settings, "python %s/python/Epsilon-NB.py %s/Annotate/out/%s.nb_results.txt 1E10 %s/Annotate/out/%s.epsilon-nb_results.txt %s/models"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS),"Annotate")
+       #need python TaxonomicSummary.py test.fasta nb_topModels.txt nb_taxonomicSummary.txt
+       #run_process(_settings, "python %s/python/TaxonomicSummary.py %s/Annotate/in/%s.fna %s/Annotate/out/%s.nb_results.txt %s/Annotate/out/%s.epsilon-nb_results.txt"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Annotate")
+       #print "FCP not yet supported.. stay tuned"
    elif _cls == "phymm":
        print "Phymm not yet supported.. stay tuned"
    elif _cls == None:

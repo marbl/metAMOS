@@ -1,10 +1,10 @@
 # Classify fragments using Epsilon-NB.
 
-import sys
+import sys,os
 import fileinput
 import math
 
-if len(sys.argv) != 4:
+if len(sys.argv) != 5:
 	print 'Epsilon-NB v1.0 by Donovan Parks, Norm MacDonald, and Rob Beiko'
 	print ''
 	print 'Usage: python Epsilon-NB.py <nb-results> <epsilon> <results-file>'
@@ -26,10 +26,10 @@ if sys.argv[2] == '0' or sys.argv[2] == '0.0' or float(sys.argv[2]) == 0.0:
 else:
 	epsilon = math.log(float(sys.argv[2]))
 resultsFile = sys.argv[3]
-
+model_dir = sys.argv[4]
 # read in complete taxonomy of each strain/genome
 strainToTaxonomy = {}
-for line in  fileinput.input(['taxonomy.txt']):
+for line in  fileinput.input([model_dir+os.sep+'taxonomy.txt']):
 	lineSplit = line.split('\t')
 	taxonomy = lineSplit[1].split(';')
 	

@@ -11,14 +11,16 @@ from ruffus import *
 
 _readlibs = []
 _skipsteps = []
+_forcesteps = []
 _settings = Settings()
 
-def init(reads, skipsteps):
+def init(reads, skipsteps, forcesteps):
    global _readlibs
    global _skipsteps
-
+   global _forcesteps
    _readlibs = reads
    _skipsteps = skipsteps
+   _forcesteps = forcesteps
 
 def parse_metaphyler(giMapping, toTranslate, output):
    giDictionary = {};
@@ -45,10 +47,10 @@ def parse_metaphyler(giMapping, toTranslate, output):
    GIs.close()
    outf.close()
 
-@follows(FindORFS)
+@follows(FindScaffoldORFS)
 @files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/Abundance/out/%s.taxprof.pct.txt"%(_settings.rundir,_settings.PREFIX))
 def Abundance(input,output):
-   if "FindORFS" in _skipsteps or "Abundance" in _skipsteps:
+   if "Abundance" not in _forcesteps and ("FindORFS" in _skipsteps or "FindScaffoldORFS" in _skipsteps or "Abundance" in _skipsteps):
       return 0
 
    blastfile = _settings.PREFIX+".blastx"

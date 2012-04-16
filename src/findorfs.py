@@ -238,6 +238,7 @@ def FindORFS(input,output):
        run_process(_settings, "unlink %s/Annotate/in/%s.fna"%(_settings.rundir,_settings.PREFIX),"FindORFS")
        run_process(_settings, "unlink %s/FindRepeats/in/%s.fna"%(_settings.rundir,_settings.PREFIX),"FindORFS")
        run_process(_settings, "ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
+       run_process(_settings, "ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
        run_process(_settings, "ln -t %s/FindRepeats/in/ -s %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
    elif _orf == "fraggenescan":
        run_process(_settings,"%s/FragGeneScan -s %s/FindORFS/in/%s.asm.contig -o %s/FindORFS/out/%s.orfs -w 0 -t complete"%(_settings.FRAGGENESCAN,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX))

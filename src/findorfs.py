@@ -158,12 +158,15 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
             outf.write(">%s_gene%d\n%s"%(key,genecnt,gene))
 
             genecnt +=1
+    genecnt = 1
     for key in fna_dict.keys():
         for gene in fna_dict[key].keys():
             #gene = fna_dict[key][gkey]
             if len(gene) < 300:# or cvg_dict[key] < 5:
                 continue
             outf2.write(">%s_gene%d\n%s"%(key,genecnt,gene))
+            genecnt +=1
+
 #        print gene_dict[key][0]
     outf.close()
     cvgg.close()
@@ -204,6 +207,7 @@ def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS"):
                 cvgg.write("%s\t%s\n"%(key,cvg_dict[gkey])) 
             else:
                 cvgg.write("%s\t%s\n"%(key,1.0))
+        genecnt +=1
     cvgg.close()
 
 @follows(MapReads)

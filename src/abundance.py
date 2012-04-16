@@ -45,7 +45,7 @@ def parse_metaphyler(giMapping, toTranslate, output):
    GIs.close()
    outf.close()
 
-@follows(FindScaffoldORFS)
+@follows(FindORFS)
 @files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/Abundance/out/%s.taxprof.pct.txt"%(_settings.rundir,_settings.PREFIX))
 def Abundance(input,output):
    if "FindORFS" in _skipsteps or "Abundance" in _skipsteps:

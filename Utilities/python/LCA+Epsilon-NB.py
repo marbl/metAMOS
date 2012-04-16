@@ -5,7 +5,7 @@ import fileinput
 import math
 
 if len(sys.argv) != 7:
-	print 'LCA+Epsilon-NB v1.0 by Donovan Parks, Norm MacDonald, and Rob Beiko'
+	print 'LCA+Epsilon-NB v1.0.2 by Donovan Parks, Norm MacDonald, and Rob Beiko'
 	print ''
 	print 'Usage: python LCA+Epsilon-NB.py <blastn-results> <nb-results> <E-value> <percentage> <epsilon> <results-file>'
 	print ''
@@ -28,8 +28,12 @@ blastnResults = sys.argv[1]
 nbResults = sys.argv[2]
 eValueThreshold = float(sys.argv[3])
 percentageThreshold = float(sys.argv[4]) / 100.0
-epsilon = float(sys.argv[5])
 resultsFile = sys.argv[6]
+
+if sys.argv[5] == '0' or sys.argv[5] == '0.0' or float(sys.argv[5]) == 0.0:
+	epsilon = 0.0
+else:
+	epsilon = math.log(float(sys.argv[5]))
 
 # read in complete taxonomy of each accession number
 strainToTaxonomy = {}
@@ -51,7 +55,7 @@ fragmentHits = {}
 for line in fileinput.input([blastnResults]):
 	if '# Query:' in line:
 		fragmentId = line[line.rfind(' '):]
-		fragmentHits[fragmentId.strip()] = [[0, ['u']*8]]
+		fragmentHits[fragmentId.strip()] = [[0, ['unclassified']*8]]
 		continue
 		
 	if line[0] == '#':

@@ -5,7 +5,7 @@ import fileinput
 import math
 
 if len(sys.argv) != 5:
-	print 'LCA v1.0 by Donovan Parks, Norm MacDonald, and Rob Beiko'
+	print 'LCA v1.0.2 by Donovan Parks, Norm MacDonald, and Rob Beiko'
 	print ''
 	print 'Usage: python LCA.py <blastn-results> <E-value> <percentage> <results-file>'
 	print ''
@@ -42,7 +42,7 @@ fragmentHits = {}
 for line in  fileinput.input([blastnResults]):
 	if '# Query:' in line:
 		fragmentId = line[line.rfind(' '):]
-		fragmentHits[fragmentId.strip()] = [[0, ['u']*8]]
+		fragmentHits[fragmentId.strip()] = [[0, ['unclassified']*8]]
 		continue
 		
 	if line[0] == '#':

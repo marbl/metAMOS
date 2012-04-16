@@ -348,7 +348,7 @@ if __name__ == "__main__":
     findorfs.init(readlibs, skipsteps, asm, orf)
     findreps.init(readlibs, skipsteps)
     annotate.init(readlibs, skipsteps, cls)
-    abundance.init(readlibs, skipsteps)
+    abundance.init(readlibs, skipsteps, forcesteps)
     scaffold.init(readlibs, skipsteps, retainBank, asm)
     findscforfs.init(readlibs, skipsteps, orf)
     propagate.init(readlibs, skipsteps, cls)

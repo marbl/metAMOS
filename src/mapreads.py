@@ -212,8 +212,9 @@ def map2contig():
             i+= width
         cseq_fmt += cseq[i:]+"\n"
         ctgslen = len(item[1])
+        libcov_dict[ref] = {}
         for lib in _readlibs:
-            libcov_dict[ref] = {}
+            #libcov_dict[ref] = {}
             libcov_dict[ref]["lib%d"%(lib.id)] = {}
             ii = 0
             while ii < ctgslen:

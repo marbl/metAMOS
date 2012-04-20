@@ -189,6 +189,8 @@ def map2contig():
     n50_size = 0
     n50_mid = 955,000
     ctg_cvg_file = open("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir,_settings.PREFIX),'w')
+    libcov_dict = {}
+
     for item in contig_data:
         if item == '':
             continue
@@ -196,6 +198,8 @@ def map2contig():
         item = item.split("\n",1)
         ref = item[0].split(" ")[0]
         ref = ref.replace("\n","")
+
+
         cseq = item[1].replace("\n","")
         ctgseq+=len(cseq)
         ctgsizes.append(len(cseq))
@@ -208,6 +212,14 @@ def map2contig():
             i+= width
         cseq_fmt += cseq[i:]+"\n"
         ctgslen = len(item[1])
+        libcov_dict[ref] = {}
+        for lib in _readlibs:
+            #libcov_dict[ref] = {}
+            libcov_dict[ref]["lib%d"%(lib.id)] = {}
+            ii = 0
+            while ii < ctgslen:
+                libcov_dict[ref]["lib%d"%(lib.id)][ii] = 0
+                ii+=1
         #contigdict2[ref] = item[1]
         try:
             tigr_file.write("##%s %d %d bases, 00000000 checksum.\n"%(ref.replace(">",""),len(contigdict[ref]), len(item[1])))
@@ -226,14 +238,22 @@ def map2contig():
         except KeyError:
             #no reads map to this contig, skip?
             continue
+        
         for read in contigdict[ref]:
-            
+            #libcovfile = open("%s/Assemble/out/%s.%s.contig.cov"%(_settings.rundir,_settings.PREFIX,read[3][0:4]),'w')
             try:
                 #if read[0] <= 500 and ctgslen - (int(read[1])) <= 500:
                 matectgdict[read[-1]] = ref
                 mateotdict[read[-1]] = read[2]
             except KeyError:
                 pass
+            ii = 0
+            while ii < read[-1]:
+                try:     
+                    libcov_dict[ref][read[3][0:4]][read[0]+ii]+=1
+                except KeyError:
+                    libcov_dict[ref][read[3][0:4]][read[0]+ii] = 1
+                ii+=1
             if read[2] == "-":
                 tigr_file.write("#%s(%d) [RC] %d bases, 00000000 checksum. {%d 1} <%d %d>\n"%(read[3],read[0]-1, read[-1], read[-1], read[0], read[1]))
             else:
@@ -243,6 +263,12 @@ def map2contig():
    
 
     for lib in _readlibs:
+        libcovfile = open("%s/Assemble/out/lib%d.contig.cov"%(_settings.rundir,lib.id),'w')
+        for key in libcov_dict.keys():
+            libcovfile.write(">%s\n"%(key))
+            for pos in libcov_dict[key]["lib%d"%(lib.id)].keys():
+                libcovfile.write("%d,%d\n"%(pos,libcov_dict[key]["lib%d"%(lib.id)][pos]))
+        libcovfile.close()
         mateheader = open("%s/Assemble/out/%s.lib%d.hdr"%(_settings.rundir,_settings.PREFIX,lib.id),'w')
         new_matefile = open("%s/Assemble/out/%s.lib%d.mappedmates"%(_settings.rundir,_settings.PREFIX,lib.id),'w')
         badmatefile = open("%s/Assemble/out/%s.lib%d.badmates"%(_settings.rundir,_settings.PREFIX,lib.id),'w')

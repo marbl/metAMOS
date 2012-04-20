@@ -170,9 +170,9 @@ foreach my $input (@ARGV)
 	print "Importing $fileName...\n";
 	 
 	open BLAST, "<$fileName";
-        my $annotFile = $magFile;
+        my $annotFile = $fileName;
         #print "$annotFile\n";
-        $annotFile =~ s/contig.cvg/annots/;
+        $annotFile =~ s/hits/annots/;
         #print "$annotFile\n";
         open ANNOTS, ">$annotFile" or die $!;
 

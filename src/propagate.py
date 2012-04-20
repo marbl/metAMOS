@@ -33,8 +33,9 @@ def Propagate(input,output):
 
    if _cls == "metaphyler":
        run_process(_settings, "python %s/python/create_mapping.py %s/DB/class_key.tab %s/Abundance/out/%s.classify.txt %s/Propagate/in/%s.annots"%(_settings.METAMOS_UTILS,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Propagate")
-   if _cls == "phylosift" or _cls == "PhyloSift" or _cls == "Phylosift":
-       run_process(_settings, "cp %s/Assemble/out/%s.annots %s/Propagate/in/%s.annots"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Propagate")
+   if _cls == "phylosift" or _cls == "PhyloSift" or _cls == "Phylosift" or _cls == "FCP" or _cls == "fcp":
+       run_process(_settings, "ln -s %s/Annotate/out/%s.annots %s/Propagate/in/%s.annots"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Propagate")
+
    # strip headers from file and contig name prefix
    
    # some output from the classifiers (for example PhyloSift) outputs multiple contigs with the same classification on one line

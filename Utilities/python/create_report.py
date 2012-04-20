@@ -147,27 +147,15 @@ if __name__ == "__main__":
     header = ""#metAMOS Metagenomic assembly report"
 
     footer = ""#"Generated %s"%(ds)
-    styles = ( '%s/html/style3.css'%(utils))#'layout.css', 'alt.css', 'images.css' )
+    styles = ( 'style2.css')#'layout.css', 'alt.css', 'images.css' )
     #styles = ( 'layout.css', 'alt.css', 'images.css' )
-    meta = {"description":"","author":"","viewport":"width=device-width"}
+
     page = markup.page( )
-    page.init( css=styles, title=title,header=header, metainfo=meta,footer=footer,script={"%s/html/modernizr.js"%(utils):'js'} )
+    page.init( css=styles, title=title, header=header, footer=footer )
 
 #    page.br()
-    #page.div( id_='page' )
-    #page.div( id_='header' )
-    page.div( id_ = "header-container")#.h1("title").nav("")
-    page.ul( class_="wrapper clearfix")
-    #page.div( id_="h1",value="title")
-    page.div( id_='nav')
-    page.ul()
-    page.li("<a href=\"#\">Preprocess</a></li>")
-    page.li("<a href=\"#\">Preprocess</a></li>")
-    page.li("<a href=\"#\">Preprocess</a></li>")
-    page.ul.close()
-    page.div.close()
-    #page.div.close()
-    page.div.close()
+    page.div( id_='page' )
+    page.div( id_='header' )
     page.div( id_='title')# style="vertical-align:bottom;")
     #page.font( size=14)
     page.p("metAMOS metagenomic assembly report")
@@ -185,8 +173,8 @@ if __name__ == "__main__":
     page.li("<a href=\"http://cbcb.umd.edu\">CBCB</a>")
 #    page.li( items[1] )
     page.ul.close( )
-    #page.div.close()
-
+    page.div.close()
+    
     nQC = 0
     for i in range(1, nLibs + 1):
         if os.path.exists("%s/lib%d.1.fastqc/fastqc_report.html"%(prefix, i)):
@@ -218,7 +206,7 @@ if __name__ == "__main__":
     #if os.path.exists("%s/Annotate/out/report.krona.html"%prefix):
     #    page.iframe(src="%s/Annotate/out/report.krona.html"%prefix, width="100%", height="600px")
     
-    page.div( id_='main-container')
+    page.div( id_='wrapper')
     #page.div( id_="content")
     
     #page.a( "Reference assembly:", class_='internal', href='%s'%(ref_asm) )          
@@ -280,7 +268,7 @@ if __name__ == "__main__":
   #  page.img( hspace=50, width=600, height=300, alt='Abundance', src='cov.png' )
   #  page.br()    
     page.div.close()
-    #page.div.close()
+    page.div.close()
 
     fout = open(prefix+"summary.html",'w')
     fout.write(page.__str__())

@@ -149,14 +149,14 @@ foreach my $input (@ARGV)
 		close MAG;
 	}
 
-        my @confidences;
+        my $CONF;
         my %names;
-
         if ($includeConfidence) {
+           print "Loading confidences...\n";
            my $confFile = $fileName;
            $confFile =~ s/epsilon-//g;
            open CONF, "<$confFile" or die $!;
-
+        
            my $first = 1;
            while (my $line = <CONF>) {
               chomp $line;
@@ -167,14 +167,9 @@ foreach my $input (@ARGV)
                     $count++;
                  }
                  $first = 0;
+                 last;
               }
-
-              my $remainder;
-              my ($ctgID, $remaninder) = split/\t/, $line, 2;
-              $confidences[$ctgID] = [ split/\t/, $line];
            }
-
-           close CONF;
         }
 
         my $annotFile = $fileName;
@@ -211,8 +206,8 @@ foreach my $input (@ARGV)
                       $magnitude = $magnitudes{$contigID}
                     }
                     # pick the lowest classified level to use
-                    my $bestTaxa = "";
-                    my $bestTaxaName = "";
+                    my $bestTaxa = undef;
+                    my $bestTaxaName = undef;
                     foreach my $taxa (split/;/, $taxonomy) {
                        if ($taxa eq "unclassified") {
                           last;
@@ -226,17 +221,30 @@ foreach my $input (@ARGV)
                        }
                     }
 
-                    my $confidence = 0;
-                    if ($includeConfidence && defined($names{$bestTaxaName})) {
-                       my $index = $names{$bestTaxaName};
-                       $confidence = $confidences[$contigID][$index];
+                    if (defined($bestTaxa)) {
+                       my $confidence = 0;
+                       if ($includeConfidence && defined($names{$bestTaxaName})) {
+                          my $index = $names{$bestTaxaName};
+                          while ( 1 ) {
+                             my $confLine = <CONF>;
+                             chomp $confLine;
+                             my ($confID, $remainder) = split /\t/, $confLine, 2;
+                             if ($confID eq $contigID) {
+                                $confidence = ( split/\t/, $confLine )[$index]; 
+                                last;
+                             }
+                          }
+                       }
+                       add($set, \%tree, $bestTaxa, $magnitude, $confidence);
                     }
-                    add($set, \%tree, $bestTaxa, $magnitude, $confidence);
                     $totalMagnitude += $magnitude;
                 }
 	}
         close ANNOTS;
         close FCP;
+        if ($includeConfidence) {
+           close CONF;
+        }
 	
 	if ( $include && $totalMagnitude )
 	{

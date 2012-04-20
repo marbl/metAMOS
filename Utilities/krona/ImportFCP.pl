@@ -99,11 +99,13 @@ print "Loading name to taxonomy index...\n";
 open INFO, "<$scriptPath/taxonomy.tab" or die
 	"Taxonomy not found.  Was updateTaxonomy.sh run?";
 my %ids;
+my @classes;
 while ( my $line = <INFO> )
 {
         chomp $line;
         my ($id, $depth, $parent, $rank, $name) = split /\t/, $line;
 	$ids{$name} = $id;
+        $classes[$id] = $rank;
 }
 
 close INFO;
@@ -194,7 +196,6 @@ foreach my $input (@ARGV)
 		my $line = <FCP>;
 		
 		chomp $line;
-                print "$line";
 		my
 		(
                         $contigID,
@@ -219,8 +220,11 @@ foreach my $input (@ARGV)
                        $bestTaxa = $ids{$taxa};
                        $bestTaxaName = $taxa;
                        $bestTaxaName =~ s/\s/_/g;
+
+                       if ($classes[$bestTaxa] eq "class") {
+                          print ANNOTS "$contigID\t$bestTaxa\n";
+                       }
                     }
-                    print ANNOTS "$contigID\t$bestTaxa\n";
 
                     my $confidence = 0;
                     if ($includeConfidence && defined($names{$bestTaxaName})) {

@@ -81,9 +81,10 @@ def Scaffold(input,output):
    # after the banks are created, skip the scaffolding when we have no mates
    if _mated == False and numMates == 0:
        print "No mate pair info available for scaffolding, skipping"
-       run_process(_settings, "touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX), "Scaffold")
-       _skipsteps.append("FindScaffoldORFS")
-       _skipsteps.append("Propagate")
+       run_process(_settings, "ln -s %s/Assemble/out/%s.asm.contig %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
+       #run_process(_settings, "touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX), "Scaffold")
+       #_skipsteps.append("FindScaffoldORFS")
+       #_skipsteps.append("Propagate")
        return 0
 
    #use asmQC to update mate insert lens

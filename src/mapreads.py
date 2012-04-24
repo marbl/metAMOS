@@ -98,15 +98,15 @@ def map2contig():
             #run_process(_settings, "%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir))
             if "bowtie" not in _skipsteps and (lib.format == "fasta" or lib.format == "sff"):
                 if trim:
-                    run_process(_settings, "%s/bowtie -p %d -f -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/%s.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX),"Scaffold")
+                    run_process(_settings, "%s/bowtie -p %d -f -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                 else:
-                    run_process(_settings, "%s/bowtie -p %d -f -l 25 -e 140 --best --strata -m 10 -k 1 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/%s.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX))
+                    run_process(_settings, "%s/bowtie -p %d -f -l 25 -e 140 --best --strata -m 10 -k 1 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
             elif "bowtie" not in _skipsteps and lib.format != "fasta":
                 if trim:
-                    run_process(_settings, "%s/bowtie  -p %d -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/%s.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX),"Scaffold")
+                    run_process(_settings, "%s/bowtie  -p %d -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                 else:
-                    run_process(_settings, "%s/bowtie  -p %d -l 25 -e 140 --best --strata -m 10 -k 1 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/%s.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX),"Scaffold")
-            infile = open("%s/Assemble/out/%s.bout"%(_settings.rundir,_settings.PREFIX),'r')
+                    run_process(_settings, "%s/bowtie  -p %d -l 25 -e 140 --best --strata -m 10 -k 1 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+            infile = open("%s/Assemble/out/lib%d.bout"%(_settings.rundir,lib.id),'r')
             for line1 in infile.xreadlines():
                 line1 = line1.replace("\n","")
                 ldata = line1.split("\t")
@@ -138,9 +138,9 @@ def map2contig():
                 else:
                     fiveprimeend_dict[read] = int(epos)
                 try:
-                    contigdict[contig].append([int(spos), int(epos), strand, read,len(read_seq)])
+                    contigdict[contig].append([int(spos), int(epos), strand, read,len(read_seq),lib.id])
                 except KeyError:
-                    contigdict[contig] = [[int(spos),int(epos),strand,read,len(read_seq)]]
+                    contigdict[contig] = [[int(spos),int(epos),strand,read,len(read_seq),lib.id]]
                 #print contig
                 seqdict[read] = read_seq
                 seqfile.write(">%s\n%s\n"%(read,read_seq))
@@ -216,11 +216,15 @@ def map2contig():
         #libcov_dict[ref] = {}
         for lib in _readlibs:
             #libcov_dict[ref] = {}
-            libcov_dict["lib%d"%(lib.id)][ref] = {}
+            libcov_dict["lib%d"%(lib.id)] = {}
              
             ii = 0
             while ii < ctgslen:
-                libcov_dict["lib%d"%(lib.id)][ref][ii] = 0
+                try:
+                    libcov_dict["lib%d"%(lib.id)][ref][ii] = 0
+                except KeyError:
+                    libcov_dict["lib%d"%(lib.id)][ref] = {}
+                    libcov_dict["lib%d"%(lib.id)][ref][ii] = 0
                 ii+=1
         #contigdict2[ref] = item[1]
         try:
@@ -245,28 +249,30 @@ def map2contig():
             #libcovfile = open("%s/Assemble/out/%s.%s.contig.cov"%(_settings.rundir,_settings.PREFIX,read[3][0:4]),'w')
             try:
                 #if read[0] <= 500 and ctgslen - (int(read[1])) <= 500:
-                matectgdict[read[-1]] = ref
-                mateotdict[read[-1]] = read[2]
+                matectgdict[read[-2]] = ref
+                mateotdict[read[-2]] = read[2]
             except KeyError:
                 pass
             ii = 0
-            while ii < read[-1]:
+            while ii < read[-2]:
+
                 try:     
-                    libcov_dict[read[3][0:4]][ref][read[0]+ii]+=1
+                    libcov_dict["lib%d"%(read[-1])][ref][read[0]+ii]+=1
                 except KeyError:
-                    libcov_dict[read[3][0:4]][ref][read[0]+ii] = 1
+                    libcov_dict["lib%d"%(read[-1])][ref][read[0]+ii] = 1
                 ii+=1
             if read[2] == "-":
-                tigr_file.write("#%s(%d) [RC] %d bases, 00000000 checksum. {%d 1} <%d %d>\n"%(read[3],read[0]-1, read[-1], read[-1], read[0], read[1]))
+                tigr_file.write("#%s(%d) [RC] %d bases, 00000000 checksum. {%d 1} <%d %d>\n"%(read[3],read[0]-1, read[-2], read[-2], read[0], read[1]))
             else:
-                tigr_file.write("#%s(%d) [] %d bases, 00000000 checksum. {1 %d} <%d %d>\n"%(read[3],read[0]-1, read[-1], read[-1], read[0], read[1]))
+                tigr_file.write("#%s(%d) [] %d bases, 00000000 checksum. {1 %d} <%d %d>\n"%(read[3],read[0]-1, read[-2], read[-2], read[0], read[1]))
             tigr_file.write(seqdict[read[3]]+"\n")
 
    
 
     for lib in _readlibs:
         libcovfile = open("%s/Assemble/out/lib%d.contig.cov"%(_settings.rundir,lib.id),'w')
-        for libid in libcov_dict.keys():
+        libid = "lib%d"%(lib.id)
+        if 1:#for libid in libcov_dict.keys():
             for ctgid in libcov_dict[libid].keys():
                 libcovfile.write(">%s\n"%(ctgid))
                 for pos in libcov_dict[libid][ctgid].keys():

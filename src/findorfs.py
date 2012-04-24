@@ -191,7 +191,7 @@ def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS"):
     data = genefile.read()
     seqs = data.split(">")[1:]
     gene_ids = []
-    
+    orfhdrs = {}
     for seq in seqs:
         hdr,gene = seq.split("\n",1)
         hdr = hdr.split("\n")[0]

@@ -190,25 +190,43 @@ def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS"):
   
     data = genefile.read()
     seqs = data.split(">")[1:]
-    gene_ids = []    
+    gene_ids = []
+    
     for seq in seqs:
         hdr,gene = seq.split("\n",1)
         hdr = hdr.split("\n")[0]
         gene_ids.append(hdr)
-    for key in gene_ids:
-        genecnt = 1
-        gkey = ""
-        if not is_scaff:
-            for ckey in cvg_dict.keys():
-                if ckey in key:
-                    gkey = ckey
-            
-            if gkey != "":
-                cvgg.write("%s\t%s\n"%(key,cvg_dict[gkey])) 
-            else:
-                cvgg.write("%s\t%s\n"%(key,1.0))
-        genecnt +=1
+
+    for seq in seqs:
+       hdr,gene = seq.split("\n",1)
+       #hdr = hdr.split("\n")[0]
+       hdr = hdr.rstrip("\n")
+       #gene_ids.append(hdr)
+       #split the header in two
+       orfkey = '_'.join(hdr.split('_')[:6])
+       orfval = '_'.join(hdr.split('_')[7:])
+       orfhdrs[orfkey]=orfval
+
+    for key in orfhdrs.keys():
+        if key in cvg_dict:
+            cvgg.write("%s\t%s\n"%((key + orfhdrs[key]),cvg_dict[key]))
+        else:
+            cvgg.write("%s\t%s\n"%((key + orfhdrs[key]),str(1.0)))
     cvgg.close()
+    #for key in gene_ids:
+    #    genecnt = 1
+    #    gkey = ""
+    #    if not is_scaff:
+    #        for ckey in cvg_dict.keys():
+    #            if ckey in key:
+    #                gkey = ckey
+    #        
+    #        if gkey != "":
+    #            cvgg.write("%s\t%s\n"%(key,cvg_dict[gkey])) 
+    #        else:
+    #            cvgg.write("%s\t%s\n"%(key,1.0))
+    #    genecnt +=1
+    #cvgg.close()
 
 @follows(MapReads)
 @files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.PREFIX))

@@ -189,6 +189,7 @@ def map2contig():
     n50_size = 0
     n50_mid = 955,000
     ctg_cvg_file = open("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir,_settings.PREFIX),'w')
+    ctg_cnt_file = open("%s/Assemble/out/%s.contig.cnt"%(_settings.rundir,_settings.PREFIX),'w')
     libcov_dict = {}
     for lib in _readlibs:
         libcov_dict["lib%d"%(lib.id)] = {}
@@ -241,6 +242,7 @@ def map2contig():
         #print contigdict[ref]
         try:
             ctg_cvg_file.write("%s\t%.2f\n"%(ref,(float(len(contigdict[ref])*len(seqdict[contigdict[ref][0][3]]))/float(ctgslen))))
+            ctg_cnt_file.write("%s\t%d\n"%(ref,len(contigdict[ref])))
         except KeyError:
             #no reads map to this contig, skip?
             continue
@@ -347,6 +349,7 @@ def map2contig():
         run_process(_settings, "cat %s/Assemble/out/%s.lib%d.mappedmates >> %s/Assemble/out/%s.lib%d.hdr "%(_settings.rundir,_settings.PREFIX, lib.id,_settings.rundir,_settings.PREFIX,lib.id))
         run_process(_settings, "cp %s/Assemble/out/%s.lib%d.hdr %s/Assemble/out/%s.lib%d.mappedmates "%(_settings.rundir,_settings.PREFIX, lib.id,_settings.rundir,_settings.PREFIX,lib.id))
     ctg_cvg_file.close()
+    ctg_cnt_file.close()
     tigr_file.close()
 
 @files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/Assemble/out/%s.bout"%(_settings.rundir,_settings.PREFIX))

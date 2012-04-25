@@ -216,7 +216,7 @@ def map2contig():
         #libcov_dict[ref] = {}
         for lib in _readlibs:
             #libcov_dict[ref] = {}
-            libcov_dict["lib%d"%(lib.id)] = {}
+            #libcov_dict["lib%d"%(lib.id)] = {}
              
             ii = 0
             while ii < ctgslen:

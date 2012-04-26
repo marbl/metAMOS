@@ -33,6 +33,7 @@ def usage():
     print "-f = <runPipeline step>: force this step to be run"
     print "-v: verbose output? (default = NO)"
     print "-4: 454 data? (default = NO)"
+    print "-b: save (bowtie) index? (default = NO)"
     
     #print "options: annotate, stopafter, startafter, fq, fa"
 
@@ -56,6 +57,7 @@ output = None
 reads = None
 quals = None
 format = None
+savebtidx = False
 verbose = False
 bowtie_mapping = 1
 startat = None
@@ -151,7 +153,8 @@ for o, a in opts:
         #tweak all parameters to run fast
         #bambus2, use SOAP, etc
         runfast = True
-    
+    elif o in ("-b","--savebowtieidx"):
+        savebtidx = True
     else:
         assert False, "unhandled option"
 
@@ -359,7 +362,7 @@ if __name__ == "__main__":
     # initialize submodules
     preprocess.init(readlibs, skipsteps, asm, run_fastqc,filter)
     assemble.init(readlibs, skipsteps, asm, usecontigs)
-    mapreads.init(readlibs, skipsteps, asm, mapper)
+    mapreads.init(readlibs, skipsteps, asm, mapper, savebtidx)
     findorfs.init(readlibs, skipsteps, asm, orf)
     findreps.init(readlibs, skipsteps)
     annotate.init(readlibs, skipsteps, cls)

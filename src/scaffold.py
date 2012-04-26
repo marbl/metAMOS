@@ -89,6 +89,7 @@ def Scaffold(input,output):
 
    #use asmQC to update mate insert lens
    run_process(_settings, "%s/asmQC -b %s/Scaffold/in/%s.bnk -scaff -recompute -update -numsd 2"%(_settings.AMOS,_settings.rundir,_settings.PREFIX))
+   run_process(_settings, "%s/bank-unlock %s/Scaffold/in/%s.bnk"%(_settings.AMOS,_settings.rundir,_settings.PREFIX))
    #calls to Bambus2, goBambus2 script
    # first, parse the parameters
    markRepeatParams = getProgramParams(_settings.METAMOS_UTILS, "bambus.spec", "MarkRepeats", "-")

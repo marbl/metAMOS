@@ -2,6 +2,12 @@ import os, sys, string, subprocess, distutils.util
 
 print "<<Weclome to metAMOS install>>"
 
+silentInstall=False
+if (len(sys.argv) > 1):
+  if sys.argv[1] == 'silent':
+     silentInstall=True
+     print "Running in silent mode"
+
 ALLOW_FAST=True
 OSTYPE="Linux"
 OSVERSION="1"
@@ -44,7 +50,10 @@ if (sys.version_info[0] < 2) or (sys.version_info[0] == 2 and sys.version_info[1
 
 if not os.path.exists("./FastQC"):
     print "FastQC not found, optional for Preprocess, download now?"
-    dl = raw_input("Enter Y/N: ")
+    if silentInstall:
+       dl = 'y'
+    else:
+       dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         archive = "fastqc_v0.10.0.zip"
         os.system("wget http://www.bioinformatics.bbsrc.ac.uk/projects/fastqc/%s" % archive)
@@ -54,7 +63,10 @@ if not os.path.exists("./FastQC"):
 
 if not os.path.exists("./Utilities/models"):
     print "Genome models not found, optional for FCP/NB, download now?"
-    dl = raw_input("Enter Y/N: ")
+    if silentInstall:
+       dl = 'y'
+    else:
+       dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         archive = "fcp_models.tar.gz"
         os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -O %s" %(archive, archive))
@@ -66,7 +78,10 @@ if not os.path.exists("./Utilities/models"):
 
 if not os.path.exists("./Utilities/DB/refseq_protein.pal"):
     print "refseq protein DB not found, needed for Annotate step, download now?"
-    dl = raw_input("Enter Y/N: ")
+    if silentInstall:
+       dl = 'y'
+    else:
+       dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         print "Download and install refseq protein DB.."
         os.system("perl ./Utilities/perl/update_blastdb.pl refseq_protein")
@@ -84,7 +99,10 @@ if not os.path.exists("./Utilities/DB/refseq_protein.pal"):
 
 if not os.path.exists("./Utilities/krona/taxonomy.tab"):
     print "ncbi taxonomy file not found, needed for Postprocess, download now?"
-    dl = raw_input("Enter Y/N: ")
+    if silentInstall:
+       dl = 'y'
+    else:
+       dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         print "Download and install ncbi taxonomy.."
         os.system("./Utilities/krona/updateTaxonomy.sh")
@@ -92,7 +110,10 @@ if not os.path.exists("./Utilities/krona/taxonomy.tab"):
 
 if not os.path.exists("./AMOS"):
     print "AMOS binaries not found, needed for all steps, download now?"
-    dl = raw_input("Enter Y/N: ")
+    if silentInstall:
+       dl = 'y'
+    else:
+       dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/amos-%s-%s.binaries.tar.gz -O ./amos-binaries.tar.gz"%(OSTYPE, MACHINETYPE))
         os.system("tar -xvf amos-binaries.tar.gz")
@@ -100,7 +121,10 @@ if not os.path.exists("./AMOS"):
 
 if 0 or not os.path.exists("./phylosift"):
    print "PhyloSift binaries not found, optional for Annotate step, download now?"
-   dl = raw_input("Enter Y/N: ")
+   if silentInstall:
+      dl = 'y'
+   else:
+      dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':
       os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/phylosift-%s-%s-20120404.tar.bz2 -O ./phylosift.tar.bz2"%(OSTYPE, MACHINETYPE))
       os.system("tar -xvjf phylosift.tar.bz2")
@@ -108,7 +132,10 @@ if 0 or not os.path.exists("./phylosift"):
 
 if not os.path.exists("./CA"):
    print "Celera Assembler binaries not found, optional for Assemble step, download now?"
-   dl = raw_input("Enter Y/N: ")
+   if silentInstall:
+      dl = 'y'
+   else:
+      dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':
       if OSTYPE == 'Linux' and MACHINETYPE == "x86_64":
          os.system("wget http://sourceforge.net/projects/wgs-assembler/files/wgs-assembler/wgs-7.0/wgs-7.0-PacBio-Linux-amd64.tar.bz2")

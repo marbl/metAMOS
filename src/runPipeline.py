@@ -33,6 +33,7 @@ def usage():
     print "-f = <runPipeline step>: force this step to be run"
     print "-v: verbose output? (default = NO)"
     print "-4: 454 data? (default = NO)"
+    print "-b: save (bowtie) index? (default = NO)"
     
     #print "options: annotate, stopafter, startafter, fq, fa"
 
@@ -44,11 +45,19 @@ except getopt.GetoptError, err:
     usage()
     sys.exit(2)
 
+supported_genecallers = ["fraggenescan","metagenemark"]
+supported_assemblers = ["soap","soapdenovo","newbler","ca","velvet","metavelvet","metaidba","sparse","sparseassembler","minimus"]
+supported_mappers = ["bowtie"]
+supported_abundance = ["metaphyler"]
+supported_classifiers = ["FCP","fcp","PhyloSift","phylosift","phmmer","blast","metaphyler"]
+supported_scaffolders = ["bambus2"]
+
 allsteps = ["Preprocess","Assemble","FindORFS","Abundance","Annotate","Scaffold","Propagate","Classify","Postprocess"]
 output = None
 reads = None
 quals = None
 format = None
+savebtidx = False
 verbose = False
 bowtie_mapping = 1
 startat = None
@@ -123,20 +132,29 @@ for o, a in opts:
         cls = a#"phmmer"
         if cls == "phylosift" or cls == "PhyloSift":
             cls = "phylosift"
+        if cls not in supported_classifiers:
+            print "!!Sorry, %s is not a supported classification method. Using FCP instead"%(cls)
+            cls = "fcp"
     elif o in ("-a","--assembler"):
         #maximus,CA,soap
         #default: maximus?
         asm = a.lower()
         if asm == "metaidba":
             bowtie_mapping = 1
-
+        if asm not in supported_assemblers:
+            print "!!Sorry, %s is not a supported assembler. Using SOAPdenovo instead"%(asm)
+            asm = "soap"
     elif o in ("-g","--genecaller"):
         orf = a
+        if orf not in supported_genecallers:
+            print "!!Sorry, %s is not a supported gene caller. Using FragGeneScan instead"%(orf)
+            orf = "fraggenescan"
     elif o in ("-f","--fastest"):
         #tweak all parameters to run fast
         #bambus2, use SOAP, etc
         runfast = True
-    
+    elif o in ("-b","--savebowtieidx"):
+        savebtidx = True
     else:
         assert False, "unhandled option"
 
@@ -344,7 +362,7 @@ if __name__ == "__main__":
     # initialize submodules
     preprocess.init(readlibs, skipsteps, asm, run_fastqc,filter)
     assemble.init(readlibs, skipsteps, asm, usecontigs)
-    mapreads.init(readlibs, skipsteps, asm, mapper)
+    mapreads.init(readlibs, skipsteps, asm, mapper, savebtidx)
     findorfs.init(readlibs, skipsteps, asm, orf)
     findreps.init(readlibs, skipsteps)
     annotate.init(readlibs, skipsteps, cls)

@@ -14,14 +14,16 @@ _skipsteps = []
 _settings = Settings()
 _asm = None
 _mapper = "bowtie"
-def init(reads, skipsteps, asm,mapper):
+def init(reads, skipsteps, asm,mapper,savebtidx):
    global _readlibs
    global _asm
    global _skipsteps
+   global _savebtidx
    _mapper = mapper
    _readlibs = reads
    _skipsteps = skipsteps
    _asm = asm
+   _savebtidx = savebtidx
 
 def meanstdv(x):
     n, mean, std = len(x), 0, 0
@@ -93,8 +95,8 @@ def map2contig():
                     linecnt +=1
                 f1.close()
                 f2.close()
-            if not os.path.exists("%s/Assemble/out/IDX.1.ebwt"%(_settings.rundir)):
-                run_process(_settings, "%s/bowtie-build -o 2 %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir),"Scaffold")
+            if "bowtie" not in _skipsteps and not _savebtidx:# and not os.path.exists("%s/Assemble/out/IDX.1.ebwt"%(_settings.rundir)):
+                run_process(_settings, "%s/bowtie-build -o 2 %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir),"MapReads")
             #run_process(_settings, "%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir))
             if "bowtie" not in _skipsteps and (lib.format == "fasta" or lib.format == "sff"):
                 if trim:

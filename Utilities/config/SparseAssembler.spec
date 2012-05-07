@@ -27,6 +27,6 @@ GS 2000000
 NodeCovTh 1
 EdgeCovTh 0
 BFS 1
-PathCovTh 100
+PathCovTh 5
 ResolveBranchesPE 1
 LinkCovTh 1

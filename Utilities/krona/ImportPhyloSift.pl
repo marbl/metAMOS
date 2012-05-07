@@ -24,7 +24,7 @@ use lib "$scriptPath/";
 use Getopt::Long;
 use Krona;
 
-my $AMPHORA_MIN_CONFIDENCE = 0.15;
+my $PHYLOSIFT_MIN_CONFIDENCE = 0.15;
 my %TAXONOMIC_ORDERING = ( 
 		"no rank" => 0,
 		"domain" => 1,
@@ -75,8 +75,8 @@ if
  	print '
 
 Description:
-   Infers taxonomic abundance from Amphora results.  By default, each
-   Amphora result file will create a separate dataset named after the file
+   Infers taxonomic abundance from PhyloSift results.  By default, each
+   PhyloSift result file will create a separate dataset named after the file
    (see -c).
 
 Usage:
@@ -170,9 +170,9 @@ foreach my $input (@ARGV)
 	print "Importing $fileName...\n";
 	 
 	open BLAST, "<$fileName";
-        my $annotFile = $magFile;
+        my $annotFile = $fileName;
         #print "$annotFile\n";
-        $annotFile =~ s/contig.cvg/annots/;
+        $annotFile =~ s/hits/annots/;
         #print "$annotFile\n";
         open ANNOTS, ">$annotFile" or die $!;
 
@@ -218,7 +218,7 @@ foreach my $input (@ARGV)
                            print ANNOTS "$currCtg\t$bestTaxa{$taxa}\n";
                        }
 
-                       if ($bestScores{$taxa} > $AMPHORA_MIN_CONFIDENCE) {
+                       if ($bestScores{$taxa} > $PHYLOSIFT_MIN_CONFIDENCE) {
                           if (!defined($bestTaxon)) {
                              $bestTaxon = $bestTaxa{$taxa};
                              $bestName = $taxa;

@@ -53,18 +53,18 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
                 #print prevhdraa, prevhdrnt#, curseqaa, curseqnt
                 if prevhdraa and curseqaa != "":
                     try:
-                        gene_dict[curcontig].append(curseqaa)
+                        gene_dict[curcontig][curseqaa] = 1
                     except KeyError:
-                        gene_dict[curcontig] = []
-                        gene_dict[curcontig].append(curseqaa)
+                        gene_dict[curcontig] = {}
+                        gene_dict[curcontig][curseqaa] =1
                     curseqaa = ""
 
                 elif prevhdrnt and curseqnt != "":
                     try:
-                        fna_dict[curcontig].append(curseqnt)
+                        fna_dict[curcontig][curseqnt] = 1
                     except KeyError:
-                        fna_dict[curcontig] = []
-                        fna_dict[curcontig].append(curseqnt)
+                        fna_dict[curcontig] = {}
+                        fna_dict[curcontig][curseqnt] = 1
                     curseqnt = ""
 
                 prevhdrnt = 1
@@ -74,17 +74,17 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
 
                 if prevhdrnt and curseqnt != "":
                     try:
-                        fna_dict[curcontig].append(curseqnt)
+                        fna_dict[curcontig][curseqnt] = 1
                     except KeyError:
-                        fna_dict[curcontig] = []
-                        fna_dict[curcontig].append(curseqnt)
+                        fna_dict[curcontig] = {}
+                        fna_dict[curcontig][curseqnt] = 1
                     curseqnt = ""
                 elif prevhdraa and curseqaa != "":
                     try:
-                        gene_dict[curcontig].append(curseqaa)
+                        gene_dict[curcontig][curseqaa] = 1
                     except KeyError:
-                        gene_dict[curcontig] = []
-                        gene_dict[curcontig].append(curseqaa)
+                        gene_dict[curcontig] = {}
+                        gene_dict[curcontig][curseqaa] = 1
                     curseqaa = ""
                 prevhdraa = 1
                 prevhdrnt = 0
@@ -113,18 +113,18 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
             continue
     if prevhdraa and curseqaa != "":
         try:
-          gene_dict[curcontig].append(curseqaa)
+          gene_dict[curcontig][curseqaa] = 1
         except KeyError:
-          gene_dict[curcontig] = []
-          gene_dict[curcontig].append(curseqaa)
+          gene_dict[curcontig] = {}
+          gene_dict[curcontig][curseqaa] = 1
           curseqaa = ""
 
     elif prevhdrnt and curseqnt != "":
         try:
-          fna_dict[curcontig].append(curseqnt)
+          fna_dict[curcontig][curseqnt] = 1
         except KeyError:
-          fna_dict[curcontig] = []
-          fna_dict[curcontig].append(curseqnt)
+          fna_dict[curcontig] = {}
+          fna_dict[curcontig][curseqnt] = 1
     if is_scaff:
         outf = open("%s/FindScaffoldORFS/out/%s.faa"%(_settings.rundir,_settings.PREFIX),'w')
         outf2 = open("%s/FindScaffoldORFS/out/%s.fna"%(_settings.rundir,_settings.PREFIX),'w')
@@ -138,15 +138,15 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
     #print len(gene_dict.keys())
     orfs = {}
 
+    genecnt = 1
     for key in gene_dict.keys():
-        genecnt = 1
-
         if not is_scaff:
             if key in cvg_dict.keys():
                 cvgg.write("%s_gene%d\t%s\n"%(key,genecnt,cvg_dict[key])) 
             else:
                 cvgg.write("%s_gene%d\t%s\n"%(key,genecnt, 1.0))
-        for gene in gene_dict[key]:
+        genecnt = 1
+        for gene in gene_dict[key].keys():
             #min aa length, read depth
             if len(gene) < 100:# or cvg_dict[key] < 5:
                 continue
@@ -159,10 +159,14 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
 
             genecnt +=1
     for key in fna_dict.keys():
-        for gene in fna_dict[key]:
+        genecnt = 1
+        for gene in fna_dict[key].keys():
+            #gene = fna_dict[key][gkey]
             if len(gene) < 300:# or cvg_dict[key] < 5:
                 continue
             outf2.write(">%s_gene%d\n%s"%(key,genecnt,gene))
+            genecnt +=1
+
 #        print gene_dict[key][0]
     outf.close()
     cvgg.close()
@@ -186,24 +190,43 @@ def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS"):
   
     data = genefile.read()
     seqs = data.split(">")[1:]
-    gene_ids = []    
+    gene_ids = []
+    orfhdrs = {}
     for seq in seqs:
         hdr,gene = seq.split("\n",1)
         hdr = hdr.split("\n")[0]
         gene_ids.append(hdr)
-    for key in gene_ids:
-        genecnt = 1
-        gkey = ""
-        if not is_scaff:
-            for ckey in cvg_dict.keys():
-                if ckey in key:
-                    gkey = ckey
-            
-            if gkey != "":
-                cvgg.write("%s\t%s\n"%(key,cvg_dict[gkey])) 
-            else:
-                cvgg.write("%s\t%s\n"%(key,1.0))
+
+    for seq in seqs:
+       hdr,gene = seq.split("\n",1)
+       #hdr = hdr.split("\n")[0]
+       hdr = hdr.rstrip("\n")
+       #gene_ids.append(hdr)
+       #split the header in two
+       orfkey = '_'.join(hdr.split('_')[:6])
+       orfval = '_'.join(hdr.split('_')[7:])
+       orfhdrs[orfkey]=orfval
+
+    for key in orfhdrs.keys():
+        if key in cvg_dict:
+            cvgg.write("%s\t%s\n"%((key + orfhdrs[key]),cvg_dict[key]))
+        else:
+            cvgg.write("%s\t%s\n"%((key + orfhdrs[key]),str(1.0)))
     cvgg.close()
+    #for key in gene_ids:
+    #    genecnt = 1
+    #    gkey = ""
+    #    if not is_scaff:
+    #        for ckey in cvg_dict.keys():
+    #            if ckey in key:
+    #                gkey = ckey
+    #        
+    #        if gkey != "":
+    #            cvgg.write("%s\t%s\n"%(key,cvg_dict[gkey])) 
+    #        else:
+    #            cvgg.write("%s\t%s\n"%(key,1.0))
+    #    genecnt +=1
+    #cvgg.close()
 
 @follows(MapReads)
 @files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.PREFIX))
@@ -237,6 +260,7 @@ def FindORFS(input,output):
        run_process(_settings, "unlink %s/Annotate/in/%s.fna"%(_settings.rundir,_settings.PREFIX),"FindORFS")
        run_process(_settings, "unlink %s/FindRepeats/in/%s.fna"%(_settings.rundir,_settings.PREFIX),"FindORFS")
        run_process(_settings, "ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
+       run_process(_settings, "ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
        run_process(_settings, "ln -t %s/FindRepeats/in/ -s %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
    elif _orf == "fraggenescan":
        run_process(_settings,"%s/FragGeneScan -s %s/FindORFS/in/%s.asm.contig -o %s/FindORFS/out/%s.orfs -w 0 -t complete"%(_settings.FRAGGENESCAN,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX))

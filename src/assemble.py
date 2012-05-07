@@ -51,6 +51,34 @@ def extractNewblerReads():
           run_process(_settings, "rm %s/Preprocess/out/lib%d.noPairs.sff"%(_settings.rundir, lib.id), "Assemble")
        elif lib.mated:
           run_process(_settings, "cat %s/Preprocess/out/lib%d.mates >> %s/Preprocess/out/all.seq.mates"%(_settings.rundir, lib.id, _settings.rundir), "Assemble")
+
+def getVelvetGCommand(velvetPath):
+   CATEGORIES = 0.0;
+   p = subprocess.Popen("%s/velveth | grep CATEGORIES"%(velvetPath), shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   (checkStdout, checkStderr) = p.communicate()
+   if checkStderr != "":
+      print "Warning: Cannot determine Velvet number of supported libraries"
+   else:
+      mymatch = re.split('\s+=\s+', checkStdout.strip())
+      if (len(mymatch) == 2 and mymatch[1] != None):
+         CATEGORIES = float(mymatch[1])
+
+   velvetgCommandLine = ""
+
+   currLibID = 1;
+   currLibString = ""
+   for lib in _readlibs:
+      if (currLibID > CATEGORIES):
+         print "Warning: Velvet only supports %d libraries, will not input any more libraries\n"%(CATEGORIES)
+         break
+
+      if lib.mated:
+         velvetgCommandLine += " -ins_length%s %d -ins_length%s_sd %d"%(currLibString, lib.mean, currLibString, lib.stdev)
+      currLibID += 1
+      if (currLibID > 1):
+         currLibString = "%d"%(currLibID)
+
+   return velvetgCommandLine
  
 def runVelvet(velvetPath, name):
    if not os.path.exists(velvetPath + os.sep + "velvetg"):
@@ -93,20 +121,8 @@ def runVelvet(velvetPath, name):
    run_process(_settings, "%s"%(velvethCommandLine), "Assemble")
 
    # now build velvetg command line
-   velvetgCommandLine = "%s/velvetg %s/Assemble/out/"%(velvetPath, _settings.rundir) 
-
-   currLibID = 1;
-   currLibString = ""
-   for lib in _readlibs:
-      if (currLibID > CATEGORIES):
-         print "Warning: Velvet only supports %d libraries, will not input any more libraries\n"%(CATEGORIES)
-         break
-
-      if lib.mated:
-         velvetgCommandLine += " -ins_length%s %d -ins_length%s_sd %d"%(currLibString, lib.mean, currLibString, lib.stdev)
-      currLibID += 1
-      if (currLibID > 1):
-         currLibString = "%d"%(currLibID)
+   velvetgCommandLine = "%s/velvetg %s/Assemble/out/ "%(velvetPath, _settings.rundir) 
+   velvetgCommandLine += getVelvetGCommand(velvetPath)
    velvetgCommandLine += " %s"%(getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(name), "", "-"))
    velvetgCommandLine += " -read_trkg yes -scaffolding no -amos_file yes";
    run_process(_settings, "%s"%(velvetgCommandLine), "Assemble")
@@ -160,7 +176,42 @@ def runSparseAssembler(sparsePath, name):
    run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")
    run_process(_settings, "ln -s %s/Assemble/out/Contigs.txt %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
 
+def runMetaVelvet(velvetPath, metavelvetPath, name):
+   # check for metavelvet
+   if not os.path.exists(metavelvetPath + os.sep + "meta-velvetg"):
+      print "Error: %s not found in %s. Please check your path and try again.\n"%(name, velvetPath)
+      raise(JobSignalledBreak)
 
+   # run velvet first
+   runVelvet(velvetPath, name)
+
+   # now run the extras
+   velvetgCommandLine = "%s/meta-velvetg %s/Assemble/out/ "%(metavelvetPath, _settings.rundir)
+   velvetgCommandLine += getVelvetGCommand(velvetPath)
+   velvetgCommandLine += " %s"%(getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(name), "", "-"))
+   velvetgCommandLine += " -read_trkg yes -scaffolding no -amos_file yes"
+   run_process(_settings, "%s"%(velvetgCommandLine), "Assemble")
+   
+   # get coverage peaks
+   # metavelvet comes with a peak estimator but it is not packaged in v1.01 only in the git repository, why?
+   p = subprocess.Popen("%s/scripts/scriptEstimatedCovMulti.py %s/Assemble/out/meta-velvetg.LastGraph-stats.txt |tail -n 1"%(metavelvetPath, _settings.rundir), shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   (checkStdout, checkStderr) = p.communicate()
+   if checkStderr != "":
+      print "Warning: Cannot determine MetaVelvet coverages"
+   else:
+      checkStdout.strip()
+      # finally re-run velvetg with the peaks
+      velvetgCommandLine = "%s/meta-velvetg %s/Assemble/out/ "%(metavelvetPath, _settings.rundir)
+      velvetgCommandLine += getVelvetGCommand(velvetPath)
+      velvetgCommandLine += " -read_trkg yes -scaffolding no -amos_file yes"
+      velvetgCommandLine += " -exp_covs %s"%(checkStdout.strip())
+      run_process(_settings, "%s"%(velvetgCommandLine), "Assemble")
+
+   # make symlinks
+   run_process(_settings, "rm %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.PREFIX), "Assemble")
+   run_process(_settings, "ln -s %s/Assemble/out/meta-velvetg.asm.afg %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
+   run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")
+   run_process(_settings, "ln -s %s/Assemble/out/meta-velvetg.contigs.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
         
 @files(_settings.asmfiles,["%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX)])
 #@posttask(create_symlink,touch_file("completed.flag"))
@@ -169,7 +220,9 @@ def Assemble(input,output):
    #pick assembler
    if "Assemble" in _skipsteps or "assemble" in _skipsteps:
       return 0
-   if _asm == "soap":
+   if _asm == "none" or _asm == None:
+      pass
+   elif _asm == "soap":
       #open & update config
       soapf = open("%s/config.txt"%(_settings.rundir),'r')
       soapd = soapf.read()
@@ -310,7 +363,7 @@ def Assemble(input,output):
                   if lib.mated:
                       matedString = "-mean %d -stddev %d -m %s/Preprocess/out/lib%d.seq.mates"%(lib.mean, lib.stdev, _settings.rundir, lib.id)
                   run_process(_settings, "%s/convert-fasta-to-v2.pl -l %s %s -s %s/Preprocess/out/lib%d.seq -q %s/Preprocess/out/lib%d.seq.qual > %s/Preprocess/out/lib%d.frg"%(_settings.CA, lib.sid, matedString, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id),"Assemble")
-              frglist += "%s/Preprocess/out/lib%d.frg"%(_settings.rundir, lib.id)
+              frglist += "%s/Preprocess/out/lib%d.frg "%(_settings.rundir, lib.id)
       run_process(_settings, "%s/runCA -p %s -d %s/Assemble/out/ -s %s/config/asm.spec %s"%(_settings.CA,_settings.PREFIX,_settings.rundir,_settings.METAMOS_UTILS,frglist),"Assemble")
       #convert CA to AMOS
       run_process(_settings, "%s/gatekeeper -dumpfrg -allreads %s.gkpStore > %s.frg"%(_settings.CA, _settings.PREFIX, _settings.PREFIX),"Assemble")
@@ -321,12 +374,12 @@ def Assemble(input,output):
       runVelvet(_settings.VELVET, "velvet")
    elif _asm == "velvet-sc":
       runVelvet(_settings.VELVET_SC, "velvet-sc")
+   elif _asm == "metavelvet":
+      runMetaVelvet(_settings.VELVET, _settings.METAVELVET, "metavelvet")
    elif _asm.lower() == "spades":
       print "Warning: SPades is not yet supported. Stay Tuned!"
    elif _asm.lower() == "sparseassembler":
       runSparseAssembler(_settings.SPARSE_ASSEMBLER, "SparseAssembler");
-   elif _asm == "none":
-      pass
    else:  
       print "Error: %s is an unknown assembler. No valid assembler specified."%(_asm)
       raise(JobSignalledBreak)

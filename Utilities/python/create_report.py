@@ -27,7 +27,8 @@ if __name__ == "__main__":
     nLibs = int(sys.argv[7])
     #mp2 = open(sys.argv[1].replace("s12","s3"),'r')    
     if not os.path.exists(prefix+"asmstats.out"):
-        os.system("perl %s/perl/statistics.pl %s > %sasmstats.out"%(utils,sys.argv[4],prefix))        
+        libPath = rund.replace("bin", "lib")
+        os.system("perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,sys.argv[4],prefix))        
     report = open(prefix+"asmstats.out",'r')
     
     rdata = []

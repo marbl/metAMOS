@@ -47,7 +47,7 @@ def Scaffold(input,output):
           (checkStdout, checkStderr) = p.communicate()
           numMates = int(checkStdout.strip())
 
-       if _asm == "soap" or _asm == "metaidba" or _asm == "amos" or _asm == "sparseassembler" or _asm == "none":
+       if _asm == "soap" or _asm == "metaidba" or _asm == "amos" or _asm == "sparseassembler" or _asm == "velvet" or _asm == "velvet-sc" or _asm == "metavelvet" or _asm == "none":
            for lib in _readlibs:
         
                if lib.format == "fasta":
@@ -64,9 +64,9 @@ def Scaffold(input,output):
           run_process(_settings, "rm -rf %s/Scaffold/in/%s.bnk"%(_settings.rundir, _settings.PREFIX),"Scaffold")
           # build the bank for amos
           run_process(_settings, "%s/bank-transact -b %s/Scaffold/in/%s.bnk -c -m %s/Assemble/out/%s.afg"%(_settings.AMOS,_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX),"Scaffold")
-       elif _asm == "velvet" or _asm == "velvet-sc":
-          run_process(_settings, "rm -rf %s/Scaffold/in/%s.bnk"%(_settings.rundir, _settings.PREFIX), "Scaffold")
-          run_process(_settings, "%s/bank-transact -b %s/Scaffold/in/%s.bnk -c -m %s/Assemble/out/%s.afg"%(_settings.AMOS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
+       #elif _asm == "velvet" or _asm == "velvet-sc" or _asm == "metavelvet":
+       #   run_process(_settings, "rm -rf %s/Scaffold/in/%s.bnk"%(_settings.rundir, _settings.PREFIX), "Scaffold")
+       #   run_process(_settings, "%s/bank-transact -b %s/Scaffold/in/%s.bnk -c -m %s/Assemble/out/%s.afg"%(_settings.AMOS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
        elif _asm == "ca" or _asm == "CA":
           run_process(_settings, "%s/toAmos_new -a %s/Assemble/out/%s.asm -f %s/Assemble/out/%s.frg -b %s/Scaffold/in/%s.bnk -U "%(_settings.AMOS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX),"Scaffold")
 
@@ -81,13 +81,16 @@ def Scaffold(input,output):
    # after the banks are created, skip the scaffolding when we have no mates
    if _mated == False and numMates == 0:
        print "No mate pair info available for scaffolding, skipping"
-       run_process(_settings, "touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX), "Scaffold")
-       _skipsteps.append("FindScaffoldORFS")
-       _skipsteps.append("Propagate")
+       run_process(_settings, "%s/bank2fasta -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.contigs"%(_settings.AMOS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
+       run_process(_settings, "ln -s %s/Scaffold/out/%s.contigs %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
+       #run_process(_settings, "touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX), "Scaffold")
+       #_skipsteps.append("FindScaffoldORFS")
+       #_skipsteps.append("Propagate")
        return 0
 
    #use asmQC to update mate insert lens
    run_process(_settings, "%s/asmQC -b %s/Scaffold/in/%s.bnk -scaff -recompute -update -numsd 2"%(_settings.AMOS,_settings.rundir,_settings.PREFIX))
+   run_process(_settings, "%s/bank-unlock %s/Scaffold/in/%s.bnk"%(_settings.AMOS,_settings.rundir,_settings.PREFIX))
    #calls to Bambus2, goBambus2 script
    # first, parse the parameters
    markRepeatParams = getProgramParams(_settings.METAMOS_UTILS, "bambus.spec", "MarkRepeats", "-")

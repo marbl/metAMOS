@@ -1,19 +1,21 @@
-metAMOS v0.34 README
-Last updated: November 22nd 2011
+metAMOS v1.0b README
+Last updated: April 26th 2012
 
 NEWS:
 
-*Amphora2 now supported
-*meta-IDBA now supported
-*Velvet-SC now supported
+*FCP now supported
+*Glimmer-MG now supported
+*PhymmBL now supported
 
 > SUMMARY
         * A/ HARDWARE REQUIREMENTS
         * B/ SOFTWARE REQUIREMENTS
         * C/ INSTALLING metAMOS
         * D/ QUICK START
-        * E/ OUTPUT
-        * F/ CONTACT
+        * E/ TEST SUITE
+        * F/ EXAMPLE OUTPUT
+        * G/ CONTACT
+        * H/ CITING
 
 ----------------------------------------------------------------------------------
 A/ HARDWARE REQUIREMENTS
@@ -91,26 +93,49 @@ input and runs the following steps by default:
 2. Assemble
 3. FindORFs
 4. FindRepeats
-5. Annotate
-6. Scaffold
-7. Propagate 
-8. FindScaffoldORFs
-9. Classify 
-10. Postprocess
+5. Abundance
+6. Annotate
+7. Scaffold
+8. Propagate 
+9. FindScaffoldORFs
+10. Classify 
+11. Postprocess
 
 usage info:
 
 usage: runPipeline.py [options] -d projectdir (required)
 options:  -a <assembler> -k <kmer size> -f (forcestep) -s (skipstep) -p <num threads>  -v (verbose?) -t (filter reads?)
 
+-h: help?
+-r: retain the AMOS bank?  (default = NO)
+-m: read mapper to use? (default = bowtie)
+-d = <project dir>: directory created by initPipeline
+-s = <runPipeline step>: start at this step in the pipeline
+-e = <runPipeline step>: end at this step in the pipeline
+-o = <int>>: min overlap length
+-k = <int>: kmer size for assembly
+-c = <classifier>: classifier to use for annotation
+-a = <assembler>: genome assembler to use
+-n = <runPipeline step>: step to skip in pipeline
+-p = <int>: number of threads to use (be greedy!)
+-q: produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)
+-t: filter input reads? (default = NO)
+-f = <runPipeline step>: force this step to be run
+-v: verbose output? (default = NO)
+-4: 454 data? (default = NO)
+-b: save (bowtie) index? (default = NO)
 
-For example, to enable meta-IDBA as the assembler:
+For example, to enable read filtering:
+
+-t
+
+and to enable meta-IDBA as the assembler:
 
 -a metaidba
 
-And to use Amphora2 to annotate:
+And to use PhyloSift to annotate:
 
--c amphora2
+-c phylosift
 
 Any single step in the pipeline can be skipped by passing the
 following parameter to runPipeline:
@@ -130,8 +155,58 @@ this directory (or multiple Posprocess/out directories) as input and
 as output, generates an HTML page with summary statistics and a few
 static plots.
 
+
 ----------------------------------------------------------------------------------
-E/ Example output
+E/ Test suite
+
+We have developed a set of scripts for testing the various features of
+metAMOS. All of these regression test scripts are available inside the
+/Test directory and include all necessary datasets to run them. Here
+is a brief listing of the test scripts we currently include:
+
+*Test initPipeline
+./Test/test_create.sh
+
+*Vanilla test
+./Test/run_test.sh
+
+*Test PhlyoSift
+./Test/test_amphora.sh
+
+*Test Minimus
+./Test/test_minimus.sh
+
+*Test Preprocess filtration of non-interleaved fastq files
+./Test/test_filter_noninterleaved_fastq.s
+
+*Test Newbler (if available)
+./Test/test_newbler.sh
+
+*Test CA (fasta)
+./Test/test_ca_fasta.sh
+
+*Test CA (fastq)
+./Test/test_ca.sh
+
+*Test SOAPdenovo
+./Test/test_soap.sh
+
+*Test MetaVelvet
+./Test/test_metavelvet.sh
+
+*Test SparseAssembler
+./Test/test_sparse.sh
+
+*Test Velvet
+./Test/test_velvet.sh
+
+*Test FCP
+./Test/test_fcp.sh
+
+..more on the way!
+
+----------------------------------------------------------------------------------
+F/ Example output
 
 http://www.cbcb.umd.edu/software/metamos/report.krona.html
 
@@ -139,8 +214,11 @@ Krona publication: Ondov BD, Bergman NH, Phillippy AM.. Interactive
 metagenomic visualization in a Web browser. BMC Bioinformatics. 2011
 Sep 30;12:385.  PMID: 21961884
 
+Additionally, since metAMOS stores all of its results in an AMOS bank,
+the assemblies can be visualized with Hawkeye.
+
 ----------------------------------------------------------------------------------
-F/ CONTACT
+G/ CONTACT
 
 Who to contact to report bugs, forward complaints, feature requests:
 
@@ -148,6 +226,6 @@ Todd Treangen: treangen@gmail.com
 Sergey Koren: sergek@umd.edu
 
 ----------------------------------------------------------------------------------
-G/ CITE
+H/ CITE
 
 Coming soon!

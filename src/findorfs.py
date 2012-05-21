@@ -15,16 +15,21 @@ _skipsteps = []
 _asm = None
 _settings = Settings()
 _orf = None 
-
-def init(reads, skipsteps, asm, orf):
+_min_ctg_len = 300
+_min_ctg_cvg = 3
+def init(reads, skipsteps, asm, orf, min_ctg_len, min_ctg_cvg):
    global _readlibs
    global _skipsteps
    global _asm
    global _orf
+   global _min_ctg_cvg
+   global _min_ctg_len
    _readlibs = reads
    _skipsteps = skipsteps
    _asm = asm
    _orf = orf
+   _min_ctg_cvg = min_ctg_cvg
+   _min_ctg_len = min_ctg_len
 
 def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
     coverageFile = open("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, _settings.PREFIX), 'r')
@@ -140,15 +145,16 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
 
     genecnt = 1
     for key in gene_dict.keys():
-        if not is_scaff:
-            if key in cvg_dict.keys():
-                cvgg.write("%s_gene%d\t%s\n"%(key,genecnt,cvg_dict[key])) 
-            else:
-                cvgg.write("%s_gene%d\t%s\n"%(key,genecnt, 1.0))
         genecnt = 1
         for gene in gene_dict[key].keys():
+            if not is_scaff:
+                if key in cvg_dict.keys():
+                    cvgg.write("%s_gene%d\t%.2f\t%.2f\t%.2f\n"%(key,genecnt,cvg_dict[key]*len(gene),len(gene),cvg_dict[key]))                         
+                else:
+                    cvgg.write("%s_gene%d\t%.2f\t%.2f\n"%(key,genecnt, 1.0,len(gene),1.0))
+
             #min aa length, read depth
-            if len(gene) < 100:# or cvg_dict[key] < 5:
+            if len(gene) < _min_ctg_len/3 or cvg_dict[key] < _min_ctg_cvg:# or cvg_dict[key] < 5:
                 continue
             try:
                 #print "contig"+key
@@ -162,7 +168,7 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
         genecnt = 1
         for gene in fna_dict[key].keys():
             #gene = fna_dict[key][gkey]
-            if len(gene) < 300:# or cvg_dict[key] < 5:
+            if len(gene) < _min_ctg_len or cvg_dict[key] < _min_ctg_cvg:# or cvg_dict[key] < 5:
                 continue
             outf2.write(">%s_gene%d\n%s"%(key,genecnt,gene))
             genecnt +=1
@@ -174,6 +180,7 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
 def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS"):
     coverageFile = open("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, _settings.PREFIX), 'r')
     cvg_dict = {} 
+    len_dict = {}
 
     for line in coverageFile:
         data = line.split()
@@ -196,6 +203,7 @@ def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS"):
         hdr,gene = seq.split("\n",1)
         hdr = hdr.split("\n")[0]
         gene_ids.append(hdr)
+        len_dict[hdr] = len(seq)
 
     for seq in seqs:
        hdr,gene = seq.split("\n",1)
@@ -203,15 +211,17 @@ def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS"):
        hdr = hdr.rstrip("\n")
        #gene_ids.append(hdr)
        #split the header in two
-       orfkey = '_'.join(hdr.split('_')[:6])
-       orfval = '_'.join(hdr.split('_')[7:])
-       orfhdrs[orfkey]=orfval
+       orfkey = '_'.join(hdr.split('_')[:1])
+       #orfval = '_'.join(hdr.split('_')[2:])
+       orfhdrs[orfkey]=hdr
 
-    for key in orfhdrs.keys():
-        if key in cvg_dict:
-            cvgg.write("%s\t%s\n"%((key + orfhdrs[key]),cvg_dict[key]))
-        else:
-            cvgg.write("%s\t%s\n"%((key + orfhdrs[key]),str(1.0)))
+       if orfkey in cvg_dict:
+           if len_dict[hdr] > _min_ctg_len and cvg_dict[orfkey] >=  _min_ctg_cvg:
+               cvgg.write("%s\t%.2f\n"%(hdr,len_dict[hdr]*cvg_dict[orfkey]))
+       else:
+           if len_dict[hdr] > _min_ctg_len and 1 >=  _min_ctg_cvg:
+               cvgg.write("%s\t%s\n"%((key + orfhdrs[key]),str(1.0)))
+
     cvgg.close()
     #for key in gene_ids:
     #    genecnt = 1

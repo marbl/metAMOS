@@ -14,17 +14,19 @@ _skipsteps = []
 _settings = Settings()
 _asm = None
 _mapper = "bowtie"
-def init(reads, skipsteps, asm,mapper,savebtidx):
+_ctgbpcov = False
+def init(reads, skipsteps, asm,mapper,savebtidx,ctgbpcov):
    global _readlibs
    global _asm
    global _skipsteps
    global _savebtidx
+   global _ctgbpcov
    _mapper = mapper
    _readlibs = reads
    _skipsteps = skipsteps
    _asm = asm
    _savebtidx = savebtidx
-
+   _ctgbpcov = ctgbpcov
 def meanstdv(x):
     n, mean, std = len(x), 0, 0
     for a in x:
@@ -193,8 +195,9 @@ def map2contig():
     ctg_cvg_file = open("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir,_settings.PREFIX),'w')
     ctg_cnt_file = open("%s/Assemble/out/%s.contig.cnt"%(_settings.rundir,_settings.PREFIX),'w')
     libcov_dict = {}
-    for lib in _readlibs:
-        libcov_dict["lib%d"%(lib.id)] = {}
+    if _ctgbpcov:
+        for lib in _readlibs:
+            libcov_dict["lib%d"%(lib.id)] = {}
     for item in contig_data:
         if item == '':
             continue
@@ -217,19 +220,16 @@ def map2contig():
         cseq_fmt += cseq[i:]+"\n"
         ctgslen = len(cseq)
         #libcov_dict[ref] = {}
-        for lib in _readlibs:
-            #libcov_dict[ref] = {}
-            #libcov_dict["lib%d"%(lib.id)] = {}
-             
-            ii = 0
-            while ii < ctgslen:
-                try:
-                    libcov_dict["lib%d"%(lib.id)][ref][ii] = 0
-                except KeyError:
-                    libcov_dict["lib%d"%(lib.id)][ref] = {}
-                    libcov_dict["lib%d"%(lib.id)][ref][ii] = 0
-                ii+=1
-        #contigdict2[ref] = item[1]
+        if _ctgbpcov:
+            for lib in _readlibs:
+                ii = 0
+                while ii < ctgslen:
+                    try:
+                        libcov_dict["lib%d"%(lib.id)][ref][ii] = 0
+                    except KeyError:
+                        libcov_dict["lib%d"%(lib.id)][ref] = {}
+                        libcov_dict["lib%d"%(lib.id)][ref][ii] = 0
+                    ii+=1
         try:
             tigr_file.write("##%s %d %d bases, 00000000 checksum.\n"%(ref.replace(">",""),len(contigdict[ref]), len(item[1])))
             tigr_file.flush()
@@ -258,13 +258,14 @@ def map2contig():
             except KeyError:
                 pass
             ii = 0
-            while ii < read[-2]:
-
-                try:     
-                    libcov_dict["lib%d"%(read[-1])][ref][read[0]+ii]+=1
-                except KeyError:
-                    libcov_dict["lib%d"%(read[-1])][ref][read[0]+ii] = 1
-                ii+=1
+            #contigdict2[ref] = item[1]
+            if _ctgbpcov:
+                while ii < read[-2]:
+                    try:     
+                        libcov_dict["lib%d"%(read[-1])][ref][read[0]+ii]+=1
+                    except KeyError:
+                        libcov_dict["lib%d"%(read[-1])][ref][read[0]+ii] = 1
+                    ii+=1
             if read[2] == "-":
                 tigr_file.write("#%s(%d) [RC] %d bases, 00000000 checksum. {%d 1} <%d %d>\n"%(read[3],read[0]-1, read[-2], read[-2], read[0], read[1]))
             else:
@@ -274,14 +275,16 @@ def map2contig():
    
 
     for lib in _readlibs:
-        libcovfile = open("%s/Assemble/out/lib%d.contig.cov"%(_settings.rundir,lib.id),'w')
+       
         libid = "lib%d"%(lib.id)
-        if 1:#for libid in libcov_dict.keys():
+        if _ctgbpcov:#for libid in libcov_dict.keys():
+            libcovfile = open("%s/Assemble/out/lib%d.contig.cov"%(_settings.rundir,lib.id),'w')
+    
             for ctgid in libcov_dict[libid].keys():
                 libcovfile.write(">%s\n"%(ctgid))
                 for pos in libcov_dict[libid][ctgid].keys():
                     libcovfile.write("%d,%d\n"%(pos,libcov_dict[libid][ctgid][pos]))
-        libcovfile.close()
+            libcovfile.close()
         mateheader = open("%s/Assemble/out/%s.lib%d.hdr"%(_settings.rundir,_settings.PREFIX,lib.id),'w')
         new_matefile = open("%s/Assemble/out/%s.lib%d.mappedmates"%(_settings.rundir,_settings.PREFIX,lib.id),'w')
         badmatefile = open("%s/Assemble/out/%s.lib%d.badmates"%(_settings.rundir,_settings.PREFIX,lib.id),'w')
@@ -337,10 +340,12 @@ def map2contig():
            lmean,lstdev = meanstdv(insertlens)
            #if lavg * 1.2 < lmax or lavg * 0.8 > lmin:
            #    lmin = 
-           print "Old insert length min: ", lib.mmin
-           print "New insert length min: ", lmin
-           print "Old insert length max: ", lib.mmax
-           print "New insert length max: ", lmax
+           
+           #if verbose, output
+           #print "Old insert length min: ", lib.mmin
+           #print "New insert length min: ", lmin
+           #print "Old insert length max: ", lib.mmax
+           #print "New insert length max: ", lmax
         else:
            lmin = lib.mmin
            lmax = lib.mmax
@@ -348,8 +353,8 @@ def map2contig():
         new_matefile.close()
         badmatefile.close()
         mateheader.close()
-        run_process(_settings, "cat %s/Assemble/out/%s.lib%d.mappedmates >> %s/Assemble/out/%s.lib%d.hdr "%(_settings.rundir,_settings.PREFIX, lib.id,_settings.rundir,_settings.PREFIX,lib.id))
-        run_process(_settings, "cp %s/Assemble/out/%s.lib%d.hdr %s/Assemble/out/%s.lib%d.mappedmates "%(_settings.rundir,_settings.PREFIX, lib.id,_settings.rundir,_settings.PREFIX,lib.id))
+        run_process(_settings, "cat %s/Assemble/out/%s.lib%d.mappedmates >> %s/Assemble/out/%s.lib%d.hdr "%(_settings.rundir,_settings.PREFIX, lib.id,_settings.rundir,_settings.PREFIX,lib.id),"MapReads")
+        run_process(_settings, "cp %s/Assemble/out/%s.lib%d.hdr %s/Assemble/out/%s.lib%d.mappedmates "%(_settings.rundir,_settings.PREFIX, lib.id,_settings.rundir,_settings.PREFIX,lib.id),"MapReads")
     ctg_cvg_file.close()
     ctg_cnt_file.close()
     tigr_file.close()

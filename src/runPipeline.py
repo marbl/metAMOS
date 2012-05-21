@@ -12,28 +12,36 @@ import utils
 t1 = time.time()
 sys.path.append(utils.INITIAL_UTILS)
 from ruffus import *
-
+#new: -j, -l,-x,-u
 def usage():
     print "usage: runPipeline.py [options] -d projectdir (required)"
-    print "options:  -a <assembler> -k <kmer size> -c <classification method> -m <enable metaphyler?> -p <num threads>  "
-    print "-h: help?"
-    print "-r: retain the AMOS bank?  (default = NO)"
-    print "-m: read mapper to use? (default = bowtie)"
-    print "-d = <project dir>: directory created by initPipeline"
-    print "-s = <runPipeline step>: start at this step in the pipeline"
-    print "-e = <runPipeline step>: end at this step in the pipeline"
-    print "-o = <int>>: min overlap length"
-    print "-k = <int>: kmer size for assembly"
-    print "-c = <classifier>: classifier to use for annotation"
-    print "-a = <assembler>: genome assembler to use"
-    print "-n = <runPipeline step>: step to skip in pipeline"
-    print "-p = <int>: number of threads to use (be greedy!)"
-    print "-q: produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)"
-    print "-t: filter input reads? (default = NO)"
-    print "-f = <runPipeline step>: force this step to be run"
-    print "-v: verbose output? (default = NO)"
-    print "-4: 454 data? (default = NO)"
-    print "-b: save (bowtie) index? (default = NO)"
+    print "options:  -a <assembler> -k <kmer size> -c <classification method> -t (filter reads flag) -p <num threads>  "
+    print "-a = <string>: genome assembler to use (default = SOAPdenovo)"
+    print "-b = <bool>:   create library specific per bp coverage of assembled contigs (default = NO)"
+    print "-c = <string>: classifier to use for annotation (default = FCP)"
+    print "-d = <string>: directory created by initPipeline (default = NONE)"
+    print "-e = <string>: end at this step in the pipeline (default = Postprocess)"
+    print "-f = <string>: force this step to be run (default = NONE)"
+    print "-r = <bool>:   retain the AMOS bank?  (default = NO)"
+    print "-g = <string>: gene caller to use (default=FragGeneScan)"
+    print "-h = <bool>:   print help?"
+    print "-i = <bool>:   save bowtie (i)ndex? (default = NO)"
+    print "-j = <bool>:   just output all of the programs and citations then exit (default = NO)"
+    print "-k = <int>:    kmer size for assembly (default = 51)"
+    print "-l = <int>:    min contig length to use for ORF call (default = 300)"
+    print "-m = <string>: read mapper to use? (default = bowtie)"
+    print "-n = <string>: step to skip in pipeline (default=NONE)"
+    print "-o = <int>>:   min overlap length"
+    print "-p = <int>:    number of threads to use (be greedy!) (default=1)"
+    print "-q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)"
+    print "-r = <bool>:   retain AMOS bank? (default = NO)"
+    print "-s = <string>: start at this step in the pipeline"
+    print "-t = <bool>:   filter input reads? (default = NO)"
+    print "-u = <bool>:   annotate unassembled reads? (default = NO)"
+    print "-v = <bool>:   verbose output? (default = NO)"
+    print "-x = <int>>:   min contig coverage to use for ORF call (default = 3X)"
+    print "-4 = <bool>:   454 data? (default = NO)"
+
     
     #print "options: annotate, stopafter, startafter, fq, fa"
 
@@ -45,12 +53,25 @@ except getopt.GetoptError, err:
     usage()
     sys.exit(2)
 
-supported_genecallers = ["fraggenescan","metagenemark"]
+supported_programs = {}
+supported_genecallers = ["fraggenescan","metagenemark","glimmermg"]
 supported_assemblers = ["soap","soapdenovo","newbler","ca","velvet","metavelvet","metaidba","sparse","sparseassembler","minimus"]
 supported_mappers = ["bowtie"]
 supported_abundance = ["metaphyler"]
 supported_classifiers = ["FCP","fcp","PhyloSift","phylosift","phmmer","blast","metaphyler"]
 supported_scaffolders = ["bambus2"]
+supported_programs["findorfs"] = supported_genecallers
+supported_programs["assemble"] = supported_assemblers
+supported_programs["mapreads"] = supported_mappers
+supported_programs["abundance"] = supported_abundance
+supported_programs["classify"] = supported_classifiers
+supported_programs["scaffold"] = supported_scaffolders
+
+pub_dict = {}
+pub_dict["fraggenescan"] = "Li et al. "
+pub_dict["fraggenescan"] = "Li et al. "
+pub_dict["fraggenescan"] = "Li et al. "
+pub_dict["fraggenescan"] = "Li et al. "
 
 allsteps = ["Preprocess","Assemble","FindORFS","Abundance","Annotate","Scaffold","Propagate","Classify","Postprocess"]
 output = None
@@ -78,6 +99,11 @@ fqlibs = {}
 fqfrags = []
 rlibs = []
 mapper = "bowtie"
+ctgbpcov = False
+min_ctg_len = 300
+min_ctg_cvg = 3
+annotate_unassembled = False
+output_programs = 0
 settings = utils.Settings(DEFAULT_KMER, multiprocessing.cpu_count() - 1, "")
 
 for o, a in opts:
@@ -86,8 +112,18 @@ for o, a in opts:
     elif o in ("-h", "--help"):
         usage()
         sys.exit()
-    elif o in ("-b","--bowtie"):
+    elif o in ("-i","--indexbowtie"):
         bowtie_mapping = 1
+    elif o in ("-j","--justprogs"):
+        output_programs = 1
+    elif o in ("-u","--unassembledreads"):
+        annotate_unassembled = 1
+    elif o in ("-x","--xcov"):
+        min_ctg_cvg = int(a)
+    elif o in ("-l","--lencontigorf"):
+        min_ctg_len = int(a)
+    elif o in ("-b","--bpctgcov"):
+        bpctgcov = True
     elif o in ("-s","--startat"):
         startat = a
         if startat not in allsteps:
@@ -144,6 +180,7 @@ for o, a in opts:
         if asm not in supported_assemblers:
             print "!!Sorry, %s is not a supported assembler. Using SOAPdenovo instead"%(asm)
             asm = "soap"
+        
     elif o in ("-g","--genecaller"):
         orf = a
         if orf not in supported_genecallers:
@@ -198,7 +235,7 @@ for line in inf:
         asmc = line.replace("\n","").split("\t")[-1]
         if len(asmc) <= 2:
             continue
-        utils.run_process(settings, "cp %s %s/Assemble/out/%s"%(asmc,settings.rundir,"proba.asm.contig"))
+        utils.run_process(settings, "cp %s %s/Assemble/out/%s"%(asmc,settings.rundir,"proba.asm.contig"),"RunPipeline")
         #skipsteps.append("Assemble")
         usecontigs = True
         asm = "none"
@@ -301,7 +338,7 @@ for lib in readlibs:
 #if asm == "soap":
 if "Preprocess" in forcesteps:
    for path in readpaths:
-      utils.run_process(settings, "touch %s"%(path))
+      utils.run_process(settings, "touch %s"%(path),"RunPipeline")
 utils.Settings.readpaths = readpaths
 
 asmfiles = []
@@ -310,36 +347,38 @@ asmfiles = []
 for lib in readlibs:
     #print "touch"
     if "MapReads" in forcesteps:
-        utils.run_process(settings, "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX))
+        utils.run_process(settings, "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX),"RunPipeline")
     if "Assemble" in forcesteps:
         #print lib.id
-        utils.run_process(settings, "touch %s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id))
+        utils.run_process(settings, "touch %s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id),"RunPipeline")
 
     asmfiles.append("%s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id))
 utils.Settings.asmfiles = asmfiles
 
 if "Assemble" not in skipsteps and "Assemble" in forcesteps:
-    utils.run_process(settings, "rm %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX))
+    utils.run_process(settings, "rm %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX),"RunPipeline")
 
-if "FindORFS" in forcesteps:
-   utils.run_process(settings, "rm %s/FindORFS/out/%s.faa"%(settings.rundir,settings.PREFIX))
+if "FINDORFS" in forcesteps or "findorfs" in forcesteps or "FindORFS" in forcesteps:
+   utils.run_process(settings, "rm %s/FindORFS/out/%s.faa"%(settings.rundir,settings.PREFIX),"RunPipeline")
+   utils.run_process(settings, "rm %s/FindORFS/out/%s.fna"%(settings.rundir,settings.PREFIX),"RunPipeline")
+   utils.run_process(settings, "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX),"RunPipeline")
 
 if "Annotate" in forcesteps:
-   utils.run_process(settings, "rm %s/Annotate/out/%s.hits"%(settings.rundir,settings.PREFIX))
+   utils.run_process(settings, "rm %s/Annotate/out/%s.hits"%(settings.rundir,settings.PREFIX),"RunPipeline")
 
 if "Abundance" in forcesteps:
-   utils.run_process(settings, "touch %s/FindORFS/out/%s.faa"%(settings.rundir,settings.PREFIX))
-   utils.run_process(settings, "rm %s/Abundance/out/%s.taxprof.pct.txt"%(settings.rundir,settings.PREFIX))
+   utils.run_process(settings, "touch %s/FindORFS/out/%s.faa"%(settings.rundir,settings.PREFIX),"RunPipeline")
+   utils.run_process(settings, "rm %s/Abundance/out/%s.taxprof.pct.txt"%(settings.rundir,settings.PREFIX),"RunPipeline")
 
 if "Scaffold" in forcesteps:
     #utils.run_process(settings, "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX))
-    utils.run_process(settings, "rm %s/Scaffold/out/%s.scaffolds.final"%(settings.rundir,settings.PREFIX))
+    utils.run_process(settings, "rm %s/Scaffold/out/%s.scaffolds.final"%(settings.rundir,settings.PREFIX),"RunPipeline")
 
 if "FindScaffoldORFS" in forcesteps:
-    utils.run_process(settings, "touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(settings.rundir,settings.PREFIX))
+    utils.run_process(settings, "touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(settings.rundir,settings.PREFIX),"RunPipeline")
 
 if "Propagate" in forcesteps:
-    utils.run_process(settings, "touch %s/DB/class_key.tab"%(settings.METAMOS_UTILS))
+    utils.run_process(settings, "touch %s/DB/class_key.tab"%(settings.METAMOS_UTILS),"RunPipeline")
 
 if __name__ == "__main__":
     #pid = start_http()
@@ -362,8 +401,8 @@ if __name__ == "__main__":
     # initialize submodules
     preprocess.init(readlibs, skipsteps, asm, run_fastqc,filter)
     assemble.init(readlibs, skipsteps, asm, usecontigs)
-    mapreads.init(readlibs, skipsteps, asm, mapper, savebtidx)
-    findorfs.init(readlibs, skipsteps, asm, orf)
+    mapreads.init(readlibs, skipsteps, asm, mapper, savebtidx,ctgbpcov)
+    findorfs.init(readlibs, skipsteps, asm, orf, min_ctg_len, min_ctg_cvg)
     findreps.init(readlibs, skipsteps)
     annotate.init(readlibs, skipsteps, cls)
     abundance.init(readlibs, skipsteps, forcesteps, cls)

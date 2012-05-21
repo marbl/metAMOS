@@ -143,13 +143,13 @@ def Preprocess(input,output):
    for lib in _readlibs:
       for read in lib.reads:
          if lib.format == "fasta" and not os.path.isfile("%s/Preprocess/in/%s.qual"%(_settings.rundir, read.fname)):
-            run_process(_settings, "java -cp %s:. outputDefaultQuality %s/Preprocess/in/%s > %s/Preprocess/in/%s.qual"%(_settings.METAMOS_JAVA, _settings.rundir, read.fname, _settings.rundir, read.fname), "Assemble")
+            run_process(_settings, "java -cp %s:. outputDefaultQuality %s/Preprocess/in/%s > %s/Preprocess/in/%s.qual"%(_settings.METAMOS_JAVA, _settings.rundir, read.fname, _settings.rundir, read.fname), "Preprocess")
             if lib.mated and not lib.interleaved:
                 readpair = lib.getPair(read.id)
                 if readpair == -1:
                     #not interleaved and mated, yet do not have 2nd file..
                     continue
-                run_process(_settings, "java -cp %s:. outputDefaultQuality %s/Preprocess/in/%s > %s/Preprocess/in/%s.qual"%(_settings.METAMOS_JAVA, _settings.rundir, readpair.fname, _settings.rundir, readpair.fname), "Assemble")
+                run_process(_settings, "java -cp %s:. outputDefaultQuality %s/Preprocess/in/%s > %s/Preprocess/in/%s.qual"%(_settings.METAMOS_JAVA, _settings.rundir, readpair.fname, _settings.rundir, readpair.fname), "Preprocess")
 
          if "lib%d"%(lib.id) in read.path:
             if lib.mated and not lib.interleaved:

@@ -15,16 +15,21 @@ _skipsteps = []
 _asm = None
 _settings = Settings()
 _orf = None 
-
-def init(reads, skipsteps, asm, orf):
+_min_ctg_len = 300
+_min_ctg_cvg = 3
+def init(reads, skipsteps, asm, orf, min_ctg_len, min_ctg_cvg):
    global _readlibs
    global _skipsteps
    global _asm
    global _orf
+   global _min_ctg_cvg
+   global _min_ctg_len
    _readlibs = reads
    _skipsteps = skipsteps
    _asm = asm
    _orf = orf
+   _min_ctg_cvg = min_ctg_cvg
+   _min_ctg_len = min_ctg_len
 
 def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
     coverageFile = open("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, _settings.PREFIX), 'r')
@@ -149,7 +154,7 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
                     cvgg.write("%s_gene%d\t%.2f\t%.2f\n"%(key,genecnt, 1.0,len(gene),1.0))
 
             #min aa length, read depth
-            if len(gene) < 100:# or cvg_dict[key] < 5:
+            if len(gene) < _min_ctg_len/3 or cvg_dict[key] < _min_ctg_cvg:# or cvg_dict[key] < 5:
                 continue
             try:
                 #print "contig"+key
@@ -163,7 +168,7 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
         genecnt = 1
         for gene in fna_dict[key].keys():
             #gene = fna_dict[key][gkey]
-            if len(gene) < 300:# or cvg_dict[key] < 5:
+            if len(gene) < _min_ctg_len or cvg_dict[key] < _min_ctg_cvg:# or cvg_dict[key] < 5:
                 continue
             outf2.write(">%s_gene%d\n%s"%(key,genecnt,gene))
             genecnt +=1
@@ -211,9 +216,11 @@ def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS"):
        orfhdrs[orfkey]=hdr
 
        if orfkey in cvg_dict:
-           cvgg.write("%s\t%.2f\n"%(hdr,len_dict[hdr]*cvg_dict[orfkey]))
+           if len_dict[hdr] > _min_ctg_len and cvg_dict[orfkey] >=  _min_ctg_cvg:
+               cvgg.write("%s\t%.2f\n"%(hdr,len_dict[hdr]*cvg_dict[orfkey]))
        else:
-           cvgg.write("%s\t%s\n"%((key + orfhdrs[key]),str(1.0)))
+           if len_dict[hdr] > _min_ctg_len and 1 >=  _min_ctg_cvg:
+               cvgg.write("%s\t%s\n"%((key + orfhdrs[key]),str(1.0)))
 
     cvgg.close()
     #for key in gene_ids:

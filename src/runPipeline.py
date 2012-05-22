@@ -134,6 +134,9 @@ pub_dict["fraggenescan"] = "Li et al. "
 
 allsteps = ["Preprocess","Assemble","FindORFS","Abundance","Annotate",\
                 "Scaffold","Propagate","Classify","Postprocess"]
+
+## Need comments here and further down
+
 output = None
 reads = None
 quals = None

@@ -1,52 +1,110 @@
 #!python
 
-import os, sys, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser, multiprocessing
-from operator import itemgetter
+## $Id$
 
+#########################
+## runPipeline.py - main pipeline driver for metAMOS
+#########################
+
+
+## The usual library dependencies
+import os
+import sys
+import string
+import time
+import BaseHTTPServer
+import getopt
+import re
+import subprocess
+import webbrowser
+import multiprocessing
+from operator import itemgetter
+from ruffus import *
+
+
+## Setting up paths
 INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
-DEFAULT_KMER  = 31
 
 sys.path.append(INITIAL_SRC)
 import utils
-
-t1 = time.time()
 sys.path.append(utils.INITIAL_UTILS)
-from ruffus import *
-#new: -j, -l,-x,-u
-def usage():
-    print "usage: runPipeline.py [options] -d projectdir (required)"
-    print "options:  -a <assembler> -k <kmer size> -c <classification method> -t (filter reads flag) -p <num threads>  "
-    print "-a = <string>: genome assembler to use (default = SOAPdenovo)"
-    print "-b = <bool>:   create library specific per bp coverage of assembled contigs (default = NO)"
-    print "-c = <string>: classifier to use for annotation (default = FCP)"
-    print "-d = <string>: directory created by initPipeline (default = NONE)"
-    print "-e = <string>: end at this step in the pipeline (default = Postprocess)"
-    print "-f = <string>: force this step to be run (default = NONE)"
-    print "-r = <bool>:   retain the AMOS bank?  (default = NO)"
-    print "-g = <string>: gene caller to use (default=FragGeneScan)"
-    print "-h = <bool>:   print help?"
-    print "-i = <bool>:   save bowtie (i)ndex? (default = NO)"
-    print "-j = <bool>:   just output all of the programs and citations then exit (default = NO)"
-    print "-k = <int>:    kmer size for assembly (default = 51)"
-    print "-l = <int>:    min contig length to use for ORF call (default = 300)"
-    print "-m = <string>: read mapper to use? (default = bowtie)"
-    print "-n = <string>: step to skip in pipeline (default=NONE)"
-    print "-o = <int>>:   min overlap length"
-    print "-p = <int>:    number of threads to use (be greedy!) (default=1)"
-    print "-q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)"
-    print "-r = <bool>:   retain AMOS bank? (default = NO)"
-    print "-s = <string>: start at this step in the pipeline"
-    print "-t = <bool>:   filter input reads? (default = NO)"
-    print "-u = <bool>:   annotate unassembled reads? (default = NO)"
-    print "-v = <bool>:   verbose output? (default = NO)"
-    print "-x = <int>>:   min contig coverage to use for ORF call (default = 3X)"
-    print "-4 = <bool>:   454 data? (default = NO)"
 
-    
-    #print "options: annotate, stopafter, startafter, fq, fa"
+## Get start time
+t1 = time.time()
+
+## Hardcode a k-mer size
+DEFAULT_KMER  = 31
+
+def usage():
+    print "usage: runPipeline.py [options] -d projectdir"
+    print "   -h = <bool>:   print help [this message]"
+    print "   -v = <bool>:   verbose output? (default = NO)"
+    print "   -d = <string>: directory created by initPipeline (REQUIRED)"
+
+    print "\n[options]: [pipeline_opts] [misc_opts]"
+    print "\n[pipeline_opts]: options that affect the pipeline execution"
+
+    print "Pipeline consists of the following steps:"
+    print "  Preprocess, Assemble, FindORFS, MapReads, Abundance, Annotate,"
+    print "  Scaffold, Propagate, Classify, Postprocess"
+
+    print "Each of these steps can be referred to by the following options:" 
+    print "   -f = <string>: force this step to be run (default = NONE)"
+    print "   -s = <string>: start at this step in the pipeline (default = Preprocess)"
+    print "   -e = <string>: end at this step in the pipeline (default = Postprocess)"
+    print "   -n = <string>: step to skip in pipeline (default=NONE)"
+    print "   -j = <bool>:   just output all of the programs and citations then exit (default = NO)"
+
+    print "\nFor each step you can fine-tune the execution as follows"
+    print "[Preprocess]"
+    print "   -t = <bool>:   filter input reads? (default = NO)"
+    print "   -q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)"
+    print "[Assemble]"
+    print "   -a = <string>: genome assembler to use (default = SOAPdenovo)"
+    print "   -k = <kmer size>: k-mer size to be used for assembly (default = " + str(DEFAULT_KMER) +  ")"
+    print "   -o = <int>>:   min overlap length"
+    print "[MapReads]"
+    print "   -m = <string>: read mapper to use? (default = bowtie)"
+    print "   -i = <bool>:   save bowtie (i)ndex? (default = NO)"
+    print "   -b = <bool>:   create library specific per bp coverage of assembled contigs (default = NO)"
+    print "[FindORFS]"
+    print "   -g = <string>: gene caller to use (default=FragGeneScan)"
+    print "   -l = <int>:    min contig length to use for ORF call (default = 300)"
+    print "   -x = <int>>:   min contig coverage to use for ORF call (default = 3X)"
+    print "[Classify]"
+    print "   -c = <string>: classifier to use for annotation (default = FCP)"
+    print "   -u = <bool>:   annotate unassembled reads? (default = NO)"
+
+    print "\n[misc_opts]: Miscellaneous options"
+    print "   -r = <bool>:   retain the AMOS bank?  (default = NO)"
+    print "   -p = <int>:    number of threads to use (be greedy!) (default=1)"
+    print "   -4 = <bool>:   454 data? (default = NO)"    
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hrbd:s:e:o:k:c:a:n:p:qtf:vm:4g:", ["help", "retainBank""bowtie","projectdir","startat","endat", "minoverlap","kmersize","classifier","assembler","skipsteps","threads","filter","forcesteps","verbose","mapper","454","genecaller"])
+    opts, args = getopt.getopt(sys.argv[1:], "hrbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iul:x:",\
+                                   ["help", \
+                                        "retainBank", \
+                                        "libspeccov",\
+                                        "projectdir",\
+                                        "startat",\
+                                        "endat", \
+                                        "minoverlap",\
+                                        "kmersize",\
+                                        "classifier",\
+                                        "assembler",\
+                                        "skipsteps",\
+                                        "threads",\
+                                        "fastqreport",\
+                                        "filter",\
+                                        "forcesteps",\
+                                        "verbose",\
+                                        "mapper",\
+                                        "454",\
+                                        "genecaller",\
+                                        "bowtieindex",\
+                                        "unassembledreads",\
+                                        "minlen",\
+                                        "mincov"])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -54,11 +112,13 @@ except getopt.GetoptError, err:
     sys.exit(2)
 
 supported_programs = {}
-supported_genecallers = ["fraggenescan","metagenemark","glimmermg"]
-supported_assemblers = ["soap","soapdenovo","newbler","ca","velvet","metavelvet","metaidba","sparse","sparseassembler","minimus"]
+supported_genecallers = ["FragGeneScan", "fraggenescan","metagenemark","glimmermg"]
+supported_assemblers = ["soap","soapdenovo","newbler","ca","velvet","metavelvet",\
+                            "metaidba","sparse","sparseassembler","minimus"]
 supported_mappers = ["bowtie"]
 supported_abundance = ["metaphyler"]
-supported_classifiers = ["FCP","fcp","PhyloSift","phylosift","phmmer","blast","metaphyler"]
+supported_classifiers = ["FCP","fcp","PhyloSift","phylosift","phmmer","blast",\
+                             "metaphyler"]
 supported_scaffolders = ["bambus2"]
 supported_programs["findorfs"] = supported_genecallers
 supported_programs["assemble"] = supported_assemblers
@@ -67,13 +127,18 @@ supported_programs["abundance"] = supported_abundance
 supported_programs["classify"] = supported_classifiers
 supported_programs["scaffold"] = supported_scaffolders
 
+# Why 4 times????
 pub_dict = {}
 pub_dict["fraggenescan"] = "Li et al. "
 pub_dict["fraggenescan"] = "Li et al. "
 pub_dict["fraggenescan"] = "Li et al. "
 pub_dict["fraggenescan"] = "Li et al. "
 
-allsteps = ["Preprocess","Assemble","FindORFS","Abundance","Annotate","Scaffold","Propagate","Classify","Postprocess"]
+allsteps = ["Preprocess","Assemble","FindORFS","Abundance","Annotate",\
+                "Scaffold","Propagate","Classify","Postprocess"]
+
+## Need comments here and further down
+
 output = None
 reads = None
 quals = None
@@ -138,13 +203,9 @@ for o, a in opts:
     elif o in ("-4", "--454"):
         fff = "-454"
     elif o in ("-f", "--forcesteps"):
-        #print o,a
         forcesteps = a.split(",")
-        #print forcesteps
     elif o in ("-n", "--skipsteps"):
-        #print o, a
         skipsteps = a.split(",")
-        #print skipsteps
     elif o in ("-p", "--threads"):
         utils.Settings.threads = int(a)
     elif o in ("-d", "--projectdir"):
@@ -163,17 +224,13 @@ for o, a in opts:
     elif o in ("-r", "--retainBank"):
         retainBank = True
     elif o in ("-c", "--classifier"):
-        #blast,fcp,etc 
-        #default: fcp?
-        cls = a#"phmmer"
+        cls = a
         if cls == "phylosift" or cls == "PhyloSift":
             cls = "phylosift"
         if cls not in supported_classifiers:
             print "!!Sorry, %s is not a supported classification method. Using FCP instead"%(cls)
             cls = "fcp"
     elif o in ("-a","--assembler"):
-        #maximus,CA,soap
-        #default: maximus?
         asm = a.lower()
         if asm == "metaidba":
             bowtie_mapping = 1
@@ -187,15 +244,11 @@ for o, a in opts:
             print "!!Sorry, %s is not a supported gene caller. Using FragGeneScan instead"%(orf)
             orf = "fraggenescan"
     elif o in ("-f","--fastest"):
-        #tweak all parameters to run fast
-        #bambus2, use SOAP, etc
         runfast = True
     elif o in ("-b","--savebowtieidx"):
         savebtidx = True
     else:
         assert False, "unhandled option"
-
-    #sys.exit(2)
 
 if not os.path.exists(settings.rundir) or settings.rundir == "":
     print "project dir %s does not exist!"%(settings.rundir)
@@ -217,6 +270,8 @@ mmax = 0
 mated = True
 interleaved = False
 innie = True
+
+# This should be an option somewhere and probably belongs to initPipeline
 linkerType = "titanium"
 frg = ""
 f1 = ""
@@ -225,18 +280,17 @@ currlibno = 0
 newlib = ""
 usecontigs = False
 libadded = False
+
 for line in inf:
     line = line.replace("\n","")
     if "#" in line:
         continue
     elif "asmcontigs:" in line:
-        #move to proba.asm.contigs
-        #skip Assembly
         asmc = line.replace("\n","").split("\t")[-1]
         if len(asmc) <= 2:
             continue
-        utils.run_process(settings, "cp %s %s/Assemble/out/%s"%(asmc,settings.rundir,"proba.asm.contig"),"RunPipeline")
-        #skipsteps.append("Assemble")
+        utils.run_process(settings, "cp %s %s/Assemble/out/%s"%(asmc,settings.rundir,\
+                          "proba.asm.contig"),"RunPipeline")
         usecontigs = True
         asm = "none"
         bowtie_mapping = 1
@@ -258,11 +312,11 @@ for line in inf:
         innie = utils.str2bool(line.replace("\n","").split("\t")[-1])
     elif "linker:" in line:
         linkerType = line.replace("\n","").split("\t")[-1]
-    elif "f1:" in line:# or "f2:" in line:
+    elif "f1:" in line:
         data = line.split("\t")
 
         fqlibs[data[0]] = data[1]
-        #f1 = data[1].split(",")[0]
+ 
         f1 = "%s/Preprocess/in/%s"%(settings.rundir,data[1].split(",")[0])
         inf = data[1].split(",")
         mean = int(inf[3])
@@ -271,7 +325,7 @@ for line in inf:
         mmax = int(inf[2])
         libs.append(f1)
 
-    elif "f2:" in line:# or "f2:" in line:
+    elif "f2:" in line:
         data = line.split("\t")
 
         fqlibs[data[0]] = data[1]
@@ -287,27 +341,24 @@ for line in inf:
         readobjs.append(nread1)
         nread2 = utils.Read(format,f2,mated,interleaved)
         readobjs.append(nread2)
-        nlib = utils.readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,innie,linkerType)
+        nlib = utils.readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,\
+                             innie,linkerType)
         readlibs.append(nlib)
         libadded = True
     elif "frg" in line:
 
         data = line.split("\t")
-        #frg = data[1]
         frg = "%s/Preprocess/in/%s"%(settings.rundir,data[1].split(",")[0])
         mated = False
         f1 = frg
-        #fqfrags[data[0]] = data[1]
-        #frgs.append(data[1])
         libs.append(frg)
 if f1 and not libadded:
     nread1 = utils.Read(format,f1,mated,interleaved)
     readobjs.append(nread1)
     nread2 = ""
-    nlib = utils.readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,innie,linkerType)
+    nlib = utils.readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,innie,\
+                         linkerType)
     readlibs.append(nlib)
-    #libadded = True
-
 
 if len(readlibs) > 1 and asm == "metaidba":
     print "ERROR: meta-IDBA only supports 1 library, please select different assembler or reduce libraries"
@@ -315,7 +366,6 @@ if len(readlibs) > 1 and asm == "metaidba":
 
 infile = ""
 
-#for lib in libs:
 if (format == "fastq" and mated):
     infile = f1
 elif (format == "fastq" and not mated):
@@ -335,53 +385,68 @@ for lib in readlibs:
       readpaths.append("%s/Preprocess/in/"%(settings.rundir)+read.fname)
       filtreadpaths.append("%s/Preprocess/out/"%(settings.rundir)+read.fname)
 
-#if asm == "soap":
 if "Preprocess" in forcesteps:
    for path in readpaths:
       utils.run_process(settings, "touch %s"%(path),"RunPipeline")
 utils.Settings.readpaths = readpaths
 
 asmfiles = []
-#if asm == "soap"
 
 for lib in readlibs:
-    #print "touch"
     if "MapReads" in forcesteps:
-        utils.run_process(settings, "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX),"RunPipeline")
+        utils.run_process(settings, \
+           "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX),\
+           "RunPipeline")
     if "Assemble" in forcesteps:
-        #print lib.id
-        utils.run_process(settings, "touch %s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id),"RunPipeline")
-
+        utils.run_process(settings, \
+           "touch %s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id),\
+           "RunPipeline")
     asmfiles.append("%s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id))
+
+
 utils.Settings.asmfiles = asmfiles
 
 if "Assemble" not in skipsteps and "Assemble" in forcesteps:
-    utils.run_process(settings, "rm %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX),"RunPipeline")
+    utils.run_process(settings, \
+          "rm %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX),\
+          "RunPipeline")
 
 if "FINDORFS" in forcesteps or "findorfs" in forcesteps or "FindORFS" in forcesteps:
-   utils.run_process(settings, "rm %s/FindORFS/out/%s.faa"%(settings.rundir,settings.PREFIX),"RunPipeline")
-   utils.run_process(settings, "rm %s/FindORFS/out/%s.fna"%(settings.rundir,settings.PREFIX),"RunPipeline")
-   utils.run_process(settings, "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX),"RunPipeline")
+   utils.run_process(settings, \
+          "rm %s/FindORFS/out/%s.faa"%(settings.rundir,settings.PREFIX),"RunPipeline")
+   utils.run_process(settings, \
+          "rm %s/FindORFS/out/%s.fna"%(settings.rundir,settings.PREFIX),"RunPipeline")
+   utils.run_process(settings, \
+          "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX),\
+          "RunPipeline")
 
 if "Annotate" in forcesteps:
-   utils.run_process(settings, "rm %s/Annotate/out/%s.hits"%(settings.rundir,settings.PREFIX),"RunPipeline")
+   utils.run_process(settings, \
+          "rm %s/Annotate/out/%s.hits"%(settings.rundir,settings.PREFIX),"RunPipeline")
 
 if "Abundance" in forcesteps:
-   utils.run_process(settings, "touch %s/FindORFS/out/%s.faa"%(settings.rundir,settings.PREFIX),"RunPipeline")
-   utils.run_process(settings, "rm %s/Abundance/out/%s.taxprof.pct.txt"%(settings.rundir,settings.PREFIX),"RunPipeline")
+   utils.run_process(settings, \
+          "touch %s/FindORFS/out/%s.faa"%(settings.rundir,settings.PREFIX),\
+          "RunPipeline")
+   utils.run_process(settings, \
+          "rm %s/Abundance/out/%s.taxprof.pct.txt"%(settings.rundir,settings.PREFIX),\
+          "RunPipeline")
 
 if "Scaffold" in forcesteps:
-    #utils.run_process(settings, "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX))
-    utils.run_process(settings, "rm %s/Scaffold/out/%s.scaffolds.final"%(settings.rundir,settings.PREFIX),"RunPipeline")
+    utils.run_process(settings, \
+          "rm %s/Scaffold/out/%s.scaffolds.final"%(settings.rundir,settings.PREFIX),\
+          "RunPipeline")
 
 if "FindScaffoldORFS" in forcesteps:
-    utils.run_process(settings, "touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(settings.rundir,settings.PREFIX),"RunPipeline")
+    utils.run_process(settings, \
+          "touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(settings.rundir,settings.PREFIX),\
+          "RunPipeline")
 
 if "Propagate" in forcesteps:
-    utils.run_process(settings, "touch %s/DB/class_key.tab"%(settings.METAMOS_UTILS),"RunPipeline")
+    utils.run_process(settings, "touch %s/DB/class_key.tab"%(settings.METAMOS_UTILS),\
+                      "RunPipeline")
 
 if __name__ == "__main__":
-    #pid = start_http()
     print "Starting metAMOS pipeline"
     settings = utils.initConfig(settings.kmer, settings.threads, settings.rundir)
 
@@ -413,17 +478,26 @@ if __name__ == "__main__":
     postprocess.init(readlibs, skipsteps, cls)
 
     try:
-       #files = os.listdir(".")
        dlist = []
-       pipeline_printout(sys.stdout,[preprocess.Preprocess,assemble.Assemble, findorfs.FindORFS, findreps.FindRepeats, annotate.Annotate, abundance.Abundance, scaffold.Scaffold, findscforfs.FindScaffoldORFS, propagate.Propagate, classify.Classify, postprocess.Postprocess], verbose=1)
+       pipeline_printout(sys.stdout,[preprocess.Preprocess,assemble.Assemble, \
+                         findorfs.FindORFS, findreps.FindRepeats, annotate.Annotate, \
+                         abundance.Abundance, scaffold.Scaffold, \
+                         findscforfs.FindScaffoldORFS, propagate.Propagate, \
+                         classify.Classify, postprocess.Postprocess], verbose=1)
        pipeline_printout_graph (   'flowchart.svg',
                             'svg',
                             [postprocess.Postprocess],
                             no_key_legend = True)
-       pipeline_run([preprocess.Preprocess,assemble.Assemble,findorfs.FindORFS, findreps.FindRepeats, annotate.Annotate, abundance.Abundance, scaffold.Scaffold, findscforfs.FindScaffoldORFS, propagate.Propagate, classify.Classify, postprocess.Postprocess], verbose = 1) 
+       pipeline_run([preprocess.Preprocess, assemble.Assemble,findorfs.FindORFS, \
+                    findreps.FindRepeats, annotate.Annotate, abundance.Abundance, \
+                    scaffold.Scaffold, findscforfs.FindScaffoldORFS, \
+                    propagate.Propagate, classify.Classify, postprocess.Postprocess],\
+                    verbose = 1) 
+
        #multiprocess threads
-       t2 = time.time()#clock()
+       t2 = time.time()
        elapsed = float(t2)-float(t1)
+
        #print elapsed
        print "done! pipeline took %.2f minutes"%(float(elapsed)/float(60.0))
     except JobSignalledBreak:

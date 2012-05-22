@@ -20,12 +20,13 @@ import webbrowser
 import multiprocessing
 from operator import itemgetter
 from ruffus import *
-import utils
+
 
 ## Setting up paths
 INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
 
 sys.path.append(INITIAL_SRC)
+import utils
 sys.path.append(utils.INITIAL_UTILS)
 
 ## Get start time

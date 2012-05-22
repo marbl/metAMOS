@@ -7,56 +7,77 @@
 #########################
 
 
-import os;
-import sys;
-import string;
-import time;
-import BaseHTTPServer;
-import getopt;
-import re;
-import subproces;
-import webbrowser;
-import multiprocessing;
+## The usual library dependencies
+import os
+import sys
+import string
+import time
+import BaseHTTPServer
+import getopt
+import re
+import subproces
+import webbrowser
+import multiprocessing
 from operator import itemgetter
-
-INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
-DEFAULT_KMER  = 31
-
-sys.path.append(INITIAL_SRC)
+from ruffus import *
 import utils
 
-t1 = time.time()
+## Setting up paths
+INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
+
+sys.path.append(INITIAL_SRC)
 sys.path.append(utils.INITIAL_UTILS)
-from ruffus import *
-#new: -j, -l,-x,-u
+
+## Get start time
+t1 = time.time()
+
+## Hardcode a k-mer size
+DEFAULT_KMER  = 31
+
 def usage():
-    print "usage: runPipeline.py [options] -d projectdir (required)"
-    print "options:  -a <assembler> -k <kmer size> -c <classification method> -t (filter reads flag) -p <num threads>  "
-    print "-a = <string>: genome assembler to use (default = SOAPdenovo)"
-    print "-b = <bool>:   create library specific per bp coverage of assembled contigs (default = NO)"
-    print "-c = <string>: classifier to use for annotation (default = FCP)"
-    print "-d = <string>: directory created by initPipeline (default = NONE)"
-    print "-e = <string>: end at this step in the pipeline (default = Postprocess)"
-    print "-f = <string>: force this step to be run (default = NONE)"
-    print "-r = <bool>:   retain the AMOS bank?  (default = NO)"
-    print "-g = <string>: gene caller to use (default=FragGeneScan)"
-    print "-h = <bool>:   print help?"
-    print "-i = <bool>:   save bowtie (i)ndex? (default = NO)"
-    print "-j = <bool>:   just output all of the programs and citations then exit (default = NO)"
-    print "-k = <int>:    kmer size for assembly (default = 51)"
-    print "-l = <int>:    min contig length to use for ORF call (default = 300)"
-    print "-m = <string>: read mapper to use? (default = bowtie)"
-    print "-n = <string>: step to skip in pipeline (default=NONE)"
-    print "-o = <int>>:   min overlap length"
-    print "-p = <int>:    number of threads to use (be greedy!) (default=1)"
-    print "-q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)"
-    print "-r = <bool>:   retain AMOS bank? (default = NO)"
-    print "-s = <string>: start at this step in the pipeline"
-    print "-t = <bool>:   filter input reads? (default = NO)"
-    print "-u = <bool>:   annotate unassembled reads? (default = NO)"
-    print "-v = <bool>:   verbose output? (default = NO)"
-    print "-x = <int>>:   min contig coverage to use for ORF call (default = 3X)"
-    print "-4 = <bool>:   454 data? (default = NO)"
+    print "usage: runPipeline.py [options] -d projectdir"
+    print "   -h = <bool>:   print help [this message]"
+    print "   -v = <bool>:   verbose output? (default = NO)"
+    print "   -d = <string>: directory created by initPipeline (REQUIRED)"
+
+    print "\n[options]: [pipeline_opts] [misc_opts]"
+    print "\n[pipeline_opts]: options that affect the pipeline execution"
+
+    print "Pipeline consists of the following steps:"
+    print "  Preprocess,Assemble,MapReads,FindORFS,FindRepeats,Annotate,"
+    print "  Scaffold,FindScaffoldORFS,Propagate,Classify,Postprocess"
+
+    print "Each of these steps can be referred to by the following options:" 
+    print "   -f = <string>: force this step to be run (default = NONE)"
+    print "   -s = <string>: start at this step in the pipeline (default = Preprocess)"
+    print "   -e = <string>: end at this step in the pipeline (default = Postprocess)"
+    print "   -n = <string>: step to skip in pipeline (default=NONE)"
+    print "   -j = <bool>:   just output all of the programs and citations then exit (default = NO)"
+
+    print "\nFor each step you can fine-tune the execution as follows"
+    print "[Preprocess]"
+    print "   -t = <bool>:   filter input reads? (default = NO)"
+    print "   -q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)"
+    print "[Assemble]"
+    print "   -a = <string>: genome assembler to use (default = SOAPdenovo)"
+    print "   -k = <kmer size>: k-mer size to be used for assembly (default = " + DEFAULT_KMER +  ")"
+    print "   -o = <int>>:   min overlap length"
+    print "[MapReads]"
+    print "   -m = <string>: read mapper to use? (default = bowtie)"
+    print "   -i = <bool>:   save bowtie (i)ndex? (default = NO)"
+    print "   -b = <bool>:   create library specific per bp coverage of assembled contigs (default = NO)"
+    print "[FindORFS]"
+    print "   -g = <string>: gene caller to use (default=FragGeneScan)"
+    print "   -l = <int>:    min contig length to use for ORF call (default = 300)"
+    print "   -x = <int>>:   min contig coverage to use for ORF call (default = 3X)"
+    print "[Classify]"
+    print "   -c = <string>: classifier to use for annotation (default = FCP)"
+    print "   -u = <bool>:   annotate unassembled reads? (default = NO)"
+
+    print "\n[misc_opts]: Miscellaneous options"
+    print "   -r = <bool>:   retain the AMOS bank?  (default = NO)"
+    print "   -p = <int>:    number of threads to use (be greedy!) (default=1)"
+    print "   -4 = <bool>:   454 data? (default = NO)"
 
     
     #print "options: annotate, stopafter, startafter, fq, fa"

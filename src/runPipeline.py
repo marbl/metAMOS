@@ -126,6 +126,7 @@ supported_programs["abundance"] = supported_abundance
 supported_programs["classify"] = supported_classifiers
 supported_programs["scaffold"] = supported_scaffolders
 
+# Why 4 times????
 pub_dict = {}
 pub_dict["fraggenescan"] = "Li et al. "
 pub_dict["fraggenescan"] = "Li et al. "
@@ -268,6 +269,8 @@ mmax = 0
 mated = True
 interleaved = False
 innie = True
+
+# This should be an option somewhere and probably belongs to initPipeline
 linkerType = "titanium"
 frg = ""
 f1 = ""
@@ -308,11 +311,11 @@ for line in inf:
         innie = utils.str2bool(line.replace("\n","").split("\t")[-1])
     elif "linker:" in line:
         linkerType = line.replace("\n","").split("\t")[-1]
-    elif "f1:" in line:# or "f2:" in line:
+    elif "f1:" in line:
         data = line.split("\t")
 
         fqlibs[data[0]] = data[1]
-        #f1 = data[1].split(",")[0]
+ 
         f1 = "%s/Preprocess/in/%s"%(settings.rundir,data[1].split(",")[0])
         inf = data[1].split(",")
         mean = int(inf[3])

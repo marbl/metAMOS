@@ -81,7 +81,7 @@ def usage():
     print "   -4 = <bool>:   454 data? (default = NO)"    
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hrbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iul:x:",\
+    opts, args = getopt.getopt(sys.argv[1:], "hrjbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iul:x:",\
                                    ["help", \
                                         "retainBank", \
                                         "libspeccov",\
@@ -111,13 +111,15 @@ except getopt.GetoptError, err:
     usage()
     sys.exit(2)
 
+## always use long names, search will auto-detect abbreviations
+
 supported_programs = {}
-supported_genecallers = ["FragGeneScan", "fraggenescan","metagenemark","glimmermg"]
-supported_assemblers = ["soap","soapdenovo","newbler","ca","velvet","metavelvet",\
-                            "metaidba","sparse","sparseassembler","minimus"]
+supported_genecallers = ["fraggenescan","metagenemark","glimmermg"]
+supported_assemblers = ["soapdenovo","newbler","ca","velvet","metavelvet",\
+                            "metaidba","sparseassembler","minimus"]
 supported_mappers = ["bowtie"]
 supported_abundance = ["metaphyler"]
-supported_classifiers = ["FCP","fcp","PhyloSift","phylosift","phmmer","blast",\
+supported_classifiers = ["fcp","phylosift","phmmer","blast",\
                              "metaphyler"]
 supported_scaffolders = ["bambus2"]
 supported_programs["findorfs"] = supported_genecallers
@@ -127,15 +129,49 @@ supported_programs["abundance"] = supported_abundance
 supported_programs["classify"] = supported_classifiers
 supported_programs["scaffold"] = supported_scaffolders
 
-# Why 4 times????
-pub_dict = {}
-pub_dict["fraggenescan"] = "Li et al. "
-pub_dict["fraggenescan"] = "Li et al. "
-pub_dict["fraggenescan"] = "Li et al. "
-pub_dict["fraggenescan"] = "Li et al. "
+## a list of citations for each program used in the pipeline
+progname_dict = {}
+progname_dict["fraggenescan"] = "FragGeneScan"
+progname_dict["metagenemark"] = "MetaGeneMark"
+progname_dict["soapdenovo"] = "SOAPdenovo"
+progname_dict["metaidba"] = "Meta-IDBA"
+progname_dict["velvet"] = "Velvet"
+progname_dict["metavelvet"] = "MetaVelvet"
+progname_dict["ca"] = "Celera Assembler"
+progname_dict["bambus2"] = "Bambus 2"
+progname_dict["fcp"] = "FCP,Naive Bayesian Classifier"
+progname_dict["bowtie"] = "Bowtie"
+progname_dict["blast"] = "BLAST"
+progname_dict["phmmer"] = "PHMMER"
+progname_dict["phylosift"] = "PhyloSift"
+progname_dict["minimus"] = "Minimus"
+progname_dict["glimmermg"] = "Glimmer-MG"
+progname_dict["sparseassembler"] = "Sparse Assembler"
+progname_dict["metaphyler"] = "MetaPhyler"
+progname_dict["newbler"] = "Newbler"
 
+pub_dict = {}
+pub_dict["fraggenescan"] = "Rho M, Tang H, Ye Y: FragGeneScan: predicting genes in short and error-prone reads. Nucleic Acids Research 2010, 38:e191-e191."
+pub_dict["metagenemark"] = "Borodovsky M, Mills R, Besemer J, Lomsadze A: Prokaryotic gene prediction using GeneMark and GeneMark.hmm.Current protocols in bioinformatics editoral board Andreas D Baxevanis et al 2003, Chapter 4:Unit4.6-Unit4.6."
+pub_dict["soapdenovo"] = "Li Y, Hu Y, Bolund L, Wang J: State of the art de novo assembly of human genomes from massively parallel sequencing data.Human genomics 2010, 4:271-277."
+pub_dict["metaidba"] = "Peng Y, Leung HCM, Yiu SM, Chin FYL: Meta-IDBA: a de Novo assembler for metagenomic data. Bioinformatics 2011, 27:i94-i101."
+pub_dict["metavelvet"] = "Namiki T, Hachiya T, Tanaka H, Sakakibara Y: MetaVelvet : An extension of Velvet assembler to de novo metagenome assembly from short sequence reads. In; 2011."
+pub_dict["bowtie"] = "Langmead B, Trapnell C, Pop M, Salzberg SL. Ultrafast and memory-efficient alignment of short DNA sequences to the human genome. Genome Biol. 2009;10(3):R25. Epub 2009 Mar 4."
+pub_dict["bambus2"] = "Koren S, Treangen TJ, Pop M. Bambus 2: scaffolding metagenomes. Bioinformatics. 2011 Nov 1;27(21):2964-71. Epub 2011 Sep 16."
+pub_dict["fcp"] = "Macdonald NJ, Parks DH, Beiko RG. Rapid identification of high-confidence taxonomic assignments for metagenomic data. Nucleic Acids Res. 2012 Apr 24."
+pub_dict["metaphyler"] = "Liu B, Gibbons T, Ghodsi M, Treangen T, Pop M. Accurate and fast estimation of taxonomic profiles from metagenomic shotgun sequences. BMC Genomics. 2011;12 Suppl 2:S4. Epub 2011 Jul 27."
+pub_dict["glimmermg"] = "Kelley DR, Liu B, Delcher AL, Pop M, Salzberg SL. Gene prediction with Glimmer for metagenomic sequences augmented by classification and clustering. Nucleic Acids Res. 2012 Jan;40(1):e9. Epub 2011 Nov 18."
+pub_dict["sparseassembler"] = "Ye C, Ma ZS, Cannon CH, Pop M, Yu DW. Exploiting sparseness in de novo genome assembly. BMC Bioinformatics. 2012 Apr 19;13 Suppl 6:S1."
+pub_dict["minimus"] = "Sommer DD, Delcher AL, Salzberg SL, Pop M. Minimus: a fast, lightweight genome assembler. BMC Bioinformatics. 2007 Feb 26;8:64."
+pub_dict["velvet"] = "Zerbino DR, Birney E. Velvet: algorithms for de novo short read assembly using de Bruijn graphs. Genome Res. 2008 May;18(5):821-9. Epub 2008 Mar 18."
+pub_dict["phylosift"] = "http://phylosift.wordpress.com/"
+pub_dict["ca"] = "Miller JR, Delcher AL, Koren S, Venter E, Walenz BP, Brownley A, Johnson J, Li K, Mobarry C, Sutton G. Aggressive assembly of pyrosequencing reads with mates.Bioinformatics. 2008 Dec 15;24(24):2818-24. Epub 2008 Oct 24."
+pub_dict["phmmer"] = "Eddy SR. Accelerated Profile HMM Searches. PLoS Comput Biol. 2011 Oct;7(10):e1002195. Epub 2011 Oct 20."
+pub_dict["blast"] = "Altschul SF, Gish W, Miller W, Myers EW, Lipman DJ. Basic local alignment search tool. J Mol Biol. 1990 Oct 5;215(3):403-10." 
 allsteps = ["Preprocess","Assemble","FindORFS","Abundance","Annotate",\
                 "Scaffold","Propagate","Classify","Postprocess"]
+
+
 
 ## Need comments here and further down
 
@@ -181,6 +217,21 @@ for o, a in opts:
         bowtie_mapping = 1
     elif o in ("-j","--justprogs"):
         output_programs = 1
+        print "\n======Supported programs and citations (if available)=======\n"
+        for type in supported_programs.keys():
+            print "[" + type + "]"
+            ccnt = 1
+            for prog in supported_programs[type]:
+                citation = "NA"
+                try: 
+                    citation = pub_dict[prog]
+                except KeyError:
+                    citation = "NA"
+                print "  %d)"%(ccnt)+" "+progname_dict[prog]
+                print "    "+citation+"\n"
+                ccnt +=1
+        sys.exit(0)
+                
     elif o in ("-u","--unassembledreads"):
         annotate_unassembled = 1
     elif o in ("-x","--xcov"):
@@ -220,29 +271,70 @@ for o, a in opts:
         filter = True
 
     elif o in ("-m", "--mapper"):
-        mapper = a
+        mapper = a.lower()
+        foundit = False
+        for sm in supported_mappers:
+            if mapper not in sm:
+                continue
+            else:
+                mapper = sm
+                foundit = True
+                break
+        if not foundit:
+            print "!!Sorry, %s is not a supported read alignment method. Using bowtie instead"%(mapper)
+            mapper = "bowtie"
     elif o in ("-r", "--retainBank"):
         retainBank = True
     elif o in ("-c", "--classifier"):
-        cls = a
-        if cls == "phylosift" or cls == "PhyloSift":
-            cls = "phylosift"
-        if cls not in supported_classifiers:
-            print "!!Sorry, %s is not a supported classification method. Using FCP instead"%(cls)
-            cls = "fcp"
+        cls = a.lower()
+        foundit = False
+        for sc in supported_classifiers:
+            if cls not in sc:
+                continue
+            else:
+                cls = sc
+                foundit = True
+                break
+        if not foundit:
+            print "!!Sorry, %s is not a supported classification method. Using FCP instead"%(fcp)
+            orf = "fcp"
+
     elif o in ("-a","--assembler"):
         asm = a.lower()
         if asm == "metaidba":
             bowtie_mapping = 1
-        if asm not in supported_assemblers:
+            
+        foundit = False
+        
+        for sa in supported_assemblers:
+            if asm not in sa:
+                continue
+            else:
+                if asm != "velvet":
+                    #some special cases required, velvet would trigger MetaVelvet, not velvet, etc
+                    asm = sa
+                foundit = True
+                break
+        
+        if not foundit:
             print "!!Sorry, %s is not a supported assembler. Using SOAPdenovo instead"%(asm)
             asm = "soap"
+
         
     elif o in ("-g","--genecaller"):
-        orf = a
-        if orf not in supported_genecallers:
+        orf = a.lower()
+        foundit = False
+        for sg in supported_assemblers:
+            if orf not in sg:
+                continue
+            else:
+                orf = sg
+                foundit = True
+                break
+        if not foundit:
             print "!!Sorry, %s is not a supported gene caller. Using FragGeneScan instead"%(orf)
-            orf = "fraggenescan"
+            orf = "soap"
+
     elif o in ("-f","--fastest"):
         runfast = True
     elif o in ("-b","--savebowtieidx"):

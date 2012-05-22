@@ -61,7 +61,7 @@ def usage():
     print "   -q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)"
     print "[Assemble]"
     print "   -a = <string>: genome assembler to use (default = SOAPdenovo)"
-    print "   -k = <kmer size>: k-mer size to be used for assembly (default = " + DEFAULT_KMER +  ")"
+    print "   -k = <kmer size>: k-mer size to be used for assembly (default = " + str(DEFAULT_KMER) +  ")"
     print "   -o = <int>>:   min overlap length"
     print "[MapReads]"
     print "   -m = <string>: read mapper to use? (default = bowtie)"

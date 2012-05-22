@@ -1,6 +1,22 @@
 #!python
 
-import os, sys, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser, multiprocessing
+## $Id$
+
+#########################
+## runPipeline.py - main pipeline driver for metAMOS
+#########################
+
+
+import os;
+import sys;
+import string;
+import time;
+import BaseHTTPServer;
+import getopt;
+import re;
+import subproces;
+import webbrowser;
+import multiprocessing;
 from operator import itemgetter
 
 INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)

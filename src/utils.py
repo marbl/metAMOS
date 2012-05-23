@@ -18,6 +18,8 @@ class Settings:
    kmer = 55
    threads = 16
    rundir = ""
+   task_dict = []
+
    VERBOSE = False
    OUTPUT_ONLY = False
 
@@ -68,6 +70,7 @@ class Settings:
       Settings.kmer = kmer
       Settings.threads = threads 
       Settings.rundir = rundir
+      Settings.task_dict = []
 
       Settings.PREFIX = "proba"
       Settings.VERBOSE = verbose
@@ -451,12 +454,17 @@ def run_process(settings,command,step=""):
            if not os.path.exists(workingDir):
               workingDir = ""
            step = string.upper(step)
-           if not os.path.exists(settings.rundir+"/Logs"):
+           if not os.path.exists(settings.rundir+os.sep+"Logs"):
                os.system("mkdir %s/Logs"%(settings.rundir))
-           outf = open(settings.rundir+"/Logs/"+step+".log",'a')
+           if not step in settings.task_dict:
+              print "Starting Task = %s.%s"%(step.lower(), step)
+              outf = open(settings.rundir+os.sep+"Logs"+os.sep+step+".log",'w')
+              settings.task_dict.append(step)
+           else:
+              outf = open(settings.rundir+os.sep+"Logs"+os.sep+step+".log",'a')
 
        if settings.VERBOSE or settings.OUTPUT_ONLY:
-           print command
+           print "*** metAMOS running command: %s\n"%(command)
 
        if settings.OUTPUT_ONLY == False:
           stdout = ""

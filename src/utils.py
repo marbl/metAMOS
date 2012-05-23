@@ -455,13 +455,10 @@ def run_process(settings,command,step=""):
                os.system("mkdir %s/Logs"%(settings.rundir))
            outf = open(settings.rundir+"/Logs/"+step+".log",'a')
 
-       print "The output is set to %s and so I will not run"%(settings.OUTPUT_ONLY)
        if settings.VERBOSE or settings.OUTPUT_ONLY:
            print command
 
        if settings.OUTPUT_ONLY == False:
-          print "Requested to run"
-
           stdout = ""
           stderr = ""
           if workingDir == "":

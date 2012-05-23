@@ -8,6 +8,9 @@ import hashlib
 _METAMOSDIR    = sys.path[0]
 INITIAL_UTILS = "%s%sUtilities"%(_METAMOSDIR, os.sep)
 
+_PROG_NAME_DICT = {}
+_PUB_DICT = {}
+
 class Settings:
    asmfiles = []
    runfiles = []
@@ -15,8 +18,11 @@ class Settings:
    kmer = 55
    threads = 16
    rundir = ""
-   PREFIX = ""
    VERBOSE = False
+   OUTPUT_ONLY = False
+
+   PREFIX = ""
+
    OSTYPE = ""
    OSVERSION = ""
    MACHINETYPE = ""
@@ -49,7 +55,7 @@ class Settings:
    KRONA = ""
    REPEATOIRE = ""
 
-   def __init__(self, kmer = None, threads = None, rundir = None, update = False):
+   def __init__(self, kmer = None, threads = None, rundir = None, verbose = False, outputOnly = False, update = False):
 
       if (Settings.rundir != "" and update == False):
          return
@@ -64,12 +70,15 @@ class Settings:
       Settings.rundir = rundir
 
       Settings.PREFIX = "proba"
-      Settings.VERBOSE = False
+      Settings.VERBOSE = verbose
+      Settings.OUTPUT_ONLY = outputOnly
+
       Settings.OSTYPE        = "Linux"
       Settings.OSVERSION     = "0.0"
       Settings.MACHINETYPE   = "x86_64"
 
       Settings.METAMOSDIR    = sys.path[0]
+      Settings.METAMOS_DOC   = "%s%sdoc"%(Settings.METAMOSDIR, os.sep)
       Settings.METAMOS_UTILS = "%s%sUtilities"%(Settings.METAMOSDIR, os.sep) 
       Settings.METAMOS_JAVA  = "%s%sjava:%s"%(Settings.METAMOS_UTILS,os.sep,os.curdir)
 
@@ -268,8 +277,8 @@ def getFromPath(theCommand, theName):
     else:
        return checkStdout.replace(theCommand, "").strip()
 
-def initConfig(kmer, threads, theRundir):
-    Settings(kmer, threads, theRundir, True)
+def initConfig(kmer, threads, theRundir, verbose, outputOnly):
+    Settings(kmer, threads, theRundir, verbose, outputOnly, True)
 
     getMachineType()
 
@@ -283,6 +292,7 @@ def initConfig(kmer, threads, theRundir):
           sys.exit(1);   
 
        Settings.METAMOS_JAVA  = "%s%sjava:%s"%(Settings.METAMOS_UTILS, os.sep, os.curdir)
+       Settings.METAMOS_DOC   = "%s%sdoc"%(Settings.METAMOS_UTILS, os.sep)
 
     # FastQC
     Settings.FASTQC = "%s%sFastQC"%(Settings.METAMOSDIR, os.sep)
@@ -444,22 +454,55 @@ def run_process(settings,command,step=""):
            if not os.path.exists(settings.rundir+"/Logs"):
                os.system("mkdir %s/Logs"%(settings.rundir))
            outf = open(settings.rundir+"/Logs/"+step+".log",'a')
-       if settings.VERBOSE:
+
+       print "The output is set to %s and so I will not run"%(settings.OUTPUT_ONLY)
+       if settings.VERBOSE or settings.OUTPUT_ONLY:
            print command
-       stdout = ""
-       stderr = ""
-       if workingDir == "":
-           p = subprocess.Popen(command, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,close_fds=True,executable="/bin/bash")
-       else:
-           p = subprocess.Popen(command, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,close_fds=True,executable="/bin/bash", cwd=workingDir)
-       fstdout,fstderr = p.communicate()
 
-       if step == "":
-           print fstdout,fstderr
-       else:
-           outf.write(fstdout+fstderr)
-           outf.close()
+       if settings.OUTPUT_ONLY == False:
+          print "Requested to run"
 
+          stdout = ""
+          stderr = ""
+          if workingDir == "":
+              p = subprocess.Popen(command, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,close_fds=True,executable="/bin/bash")
+          else:
+              p = subprocess.Popen(command, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,close_fds=True,executable="/bin/bash", cwd=workingDir)
+          fstdout,fstderr = p.communicate()
+
+          if step == "":
+              print fstdout,fstderr
+          else:
+              outf.write(fstdout+fstderr)
+              outf.close()
+
+def getProgramCitations(settings, programName, comment="#"):
+   global _PUB_DICT
+   global _PROG_NAME_DICT
+
+   if len(_PUB_DICT) == 0:
+      try:
+         cite = open("%s/%s"%(settings.METAMOS_DOC, "citations.rst"), 'r')
+      except IOError as e:
+         return
+
+      for line in cite:
+         (line, sep, commentLine) = line.partition(comment)
+         splitLine = line.strip().split("\t")
+         if len(splitLine) >= 3:
+            name = splitLine[0]
+            commonName = splitLine[1]
+            citation = splitLine[2]
+         elif len(splitLine) >= 2:
+           name = splitLine[0]
+           commonName = splitLine[1]
+           citation = "NA" 
+         else:
+            continue
+         _PROG_NAME_DICT[name] = commonName
+         _PUB_DICT[name] = citation
+
+   return (_PROG_NAME_DICT[programName], _PUB_DICT[programName]) 
 
 def getProgramParams(configDir, fileName, module="", prefix="", comment="#"):
     # we process parameters in the following priority:

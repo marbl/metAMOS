@@ -79,6 +79,7 @@ def Postprocess(input,output):
        #   print "Error: Krona importer for FCP not found in %s. Please check your path and try again.\n"%()
        #   raise(JobSignalledBreak)
        #run_process(_settings, "perl %s/ImportFCP.pl -c -v -i -p %s/Postprocess/in/%s.epsilon-nb_results.txt"%(_settings.KRONA,_settings.rundir,_settings.PREFIX),"Postprocess")
+       run_process(_settings, "unlink %s/Postprocess/out/report.krona.html"%(_settings.rundir), "Postprocess")
        run_process(_settings, "ln -s %s/Annotate/out/report.krona.html %s/Postprocess/out/report.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
    elif _cls == 'phymm':
        if not os.path.exists(_settings.KRONA + os.sep + "ImportPHYMM.pl"):
@@ -92,6 +93,7 @@ def Postprocess(input,output):
        #    print "Error: Krona importer for PhyloSift not found in %s. Please check your path and try again.\n"%()
        #    raise(JobSignalledBreak)
        #run_process(_settings, "perl %s/ImportPhyloSift.pl -c -v -i %s/Postprocess/in/%s.hits:%s/Assemble/out/%s.contig.cvg"%(_settings.KRONA,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX), "Postprocess") 
+       run_process(_settings, "unlink %s/Postprocess/out/report.krona.html"%(_settings.rundir), "Postprocess")
        run_process(_settings, "ln -s %s/Annotate/out/report.krona.html %s/Postprocess/out/report.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
 
    #command to open webbrowser?

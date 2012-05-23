@@ -87,8 +87,9 @@ def parse_phmmerout(phmmerout):
 @follows(FindRepeats)
 @files("%s/Annotate/in/%s.faa"%(_settings.rundir,_settings.PREFIX),"%s/Annotate/out/%s.hits"%(_settings.rundir,_settings.PREFIX))
 def Annotate(input,output):
-   if "Annotate" in _skipsteps:
+   if "Annotate" in _skipsteps or _cls == None:
       run_process(_settings, "touch %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")
+      run_process(_settings, "touch %s/Annotate/out/%s.annots"%(_settings.rundir, _settings.PREFIX), "Annotate")
       return 0
 
    #annotate contigs > 1000bp with FCP

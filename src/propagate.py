@@ -26,7 +26,7 @@ def init(reads, skipsteps, cls):
    _cls = cls
 
 @follows(Scaffold)
-@files("%s/DB/class_key.tab"%(_settings.METAMOS_UTILS),"%s/Propagate/out/%s.clusters"%(_settings.rundir,_settings.PREFIX))
+@files("%s/Annotate/out/%s.annots"%(_settings.rundir, _settings.PREFIX),"%s/Propagate/out/%s.clusters"%(_settings.rundir,_settings.PREFIX))
 def Propagate(input,output):
    #run propogate java script
    # create s12.annots from Metaphyler output

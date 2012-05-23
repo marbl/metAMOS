@@ -359,7 +359,7 @@ def map2contig():
     ctg_cnt_file.close()
     tigr_file.close()
 
-@files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/Assemble/out/%s.bout"%(_settings.rundir,_settings.PREFIX))
+@files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/Assemble/out/mapreads.success"%(_settings.rundir))
 #@posttask(create_symlink,touch_file("completed.flag"))
 @follows(Assemble)
 def MapReads(input,output):
@@ -371,6 +371,7 @@ def MapReads(input,output):
    else:
        print "Read mapper not supported, time to exit"
        sys.exit(1)
+   run_process(_settings, "touch %s/Assemble/out/mapreads.success"%(_settings.rundir), "MapReads")
    #stop here, for now
    #sys.exit(0)
    #check if sucessfully completed   

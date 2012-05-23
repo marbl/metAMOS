@@ -213,7 +213,7 @@ def runMetaVelvet(velvetPath, metavelvetPath, name):
    run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")
    run_process(_settings, "ln -s %s/Assemble/out/meta-velvetg.contigs.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
         
-@files(_settings.asmfiles,["%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX)])
+@files("%s/Preprocess/out/preprocess.success"%(_settings.rundir),["%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX)])
 #@posttask(create_symlink,touch_file("completed.flag"))
 @follows(Preprocess)
 def Assemble(input,output):

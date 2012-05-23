@@ -154,8 +154,12 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
                     cvgg.write("%s_gene%d\t%.2f\t%.2f\t%.2f\n"%(key,genecnt, 1.0,len(gene),1.0))
 
             #min aa length, read depth
-            if len(gene) < _min_ctg_len/3 or cvg_dict[key] < _min_ctg_cvg:# or cvg_dict[key] < 5:
-                continue
+            if key in cvg_dict:
+                if len(gene) < _min_ctg_len/3 or cvg_dict[key] < _min_ctg_cvg:# or cvg_dict[key] < 5:
+                   continue
+            else:
+                if len(gene) < _min_ctg_len/3 or 1 >= _min_ctg_cvg: 
+                   continue
             try:
                 #print "contig"+key
                 orfs["%s"%(key)] +=1
@@ -168,8 +172,12 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
         genecnt = 1
         for gene in fna_dict[key].keys():
             #gene = fna_dict[key][gkey]
-            if len(gene) < _min_ctg_len or cvg_dict[key] < _min_ctg_cvg:# or cvg_dict[key] < 5:
-                continue
+            if key in cvg_dict:
+                if len(gene) < _min_ctg_len or cvg_dict[key] < _min_ctg_cvg:# or cvg_dict[key] < 5:
+                    continue
+            else:
+                if len(gene) < _min_ctg_len or 1 >= _min_ctg_cvg:
+                   continue;
             outf2.write(">%s_gene%d\n%s"%(key,genecnt,gene))
             genecnt +=1
 

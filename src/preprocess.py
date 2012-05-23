@@ -142,6 +142,30 @@ def Preprocess(input,output):
    # update file names if necessary to avoid conflicts and create qual files
    for lib in _readlibs:
       for read in lib.reads:
+         if "lib%d"%(lib.id) in os.path.basename(read.path):
+            if lib.mated and not lib.interleaved:
+                readpair = lib.getPair(read.id)
+                if readpair == -1:
+                    #not interleaved and mated, yet do not have 2nd file..
+                    continue
+                (nprefix, nmatch, nsuffix) = readpair.path.rpartition("lib%d"%(lib.id))
+                if len(nmatch) == 0:
+                    print "Error: Could not find expected input file %s\n"%(readpair.path)
+                    raise(JobSignalledBreak)
+                npath = nprefix + "inputLib%d"%(lib.id) + nsuffix
+                run_process(_settings, "cp %s %s"%(readpair.path, npath), "Preprocess")
+                readpair.path = npath
+                readpair.fname = os.path.basename(readpair.path)
+
+            (nprefix, nmatch, nsuffix) = read.path.rpartition("lib%d"%(lib.id))
+            if (len(nmatch) == 0):
+                print "Error: Could not find expected input file %s\n"%(readpair.path)
+                raise(JobSignalledBreak)
+            npath = nprefix + "inputLib%d"%(lib.id) + nsuffix
+            run_process(_settings, "cp %s %s"%(read.path, npath), "Preprocess")
+            read.path = npath
+            read.fname = os.path.basename(read.path)
+
          if lib.format == "fasta" and not os.path.isfile("%s/Preprocess/in/%s.qual"%(_settings.rundir, read.fname)):
             run_process(_settings, "java -cp %s:. outputDefaultQuality %s/Preprocess/in/%s > %s/Preprocess/in/%s.qual"%(_settings.METAMOS_JAVA, _settings.rundir, read.fname, _settings.rundir, read.fname), "Preprocess")
             if lib.mated and not lib.interleaved:
@@ -150,22 +174,6 @@ def Preprocess(input,output):
                     #not interleaved and mated, yet do not have 2nd file..
                     continue
                 run_process(_settings, "java -cp %s:. outputDefaultQuality %s/Preprocess/in/%s > %s/Preprocess/in/%s.qual"%(_settings.METAMOS_JAVA, _settings.rundir, readpair.fname, _settings.rundir, readpair.fname), "Preprocess")
-
-         if "lib%d"%(lib.id) in read.path:
-            if lib.mated and not lib.interleaved:
-                readpair = lib.getPair(read.id)
-                if readpair == -1:
-                    #not interleaved and mated, yet do not have 2nd file..
-                    continue
-                npath = readpair.path.replace("lib%d"%(lib.id), "inputLib%d"%(lib.id))
-                run_process(_settings, "mv %s %s"%(readpair.path, npath), "Preprocess")
-                readpair.path = npath
-                readpair.fname = os.path.basename(readpair.path)
-
-            npath = read.path.replace("lib%d"%(lib.id), "inputLib%d"%(lib.id))
-            run_process(_settings, "mv %s %s"%(read.path, npath), "Preprocess")
-            read.path = npath
-            read.fname = os.path.basename(read.path)
 
    #move input files into Preprocess ./in dir
    #output will either be split fastq files in out, or AMOS bank

@@ -5,10 +5,20 @@
 #########################
 ## runPipeline.py - main pipeline driver for metAMOS
 #########################
+##first imports
+import os,sys
 
-#the usual imports, before 
-import os
-import sys
+## Setting up paths
+INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
+## Hardcode a k-mer size
+DEFAULT_KMER  = 31
+
+
+sys.path.append(INITIAL_SRC)
+import utils
+sys.path.append(utils.INITIAL_UTILS)
+
+## The usual library dependencies
 import string
 import time
 import BaseHTTPServer
@@ -18,27 +28,10 @@ import subprocess
 import webbrowser
 import multiprocessing
 from operator import itemgetter
-
-#set paths
-INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
-DEFAULT_KMER  = 31
-
-sys.path.append(INITIAL_SRC)
-
-#now import utils with paths
-import utils
-
-#and append chosen paths from utils.py
-sys.path.append(utils.INITIAL_UTILS)
-
-#finally, import ruffus
 from ruffus import *
 
 ## Get start time
 t1 = time.time()
-
-## Hardcode a k-mer size
-DEFAULT_KMER  = 31
 
 def usage():
     print "usage: runPipeline.py [options] -d projectdir"

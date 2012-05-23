@@ -246,7 +246,7 @@ def FindORFS(input,output):
       run_process(_settings, "touch %s/FindORFS/out/%s.faa"%(_settings.rundir, _settings.PREFIX),"FindORFS")
       return 0
 
-   if _asm == "soap":
+   if _asm == "soapdenovo":
          
        #if not os.path.exists("%s/Assemble/out/%s.asm.scafSeq.contigs"%(_settings.rundir,_settings.PREFIX)):
        #    run_process(_settings, "python %s/python/extract_soap_contigs.py %s/Assemble/out/%s.asm.scafSeq"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX))
@@ -273,7 +273,9 @@ def FindORFS(input,output):
        run_process(_settings, "ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
        run_process(_settings, "ln -t %s/FindRepeats/in/ -s %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
    elif _orf == "fraggenescan":
+       print "%s/FragGeneScan -s %s/FindORFS/in/%s.asm.contig -o %s/FindORFS/out/%s.orfs -w 0 -t complete"%(_settings.FRAGGENESCAN,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX)
        run_process(_settings,"%s/FragGeneScan -s %s/FindORFS/in/%s.asm.contig -o %s/FindORFS/out/%s.orfs -w 0 -t complete"%(_settings.FRAGGENESCAN,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX))
+       
        parse_fraggenescanout("%s/FindORFS/out/%s.orfs"%(_settings.rundir,_settings.PREFIX))
        run_process(_settings,"cp %s/FindORFS/out/%s.orfs.ffn %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")
        run_process(_settings,"cp %s/FindORFS/out/%s.orfs.faa %s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")

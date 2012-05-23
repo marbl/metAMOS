@@ -5,15 +5,8 @@
 #########################
 ## runPipeline.py - main pipeline driver for metAMOS
 #########################
-## Setting up paths
-INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
 
-sys.path.append(INITIAL_SRC)
-import utils
-sys.path.append(utils.INITIAL_UTILS)
-
-
-## The usual library dependencies
+#the usual imports, before 
 import os
 import sys
 import string
@@ -25,9 +18,21 @@ import subprocess
 import webbrowser
 import multiprocessing
 from operator import itemgetter
+
+#set paths
+INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
+DEFAULT_KMER  = 31
+
+sys.path.append(INITIAL_SRC)
+
+#now import utils with paths
+import utils
+
+#and append chosen paths from utils.py
+sys.path.append(utils.INITIAL_UTILS)
+
+#finally, import ruffus
 from ruffus import *
-
-
 
 ## Get start time
 t1 = time.time()
@@ -331,9 +336,12 @@ for o, a in opts:
                 orf = sg
                 foundit = True
                 break
+        if orf == "metagenemark" and "Darwin" in settings.OSTYPE:
+            print "!!Sorry, %s is not a supported gene caller for Mac OSX. Using FragGeneScan instead"%(orf)
+            orf = "fraggenescan"
         if not foundit:
             print "!!Sorry, %s is not a supported gene caller. Using FragGeneScan instead"%(orf)
-            orf = "soap"
+            orf = "fraggenescan"
 
     elif o in ("-f","--fastest"):
         runfast = True

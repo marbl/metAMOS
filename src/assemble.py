@@ -222,7 +222,7 @@ def Assemble(input,output):
       return 0
    if _asm == "none" or _asm == None:
       pass
-   elif _asm == "soap":
+   elif _asm == "soapdenovo":
       #open & update config
       soapf = open("%s/config.txt"%(_settings.rundir),'r')
       soapd = soapf.read()

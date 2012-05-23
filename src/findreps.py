@@ -40,7 +40,11 @@ def getContigRepeats(contigFile,outFile):
     contig_file = open(contigFile,'r')
     concatContig(contigFile)
     run_process(_settings, "%s --minreplen=200 --z=17 --sequence=%s.merged --xmfa=%s.xmfa"%(_settings.REPEATOIRE,contigFile,contigFile),"FindRepeats")
-    repeat_file = open(contigFile+".xmfa",'r')
+    try:
+        repeat_file = open(contigFile+".xmfa",'r')
+    except IOError:
+        print "Repeatoire failed, check log for details, skipping.."
+        return -1
     ctg_dict = {}
     seq_map = {}
     contig_data = contig_file.read()

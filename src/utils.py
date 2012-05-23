@@ -369,7 +369,8 @@ def initConfig(kmer, threads, theRundir):
     if not os.path.exists(Settings.GMHMMP + os.sep + "gmhmmp"):
        Settings.GMHMMP = getFromPath("gmhmmp", "MetaGeneMark")
     gmhmmpMD5 = getMD5Sum(Settings.GMHMMP + os.sep + "gmhmmp")
-
+    
+    
     Settings.FRAGGENESCAN = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
     if not os.path.exists(Settings.FRAGGENESCAN + os.sep + "FragGeneScan"):
        Settings.FRAGGENESCAN = getFromPath("FragGeneScan","FragGeneScan")

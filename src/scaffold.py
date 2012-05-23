@@ -47,7 +47,7 @@ def Scaffold(input,output):
           (checkStdout, checkStderr) = p.communicate()
           numMates = int(checkStdout.strip())
 
-       if _asm == "soap" or _asm == "metaidba" or _asm == "amos" or _asm == "sparseassembler" or _asm == "velvet" or _asm == "velvet-sc" or _asm == "metavelvet" or _asm == "none":
+       if _asm == "soapdenovo" or _asm == "metaidba" or _asm == "amos" or _asm == "sparseassembler" or _asm == "velvet" or _asm == "velvet-sc" or _asm == "metavelvet" or _asm == "none":
            for lib in _readlibs:
         
                if lib.format == "fasta":

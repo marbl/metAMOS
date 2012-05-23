@@ -5,6 +5,12 @@
 #########################
 ## runPipeline.py - main pipeline driver for metAMOS
 #########################
+## Setting up paths
+INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
+
+sys.path.append(INITIAL_SRC)
+import utils
+sys.path.append(utils.INITIAL_UTILS)
 
 
 ## The usual library dependencies
@@ -22,12 +28,6 @@ from operator import itemgetter
 from ruffus import *
 
 
-## Setting up paths
-INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
-
-sys.path.append(INITIAL_SRC)
-import utils
-sys.path.append(utils.INITIAL_UTILS)
 
 ## Get start time
 t1 = time.time()

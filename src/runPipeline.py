@@ -23,6 +23,7 @@ sys.path.append(utils.INITIAL_UTILS)
 ## The usual library dependencies
 import string
 import time
+import datetime
 import BaseHTTPServer
 import getopt
 import re
@@ -83,6 +84,36 @@ def usage():
     print "   -p = <int>:    number of threads to use (be greedy!) (default=1)"
     print "   -4 = <bool>:   454 data? (default = NO)"    
 
+def printConfiguration(fileName=None):
+    configurationText = []
+    configurationText.append("metAMOS configuration summary:\n")
+    configurationText.append("Time and Date:\t\t%s\n"%(str(datetime.date.today())))
+    configurationText.append("Working directory:\t%s\n"%(utils.Settings.rundir))
+    configurationText.append("Prefix:\t\t%s\n"%(utils.Settings.PREFIX))
+    configurationText.append("K-Mer:\t\t\t%d\n"%(utils.Settings.kmer))
+    configurationText.append("Threads:\t\t%d\n"%(utils.Settings.threads)) 
+    configurationText.append("Taxonomic level:\t\t%s\n"%(utils.Settings.taxa_level))
+    configurationText.append("Verbose:\t\t%s\n"%(utils.Settings.VERBOSE))
+
+    configurationText.append("\n")
+    configurationText.append("Step-specific configuration:\n")
+    for type in selected_programs.keys():
+        configurationText.append("[" + type + "]\n")
+        prog = selected_programs[type]
+        if prog == None or prog == "none":
+           configurationText.append("None\n\n")
+        else:
+           (progName, citation) = utils.getProgramCitations(settings, prog)
+           configurationText.append(progName+"\n")
+           configurationText.append("\t" + citation + "\n\n")
+
+    if fileName == "" or fileName == None:
+        print ''.join(configurationText)
+    else:
+        conf = open(fileName, 'w')
+        conf.write(''.join(configurationText))
+        conf.close()
+
 try:
     opts, args = getopt.getopt(sys.argv[1:], "hrjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iul:x:z:",\
                                    ["help", \
@@ -137,10 +168,16 @@ supported_programs["scaffold"] = supported_scaffolders
 
 supported_taxonomic = ["kingdom", "phylum", "class", "order", "family", "genus", "species"]
 
+selected_programs = {}
+selected_programs["assemble"] = "soap"
+selected_programs["findorfs"] = "metagenemark"
+selected_programs["mapreads"] = "bowtie"
+selected_programs["abundance"] = "metaphyler"
+selected_programs["classify"] = "fcp"
+selected_programs["scaffold"] = "bambus2"
+
 allsteps = ["Preprocess","Assemble","MapReads","FindORFS","Abundance","Annotate",\
                 "Scaffold","Propagate","Classify","Postprocess"]
-
-
 
 ## Need comments here and further down
 
@@ -157,18 +194,13 @@ filter = False
 forcesteps = []
 skipsteps = []
 run_fastqc = False
-run_metaphyler = False
 runfast = False
-cls = "fcp"
 retainBank = False
-asm = "soap"
-orf = "metagenemark"
 fff = ""
 readlen = 75
 fqlibs = {}
 fqfrags = []
 rlibs = []
-mapper = "bowtie"
 ctgbpcov = False
 min_ctg_len = 300
 min_ctg_cvg = 3
@@ -243,33 +275,33 @@ for o, a in opts:
         filter = True
 
     elif o in ("-m", "--mapper"):
-        mapper = a.lower()
+        selected_programs["mapreads"] = a.lower()
         foundit = False
         for sm in supported_mappers:
-            if mapper not in sm:
+            if selected_programs["mapreads"] not in sm:
                 continue
             else:
-                mapper = sm
+                selected_programs["mapreads"] = sm
                 foundit = True
                 break
         if not foundit:
-            print "!!Sorry, %s is not a supported read alignment method. Using bowtie instead"%(mapper)
-            mapper = "bowtie"
+            print "!!Sorry, %s is not a supported read alignment method. Using bowtie instead"%(selected_programs["mapreads"])
+            selected_programs["mapreads"] = "bowtie"
     elif o in ("-r", "--retainBank"):
         retainBank = True
     elif o in ("-c", "--classifier"):
-        cls = a.lower()
+        selected_programs["classify"] = a.lower()
         foundit = False
         for sc in supported_classifiers:
-            if cls not in sc:
+            if selected_programs["classify"] not in sc:
                 continue
             else:
-                cls = sc
+                selected_programs["classify"] = sc
                 foundit = True
                 break
         if not foundit:
-            print "!!Sorry, %s is not a supported classification method. Using FCP instead"%(fcp)
-            orf = "fcp"
+            print "!!Sorry, %s is not a supported classification method. Using FCP instead"%(selected_programs["classify"])
+            selected_programs["classify"] = "fcp"
     elif o in ("-z", "--taxalevel"):
         utils.Settings.taxa_level = a.lower()
 
@@ -277,43 +309,43 @@ for o, a in opts:
            print "!!Sorry, %s is not a valid taxonomic level. Using class instead"%(utils.Settings.taxa_level)
 
     elif o in ("-a","--assembler"):
-        asm = a.lower()
-        if asm == "metaidba":
+        selected_programs["assemble"] = a.lower()
+        if selected_programs["assemble"] == "metaidba":
             bowtie_mapping = 1
             
         foundit = False
         
         for sa in supported_assemblers:
-            if asm not in sa:
+            if selected_programs["assemble"] not in sa:
                 continue
             else:
-                if asm != "velvet":
+                if selected_programs["assemble"] != "velvet":
                     #some special cases required, velvet would trigger MetaVelvet, not velvet, etc
-                    asm = sa
+                    selected_programs["assemble"] = sa
                 foundit = True
                 break
         
         if not foundit:
-            print "!!Sorry, %s is not a supported assembler. Using SOAPdenovo instead"%(asm)
-            asm = "soap"
+            print "!!Sorry, %s is not a supported assembler. Using SOAPdenovo instead"%(selected_programs["assemble"])
+            selected_programs["assemble"] = "soap"
 
         
     elif o in ("-g","--genecaller"):
-        orf = a.lower()
+        selected_programs["findorfs"] = a.lower()
         foundit = False
         for sg in supported_genecallers:
-            if orf not in sg:
+            if selected_programs["findorfs"] not in sg:
                 continue
             else:
-                orf = sg
+                selected_programs["findorfs"] = sg
                 foundit = True
                 break
-        if orf == "metagenemark" and "Darwin" in settings.OSTYPE:
-            print "!!Sorry, %s is not a supported gene caller for Mac OSX. Using FragGeneScan instead"%(orf)
-            orf = "fraggenescan"
+        if selected_programs["findorfs"] == "metagenemark" and "Darwin" in settings.OSTYPE:
+            print "!!Sorry, %s is not a supported gene caller for Mac OSX. Using FragGeneScan instead"%(selected_programs["findorfs"])
+            selected_programs["findorfs"] = "fraggenescan"
         if not foundit:
-            print "!!Sorry, %s is not a supported gene caller. Using FragGeneScan instead"%(orf)
-            orf = "fraggenescan"
+            print "!!Sorry, %s is not a supported gene caller. Using FragGeneScan instead"%(selected_programs["findorfs"])
+            selected_programs["findorfs"] = "fraggenescan"
 
     elif o in ("-f","--fastest"):
         runfast = True
@@ -364,7 +396,7 @@ for line in inf:
         utils.run_process(settings, "cp %s %s/Assemble/out/%s"%(asmc,settings.rundir,\
                           "proba.asm.contig"),"RunPipeline")
         usecontigs = True
-        asm = "none"
+        selected_programs["assemble"] = "none"
         bowtie_mapping = 1
     elif "format:" in line:
 
@@ -432,7 +464,7 @@ if f1 and not libadded:
                          linkerType)
     readlibs.append(nlib)
 
-if len(readlibs) > 1 and asm == "metaidba":
+if len(readlibs) > 1 and selected_programs["assemble"] == "metaidba":
     print "ERROR: meta-IDBA only supports 1 library, please select different assembler or reduce libraries"
     sys.exit(1)
 
@@ -536,18 +568,18 @@ if __name__ == "__main__":
     import postprocess
 
     # initialize submodules
-    preprocess.init(readlibs, skipsteps, asm, run_fastqc,filter)
-    assemble.init(readlibs, skipsteps, asm, usecontigs)
-    mapreads.init(readlibs, skipsteps, asm, mapper, savebtidx,ctgbpcov)
-    findorfs.init(readlibs, skipsteps, asm, orf, min_ctg_len, min_ctg_cvg)
+    preprocess.init(readlibs, skipsteps, selected_programs["assemble"], run_fastqc,filter)
+    assemble.init(readlibs, skipsteps, selected_programs["assemble"], usecontigs)
+    mapreads.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["mapreads"], savebtidx,ctgbpcov)
+    findorfs.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["findorfs"], min_ctg_len, min_ctg_cvg)
     findreps.init(readlibs, skipsteps)
-    annotate.init(readlibs, skipsteps, cls)
-    abundance.init(readlibs, skipsteps, forcesteps, cls)
-    scaffold.init(readlibs, skipsteps, retainBank, asm)
-    findscforfs.init(readlibs, skipsteps, orf)
-    propagate.init(readlibs, skipsteps, cls)
-    classify.init(readlibs, skipsteps, cls)
-    postprocess.init(readlibs, skipsteps, cls)
+    annotate.init(readlibs, skipsteps, selected_programs["classify"])
+    abundance.init(readlibs, skipsteps, forcesteps, selected_programs["classify"])
+    scaffold.init(readlibs, skipsteps, retainBank, selected_programs["assemble"])
+    findscforfs.init(readlibs, skipsteps, selected_programs["findorfs"])
+    propagate.init(readlibs, skipsteps, selected_programs["classify"])
+    classify.init(readlibs, skipsteps, selected_programs["classify"])
+    postprocess.init(readlibs, skipsteps, selected_programs["classify"])
 
     try:
        dlist = []
@@ -561,6 +593,11 @@ if __name__ == "__main__":
                             'svg',
                             [postprocess.Postprocess],
                             no_key_legend = True)
+
+       printConfiguration()
+       printConfiguration("%s/pipeline.run"%(settings.rundir))
+
+
        pipeline_run([preprocess.Preprocess, assemble.Assemble,findorfs.FindORFS, \
                     mapreads.MapReads, \
                     findreps.FindRepeats, annotate.Annotate, abundance.Abundance, \

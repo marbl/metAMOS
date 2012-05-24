@@ -420,10 +420,6 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
     conf = open("%s/pipeline.conf"%(Settings.rundir),'w')
 
     conf.write("#Configuration summary\n")
-    conf.write("THREADS:\t\t%d\n"%(Settings.threads))
-    conf.write("KMER:\t\t\t%d\n"%(Settings.kmer))
-    conf.write("PREFIX:\t\t\t%s\n"%(Settings.PREFIX))
-    conf.write("VERBOSE:\t\t%s\n"%(Settings.VERBOSE)) 
     conf.write("OS:\t\t\t%s\nOS Version:\t\t%s\nMachine:\t\t%s\n"%(Settings.OSTYPE, Settings.OSVERSION, Settings.MACHINETYPE))
     conf.write("metAMOS main dir:\t%s\nmetAMOS Utilities:\t%s\nmetAMOS Java:\t\t%s\n"%(Settings.METAMOSDIR, Settings.METAMOS_UTILS, Settings.METAMOS_JAVA))
     conf.write("AMOS:\t\t\t%s\t%s\n"%(Settings.AMOS, amosMD5))
@@ -457,9 +453,19 @@ def run_process(settings,command,step=""):
               workingDir = ""
            step = string.upper(step)
            if not os.path.exists(settings.rundir+os.sep+"Logs"):
+               # create Log directory
                os.system("mkdir %s/Logs"%(settings.rundir))
+
+               # create the log of commands
+               commandf = open(settings.rundir + os.sep + "Logs" + os.sep + "COMMANDS.log", 'w')
+               commandf.close()
+
+           # open command log file for appending (it should have been created above)
+           commandf = open(settings.rundir + os.sep + "Logs" + os.sep + "COMMANDS.log", 'a')
+
            if not step in settings.task_dict:
               print "Starting Task = %s.%s"%(step.lower(), step)
+              commandf.write("# [%s]\n"%(step))
               outf = open(settings.rundir+os.sep+"Logs"+os.sep+step+".log",'w')
               settings.task_dict.append(step)
            else:
@@ -482,6 +488,8 @@ def run_process(settings,command,step=""):
           else:
               outf.write(fstdout+fstderr)
               outf.close()
+              commandf.write(command+"\n")
+              commandf.close()
 
 def getProgramCitations(settings, programName, comment="#"):
    global _PUB_DICT

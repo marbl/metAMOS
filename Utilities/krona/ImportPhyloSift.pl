@@ -167,7 +167,7 @@ foreach my $input (@ARGV)
 		close MAG;
 	}
 
-        if ( ! defined $taxonomicLevel || length($taxonomicLevel) == 0) {
+        if ( ! defined $taxonomicLevel || length($taxonomicLevel) == 0)
         {
 		$taxonomicLevel = "class"
         }

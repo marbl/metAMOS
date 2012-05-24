@@ -142,7 +142,7 @@ if 0 or not os.path.exists("./phylosift"):
    else:
       dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':
-      os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/phylosift-%s-%s-20120404.tar.bz2 -O ./phylosift.tar.bz2"%(OSTYPE, MACHINETYPE))
+      os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/phylosift-%s-%s-20120523.tar.bz2 -O ./phylosift.tar.bz2"%(OSTYPE, MACHINETYPE))
       os.system("tar -xvjf phylosift.tar.bz2")
       os.system("rm -rf phylosift.tar.bz2")
 

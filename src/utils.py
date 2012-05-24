@@ -36,6 +36,7 @@ class Settings:
 
    FASTQC = ""
    AMOS = ""
+   BAMBUS2 = ""
 
    SOAP = ""
    METAIDBA = ""
@@ -44,11 +45,11 @@ class Settings:
    VELVET = ""
    VELVET_SC = ""
    METAVELVET = ""
-   SPARSE_ASSEMBLER = ""
+   SPARSEASSEMBLER = ""
 
    BOWTIE = ""
 
-   GMHMMP = ""
+   METAGENEMARK = ""
    FRAGGENESCAN = ""
    FCP = ""
    PHMMER = ""
@@ -88,6 +89,7 @@ class Settings:
       Settings.METAMOS_JAVA  = "%s%sjava:%s"%(Settings.METAMOS_UTILS,os.sep,os.curdir)
 
       Settings.AMOS          = "%s%sAMOS%sbin"%(Settings.METAMOSDIR, os.sep, os.sep)
+      Settings.BAMBUS2       = Settings.AMOS
 
       Settings.SOAP          = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.METAIDBA      = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
@@ -96,12 +98,12 @@ class Settings:
       Settings.VELVET        = "%s%scpp%s%s-%s%svelvet"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
       Settings.VELVET_SC     = "%s%scpp%s%s-%s%svelvet-sc"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
       Settings.METAVELVET    = "%s%scpp%s%s-%s%sMetaVelvet"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
-      Settings.SPARSE_ASSEMBLER = "%s%scpp%s%s-%s%sSparseAssembler"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
+      Settings.SPARSEASSEMBLER = "%s%scpp%s%s-%s%sSparseAssembler"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
 
       Settings.BOWTIE        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
 
-      Settings.GMHMMP        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
-      Settings.FRAGGENESCAN      = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.METAGENEMARK  = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.FRAGGENESCAN  = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
 
       Settings.FCP           = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.PHMMER        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
@@ -314,6 +316,8 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
           print "Error: cannot find AMOS in %s or %s. Please check your path and try again."%(Settings.METAMOSDIR + os.sep + "AMOS", Settings.AMOS)
           sys.exit(1)
     amosMD5 = getMD5Sum(Settings.AMOS + os.sep + "toAmos_new")
+    Settings.BAMBUS2 = Settings.AMOS
+    bambusMD5 = getMD5Sum(Settings.BAMBUS2 + os.sep + "OrientContigs")
 
     # 2. Soap
     Settings.SOAP = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE) 
@@ -359,10 +363,10 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
     metaVelvetMD5 = getMD5Sum(Settings.SOAP + os.sep + "meta-velvetg")
 
     # 8. SparseAssembler
-    Settings.SPARSE_ASSEMBLER = "%s%scpp%s%s-%s%sSparseAssembler"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
-    if not os.path.exists(Settings.SPARSE_ASSEMBLER + os.sep + "SparseAssembler"):
-       Settings.SPARSE_ASSEMBLER = getFromPath("SparseAssembler", "SparseAssembler")
-    sparseAssemblerMD5 = getMD5Sum(Settings.SPARSE_ASSEMBLER + os.sep + "SparseAssembler")
+    Settings.SPARSEASSEMBLER = "%s%scpp%s%s-%s%sSparseAssembler"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
+    if not os.path.exists(Settings.SPARSEASSEMBLER + os.sep + "SparseAssembler"):
+       Settings.SPARSEASSEMBLER = getFromPath("SparseAssembler", "SparseAssembler")
+    sparseAssemblerMD5 = getMD5Sum(Settings.SPARSEASSEMBLER + os.sep + "SparseAssembler")
 
 
     # now for repeatoire
@@ -380,10 +384,10 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
     bowtieMD5 = getMD5Sum(Settings.BOWTIE + os.sep + "bowtie")
 
     # now for the annotation
-    Settings.GMHMMP = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
-    if not os.path.exists(Settings.GMHMMP + os.sep + "gmhmmp"):
-       Settings.GMHMMP = getFromPath("gmhmmp", "MetaGeneMark")
-    gmhmmpMD5 = getMD5Sum(Settings.GMHMMP + os.sep + "gmhmmp")
+    Settings.METAGENEMARK = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+    if not os.path.exists(Settings.METAGENEMARK + os.sep + "gmhmmp"):
+       Settings.METAGENEMARK = getFromPath("gmhmmp", "MetaGeneMark")
+    gmhmmpMD5 = getMD5Sum(Settings.METAGENEMARK + os.sep + "gmhmmp")
     
     
     Settings.FRAGGENESCAN = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
@@ -423,15 +427,16 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
     conf.write("OS:\t\t\t%s\nOS Version:\t\t%s\nMachine:\t\t%s\n"%(Settings.OSTYPE, Settings.OSVERSION, Settings.MACHINETYPE))
     conf.write("metAMOS main dir:\t%s\nmetAMOS Utilities:\t%s\nmetAMOS Java:\t\t%s\n"%(Settings.METAMOSDIR, Settings.METAMOS_UTILS, Settings.METAMOS_JAVA))
     conf.write("AMOS:\t\t\t%s\t%s\n"%(Settings.AMOS, amosMD5))
+    conf.write("BAMBUS2:\t\t%s\t%s\n"%(Settings.BAMBUS2, bambusMD5))
     conf.write("SOAP:\t\t\t%s\t%s\n"%(Settings.SOAP, soapMD5))
     conf.write("METAIDBA:\t\t%s\t%s\n"%(Settings.METAIDBA, metaidbaMD5))
     conf.write("Celera Assembler:\t%s\t%s\n"%(Settings.CA, CAMD5))
     conf.write("NEWBLER:\t\t%s\t%s\n"%(Settings.NEWBLER, newblerMD5))
     conf.write("Velvet:\t\t\t%s\t%s\nVelvet-SC:\t\t%s\t%s\n"%(Settings.VELVET, velvetMD5, Settings.VELVET_SC, velvetSCMD5))
     conf.write("MetaVelvet:\t\t%s\t%s\n"%(Settings.METAVELVET, metaVelvetMD5))
-    conf.write("SparseAssembler:\t%s\t%s\n"%(Settings.SPARSE_ASSEMBLER, sparseAssemblerMD5))
+    conf.write("SparseAssembler:\t%s\t%s\n"%(Settings.SPARSEASSEMBLER, sparseAssemblerMD5))
     conf.write("Bowtie:\t\t\t%s\t%s\n"%(Settings.BOWTIE, bowtieMD5))
-    conf.write("GMHMMP:\t\t\t%s\t%s\n"%(Settings.GMHMMP, gmhmmpMD5))
+    conf.write("METAGENEMARK:\t\t\t%s\t%s\n"%(Settings.METAGENEMARK, gmhmmpMD5))
     conf.write("FRAGGENESCAN:\t\t%s\t%s\n"%(Settings.FRAGGENESCAN, fraggenescanMD5))
     conf.write("FCP:\t\t\t%s\t%s\n"%(Settings.FCP, fcpMD5))
     conf.write("PHMMER:\t\t\t%s\t%s\n"%(Settings.PHMMER, phmmerMD5))

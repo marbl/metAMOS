@@ -378,7 +378,7 @@ def Assemble(input,output):
    elif _asm.lower() == "spades":
       print "Warning: SPades is not yet supported. Stay Tuned!"
    elif _asm.lower() == "sparseassembler":
-      runSparseAssembler(_settings.SPARSE_ASSEMBLER, "SparseAssembler");
+      runSparseAssembler(_settings.SPARSEASSEMBLER, "SparseAssembler");
    else:  
       print "Error: %s is an unknown assembler. No valid assembler specified."%(_asm)
       raise(JobSignalledBreak)

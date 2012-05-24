@@ -89,11 +89,13 @@ def printConfiguration(fileName=None):
     configurationText.append("metAMOS configuration summary:\n")
     configurationText.append("Time and Date:\t\t%s\n"%(str(datetime.date.today())))
     configurationText.append("Working directory:\t%s\n"%(utils.Settings.rundir))
-    configurationText.append("Prefix:\t\t%s\n"%(utils.Settings.PREFIX))
+    configurationText.append("Prefix:\t\t\t%s\n"%(utils.Settings.PREFIX))
     configurationText.append("K-Mer:\t\t\t%d\n"%(utils.Settings.kmer))
     configurationText.append("Threads:\t\t%d\n"%(utils.Settings.threads)) 
-    configurationText.append("Taxonomic level:\t\t%s\n"%(utils.Settings.taxa_level))
+    configurationText.append("Taxonomic level:\t%s\n"%(utils.Settings.taxa_level))
     configurationText.append("Verbose:\t\t%s\n"%(utils.Settings.VERBOSE))
+    configurationText.append("Steps to skip:\t\t%s\n"%(", ".join(skipsteps)))
+    configurationText.append("Steps to force:\t\t%s\n"%(", ".join(forcesteps)))
 
     configurationText.append("\n")
     configurationText.append("Step-specific configuration:\n")
@@ -104,7 +106,11 @@ def printConfiguration(fileName=None):
            configurationText.append("None\n\n")
         else:
            (progName, citation) = utils.getProgramCitations(settings, prog)
-           configurationText.append(progName+"\n")
+           configurationText.append(progName + "\n")
+           try:
+              configurationText.append("\t" + eval("utils.Settings.%s"%(prog.upper()))+"\n")
+           except AttributeError:
+              configurationText.append("\t" + utils.Settings.METAMOS_UTILS + "\n")           
            configurationText.append("\t" + citation + "\n\n")
 
     if fileName == "" or fileName == None:

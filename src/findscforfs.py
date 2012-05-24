@@ -30,7 +30,7 @@ def FindScaffoldORFS(input,output):
       run_process(_settings, "touch %s/FindScaffoldORFS/out/%s.scaffolds.faa"%(_settings.rundir, _settings.PREFIX))
       return 0
    if _orf == "metagenemark":
-       run_process(_settings, "%s/gmhmmp -o %s/FindScaffoldORFS/out/%s.scaffolds.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.GMHMMP,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX),"FindScaffoldORFS")
+       run_process(_settings, "%s/gmhmmp -o %s/FindScaffoldORFS/out/%s.scaffolds.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.METAGENEMARK,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX),"FindScaffoldORFS")
        parse_genemarkout("%s/FindScaffoldORFS/out/%s.scaffolds.orfs"%(_settings.rundir,_settings.PREFIX),1, "FindScaffoldORFS")
    elif _orf == "fraggenescan":
        run_process(_settings,"%s/FragGeneScan -s %s/Scaffold/out/%s.linearize.scaffolds.final -o %s/FindScaffoldORFS/out/%s.orfs -w 0 -t complete"%(_settings.FRAGGENESCAN,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX))

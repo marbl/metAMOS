@@ -96,20 +96,20 @@ def Scaffold(input,output):
    markRepeatParams = getProgramParams(_settings.METAMOS_UTILS, "bambus.spec", "MarkRepeats", "-")
    orientContigParams = getProgramParams(_settings.METAMOS_UTILS, "bambus.spec", "OrientContigs", "-")
 
-   run_process(_settings, "%s/clk -b %s/Scaffold/in/%s.bnk"%(_settings.AMOS,_settings.rundir,_settings.PREFIX),"Scaffold")
-   run_process(_settings, "%s/Bundler -b %s/Scaffold/in/%s.bnk"%(_settings.AMOS,_settings.rundir,_settings.PREFIX),"Scaffold")
-   run_process(_settings, "%s/MarkRepeats %s -b %s/Scaffold/in/%s.bnk > %s/Scaffold/in/%s.reps"%(_settings.AMOS,markRepeatParams,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
-   run_process(_settings, "%s/OrientContigs %s -b %s/Scaffold/in/%s.bnk -repeats %s/Scaffold/in/%s.reps "%(_settings.AMOS,orientContigParams,_settings.rundir,_settings.PREFIX, _settings.rundir, _settings.PREFIX),"Scaffold")
+   run_process(_settings, "%s/clk -b %s/Scaffold/in/%s.bnk"%(_settings.BAMBUS2,_settings.rundir,_settings.PREFIX),"Scaffold")
+   run_process(_settings, "%s/Bundler -b %s/Scaffold/in/%s.bnk"%(_settings.BAMBUS2,_settings.rundir,_settings.PREFIX),"Scaffold")
+   run_process(_settings, "%s/MarkRepeats %s -b %s/Scaffold/in/%s.bnk > %s/Scaffold/in/%s.reps"%(_settings.BAMBUS2,markRepeatParams,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
+   run_process(_settings, "%s/OrientContigs %s -b %s/Scaffold/in/%s.bnk -repeats %s/Scaffold/in/%s.reps "%(_settings.BAMBUS2,orientContigParams,_settings.rundir,_settings.PREFIX, _settings.rundir, _settings.PREFIX),"Scaffold")
 
    # output results
    run_process(_settings, "%s/bank2fasta  -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.contigs"%(_settings.AMOS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
-   run_process(_settings, "%s/OutputMotifs -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.motifs"%(_settings.AMOS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
-   run_process(_settings, "%s/OutputResults -b %s/Scaffold/in/%s.bnk -p %s/Scaffold/out/%s "%(_settings.AMOS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
-   run_process(_settings, "%s/OutputScaffolds -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.scaffolds.final"%(_settings.AMOS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
+   run_process(_settings, "%s/OutputMotifs -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.motifs"%(_settings.BAMBUS2,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
+   run_process(_settings, "%s/OutputResults -b %s/Scaffold/in/%s.bnk -p %s/Scaffold/out/%s "%(_settings.BAMBUS2,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
+   run_process(_settings, "%s/OutputScaffolds -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.scaffolds.final"%(_settings.BAMBUS2,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
 
    # generate linearize results
-   run_process(_settings, "%s/Linearize -b %s/Scaffold/in/%s.bnk"%(_settings.AMOS,_settings.rundir,_settings.PREFIX),"Scaffold")
-   run_process(_settings, "%s/OutputResults -b %s/Scaffold/in/%s.bnk -p %s/Scaffold/out/%s.linearize "%(_settings.AMOS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
-   run_process(_settings, "%s/OutputScaffolds -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.AMOS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
+   run_process(_settings, "%s/Linearize -b %s/Scaffold/in/%s.bnk"%(_settings.BAMBUS2,_settings.rundir,_settings.PREFIX),"Scaffold")
+   run_process(_settings, "%s/OutputResults -b %s/Scaffold/in/%s.bnk -p %s/Scaffold/out/%s.linearize "%(_settings.BAMBUS2,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
+   run_process(_settings, "%s/OutputScaffolds -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.BAMBUS2,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
 
 

@@ -151,7 +151,7 @@ def Annotate(input,output):
        if not os.path.exists(_settings.KRONA + os.sep + "ImportPhyloSift.pl"):
            print "Error: Krona importer for PhyloSift not found in %s. Please check your path and try again.\n"%(_settings.KRONA)
            raise(JobSignalledBreak)
-       run_process(_settings, "perl %s/ImportPhyloSift.pl -c -v -i %s/Annotate/out/%s.hits:%s/Assemble/out/%s.contig.cnt"%(_settings.KRONA,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX), "Annotate")
+       run_process(_settings, "perl %s/ImportPhyloSift.pl -c -v -i %s/Annotate/out/%s.hits:%s/Assemble/out/%s.contig.cnt:%s"%(_settings.KRONA,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX, _settings.taxa_level), "Annotate")
 
    elif _cls == "fcp":
        #print "%s/nb-classify -q %s/Annotate/in/%s.fna -m %s/models/models.txt -r %s/Annotate/out/%s.nb_results.txt"%(_settings.FCP,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX)
@@ -178,7 +178,7 @@ def Annotate(input,output):
        if not os.path.exists(_settings.KRONA + os.sep + "ImportFCP.pl"):
           print "Error: Krona importer for FCP not found in %s. Please check your path and try again.\n"%()
           raise(JobSignalledBreak)
-       run_process(_settings, "perl %s/ImportFCP.pl -c -v -i -p %s/Annotate/out/%s.epsilon-nb_results.txt:%s/Assemble/out/%s.contig.cnt"%(_settings.KRONA,_settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX),"Annotate")
+       run_process(_settings, "perl %s/ImportFCP.pl -c -v -i -p %s/Annotate/out/%s.epsilon-nb_results.txt:%s/Assemble/out/%s.contig.cnt:%s"%(_settings.KRONA,_settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate")
 
    elif _cls == "phymm":
        print "Phymm not yet supported.. stay tuned"

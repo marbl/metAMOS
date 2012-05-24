@@ -18,6 +18,7 @@ class Settings:
    kmer = 55
    threads = 16
    rundir = ""
+   taxa_level = "class"
    task_dict = []
 
    VERBOSE = False
@@ -57,7 +58,7 @@ class Settings:
    KRONA = ""
    REPEATOIRE = ""
 
-   def __init__(self, kmer = None, threads = None, rundir = None, verbose = False, outputOnly = False, update = False):
+   def __init__(self, kmer = None, threads = None, rundir = None, taxa_level = "", verbose = False, outputOnly = False, update = False):
 
       if (Settings.rundir != "" and update == False):
          return
@@ -70,6 +71,7 @@ class Settings:
       Settings.kmer = kmer
       Settings.threads = threads 
       Settings.rundir = rundir
+      Settings.taxa_level = taxa_level
       Settings.task_dict = []
 
       Settings.PREFIX = "proba"
@@ -280,8 +282,8 @@ def getFromPath(theCommand, theName):
     else:
        return checkStdout.replace(theCommand, "").strip()
 
-def initConfig(kmer, threads, theRundir, verbose, outputOnly):
-    Settings(kmer, threads, theRundir, verbose, outputOnly, True)
+def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
+    Settings(kmer, threads, theRundir, taxaLevel, verbose, outputOnly, True)
 
     getMachineType()
 

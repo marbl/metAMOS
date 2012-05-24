@@ -256,7 +256,6 @@ def Assemble(input,output):
          print "Error: SOAPdenovo not found in %s. Please check your path and try again.\n"%(_settings.SOAP)
          raise(JobSignalledBreak)
 
-      print "Running SOAPdenovo on input reads..."
       soapOptions = getProgramParams(_settings.METAMOS_UTILS, "soap.spec", "", "-") 
       #start stopwatch
       if _settings.kmer > 63:

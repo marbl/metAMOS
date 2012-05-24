@@ -12,6 +12,8 @@ import os,sys
 INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
 ## Hardcode a k-mer size
 DEFAULT_KMER  = 31
+## Hardcode a default taxonomic classification level
+DEFAULT_TAXA_LEVEL = "class"
 
 
 sys.path.append(INITIAL_SRC)
@@ -69,9 +71,12 @@ def usage():
     print "   -g = <string>: gene caller to use (default=FragGeneScan)"
     print "   -l = <int>:    min contig length to use for ORF call (default = 300)"
     print "   -x = <int>>:   min contig coverage to use for ORF call (default = 3X)"
-    print "[Classify]"
+    print "[Annotate]"
     print "   -c = <string>: classifier to use for annotation (default = FCP)"
     print "   -u = <bool>:   annotate unassembled reads? (default = NO)"
+
+    print "[Classify]"
+    print "   -z = <string>: taxonomic level to categorize at (default = %s)"%(DEFAULT_TAXA_LEVEL)
 
     print "\n[misc_opts]: Miscellaneous options"
     print "   -r = <bool>:   retain the AMOS bank?  (default = NO)"
@@ -79,7 +84,7 @@ def usage():
     print "   -4 = <bool>:   454 data? (default = NO)"    
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hrjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iul:x:",\
+    opts, args = getopt.getopt(sys.argv[1:], "hrjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iul:x:z:",\
                                    ["help", \
                                         "retainBank", \
                                         "libspeccov",\
@@ -104,7 +109,8 @@ try:
                                         "minlen",\
                                         "mincov", \
                                         "justprogs", \
-                                        "what"])
+                                        "what", \
+                                        "taxalevel"])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -128,6 +134,8 @@ supported_programs["mapreads"] = supported_mappers
 supported_programs["abundance"] = supported_abundance
 supported_programs["classify"] = supported_classifiers
 supported_programs["scaffold"] = supported_scaffolders
+
+supported_taxonomic = ["kingdom", "phylum", "class", "order", "family", "genus", "species"]
 
 allsteps = ["Preprocess","Assemble","MapReads","FindORFS","Abundance","Annotate",\
                 "Scaffold","Propagate","Classify","Postprocess"]
@@ -166,7 +174,7 @@ min_ctg_len = 300
 min_ctg_cvg = 3
 annotate_unassembled = False
 output_programs = 0
-settings = utils.Settings(DEFAULT_KMER, multiprocessing.cpu_count() - 1, "")
+settings = utils.Settings(DEFAULT_KMER, multiprocessing.cpu_count() - 1, "", DEFAULT_TAXA_LEVEL)
 
 for o, a in opts:
     if o in ("-v","--verbose"):
@@ -262,6 +270,11 @@ for o, a in opts:
         if not foundit:
             print "!!Sorry, %s is not a supported classification method. Using FCP instead"%(fcp)
             orf = "fcp"
+    elif o in ("-z", "--taxalevel"):
+        utils.Settings.taxa_level = a.lower()
+
+        if utils.Settings.taxa_level not in supported_taxonomic:
+           print "!!Sorry, %s is not a valid taxonomic level. Using class instead"%(utils.Settings.taxa_level)
 
     elif o in ("-a","--assembler"):
         asm = a.lower()
@@ -507,7 +520,7 @@ if "Propagate" in forcesteps:
 
 if __name__ == "__main__":
     print "Starting metAMOS pipeline"
-    settings = utils.initConfig(settings.kmer, settings.threads, settings.rundir, settings.VERBOSE, settings.OUTPUT_ONLY)
+    settings = utils.initConfig(settings.kmer, settings.threads, settings.rundir, settings.taxa_level, settings.VERBOSE, settings.OUTPUT_ONLY)
 
     import preprocess
     import assemble

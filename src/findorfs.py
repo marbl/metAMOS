@@ -281,8 +281,7 @@ def FindORFS(input,output):
        run_process(_settings, "ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
        run_process(_settings, "ln -t %s/FindRepeats/in/ -s %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
    elif _orf == "fraggenescan":
-       print "%s/FragGeneScan -s %s/FindORFS/in/%s.asm.contig -o %s/FindORFS/out/%s.orfs -w 0 -t complete"%(_settings.FRAGGENESCAN,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX)
-       run_process(_settings,"%s/FragGeneScan -s %s/FindORFS/in/%s.asm.contig -o %s/FindORFS/out/%s.orfs -w 0 -t complete"%(_settings.FRAGGENESCAN,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX))
+       run_process(_settings,"%s/FragGeneScan -s %s/FindORFS/in/%s.asm.contig -o %s/FindORFS/out/%s.orfs -w 0 -t complete"%(_settings.FRAGGENESCAN,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX), "FindORFS")
        
        parse_fraggenescanout("%s/FindORFS/out/%s.orfs"%(_settings.rundir,_settings.PREFIX))
        run_process(_settings,"cp %s/FindORFS/out/%s.orfs.ffn %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")

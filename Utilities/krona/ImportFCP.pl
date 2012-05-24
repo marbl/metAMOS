@@ -120,7 +120,7 @@ foreach my $input (@ARGV)
 {
 	my $totalMagnitude;
 	
-	my ($fileName, $magFile) = split /:/, $input;
+	my ($fileName, $magFile, $taxonomicLevel) = split /:/, $input;
 	
 	$fileName =~ /([^\/]+)\./;
 	
@@ -148,6 +148,11 @@ foreach my $input (@ARGV)
 		
 		close MAG;
 	}
+ 
+        if ( ! defined $taxonomicLevel || length($taxonomicLevel) == 0) {
+        	$taxonomicLevel = "class";
+	}
+
 
         my $CONF;
         my %names;
@@ -185,7 +190,7 @@ foreach my $input (@ARGV)
 	my $magnitude = 0;
         my $taxa = 0;
 
-        print ANNOTS "contigID\tclassID\n";
+        print ANNOTS "contigID\t". $taxonomicLevel . "ID\n";
 	while ( 1 )
 	{
 		my $line = <FCP>;
@@ -216,7 +221,7 @@ foreach my $input (@ARGV)
                        $bestTaxaName = $taxa;
                        $bestTaxaName =~ s/\s/_/g;
 
-                       if ($classes[$bestTaxa] eq "class") {
+                       if ($classes[$bestTaxa] eq $taxonomicLevel) {
                           print ANNOTS "$contigID\t$bestTaxa\n";
                        }
                     }

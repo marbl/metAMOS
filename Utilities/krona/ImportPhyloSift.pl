@@ -138,7 +138,7 @@ foreach my $input (@ARGV)
 {
 	my $totalMagnitude;
 	
-	my ($fileName, $magFile) = split /:/, $input;
+	my ($fileName, $magFile, $taxonomicLevel) = split /:/, $input;
 	
 	$fileName =~ /([^\/]+)\./;
 	
@@ -166,6 +166,11 @@ foreach my $input (@ARGV)
 		
 		close MAG;
 	}
+
+        if ( ! defined $taxonomicLevel || length($taxonomicLevel) == 0) {
+        {
+		$taxonomicLevel = "class"
+        }
 	
 	print "Importing $fileName...\n";
 	 
@@ -184,7 +189,7 @@ foreach my $input (@ARGV)
         my %bestTaxa;
         my %bestScores;
 
-        print ANNOTS "contigID\tclassID\n";
+        print ANNOTS "contigID\t" . $taxonomicLevel . "ID\n";
 	while ( 1 )
 	{
 		my $line = <BLAST>;
@@ -212,7 +217,7 @@ foreach my $input (@ARGV)
 
                     foreach my $taxa (keys %bestScores) {
                        print "$taxa\n";
-                       if ($printed == 0 && $taxa eq "class")
+                       if ($printed == 0 && $taxa eq $taxonomicLevel)
                        {
                            $printed = 1;
                            print ANNOTS "$currCtg\t$bestTaxa{$taxa}\n";

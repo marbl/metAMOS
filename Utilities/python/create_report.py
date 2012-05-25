@@ -146,36 +146,82 @@ if __name__ == "__main__":
     ds = dt.strftime("%A, %d. %B %Y %I:%M%p")
     title = "metAMOS: a metagenomic assembly pipeline for AMOS"
     header = ""#metAMOS Metagenomic assembly report"
+    #<link rel="shortcut icon" href="../assets/ico/favicon.ico">
+    #<link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    #<link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    #<link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    #<link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">
 
     footer = ""#"Generated %s"%(ds)
-    styles = ( 'style2.css')#'layout.css', 'alt.css', 'images.css' )
+    styles = ( 'style2.css')#'./html/bootstrap.css', './html/boostrap-responsive.css')#'style2.css')#'layout.css', 'alt.css', 'images.css' )
     #styles = ( 'layout.css', 'alt.css', 'images.css' )
-
+    #meta = ('viewport':"width=device-width, initial-scale=1.0",'description':'','author':'')
     page = markup.page( )
-    page.init( css=styles, title=title, header=header, footer=footer )
-
+    page.init( title=title, header=header, footer=footer )
+    
 #    page.br()
-    page.div( id_='page' )
-    page.div( id_='header' )
-    page.div( id_='title')# style="vertical-align:bottom;")
+    #page.div( class_ = 'navbar navbar-fixed-top')
+    #page.div( class_ = 'navbar-inner')
+    page.div( class_ = 'container', style_='width:100%;height=100%')
+    #page.div.close()
+    #page.div.close()
+    #page.div.close()
+    #page.div( id_='page' )
+    page.div( id_='header', style="background-color:#B8B8B8;clear:both;text-align:center;width:100%;height:7%;border:1px solid black") 
+    page.h1("<u>MetAMOS <font color=\"blue\">v1.0</font> metagenomic assembly & analysis report</u>" , style_="text-align:center;vertical-align:top")
+    page.h1.close()
+    #page.div( id_='title')# style="vertical-align:bottom;")
     #page.font( size=14)
-    page.p("metAMOS metagenomic assembly report")
-
     #page.br( )
     page.div.close()
-    
+
+    #<frameset rows="40%,60%"cols="80%,20%">
+    #<frame src="report.krona.html">
+    #<frameset rows="20%,20%">
+    #<frame src="report.krona.html">
+    #<frame src="report.krona.html">
+    #</frameset>
+    #<frameset rows="60%" cols="40%,40%">
+    #<frame src="report.krona.html">
+    #<frame src="report.krona2.html">
+    #</frameset>
+    #<frameset rows="20%,20%,20%" cols="20%">
+    #<frame src="report.krona.html">
+    #<frame src="report.krona.html">
+    #<frame src="report.krona.html">
+    #</frameset>
+    #</frameset>
+    #</html>    
     #font, estimate
-    page.div.close()
-    page.div( id_="menu")
-    items = ["<a href=\"http://cbcb.umd.edu/software/metamos\">metAMOS website</a>", ]
-    page.ul()
-    page.li("<a href=\"http://cbcb.umd.edu/software/metamos\">metAMOS website</a>")    
-    page.li("<a href=\"http://cbcb.umd.edu/~mpop/Software.shtml\">Related software</a>")
-    page.li("<a href=\"http://cbcb.umd.edu\">CBCB</a>")
-#    page.li( items[1] )
-    page.ul.close( )
-    page.div.close()
+    #page.div.close()
+    #page.frameset( rows_="40%,60%", cols_ = "80%,20%")
+    #page.div()
+    page.div( id_="menu", style_="background-color:#E8E8E8;text-align:left;width:10%;height:88%;float:left;border:1px solid black")
     
+    #items = ["<a href=\"http://cbcb.umd.edu/software/metamos\">metAMOS website</a>", ]
+    #page.ul()
+    page.p("<u>Pipeline status</u><br>")
+    page.p("<a href=\"./html/preprocess.html\">Preprocess</a>:<br> <font color=\"green\">OK</font>")
+    page.p("<a href=\"./html/assemble.html\">Assemble</a>:<br> <font color=\"green\">OK</font>")
+    page.p("<a href=\"./html/mapreads.html\">MapReads</a>:<br> <font color=\"green\">OK</font>")
+    page.p("<a href=\"./html/findorfs.html\">FindORFS</a>:<br> <font color=\"green\">OK</font>")
+    page.p("<a href=\"./html/findrepeats.html\">FindRepeats</a>:<br> <font color=\"green\">OK</font>")
+    page.p("<a href=\"./html/scaffold.html\">Scaffold</a>:<br> <font color=\"green\">OK</font>")
+    page.p("<a href=\"./html/findscaffoldorfs\">FindScaffoldORFS</a>:<br> <font color=\"green\">OK</font>")
+    page.p("<a href=\"./html/abundance.html\">Abundance</a>:<br> <font color=\"red\">FAIL</font>")
+    page.p("<a href=\"./html/annotate.html\">Annotate</a>:<br> <font color=\"red\">FAIL</font>")
+    page.p("<a href=\"./html/propagate.html\">Propagate</a>:<br> <font color=\"gray\">NA</font>")
+    page.p("<a href=\"./html/classify.html\">Classify</a>:<br> <font color=\"gray\">NA</font>")
+    #page.ul.close()
+    page.div.close()
+    #page.li("<a href=\"http://cbcb.umd.edu/software/metamos\">metAMOS website</a>")    
+    #page.li("<a href=\"http://cbcb.umd.edu/~mpop/Software.shtml\">Related software</a>")
+    #page.li("<a href=\"http://cbcb.umd.edu\">CBCB</a>")
+    
+#    page.li( items[1] )
+    #page.ul.close( )
+    #page.div.close()
+    page.div( id_="content", style="background-color:#FFFFFF;float:left;width:58%;height:12%;border:1px solid black")
     nQC = 0
     for i in range(1, nLibs + 1):
         if os.path.exists("%s/lib%d.1.fastqc/fastqc_report.html"%(prefix, i)):
@@ -206,8 +252,8 @@ if __name__ == "__main__":
     # TODO: do we want this? also, test -BDO
     #if os.path.exists("%s/Annotate/out/report.krona.html"%prefix):
     #    page.iframe(src="%s/Annotate/out/report.krona.html"%prefix, width="100%", height="600px")
-    
-    page.div( id_='wrapper')
+
+    #page.div( id_='wrapper')
     #page.div( id_="content")
     
     #page.a( "Reference assembly:", class_='internal', href='%s'%(ref_asm) )          
@@ -216,7 +262,7 @@ if __name__ == "__main__":
     cnt = 0
     #table_html = ""
     if 0:
-        page.table(border="1")
+        page.table(border="1",style_="width=80%")
         for contig in covdata:
             if cnt == 0:
                 #table_html += "<table border=\"1\">\n"
@@ -234,8 +280,8 @@ if __name__ == "__main__":
 
     #page.table.close()        
     #page.p( paragraphs )
-
-    page.table(border="1")
+    #page.p(style_="font-size:6px")
+    page.table(border="2",width="80%")
     #page.tr()
     #page.(
     if 1:
@@ -252,23 +298,64 @@ if __name__ == "__main__":
                 elif index == 1 and "File" not in item:
                     page.td("<a href=\""+ref_asm+"\">%s</a>"%(ref_asm.split("/")[-1]))
                     continue
-                page.td(item)
+
+                page.td("<p style=\"font-size:15px\">"+item+"</p>")
                 #table_html += "<td> %s </td> \n"%(item)
             page.tr.close()
             #table_html += "</tr>\n"
         page.table.close()
         #table_html += "</table>\n"
         #page.p( table_html )    
-
-    page.img( hspace=10, width=600, height=500, alt='Abundance', src='bar-phylum.png' )
-    page.p("Generated %s"%(ds))
-#    page.p("Metaphyler predicted abundance by class")
-#    page.img( hspace=50, width=600, height=300, alt='Abundance', src='class.png' )
- #   page.br()    
-  #  page.p("Metaphyler predicted abundance by genus")
-  #  page.img( hspace=50, width=600, height=300, alt='Abundance', src='cov.png' )
-  #  page.br()    
+    #page.p.close()
     page.div.close()
+    page.div( id_="quick", style_="background-color:#E8E8E8;text-align:left;width:11%;height:88%;float:right;border:1px solid black")
+    
+    #items = ["<a href=\"http://cbcb.umd.edu/software/metamos\">metAMOS website</a>", ]
+    #page.ul()
+    page.p("<u>Quick summary</u><br>")
+    page.p("#Reads:<br>10000000")
+    page.p("#Contigs:<br>10000000")
+    page.p("#Scaffolds:<br>10000000")
+    page.p("#ORFs:<br>10000000")
+    page.p("#Variants:<br>10000000")
+    page.p("<a href=\"pipeline.commands\">Run summary</a>")
+    page.p("<a href=\"https://github.com/treangen/metAMOS/wiki\">MetAMOS website</a>")
+    page.div.close()
+    page.div(id_="sideplots", style_="background-color:#FFFFFF;width:20.5%;height:88%;float:right;border:1px solid black")
+    #page.frameset(rows_="20%,20%,20%" ,cols_="100%")
+    #page.div(id_="sideplot1", style_="background-color:#FFFFFF;width:20.5%;height:22%;float:right")
+    page.img(src_="ContigSizes.png",height_="25%",width_="100%")
+    #page.div.close()
+    #page.div(id_="sideplot2", style_="background-color:#FFFFFF;width:20.5%;height:22%;float:right")
+    page.img(src_="hist_contigs.png",width_="100%",height_="25%")
+    #page.div.close()
+    #page.div(id_="sideplot3", style_="background-color:#FFFFFF;width:20.5%;height:22%;float:right")
+    page.img(src_="ScaffoldSizes.png",width_="100%",height_="25%")
+    #page.div.close()
+    #page.div(id_="sideplot4", style_="background-color:#FFFFFF;width:20.5%;height:22%;float:right")
+    page.img(src_="hist_scaffold.png",width_="100%",height_="25%")
+    page.div.close()
+    #page.frameset.close()    
+    #page.div.close()
+
+
+    page.div( id_="krona", style="float:left;width:58%;height:74%")
+    #page.iframe(src_="bar-phylum.png",style_="width:100%;height:100%;hspace=10")
+    #page.frameset(rows_="100%" ,cols_="100%")
+    page.iframe(src_="report.krona.html",style_="width:99%;height:100%",frameborder_="1",name_="Krona plot (Ondov et. al.)",scrolling_="yes",marginheight_="2px",marginwidth_="2px")
+    #page.frameset.close()
+    page.p("Krona output")
+    page.iframe.close()
+    page.div.close()
+
+    #page.div( id_="metaphyler", style="float:left;width:28%;height:70%")
+    #page.img(  hspace=10, alt='Abundance', src='bar-phylum.png' )
+    #page.div.close()
+
+    page.div(id="footer", style="background-color:#B8B8B8;clear:both;text-align:center;width:100%;height:5%;border:1px solid black;vertical-align:middle")
+    page.p("Generated %s"%(ds))
+    page.div.close()
+    #page.img( hspace=10, width=600, height=500, alt='Abundance', src='bar-phylum.png' )
     page.div.close()
 
     fout = open(prefix+"summary.html",'w')

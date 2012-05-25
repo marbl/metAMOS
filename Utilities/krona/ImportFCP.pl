@@ -199,16 +199,17 @@ foreach my $input (@ARGV)
 		my
 		(
                         $contigID,
-                        $magnitude,
 			$taxonomy
 
-		) = split /\s/, $line, 3;
+		) = split /\s/, $line;
                 if (!defined($taxonomy)) {
                    # done parsing
                    last;
                 } else { 
                    if (defined($magnitudes{$contigID})) {
-                      $magnitude = $magnitudes{$contigID}
+                      $magnitude = $magnitudes{$contigID};
+                    } else {
+                      $magnitude = 1;
                     }
                     # pick the lowest classified level to use
                     my $bestTaxa = undef;

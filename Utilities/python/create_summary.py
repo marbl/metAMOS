@@ -21,7 +21,10 @@ if __name__ == "__main__":
         sys.exit(0)
     rund = sys.argv[6]
     utils = sys.argv[5]
+
     prefix = sys.argv[3]
+    MA_dir = prefix
+    MA_dir = MA_dir.replace("/Postprocess/out/","")
     ref_asm = sys.argv[4]
     mp = open(sys.argv[1],'r')
     nLibs = int(sys.argv[7])
@@ -64,6 +67,50 @@ if __name__ == "__main__":
     step_status["Annotate"] = False
     step_status["Propagate"] = None
     step_status["Classify"] = None
+    #+male1  /cbcb/project-scratch/sergek/metAMOS/individualAsms/m1_asm      proba   b-      metaphyler=1
+    ## call Dan's script, for now on a single sample/run
+    cpfile = open("%s/plot.tab"%(prefix),'w')
+    cpfile.write("+male1\t%s\tproba\tb-\tmetaphyler=1\n"%(MA_dir))
+    cpfile.close()
+    os.system("python %s/python/create_plots.py %s/plot.tab proba1"%(utils,prefix))
+
+    ##update counts
+    #count reads
+    os.system("grep -c \">\" %s/Preprocess/out/*.seq > readcount.txt"%(MA_dir))
+    readcount = open("readcount.txt",'r').read().replace("\n","")  
+    #print readcount
+    #count contigs
+    os.system("grep -c \">\" %s/Assemble/out/proba.asm.contig > contigcount.txt"%(MA_dir))
+    contigcount = open("contigcount.txt",'r').read().replace("\n","")  
+    #print contigcount
+    os.system("rm contigcount.txt")
+    #count scaffolds
+    os.system("grep -c \">\" %s/Scaffold/out/proba.scaffolds.final > scafcount.txt"%(MA_dir))
+    scaffoldcount = open("scafcount.txt",'r').read().replace("\n","")  
+    #print scaffoldcount
+    os.system("rm scafcount.txt")
+    #count scaffolds
+    os.system("grep -c \">\" %s/Scaffold/out/proba.motifs > motifcount.txt"%(MA_dir))
+    motifcount = open("motifcount.txt",'r').read().replace("\n","")  
+    #print motifcount
+    os.system("rm motifcount.txt")
+    #count ORFs
+    os.system("grep -c \">\" %s/FindORFS/out/proba.orfs.faa > orfcount.txt"%(MA_dir))
+    orfcount = open("orfcount.txt",'r').read().replace("\n","")  
+    #print orfcount
+    os.system("rm orfcount.txt")
+    ##copy stuff
+    for step in steps:
+        step = step.lower()
+        os.system("cp %s/javascript/%s.js %s/."%(utils,step,prefix))
+    os.system("cp %s/Logs/COMMANDS.txt %s/pipeline.commands"%(MA_dir,prefix))
+    os.system("cp %s/pipeline.run %s/pipeline.summary"%(MA_dir,prefix))
+
+    ##This will create ScaffoldSizes.png,ContigSizes.png
+    
+    ##create code to automatically generate .js files for HTML report
+    ## let's start with Abundance
+    #abundance_js = open(prefix+"abundance.js",'w')
     
     rdata = []
     for line in report:
@@ -427,12 +474,13 @@ if __name__ == "__main__":
     #items = ["<a href=\"http://cbcb.umd.edu/software/metamos\">metAMOS website</a>", ]
     #page.ul()
     page.p("<u>Quick summary</u><br>")
-    page.p("#Reads:<br>10000000")
-    page.p("#Contigs:<br>10000000")
-    page.p("#Scaffolds:<br>10000000")
-    page.p("#ORFs:<br>10000000")
-    page.p("#Variants:<br>10000000")
-    page.p("<a href=\"pipeline.commands\">Run summary</a>")
+    page.p("#Reads:<br>%s"%readcount)
+    page.p("#Contigs:<br>%s"%contigcount)
+    page.p("#Scaffolds:<br>%s"%scaffoldcount)
+    page.p("#ORFs:<br>%s"%orfcount)
+    page.p("#Motifs:<br>%s"%motifcount)
+    page.p("<a href=\"pipeline.summary\">Pipeline summary</a>")
+    page.p("<a href=\"pipeline.commands\">Run commands</a>")
     page.p("<a href=\"https://github.com/treangen/metAMOS/wiki\">MetAMOS website</a>")
     page.div.close()
     page.div(id_="sideplots", style_="background-color:#FFFFFF;width:20.5%%;height:88%%;float:right;border:1px %s"%(textColor))

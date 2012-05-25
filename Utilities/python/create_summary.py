@@ -30,6 +30,40 @@ if __name__ == "__main__":
         libPath = rund.replace("bin", "lib")
         os.system("perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,sys.argv[4],prefix))        
     report = open(prefix+"asmstats.out",'r')
+
+    # define colors and style elements
+    textColor = "solid black"
+    backgroundColor = "#E8E8E8"
+    selectedColor = "yellow"
+    mouseOverColor = "#cdcdcd"
+
+    initialStep = "Annotate"
+
+    steps = []
+    steps.append("Preprocess")
+    steps.append("Assemble")
+    steps.append("MapReads")
+    steps.append("FindORFS")
+    steps.append("FindRepeats")
+    steps.append("Scaffold")
+    steps.append("FindScaffoldORFS")
+    steps.append("Abundance")
+    steps.append("Annotate")
+    steps.append("Propagate")
+    steps.append("Classify")
+
+    step_status = {}
+    step_status["Preprocess"] = True
+    step_status["Assemble"] = True
+    step_status["MapReads"] = True
+    step_status["FindORFS"] = True
+    step_status["FindRepeats"] = True
+    step_status["Scaffold"] = True
+    step_status["FindScaffoldORFS"] = True
+    step_status["Abundance"] = False
+    step_status["Annotate"] = False
+    step_status["Propagate"] = None
+    step_status["Classify"] = None
     
     rdata = []
     for line in report:
@@ -145,19 +179,80 @@ if __name__ == "__main__":
     dt = datetime.now()
     ds = dt.strftime("%A, %d. %B %Y %I:%M%p")
     title = "metAMOS: a metagenomic assembly pipeline for AMOS"
-    header = ""#metAMOS Metagenomic assembly report"
+    # header is blank for now
+    header = []
+
+    # write the javascript we need on the page
+    script = []
+    script.append("<script type=\"text/javascript\">")
+    script.append("moverColor = \"%s\""%(mouseOverColor))
+    script.append("selectedColor = \"%s\""%(selectedColor))
+    script.append("defaultColor = \"%s\""%(backgroundColor))
+    script.append("bgcolor = \"white\"")
+    script.append("")
+    script.append("function load(fileName) {")
+    script.append("   $('#krona').html(window[fileName.concat('HTML')]);")
+    script.append("   $('#links tr').each(function(){")
+    script.append("      $(this).find('td').each(function(){")
+    script.append("      if (($(this).attr('id')).toLowerCase() == fileName) {")
+    script.append("         $(this).css(\"background-color\", selectedColor);")
+    script.append("         bgcolor = selectedColor;")
+    script.append("      } else {")
+    script.append("         $(this).css(\"background-color\", defaultColor);")
+    script.append("      }")
+    script.append("   })")
+    script.append("})")
+    script.append("}")
+    script.append("")
+    script.append("function mover(aa) {")
+    script.append("   bgcolor = aa.style.backgroundColor;")
+    script.append("   aa.style.backgroundColor = moverColor;")
+    script.append("}")
+    script.append("")
+    script.append("function mout(aa) {")
+    script.append("   if (bgcolor == selectedColor) {")
+    script.append("      aa.style.backgroundColor = selectedColor;")
+    script.append("   } else {")
+    script.append("      aa.style.backgroundColor = defaultColor;")
+    script.append("   }")
+    script.append("}")
+    script.append("</script>")
+
     #<link rel="shortcut icon" href="../assets/ico/favicon.ico">
     #<link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
     #<link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
     #<link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
     #<link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">
 
+    # generate the dictionary of javascript pages we need
+    scripts = {}
+    scripts["file://%s/javascript/jquery-latest.js"%(utils)] = "javascript"
+    scripts["http://code.jquery.com/jquery-latest.js"] = "javascript"
+    # now a javascript for each page
+    for step in steps:
+       scripts["%s.js"%(step.lower())] = "javascript"
+
+    # attributes for the body tax
+    body = {}
+    body["onload"] = "load('%s')"%(initialStep.lower())
+
+    # the footer for the page
+
     footer = ""#"Generated %s"%(ds)
     styles = ( 'style2.css')#'./html/bootstrap.css', './html/boostrap-responsive.css')#'style2.css')#'layout.css', 'alt.css', 'images.css' )
     #styles = ( 'layout.css', 'alt.css', 'images.css' )
     #meta = ('viewport':"width=device-width, initial-scale=1.0",'description':'','author':'')
+
+    # create HTML page
     page = markup.page( )
-    page.init( title=title, header=header, footer=footer )
+    # add the javascript free form
+    page.add("\n".join(script))
+    # initialize the rest of the body/html headers
+    page.init( title=title,   \
+               script=scripts,\
+               header='\n'.join(header), \
+               bodyattrs=body, \
+               footer=footer )
     
 #    page.br()
     #page.div( class_ = 'navbar navbar-fixed-top')
@@ -196,22 +291,36 @@ if __name__ == "__main__":
     #page.div.close()
     #page.frameset( rows_="40%,60%", cols_ = "80%,20%")
     #page.div()
-    page.div( id_="menu", style_="background-color:#E8E8E8;text-align:left;width:10%;height:88%;float:left;border:1px solid black")
+    page.div( id_="menu", style_="background-color:%s;text-align:left;width:10%%;height:88%%;float:left;border:1px %s"%(backgroundColor, textColor))
     
     #items = ["<a href=\"http://cbcb.umd.edu/software/metamos\">metAMOS website</a>", ]
     #page.ul()
     page.p("<u>Pipeline status</u><br>")
-    page.p("<a href=\"./html/preprocess.html\">Preprocess</a>:<br> <font color=\"green\">OK</font>")
-    page.p("<a href=\"./html/assemble.html\">Assemble</a>:<br> <font color=\"green\">OK</font>")
-    page.p("<a href=\"./html/mapreads.html\">MapReads</a>:<br> <font color=\"green\">OK</font>")
-    page.p("<a href=\"./html/findorfs.html\">FindORFS</a>:<br> <font color=\"green\">OK</font>")
-    page.p("<a href=\"./html/findrepeats.html\">FindRepeats</a>:<br> <font color=\"green\">OK</font>")
-    page.p("<a href=\"./html/scaffold.html\">Scaffold</a>:<br> <font color=\"green\">OK</font>")
-    page.p("<a href=\"./html/findscaffoldorfs\">FindScaffoldORFS</a>:<br> <font color=\"green\">OK</font>")
-    page.p("<a href=\"./html/abundance.html\">Abundance</a>:<br> <font color=\"red\">FAIL</font>")
-    page.p("<a href=\"./html/annotate.html\">Annotate</a>:<br> <font color=\"red\">FAIL</font>")
-    page.p("<a href=\"./html/propagate.html\">Propagate</a>:<br> <font color=\"gray\">NA</font>")
-    page.p("<a href=\"./html/classify.html\">Classify</a>:<br> <font color=\"gray\">NA</font>")
+    page.table( id_="links" )
+    for step in steps:
+       page.tr()
+       status = "NA"
+       color = "gray"
+       try:
+          if step_status[step] == True:
+             status = "OK"
+             color = "green"
+          elif step_status[step] == False:
+             status = "FAIL"
+             color = "red"
+       except KeyError:
+          continue
+
+       tableHTML = []
+       tableHTML.append("<td id=\"%s\" onmouseover=\"mover(this);\" onmouseout=\"mout(this);\">"%(step.lower()))
+       tableHTML.append("<a href=\"javascript:void(0)\" onclick=\"load('%s');\">%s</a>"%(step.lower(), step))
+       tableHTML.append("<br>")
+       tableHTML.append("<font color=\"%s\">%s</font>"%(color, status))
+       tableHTML.append("</td>")
+       page.add("\n".join(tableHTML))
+       page.tr.close()
+
+    page.table.close()
     #page.ul.close()
     page.div.close()
     #page.li("<a href=\"http://cbcb.umd.edu/software/metamos\">metAMOS website</a>")    
@@ -221,7 +330,7 @@ if __name__ == "__main__":
 #    page.li( items[1] )
     #page.ul.close( )
     #page.div.close()
-    page.div( id_="content", style="background-color:#FFFFFF;float:left;width:58%;height:12%;border:1px solid black")
+    page.div( id_="content", style="background-color:#FFFFFF;float:left;width:58%%;height:12%%;border:1px %s"%(textColor))
     nQC = 0
     for i in range(1, nLibs + 1):
         if os.path.exists("%s/lib%d.1.fastqc/fastqc_report.html"%(prefix, i)):
@@ -308,7 +417,7 @@ if __name__ == "__main__":
         #page.p( table_html )    
     #page.p.close()
     page.div.close()
-    page.div( id_="quick", style_="background-color:#E8E8E8;text-align:left;width:11%;height:88%;float:right;border:1px solid black")
+    page.div( id_="quick", style_="background-color:%s;text-align:left;width:11%%;height:88%%;float:right;border:1px %s"%(backgroundColor, textColor))
     
     #items = ["<a href=\"http://cbcb.umd.edu/software/metamos\">metAMOS website</a>", ]
     #page.ul()
@@ -321,7 +430,7 @@ if __name__ == "__main__":
     page.p("<a href=\"pipeline.commands\">Run summary</a>")
     page.p("<a href=\"https://github.com/treangen/metAMOS/wiki\">MetAMOS website</a>")
     page.div.close()
-    page.div(id_="sideplots", style_="background-color:#FFFFFF;width:20.5%;height:88%;float:right;border:1px solid black")
+    page.div(id_="sideplots", style_="background-color:#FFFFFF;width:20.5%%;height:88%%;float:right;border:1px %s"%(textColor))
     #page.frameset(rows_="20%,20%,20%" ,cols_="100%")
     #page.div(id_="sideplot1", style_="background-color:#FFFFFF;width:20.5%;height:22%;float:right")
     page.img(src_="ContigSizes.png",height_="25%",width_="100%")
@@ -342,17 +451,13 @@ if __name__ == "__main__":
     page.div( id_="krona", style="float:left;width:58%;height:74%")
     #page.iframe(src_="bar-phylum.png",style_="width:100%;height:100%;hspace=10")
     #page.frameset(rows_="100%" ,cols_="100%")
-    page.iframe(src_="report.krona.html",style_="width:99%;height:100%",frameborder_="1",name_="Krona plot (Ondov et. al.)",scrolling_="yes",marginheight_="2px",marginwidth_="2px")
-    #page.frameset.close()
-    page.p("Krona output")
-    page.iframe.close()
     page.div.close()
 
     #page.div( id_="metaphyler", style="float:left;width:28%;height:70%")
     #page.img(  hspace=10, alt='Abundance', src='bar-phylum.png' )
     #page.div.close()
 
-    page.div(id="footer", style="background-color:#B8B8B8;clear:both;text-align:center;width:100%;height:5%;border:1px solid black;vertical-align:middle")
+    page.div(id="footer", style="background-color:#B8B8B8;clear:both;text-align:center;width:100%%;height:5%%;border:1px %s;vertical-align:middle"%(textColor))
     page.p("Generated %s"%(ds))
     page.div.close()
     #page.img( hspace=10, width=600, height=500, alt='Abundance', src='bar-phylum.png' )

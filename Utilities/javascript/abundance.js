@@ -1,0 +1,1 @@
+var abundanceHTML='<img src="bar-phylum.png" alt="Abundance" width="500" height="400" />'

@@ -88,7 +88,7 @@ if __name__ == "__main__":
     #+male1  /cbcb/project-scratch/sergek/metAMOS/individualAsms/m1_asm      proba   b-      metaphyler=1
     ## call Dan's script, for now on a single sample/run
     cpfile = open("%s/plot.tab"%(prefix),'w')
-    cpfile.write("+male1\t%s\tproba\tb-\tmetaphyler=1\n"%(MA_dir))
+    cpfile.write("+sample1\t%s\tproba\tb-\tmetaphyler=1\n"%(MA_dir))
     cpfile.close()
     os.system("python %s/python/create_plots.py %s/plot.tab proba1"%(utils,prefix))
 
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     for step in steps:
         step = step.lower()
         os.system("cp %s/javascript/%s.js %s/."%(utils,step,prefix))
-    os.system("cp %s/Logs/COMMANDS.txt %s/pipeline.commands"%(MA_dir,prefix))
+    os.system("cp %s/Logs/COMMANDS.log %s/pipeline.commands"%(MA_dir,prefix))
     os.system("cp %s/pipeline.run %s/pipeline.summary"%(MA_dir,prefix))
 
     ##This will create ScaffoldSizes.png,ContigSizes.png

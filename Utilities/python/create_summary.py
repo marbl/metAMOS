@@ -67,6 +67,24 @@ if __name__ == "__main__":
     step_status["Annotate"] = False
     step_status["Propagate"] = None
     step_status["Classify"] = None
+    ##get status of each step from Log dir
+    for step in steps:
+        stepn = step.lower()
+        started = False
+        completed = False
+        if os.path.exists("%s/Logs/%s.started"%(MA_dir,stepn)):
+            started = True
+        if os.path.exists("%s/Logs/%s.ok"%(MA_dir,stepn)):
+            completed = True
+        if started and completed:
+            step_status[step] = True
+        elif started and not completed:
+            step_status[step] = False
+        elif not started:
+            step_status[step] = None
+        else:
+            step_status[step] = None
+
     #+male1  /cbcb/project-scratch/sergek/metAMOS/individualAsms/m1_asm      proba   b-      metaphyler=1
     ## call Dan's script, for now on a single sample/run
     cpfile = open("%s/plot.tab"%(prefix),'w')

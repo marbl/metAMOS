@@ -102,6 +102,7 @@ def getContigRepeats(contigFile,outFile):
 
 
 @follows(FindORFS)
+@posttask(touch_file("%s/Logs/findrepeats.ok"%(_settings.rundir)))
 @files("%s/FindRepeats/in/%s.fna"%(_settings.rundir,_settings.PREFIX),"%s/FindRepeats/out/%s.repeats"%(_settings.rundir,_settings.PREFIX))
 def FindRepeats(input,output):
    if "FindORFS" in _skipsteps or "FindRepeats" in _skipsteps:

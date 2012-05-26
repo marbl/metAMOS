@@ -26,6 +26,7 @@ def init(reads, skipsteps, cls):
    _cls = cls
 
 @follows(Scaffold)
+@posttask(touch_file("%s/Logs/propagate.ok"%(_settings.rundir)))
 @files("%s/Annotate/out/%s.annots"%(_settings.rundir, _settings.PREFIX),"%s/Propagate/out/%s.clusters"%(_settings.rundir,_settings.PREFIX))
 def Propagate(input,output):
    #run propogate java script

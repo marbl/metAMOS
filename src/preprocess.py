@@ -134,6 +134,7 @@ def parseInterleaved(rf,wf,fastq=True):
                    read.path = read.path.replace("/in/","/out/")            
 
 #@transform(readpaths,["%s/Preprocess/out/all.seq"%(_settings.rundir),"%s/Preprocess/out/all.seq.mates"%(_settings.rundir)])
+@posttask(touch_file("%s/Logs/preprocess.ok"%(_settings.rundir)))
 @files(_settings.readpaths,"%s/Preprocess/out/preprocess.success"%(_settings.rundir))
 #filtreadpaths)
 def Preprocess(input,output):

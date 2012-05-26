@@ -365,6 +365,9 @@ if not os.path.exists(settings.rundir) or settings.rundir == "":
     usage()
     sys.exit(1)
 
+#remove started & ok flags in Logs
+os.system("rm %s%sLogs%s*.ok"%(settings.rundir,os.sep,os.sep))
+os.system("rm %s%sLogs%s*.started"%(settings.rundir,os.sep,os.sep))
 #parse frag/libs out of pipeline.ini out of rundir
 inifile = settings.rundir+os.sep+"pipeline.ini"
 inf = open(inifile,'r')

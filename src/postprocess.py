@@ -55,6 +55,7 @@ def validate_run(dir):
                         sys.exit(1)
 
 @follows(Classify)
+@posttask(touch_file("%s/Logs/postprocess.ok"%(_settings.rundir)))
 @files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/Postprocess/%s.scf.fa"%(_settings.rundir,_settings.PREFIX))
 def Postprocess(input,output):
 #create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm>

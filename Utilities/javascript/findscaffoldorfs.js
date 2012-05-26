@@ -1,0 +1,1 @@
+var findscaffoldorfsHTML='<img src="SCFORFSizes.png" alt="FindScaffoldORFS" width="100%" height="100%" />'

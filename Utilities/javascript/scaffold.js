@@ -1,1 +1,1 @@
-var scaffoldHTML='<img src="ScaffoldSizes.png" alt="Scaffold" width="500" height="400" />'
+var scaffoldHTML='<img src="ScaffoldSizes.png" alt="Scaffold" width="100%" height="100%" />'

@@ -101,7 +101,8 @@ def Postprocess(input,output):
    #try to open Krona output
    if openbrowser:
        if os.path.exists(_settings.rundir + os.sep + "Postprocess" + os.sep + "out" + os.sep + "report.krona.html"):
-           webbrowser.open_new("%s%sPostprocess%sout%sreport.krona.html"%(_settings.rundir, os.sep, os.sep, os.sep))
+           #webbrowser.open_new("%s%sPostprocess%sout%sreport.krona.html"%(_settings.rundir, os.sep, os.sep, os.sep))
+           pass
        else:
            print "ERROR: No Krona html file available! skipping"
    #webbrowser.open_new(output.html)

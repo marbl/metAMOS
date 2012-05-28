@@ -361,6 +361,7 @@ def map2contig():
 
 @files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/Assemble/out/mapreads.success"%(_settings.rundir))
 #@posttask(create_symlink,touch_file("completed.flag"))
+@posttask(touch_file("%s/Logs/mapreads.ok"%(_settings.rundir)))
 @follows(Assemble)
 def MapReads(input,output):
 

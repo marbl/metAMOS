@@ -24,6 +24,7 @@ def init(reads, skipsteps, cls):
    _cls = cls
 
 @follows(Propagate)
+@posttask(touch_file("%s/Logs/classify.ok"%(_settings.rundir)))
 @files("%s/Propagate/out/%s.clusters"%(_settings.rundir,_settings.PREFIX),"%s/Classify/out/sorted.txt"%(_settings.rundir))
 def Classify(input,output):
    if _cls == "FCP" or _cls == "fcp" or _cls == "phylosift" or _cls == "PhyloSift" or _cls == "Phylosift":

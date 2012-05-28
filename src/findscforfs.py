@@ -24,6 +24,7 @@ def init(reads, skipsteps,orf):
    _orf = orf
 
 @follows(Scaffold)
+@posttask(touch_file("%s/Logs/findscaffoldorfs.ok"%(_settings.rundir)))
 @files("%s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir,_settings.PREFIX),"%s/FindScaffoldORFS/out/%s.scaffolds.orfs"%(_settings.rundir,_settings.PREFIX))
 def FindScaffoldORFS(input,output):
    if "FindScaffoldORFS" in _skipsteps:

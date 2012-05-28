@@ -51,6 +51,7 @@ def parse_metaphyler(giMapping, toTranslate, output):
    outf.close()
 
 @follows(FindScaffoldORFS)
+@posttask(touch_file("%s/Logs/abundance.ok"%(_settings.rundir)))
 @files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/Abundance/out/%s.taxprof.pct.txt"%(_settings.rundir,_settings.PREFIX))
 def Abundance(input,output):
    if "Abundance" not in _forcesteps and ("FindORFS" in _skipsteps or "FindScaffoldORFS" in _skipsteps or "Abundance" in _skipsteps):

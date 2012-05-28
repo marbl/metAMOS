@@ -247,6 +247,7 @@ def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS"):
     #cvgg.close()
 
 @follows(MapReads)
+@posttask(touch_file("%s/Logs/findorfs.ok"%(_settings.rundir)))
 @files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.PREFIX))
 def FindORFS(input,output):
    if "FindORFS" in _skipsteps:

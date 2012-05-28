@@ -35,6 +35,7 @@ def init(reads, skipsteps, retainBank, asm):
          break
 
 @follows(FindRepeats,Annotate)
+@posttask(touch_file("%s/Logs/scaffold.ok"%(_settings.rundir)))
 @files(["%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX)],"%s/Scaffold/out/%s.scaffolds.final"%(_settings.rundir,_settings.PREFIX))
 def Scaffold(input,output):
    # check if we need to do scaffolding

@@ -84,7 +84,9 @@ def parse_phmmerout(phmmerout):
     #for key in hit_dict.keys():
     #    print hit_dict[key]
 
+
 @follows(FindRepeats)
+@posttask(touch_file("%s/Logs/annotate.ok"%(_settings.rundir)))
 @files("%s/Annotate/in/%s.faa"%(_settings.rundir,_settings.PREFIX),"%s/Annotate/out/%s.hits"%(_settings.rundir,_settings.PREFIX))
 def Annotate(input,output):
    if "Annotate" in _skipsteps or _cls == None:

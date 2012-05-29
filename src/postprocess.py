@@ -97,6 +97,15 @@ def Postprocess(input,output):
        run_process(_settings, "unlink %s/Postprocess/out/report.krona.html"%(_settings.rundir), "Postprocess")
        run_process(_settings, "ln -s %s/Annotate/out/report.krona.html %s/Postprocess/out/report.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
 
+   # create sym links
+   run_process(_settings, "unlink %s/Postprocess/out/propagate.in.clusters"%(_settings.rundir), "Postprocess")
+   run_process(_settings, "ln -s %s/Propagate/in/%s.clusters %s/Postprocess/out/propagate.in.clusters"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
+   run_process(_settings, "unlink %s/Postprocess/out/propagate.out.clusters"%(_settings.rundir), "Postprocess")
+   run_process(_settings, "ln -s %s/Propagate/out/%s.clusters %s/Postprocess/out/propagate.out.clusters"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
+
+   run_process(_settings, "unlink %s/Postprocess/out/abundance.krona.html"%(_settings.rundir), "Postprocess")
+   run_process(_settings, "ln -s %s/Abundance/out/report.krona.html %s/Postprocess/out/abundance.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
+
    #command to open webbrowser?
    #try to open Krona output
    if openbrowser:

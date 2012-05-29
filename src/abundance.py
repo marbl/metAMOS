@@ -67,6 +67,12 @@ def Abundance(input,output):
 
    # finally add the GI numbers to the results where we can
    parse_metaphyler("%s/DB/markers.toGI.txt"%(_settings.METAMOS_UTILS), "%s/Abundance/out/%s.blastp"%(_settings.rundir, _settings.PREFIX), "%s/Abundance/out/%s.gi.blastp"%(_settings.rundir, _settings.PREFIX))
+   # generate Krona output
+   if not os.path.exists(_settings.KRONA + os.sep + "ImportMetaPhyler.pl"):
+      print "Error: Krona importer for MetaPhyler not found in %s. Please check your path and try again.\n"%()
+      raise(JobSignalledBreak)
+   run_process(_settings, "perl %s/ImportMetaPhyler.pl -c -v -i -p %s/Abundance/out/%s.taxprof.pct.txt:%s"%(_settings.KRONA,_settings.rundir,_settings.PREFIX, _settings.taxa_level),"Abundance")
+
    if _cls == 'metaphyler' or _cls == None:
       print "!!No classification selected, using MetaPhyler for taxonomic composition classification\n"
       run_process(_settings, "cp %s/Abundance/out/%s.gi.blastp %s/Postprocess/in/%s.hits"%(_settings.rundir, _settings.PREFIX,_settings.rundir,_settings.PREFIX),"Abundance")

@@ -123,6 +123,10 @@ if __name__ == "__main__":
         os.system("cp %s/javascript/%s.js %s/."%(utils,step,prefix))
     os.system("cp %s/Logs/COMMANDS.log %s/pipeline.commands"%(MA_dir,prefix))
     os.system("cp %s/pipeline.run %s/pipeline.summary"%(MA_dir,prefix))
+    # generate dynamic java scripts
+    os.system("python %s/python/get_classify_stats.py %s/propagate.in.clusters %s/propagate.out.clusters %s/DB/tax_key.tab %s classify.js propagate.js"%(utils, prefix, prefix, utils, prefix)) 
+    
+    # todo, need to add report for MapReads including # reads mapped (%), contig coverage histogram, and % reads between contigs and number of links histogram. Also re-estimated insert sizes for each lib
 
     ##This will create ScaffoldSizes.png,ContigSizes.png
     

@@ -2,17 +2,39 @@ import sys, os, string
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
 # requirements for plots
-#  biopython
 #  matplotlib
 #  numpy
 
-from Bio import SeqIO, Seq
 import sys
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 import numpy as np
+
+from itertools import groupby
+
+#fasta parser from http://biostar.stackexchange.com/questions/711/correct-way-to-parse-a-fasta-file-in-python
+def fasta_iter(fasta_name):
+   """
+   given a fasta file. yield tuples of header, sequence
+   """
+   try:
+       fh = open(fasta_name, 'r')
+       # ditch the boolean (x[0]) and just keep the header or sequence since
+       # we know they alternate.
+       faiter = (x[1] for x in groupby(fh, lambda line: line[0] == ">"))
+       for header in faiter:
+           # drop the ">"
+           header = header.next()[1:].strip()
+           # join all sequence lines to one.
+           seq = "".join(s.strip() for s in faiter.next())
+           yield header, seq
+   except Exception, e:
+       print "error: %s"%(e)
+       pass
+
+#use:
 
 # represent info related to each sample
 class Sample:
@@ -77,35 +99,35 @@ for line in handle.xreadlines():
         sample_id, dir, METAMOS_prefix, line_type, args = line.split('\t')
         sample = Sample(sample_id, dir, line_type, args)
 
-        for record in SeqIO.parse(dir + METAMOS_PATH + METAMOS_prefix + Contig_file, "fasta") :
-            l = len(record.seq)
+        for header, seq in (fasta_iter(dir + METAMOS_PATH + METAMOS_prefix + Contig_file)):
+            l = len(seq)
             if(l > SIZE_CUTOFF):
-                sample.ctg_sizes[record.id] = l
+                sample.ctg_sizes[header] = l
 
 
         print " ctg_size " + str(len(sample.ctg_sizes))
         sample.list_sizes = sorted(sample.ctg_sizes.values(), reverse=True)
 
 
-        for record in SeqIO.parse(dir + METAMOS_PATH + METAMOS_prefix + Scaffold_file, "fasta") :
-            l = len(record.seq)
+        for header, seq in (fasta_iter(dir + METAMOS_PATH + METAMOS_prefix + Scaffold_file)):
+            l = len(seq)
             if(l > SIZE_CUTOFF):
-                sample.sf_sizes[record.id] = l
+                sample.sf_sizes[header] = l
 
         print " sf_size " + str(len(sample.sf_sizes))
         sample.sfsort_sizes = sorted(sample.sf_sizes.values(), reverse=True)
 
-        for record in SeqIO.parse(dir + ORF_PATH + METAMOS_prefix + ORF_file, "fasta") :
-            l = len(record.seq)
+        for header, seq in (fasta_iter(dir + ORF_PATH + METAMOS_prefix + ORF_file)):
+            l = len(seq)
             if(l > SIZE_CUTOFF):
-                sample.orf_sizes[record.id] = l
+                sample.orf_sizes[header] = l
         sample.orflist_sizes = sorted(sample.orf_sizes.values(), reverse=True)
         print " orf_size " + str(len(sample.orf_sizes))
 
-        for record in SeqIO.parse(dir + SCFORF_PATH + METAMOS_prefix + SCFORF_file, "fasta") :
-            l = len(record.seq)
+        for header, seq in (fasta_iter(dir + SCFORF_PATH + METAMOS_prefix + SCFORF_file)):
+            l = len(seq)
             if(l > SIZE_CUTOFF):
-                sample.scforf_sizes[record.id] = l
+                sample.scforf_sizes[header] = l
         sample.scforflist_sizes = sorted(sample.scforf_sizes.values(), reverse=True)
         print " sforf_size " + str(len(sample.scforf_sizes))
 

@@ -1,4 +1,5 @@
-#!/fs/szdevel/core-cbcb-software/Linux-x86_64/bin/python
+import sys, os, string
+ROOT = os.path.dirname(os.path.abspath(__file__))
 
 # requirements for plots
 #  biopython

@@ -15,24 +15,65 @@ from datetime import datetime, date, time
 import settings
 import helper
 
+def outputLibraryInfo(html_prefix, markupFile, outputHeader, libcnt, format, mated, interleaved, mmin, mmax, outputFastQC):
+   if outputHeader:
+      markupFile.table(border="1")
+      markupFile.tr()
+      markupFile.th("Library #")
+      markupFile.th("Format")
+      markupFile.th("Mated?")
+      markupFile.th("Min Insert Size")
+      markupFile.th("Max Insert Size")
+      if outputFastQC:
+         markupFile.th("First FastQC Report")
+         markupFile.th("Second FastQC Report") 
+      markupFile.tr.close()
+
+   markupFile.tr()
+   markupFile.add("<td align=\"left\">%d</td>"%(libcnt))
+   markupFile.add("<td align=\"left\">%s</td>"%(format))
+   markupFile.add("<td align=\"left\">%s</td>"%(mated))
+   markupFile.add("<td align=\"right\">%d</td>"%(mmin))
+   markupFile.add("<td align=\"right\">%d</td>"%(mmax))
+
+   if outputFastQC and os.path.exists("lib%d.1.fastqc/fastqc_report.html"%(libcnt)):
+      if mated.lower() == "true":
+         if interleaved.lower() == "true":
+            markupFile.td('<a target="_blank" href="lib%d.1.fastqc/fastqc_report.html">interleaved</a>'%(libcnt))
+            markupFile.td("NA")
+         else:
+            markupFile.td('<a target="_blank" href="lib%d.1.fastqc/fastqc_report.html">left</a>'%(libcnt))
+            markupFile.td('<a target="_blank" href="lib%d.2.fastqc/fastqc_report.html">right</a>'%(libcnt))
+      else:
+         markupFile.td('<a target="_blank" href="lib%d.1.fastqc/fastqc_report.html">unmated</a>'%(libcnt))
+         markupFile.td("NA")
+   markupFile.tr.close()
+
 if __name__ == "__main__":
     if len(sys.argv) < 5:
-        print "usage: create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm> <Utils dir> <run dir> <# of libs>"
+        print "usage: create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm> <Utils dir> <run dir> <# of libs> <taxa level of classifications>"
         sys.exit(0)
     rund = sys.argv[6]
     utils = sys.argv[5]
 
     prefix = sys.argv[3]
+    html_prefix = prefix
+    prefix = prefix.replace("/html/", "")
     MA_dir = prefix
-    MA_dir = MA_dir.replace("/Postprocess/out/","")
+    MA_dir = MA_dir.replace("/Postprocess/out","")
     ref_asm = sys.argv[4]
     mp = open(sys.argv[1],'r')
     nLibs = int(sys.argv[7])
+    taxa_level = sys.argv[8]
     #mp2 = open(sys.argv[1].replace("s12","s3"),'r')    
-    if not os.path.exists(prefix+"asmstats.out"):
+
+    # set working dir
+    os.chdir(html_prefix)
+
+    if not os.path.exists(html_prefix+"asmstats.out"):
         libPath = rund.replace("bin", "lib")
-        os.system("perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,sys.argv[4],prefix))        
-    report = open(prefix+"asmstats.out",'r')
+        os.system("perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,sys.argv[4],html_prefix))        
+    report = open(html_prefix+"asmstats.out",'r')
 
     # define colors and style elements
     textColor = "solid black"
@@ -87,16 +128,17 @@ if __name__ == "__main__":
 
     #+male1  /cbcb/project-scratch/sergek/metAMOS/individualAsms/m1_asm      proba   b-      metaphyler=1
     ## call Dan's script, for now on a single sample/run
-    cpfile = open("%s/plot.tab"%(prefix),'w')
+    cpfile = open("%s/plot.tab"%(html_prefix),'w')
     cpfile.write("+sample1\t%s\tproba\tb-\tmetaphyler=1\n"%(MA_dir))
     cpfile.close()
-    os.system("python %s/python/create_plots.py %s/plot.tab proba1"%(utils,prefix))
+    os.system("python %s/python/create_plots.py %s/plot.tab proba1"%(utils,html_prefix))
 
     ##update counts
     #count reads
     os.system("grep -c \">\" %s/Preprocess/out/*.seq > readcount.txt"%(MA_dir))
     readcount = open("readcount.txt",'r').read().replace("\n","")  
     #print readcount
+    os.system("rm readcount.txt")
     #count contigs
     os.system("grep -c \">\" %s/Assemble/out/proba.asm.contig > contigcount.txt"%(MA_dir))
     contigcount = open("contigcount.txt",'r').read().replace("\n","")  
@@ -120,36 +162,113 @@ if __name__ == "__main__":
     ##copy stuff
     for step in steps:
         step = step.lower()
-        os.system("cp %s/javascript/%s.js %s/."%(utils,step,prefix))
-    os.system("cp %s/Logs/COMMANDS.log %s/pipeline.commands"%(MA_dir,prefix))
-    os.system("cp %s/pipeline.run %s/pipeline.summary"%(MA_dir,prefix))
+        os.system("cp %s/javascript/%s.js %s/."%(utils,step,html_prefix))
+    os.system("cp %s/Logs/COMMANDS.log %s/pipeline.commands"%(MA_dir,html_prefix))
+    os.system("cp %s/pipeline.run %s/pipeline.summary"%(MA_dir,html_prefix))
+
     # generate dynamic java scripts
-    os.system("python %s/python/get_classify_stats.py %s/propagate.in.clusters %s/propagate.out.clusters %s/DB/tax_key.tab %s classify.js propagate.js"%(utils, prefix, prefix, utils, prefix)) 
+    # first classify and propagate
+    os.system("python %s/python/get_classify_stats.py %s/propagate.in.clusters %s/propagate.out.clusters %s/DB/tax_key.tab %s classify.js propagate.js %s"%(utils, html_prefix, html_prefix, utils, html_prefix, taxa_level)) 
+
+    # generate preprocess
+    preprocess = markup.page()
+    preprocess.p()
+
+    nQC = 0
+    for i in range(1, nLibs + 1):
+        if os.path.exists("%s/lib%d.1.fastqc/fastqc_report.html"%(html_prefix, i)):
+            nQC = nQC + 1
+
+    summary = open("%s/pipeline.ini"%(MA_dir), 'r')
+    libcnt = 1
+    format = None 
+    mmin = 0
+    mmax = 0
+    mated = False
+    interleaved = False
+    innie = False
+    linkerType = ""
+    libadded = False
+    firstLib = True
+    for line in summary:
+       line = line.replace("\n","")
+       if "#" in line:
+          continue
+       elif "asmcontigs:" in line:
+          asmc = line.replace("\n","").split("\t")[-1]
+          if len(asmc) <= 2:
+             continue
+          preprocess.add("Supplied assembly: %s"%(asmc))
+          preprocess.br()
+       elif "format:" in line:
+          if format and not libadded:
+             outputLibraryInfo(html_prefix, preprocess, firstLib, libcnt, format, mated, interleaved, mmin, mmax, nQC > 0)
+             libcnt += 1
+          libadded = False
+          format = line.replace("\n","").split("\t")[-1]
+       elif "mated:" in line:
+          mated = line.replace("\n","").split("\t")[-1]
+       elif "innie:" in line:
+         innie = line.replace("\n","").split("\t")[-1]
+       elif "linker:" in line:
+         linkerType = line.replace("\n","").split("\t")[-1]
+       elif "interleaved:" in line:
+         interleaved = line.replace("\n","").split("\t")[-1]
+       elif "f1:" in line:
+          data = line.split("\t")
+
+          inf = data[1].split(",")
+          mmin = int(inf[1])
+          mmax = int(inf[2])
+       elif "f2:" in line:
+          data = line.split("\t")
+
+          inf = data[1].split(",")
+          mmin = int(inf[1])
+          mmax = int(inf[2])
+
+          libadded = True
+       elif "frg" in line:
+          data = line.split("\t")
+          mated = False
+          libadded = True
+    if format and not libadded:
+       outputLibraryInfo(html_prefix, preprocess, firstLib, libcnt, format, mated, interleaved, mmin, mmax, nQC > 0)
+    preprocess.table.close()
+    summary.close()
+
+    preprocess_out = open("%s/preprocess.js"%(html_prefix), 'w')
+    preprocess_out.write("preprocessHTML = '%s'"%(preprocess.__str__().replace("\n", "\\\n")))
+    preprocess_out.close()
     
     # todo, need to add report for MapReads including # reads mapped (%), contig coverage histogram, and % reads between contigs and number of links histogram. Also re-estimated insert sizes for each lib
+    mapreads = markup.page()
+    mapreads.img(src_="hist_ctgcvg.png",height_="100%",width_="100%")
+    mapreads_out = open("%s/mapreads.js"%(html_prefix), 'w')
+    mapreads_out.write("mapreadsHTML = '%s'"%(mapreads.__str__().replace("\n", "\\\n")))
 
     ##This will create ScaffoldSizes.png,ContigSizes.png
     
     ##create code to automatically generate .js files for HTML report
     ## let's start with Abundance
-    #abundance_js = open(prefix+"abundance.js",'w')
+    #abundance_js = open(html_prefix+"abundance.js",'w')
     
     rdata = []
     for line in report:
         rdata.append(line)
        
-    if not os.path.exists(prefix+"covstats.out"):
-        os.system("%s/analyze-read-depth -x 2 %s > %scovstats.out"%(rund,sys.argv[2],prefix))
-    ff = open(prefix+"covstats.out",'r')
+    if not os.path.exists(html_prefix+"covstats.out"):
+        os.system("%s/analyze-read-depth -x 2 %s > %scovstats.out"%(rund,sys.argv[2],html_prefix))
+    ff = open(html_prefix+"covstats.out",'r')
     covdata = []
     #covdata = ff.readlines()
     #zflag = 0
     for line in ff:
         covdata.append(line)
     
-    if not os.path.exists(prefix+"stats.out"):
-        os.system("%s/astats %s > %sstats.out"%(rund,sys.argv[2],prefix))
-    dd = open(prefix+"stats.out",'r')
+    if not os.path.exists(html_prefix+"stats.out"):
+        os.system("%s/astats %s > %sstats.out"%(rund,sys.argv[2],html_prefix))
+    dd = open(html_prefix+"stats.out",'r')
     ddata = dd.readlines()
 
     ddf = ""
@@ -212,7 +331,7 @@ if __name__ == "__main__":
 
     # Download the chart
     try:
-        chart2.download(prefix+'abund.png')
+        chart2.download(html_prefix+'abund.png')
     except:
         print "Warning: could not download abund.png"
 
@@ -241,7 +360,7 @@ if __name__ == "__main__":
     chart.set_axis_positions(index, [50])
     
     try:
-        chart.download(prefix+'bar-phylum.png')
+        chart.download(html_prefix+'bar-phylum.png')
     except:
         print "Warning: could not download bar-phylum.png"
     
@@ -397,7 +516,7 @@ if __name__ == "__main__":
     page.table.close()
     #page.ul.close()
     page.div.close()
-    #page.li("<a href=\"http://cbcb.umd.edu/software/metamos\">metAMOS website</a>")    
+    #page.li("<a target=\"_blank\" href=\"http://cbcb.umd.edu/software/metamos\">metAMOS website</a>")    
     #page.li("<a href=\"http://cbcb.umd.edu/~mpop/Software.shtml\">Related software</a>")
     #page.li("<a href=\"http://cbcb.umd.edu\">CBCB</a>")
     
@@ -405,33 +524,7 @@ if __name__ == "__main__":
     #page.ul.close( )
     #page.div.close()
     page.div( id_="content", style="background-color:#FFFFFF;float:left;width:58%%;height:12%%;border:1px %s"%(textColor))
-    nQC = 0
-    for i in range(1, nLibs + 1):
-        if os.path.exists("%s/lib%d.1.fastqc/fastqc_report.html"%(prefix, i)):
-            nQC = nQC + 1
-    
-    if nQC > 0:
-        page.p("FastQC quality reports")
-        page.table()
-        page.tr()
-        page.th("Library")
-        page.th("First")
-        page.th("Second")
-        page.tr.close()
-        for i in range(1, nLibs + 1):
-#            print "%s/lib%d.1.fastqc.html"%(prefix, i)
-            if os.path.exists("%s/lib%d.1.fastqc/fastqc_report.html"%(prefix, i)):
-                page.tr()
-                page.td(i)
-                page.td('<a target="_blank" href="%s/lib%d.1.fastqc/fastqc_report.html">report</a>'%(prefix, i))
-                if os.path.exists("%s/lib%d.2.fastqc/fastqc_report.html"%(prefix, i)):
-                    page.td('<a target="_blank" href="%s/lib%d.2.fastqc/fastqc_report.html">report</a>'%(prefix, i))
-                else:
-                    page.td()
-                page.tr.close()
-        page.table.close()
-        page.br()
-    
+
     # TODO: do we want this? also, test -BDO
     #if os.path.exists("%s/Annotate/out/report.krona.html"%prefix):
     #    page.iframe(src="%s/Annotate/out/report.krona.html"%prefix, width="100%", height="600px")
@@ -479,7 +572,7 @@ if __name__ == "__main__":
                 if index == 8 or index == 7:
                     continue
                 elif index == 1 and "File" not in item:
-                    page.td("<a href=\""+ref_asm+"\">%s</a>"%(ref_asm.split("/")[-1]))
+                    page.td("<a target=\"_blank\" href=\""+ref_asm+"\">%s</a>"%(ref_asm.split("/")[-1]))
                     continue
 
                 page.td("<p style=\"font-size:15px\">"+item+"</p>")
@@ -538,6 +631,6 @@ if __name__ == "__main__":
     #page.img( hspace=10, width=600, height=500, alt='Abundance', src='bar-phylum.png' )
     page.div.close()
 
-    fout = open(prefix+"summary.html",'w')
+    fout = open(html_prefix+"summary.html",'w')
     fout.write(page.__str__())
     fout.close()

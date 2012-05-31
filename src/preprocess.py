@@ -665,7 +665,15 @@ def Preprocess(input,output):
                    fastqFiles.append("%s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir, lib.id))
                else:
                    fastqFiles.append("%s/Preprocess/out/lib%d.unmated.fastq"%(_settings.rundir, lib.id))
-           if lib.format == "fastq" or lib.format == "sff":
+           elif lib.format == "fasta":
+              # fastq files will have been generated
+              if lib.mated and not lib.interleaved:
+                 fastqFiles.append("%s/Preprocess/out/lib%d.1.fastq"%(_settings.rundir, lib.id))
+                 fastqFiles.append("%s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir, lib.id))
+              else:
+                 fastqFiles.append("%s/Preprocess/out/lib%d.fastq"%(_settings.rundir, lib.id))
+
+           if lib.format == "fastq" or lib.format == "sff" or lib.format == "fasta":
                reportNames.append("lib%d.1"%(lib.id))
                if lib.mated == True and not lib.interleaved:
                    reportNames.append("lib%d.2"%(lib.id))

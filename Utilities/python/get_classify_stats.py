@@ -1,7 +1,10 @@
 #!/usr/bin/python
 
-import sys
-import os
+import sys, os, string
+ROOT = os.path.dirname(os.path.abspath(__file__))
+#sys.path.insert(0, os.path.join(ROOT, '..'))
+#sys.path.append(ROOT+"/lib")
+import  markup, datetime
 
 contigs_by_class = { }
 origContigsByClass = { }
@@ -15,8 +18,9 @@ class_file = open(sys.argv[2])
 class_key = open(sys.argv[3])
 #pass outdir as argument
 out_dir = sys.argv[4]
-orig_out = open(out_dir + os.sep + sys.argv[5], 'w')
-out = open(out_dir + os.sep + sys.argv[6], 'w')
+out = open(out_dir + os.sep + sys.argv[5], 'w')
+orig_out = open(out_dir + os.sep + sys.argv[6], 'w')
+taxa_level = sys.argv[7]
 
 # parse in key file
 for line in class_key:
@@ -68,30 +72,40 @@ for line in class_file:
 
 # output stats
 # todo: add info on ORFs and read counts
-summary = []
-summary.append("<p>Originally classified contigs:")
-summary.append("<table>")
+summary = markup.page()
+summary.p("Originally classified contigs:")
+summary.table(border="1")
 for key in origContigsByClass:
    class_name = id_class[key]
-   summary.append("<tr>")
-   summary.append("<td align=\"left\">%s</td><td align=\"right\">%d</td><td align=\"right\">%3.2f%%</td>"%(class_name, origContigsByClass[key], origContigsByClass[key]/float(origClassifiedCount)*100))
-   summary.append("</tr>")
-summary.append("</table>")
-summary.append("Total classified: %d </p>"%(origClassifiedCount))
-orig_out.write("var classifyHTML ='%s'"%("\\\n".join(summary)))
-summary = []
+   summary.tr()
+   summary.add("<td align=\"left\">%s</td><td align=\"right\">%d</td><td align=\"right\">%3.2f%%</td>"%(class_name, origContigsByClass[key], origContigsByClass[key]/float(origClassifiedCount)*100))
+   summary.tr.close()
+summary.tr()
+summary.add("<td align=\"left\"Total classified:</td><td align=\"right\">%d</td>"%(origClassifiedCount))
+summary.tr.close()
+summary.table.close()
 
-summary.append("<p>Propagate classified contigs:")
-summary.append("<table>")
+classify = markup.page()
+classify.p("Classified contigs:")
+classify.table(border="1")
 for key in contigs_by_class:
     class_name = id_class[key]
-    summary.append("<tr>")
-    summary.append("<td align=\"left\">%s</td><td align=\"right\">%d</td><td align=\"right\">%3.2f%%</td>"%(class_name, contigs_by_class[key], contigs_by_class[key]/float(classifiedCount)*100))
-    summary.append("</tr>")
-summary.append("</table>")
+    classify.tr()
+    classify.add("<td align=\"left\"><a target=\"_blank\" href=\"%s.classified/%s/%s.fasta\">%s</a></td><td align=\"right\">%d</td><td align=\"right\">%3.2f%%</td>"%(taxa_level, class_name, class_name, class_name, contigs_by_class[key], contigs_by_class[key]/float(classifiedCount)*100))
+    classify.tr.close()
+classify.tr()
+classify.add("<td align=\"left\"Total classified:</td><td align=\"right\">%d</td>"%(classifiedCount))
+classify.tr.close()
+classify.table.close()
+
 additional = classifiedCount - origClassifiedCount 
 if additional >= 0:
-   summary.append("Total additional classified contigs: %d</p>"%(additional))
+   summary.p("Total additional classified contigs: %d"%(additional))
 else:
-   summary.append("Total contigs classified as unknown from known: %d</p>"%(abs(additional)))
-out.write("var propagateHTML='%s'"%("\\\n".join(summary)))
+   summary.p("Total contigs classified as unknown from known: %d"%(abs(additional)))
+summary.p.close();
+orig_out.write("var propagateHTML = '%s'"%(summary.__str__().replace("\n", "\\\n")))
+out.write("var classifyHTML = '%s'"%(classify.__str__().replace("\n", "\\\n")))
+
+orig_out.close()
+out.close()

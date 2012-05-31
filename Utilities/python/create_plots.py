@@ -43,6 +43,7 @@ class Sample:
         self.directory = directory
         self.args = args
         self.ctg_sizes = {}
+        self.ctgcvg_values = {}
         self.sf_sizes = {}
         self.ctg_features = {}
         self.orf_sizes = {}
@@ -85,6 +86,8 @@ ORF_PATH = "/FindORFS/out/"
 ORF_file = ".orfs.ffn"
 SCFORF_PATH = "/FindScaffoldORFS/out/"
 SCFORF_file = ".orfs.ffn"
+ASSEMBLY = "/Assemble/out/"
+Cvg_file = ".contig.cvg"
 
 handle = open(sys.argv[1], "r")
 TITLE = sys.argv[2]
@@ -131,6 +134,17 @@ for line in handle.xreadlines():
         sample.scforflist_sizes = sorted(sample.scforf_sizes.values(), reverse=True)
         print " sforf_size " + str(len(sample.scforf_sizes))
 
+        cvgs = open(dir + ASSEMBLY + METAMOS_prefix + Cvg_file, 'r')
+        counter = 1
+        for line in cvgs:
+           splitLine = line.replace("\n","").split("\t")
+           if len(splitLine) < 2:
+              continue
+           sample.ctgcvg_values[counter] = float(splitLine[1])
+           counter += 1
+        sample.ctgcvg_values = sorted(sample.ctgcvg_values.values(), reverse=True)
+        print " ctgcvg_size " + str(len(sample.ctgcvg_values))
+        cvgs.close() 
 
         samples.append(sample)
 
@@ -139,60 +153,83 @@ for line in handle.xreadlines():
 c = 0
 h = []
 for s in samples:
+    c += len(s.list_sizes)
     h.append(s.list_sizes)
 
-n, bins, patches = plt.hist(h,  100)
-plt.ylabel('Contigs Count')
-plt.xlabel('Contigs Size')
-plt.title(r'Contig Size histogram')
-plt.grid(True)
-plt.savefig('hist_contigs.png')
-plt.close()
+if c > 0:
+   n, bins, patches = plt.hist(h,  100)
+   plt.ylabel('Contigs Count')
+   plt.xlabel('Contigs Size')
+   plt.title(r'Contig Size histogram')
+   plt.grid(True)
+   plt.savefig('hist_contigs.png')
+   plt.close()
 c += 1
 
 c = 0
 h = []
 for s in samples:
+    c += len(s.sfsort_sizes)
     h.append(s.sfsort_sizes)
 
-n, bins, patches = plt.hist(h,  100)
-plt.ylabel('Scaffold Count')
-plt.xlabel('Scaffold Size')
-plt.title(r'Scaffold Size histogram')
-plt.grid(True)
-plt.savefig('hist_scaffold.png')
-plt.close()
+if c > 0:
+   n, bins, patches = plt.hist(h,  100)
+   plt.ylabel('Scaffold Count')
+   plt.xlabel('Scaffold Size')
+   plt.title(r'Scaffold Size histogram')
+   plt.grid(True)
+   plt.savefig('hist_scaffold.png')
+   plt.close()
 c += 1
 
 c = 0
 h = []
 for s in samples:
+    c += len(s.orflist_sizes)
     h.append(s.orflist_sizes)
 
-n, bins, patches = plt.hist(h,  100)
-plt.ylabel('ORF Count')
-plt.xlabel('ORF Size')
-plt.title(r'ORF Size histogram')
-plt.grid(True)
-plt.savefig('hist_orf.png')
-plt.close()
+if c > 0:
+   n, bins, patches = plt.hist(h,  100)
+   plt.ylabel('ORF Count')
+   plt.xlabel('ORF Size')
+   plt.title(r'ORF Size histogram')
+   plt.grid(True)
+   plt.savefig('hist_orf.png')
+   plt.close()
 c += 1
 
 c = 0
 h = []
 for s in samples:
+    c + len(s.scforflist_sizes)
     h.append(s.scforflist_sizes)
 
-n, bins, patches = plt.hist(h,  100)
-plt.ylabel('Scaffold ORF Count')
-plt.xlabel('Scaffold ORF Size')
-plt.title(r'Scaffold ORF Size histogram')
-plt.grid(True)
-plt.savefig('hist_scforf.png')
-plt.close()
+if c > 0:
+   n, bins, patches = plt.hist(h,  100)
+   plt.ylabel('Scaffold ORF Count')
+   plt.xlabel('Scaffold ORF Size')
+   plt.title(r'Scaffold ORF Size histogram')
+   plt.grid(True)
+   plt.savefig('hist_scforf.png')
+   plt.close()
+c += 1
+
+c = 0
+h = []
+for s in samples:
+    c += len(s.ctgcvg_values)
+    h.append(s.ctgcvg_values)
+
+if c > 0:
+   n, bins, patches = plt.hist(h,  100)
+   plt.ylabel('Contig Count')
+   plt.xlabel('Contig Coverage')
+   plt.title(r'Contig Coverage histogram')
+   plt.grid(True)
+   plt.savefig('hist_ctgcvg.png')
+   plt.close()
 c += 1
 ######
-
 
 # contig size plot
 c = 0

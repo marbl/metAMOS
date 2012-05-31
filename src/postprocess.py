@@ -98,13 +98,11 @@ def Postprocess(input,output):
        run_process(_settings, "ln -s %s/Annotate/out/report.krona.html %s/Postprocess/out/report.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
 
    # create sym links
-   run_process(_settings, "unlink %s/Postprocess/out/propagate.in.clusters"%(_settings.rundir), "Postprocess")
-   run_process(_settings, "ln -s %s/Propagate/in/%s.clusters %s/Postprocess/out/propagate.in.clusters"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
-   run_process(_settings, "unlink %s/Postprocess/out/propagate.out.clusters"%(_settings.rundir), "Postprocess")
-   run_process(_settings, "ln -s %s/Propagate/out/%s.clusters %s/Postprocess/out/propagate.out.clusters"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
-
    run_process(_settings, "unlink %s/Postprocess/out/abundance.krona.html"%(_settings.rundir), "Postprocess")
    run_process(_settings, "ln -s %s/Abundance/out/report.krona.html %s/Postprocess/out/abundance.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
+
+   run_process(_settings, "unlink %s/Postprocess/out/%s.classified"%(_settings.rundir, _settings.taxa_level), "Postprocess")
+   run_process(_settings, "ln -s %s/Classify/out %s/Postprocess/out/%s.classified"%(_settings.rundir, _settings.rundir, _settings.taxa_level), "Postprocess")
 
    #command to open webbrowser?
    #try to open Krona output
@@ -116,16 +114,39 @@ def Postprocess(input,output):
            print "ERROR: No Krona html file available! skipping"
    #webbrowser.open_new(output.html)
    #webbrowser.open_new_tab(output.html)
-   run_process(_settings, "cp -r %s/Preprocess/out/*.fastqc %s/Postprocess/out"%(_settings.rundir, _settings.rundir), "Postprocess")
+
+   run_process(_settings, "ln -s %s/Annotate/out/%s.annots %s/Postprocess/out/"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
    run_process(_settings, "cp %s/Abundance/out/%s.classify.txt %s/Postprocess/out/. "%(_settings.rundir,_settings.PREFIX,_settings.rundir),"Postprocess")
    run_process(_settings, "cp %s/Scaffold/out/%s.linearize.scaffolds.final %s/Postprocess/out/%s.scf.fa"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Postprocess")
+   run_process(_settings, "cp %s/Scaffold/out/%s.contigs %s/Postprocess/out/%s.ctg.fa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
    run_process(_settings, "ln -t %s/Postprocess/out/ -s %s/Scaffold/in/%s.bnk "%(_settings.rundir,_settings.rundir,_settings.PREFIX),"Postprocess")
+   # todo: add coverage
+
 #   print "python %s/python/create_report.py %s/Abundance/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/ %s/Postprocess/out/%s.scf.fa %s %s %d"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.AMOS, len(_readlibs))
-   run_process(_settings, "python %s/python/create_summary.py %s/Abundance/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/ %s/Postprocess/out/%s.scf.fa %s %s %d"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.AMOS, len(_readlibs)),"Postprocess")
+
+   # create html report
+   run_process(_settings, "unlink %s/Postprocess/out/html"%(_settings.rundir), "Postprocess")
+   run_process(_settings, "mkdir  %s/Postprocess/out/html"%(_settings.rundir), "Postprocess")
+
+   # create necessary links to higher-level dir
+   run_process(_settings, "unlink %s/Postprocess/out/html/%s.classified"%(_settings.rundir, _settings.taxa_level), "Postprocess")
+   run_process(_settings, "ln -s %s/Postprocess/out/%s.classified %s/Postprocess/out/html/%s.classified"%(_settings.rundir, _settings.taxa_level, _settings.rundir, _settings.taxa_level), "Postprocess")
+   run_process(_settings, "unlink %s/Postprocess/out/html/report.krona.html"%(_settings.rundir), "Postprocess")
+   run_process(_settings, "ln -s %s/Postprocess/out/report.krona.html %s/Postprocess/out/html/"%(_settings.rundir, _settings.rundir), "Postprocess")
+   run_process(_settings, "unlink %s/Postprocess/out/html/abundance.krona.html"%(_settings.rundir), "Postprocess")
+   run_process(_settings, "ln -s %s/Postprocess/out/abundance.krona.html %s/Postprocess/out/html/"%(_settings.rundir, _settings.rundir), "Postprocess")
+
+   # create html-only files
+   run_process(_settings, "mv %s/Preprocess/out/*.fastqc %s/Postprocess/out/html"%(_settings.rundir, _settings.rundir), "Postprocess")
+   run_process(_settings, "unlink %s/Postprocess/out/html/propagate.in.clusters"%(_settings.rundir), "Postprocess")
+   run_process(_settings, "ln -s %s/Propagate/in/%s.clusters %s/Postprocess/out/html/propagate.in.clusters"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
+   run_process(_settings, "unlink %s/Postprocess/out/html/propagate.out.clusters"%(_settings.rundir), "Postprocess")
+   run_process(_settings, "ln -s %s/Propagate/out/%s.clusters %s/Postprocess/out/html/propagate.out.clusters"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
+
+   run_process(_settings, "python %s/python/create_summary.py %s/Abundance/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/html/ %s/Postprocess/out/%s.scf.fa %s %s %d %s"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.AMOS, len(_readlibs), _settings.taxa_level),"Postprocess")
    #webbrowser.open_new_tab(createreport.html)
    if openbrowser:
-       if os.path.exists("%s/Postprocess/out/summary.html"%(_settings.rundir)):
-           webbrowser.open_new_tab("%s/Postprocess/out/summary.html"%(_settings.rundir))
+       if os.path.exists("%s/Postprocess/out/html/summary.html"%(_settings.rundir)):
+           webbrowser.open_new_tab("%s/Postprocess/out/html/summary.html"%(_settings.rundir))
        else:
            print "ERROR: No Summary html file available! skipping"
-

@@ -473,6 +473,10 @@ def run_process(settings,command,step=""):
               commandf.write("# [%s]\n"%(step))
               outf = open(settings.rundir+os.sep+"Logs"+os.sep+step+".log",'w')
               settings.task_dict.append(step)
+
+              # create started file
+              startedf = open(settings.rundir + os.sep + "Logs" + os.sep + step.lower() + ".started", 'w')
+              startedf.close()
            else:
               outf = open(settings.rundir+os.sep+"Logs"+os.sep+step+".log",'a')
 

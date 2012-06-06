@@ -176,7 +176,7 @@ supported_taxonomic = ["kingdom", "phylum", "class", "order", "family", "genus",
 
 selected_programs = {}
 selected_programs["assemble"] = "soap"
-selected_programs["findorfs"] = "metagenemark"
+selected_programs["findorfs"] = "fraggenescan"
 selected_programs["mapreads"] = "bowtie"
 selected_programs["abundance"] = "metaphyler"
 selected_programs["classify"] = "fcp"

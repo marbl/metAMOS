@@ -38,8 +38,15 @@ def init(reads, skipsteps, retainBank, asm):
 @posttask(touch_file("%s/Logs/scaffold.ok"%(_settings.rundir)))
 @files(["%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX)],"%s/Scaffold/out/%s.scaffolds.final"%(_settings.rundir,_settings.PREFIX))
 def Scaffold(input,output):
+   global _retainBank
+
    # check if we need to do scaffolding
    numMates = 0
+
+   # check if we need to retain the bank
+   if not os.path.isdir("%s/Scaffold/in/%s.bnk"%(_settings.rundir, _settings.PREFIX)):
+      print "Warning: cannot retain bank, it does not exist yet\n"
+      _retainBank = False
 
    if not _retainBank:
        run_process(_settings, "rm -rf %s/Scaffold/in/%s.bnk"%(_settings.rundir,_settings.PREFIX),"Scaffold")

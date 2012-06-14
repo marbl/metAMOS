@@ -543,7 +543,7 @@ def Preprocess(input,output):
            #this means interleaved, single file
            if lib.format == "sff":
                run_process(_settings, "unlink %s/Preprocess/out/lib%d.sff"%(_settings.rundir, lib.id), "Preprocess")
-               run_process(_settings, "ln -s %s %s/Preprocess/out/lib%d.sff"%(read.path, _settings.rundir, lib.id), "Preprocess")
+               run_process(_settings, "ln -s %s/Preprocess/in/%s %s/Preprocess/out/lib%d.sff"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")
 
                if _asm == "newbler":
                   if _run_fastqc:

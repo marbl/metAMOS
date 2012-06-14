@@ -168,7 +168,10 @@ foreach my $input (@ARGV)
                         $taxName,
 			$magnitude
 
-		   ) = split /\s/, $line;
+		    ) = split /\s/, $line;
+                    if (!defined($taxName)) {
+                       next;
+                    }
 
                     # pick the lowest classified level to use
                     my $bestTaxa = $ids{lc($taxName)};

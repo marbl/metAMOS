@@ -163,6 +163,7 @@ if c > 0:
    plt.title(r'Contig Size histogram')
    plt.grid(True)
    plt.savefig('hist_contigs.png')
+   plt.savefig('hist_contigs.pdf', format='pdf')
    plt.close()
 c += 1
 
@@ -179,6 +180,7 @@ if c > 0:
    plt.title(r'Scaffold Size histogram')
    plt.grid(True)
    plt.savefig('hist_scaffold.png')
+   plt.savefig('hist_scaffold.pdf', format='pdf')
    plt.close()
 c += 1
 
@@ -195,6 +197,7 @@ if c > 0:
    plt.title(r'ORF Size histogram')
    plt.grid(True)
    plt.savefig('hist_orf.png')
+   plt.savefig('hist_orf.pdf', format='pdf')
    plt.close()
 c += 1
 
@@ -211,6 +214,7 @@ if c > 0:
    plt.title(r'Scaffold ORF Size histogram')
    plt.grid(True)
    plt.savefig('hist_scforf.png')
+   plt.savefig('hist_scforf.pdf', format='pdf')
    plt.close()
 c += 1
 
@@ -227,6 +231,7 @@ if c > 0:
    plt.title(r'Contig Coverage histogram')
    plt.grid(True)
    plt.savefig('hist_ctgcvg.png')
+   plt.savefig('hist_ctgcvg.png', format='pdf')
    plt.close()
 c += 1
 ######
@@ -267,9 +272,10 @@ ax = plt.gca()
 ax.set_xlim(ax.get_xlim()[::-1])
 plt.ylabel('Total Size')
 plt.xlabel('Contig Size')
-plt.title(TITLE + 'N50 plot')
+plt.title(TITLE + ' N50 plot')
 plt.legend()
 plt.savefig('ContigSizes.png')
+plt.savefig('ContigSizes.pdf', format='pdf')
 plt.close()
 
 # ORF size plot
@@ -286,6 +292,7 @@ plt.xlabel('ORF Size')
 plt.title(TITLE + ' N50 plot')
 plt.legend()
 plt.savefig('ORFSizes.png')
+plt.savefig('ORFSizes.pdf', format='pdf')
 plt.close()
 
 # Scaffold ORF size plot
@@ -302,6 +309,7 @@ plt.xlabel('Scaffold ORF Size')
 plt.title(TITLE + ' N50 plot')
 plt.legend()
 plt.savefig('SCFORFSizes.png')
+plt.savefig('SCFORFSizes.pdf', format='pdf')
 plt.close()
 
 # scaffold size plot
@@ -318,6 +326,7 @@ plt.xlabel('Scaffold Size')
 plt.title(TITLE + ' N50 plot')
 plt.legend()
 plt.savefig('ScaffoldSizes.png')
+plt.savefig('ScaffoldSizes.pdf', format='pdf')
 plt.close()
 
 
@@ -331,6 +340,7 @@ plt.xlabel('Cumulative Contig')
 plt.title(TITLE + ' Contig (Cumulative) ')
 plt.legend(loc=4)
 plt.savefig('ContigSizes2.png')
+plt.savefig('ContigSizes2.pdf', format='pdf')
 plt.close()
 
 
@@ -345,6 +355,7 @@ plt.xlabel('Cumulative Scaffold')
 plt.title(TITLE + ' Scaffold (Cumulative) ')
 plt.legend(loc=4)
 plt.savefig('ScaffoldSizes2.png')
+plt.savefig('ScaffoldSizes2.pdf', format='pdf')
 plt.close()
 
 

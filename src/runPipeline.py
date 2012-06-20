@@ -598,10 +598,12 @@ if __name__ == "__main__":
                          abundance.Abundance, scaffold.Scaffold, \
                          findscforfs.FindScaffoldORFS, propagate.Propagate, \
                          classify.Classify, postprocess.Postprocess], verbose=1)
-       pipeline_printout_graph (   'flowchart.svg',
-                            'svg',
-                            [postprocess.Postprocess],
-                            no_key_legend = True)
+
+       if not utils.getFromPath("dot", "Graphviz") == "":
+          pipeline_printout_graph (   'flowchart.svg',
+                               'svg',
+                               [postprocess.Postprocess],
+                               no_key_legend = True)
 
        printConfiguration()
        printConfiguration("%s/pipeline.run"%(settings.rundir))

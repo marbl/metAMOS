@@ -231,7 +231,7 @@ if c > 0:
    plt.title(r'Contig Coverage histogram')
    plt.grid(True)
    plt.savefig('hist_ctgcvg.png')
-   plt.savefig('hist_ctgcvg.png', format='pdf')
+   plt.savefig('hist_ctgcvg.pdf', format='pdf')
    plt.close()
 c += 1
 ######

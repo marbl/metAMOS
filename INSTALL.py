@@ -131,7 +131,7 @@ if not os.path.exists("./AMOS"):
     else:
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
-        os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/amos-%s-%s.binaries.tar.gz -O ./amos-binaries.tar.gz"%(OSTYPE, MACHINETYPE))
+        os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/amos-3.2-BETA-%s-%s.binaries.tar.gz -O ./amos-binaries.tar.gz"%(OSTYPE, MACHINETYPE))
         os.system("tar -xvf amos-binaries.tar.gz")
         os.system("rm -rf amos-binaries.tar.gz")
 

@@ -16,7 +16,7 @@ def read(fname):
 
 setup(
     name = "metAMOS",
-    version = "0.35",
+    version = "1.0b",
     author = "Todd J. Treangen",
     author_email = "treangen+metAMOS@gmail.com",
     description = ("A metagenomic assembly all-in-one pipeline."),

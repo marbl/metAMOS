@@ -18,3 +18,5 @@ glimmermg	Glimmer-MG	Kelley DR, Liu B, Delcher AL, Pop M, Salzberg SL. Gene pred
 sparseassembler	Sparse Assembler	Ye C, Ma ZS, Cannon CH, Pop M, Yu DW. Exploiting sparseness in de novo genome assembly. BMC Bioinformatics. 2012 Apr 19;13 Suppl 6:S1.
 metaphyler	MetaPhyler	Liu B, Gibbons T, Ghodsi M, Treangen T, Pop M. Accurate and fast estimation of taxonomic profiles from metagenomic shotgun sequences. BMC Genomics. 2011;12 Suppl 2:S4. Epub 2011 Jul 27.
 newbler	Newbler
+velvet-sc	Velvet-SC	Chitsaz H, Yee-Greenbaum JL, Tesler G, Lombardo MJ, Dupont CL, Badger JH, Novotny M, Rusch DB, Fraser LJ, Gormley NA, Schulz-Trieglaff O, Smith GP, Evers DJ, Pevzner PA, Lasken RL. Efficient de novo assembly of single-cell bacterial genomes from short-read data sets. Nature Biotechnology, vol. 29, no. 11, pp. 915-921 (2011) 
+krona	Krona	Ondov BD, Bergman NH, Phillippy AM. Interactive metagenomic visualization in a Web browser. BMC Bioinformatics. 2011 Sep 30;12:385.

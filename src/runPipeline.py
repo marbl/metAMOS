@@ -175,7 +175,7 @@ supported_programs["scaffold"] = supported_scaffolders
 supported_taxonomic = ["kingdom", "phylum", "class", "order", "family", "genus", "species"]
 
 selected_programs = {}
-selected_programs["assemble"] = "soap"
+selected_programs["assemble"] = "soapdenovo"
 selected_programs["findorfs"] = "fraggenescan"
 selected_programs["mapreads"] = "bowtie"
 selected_programs["abundance"] = "metaphyler"
@@ -333,7 +333,7 @@ for o, a in opts:
         
         if not foundit:
             print "!!Sorry, %s is not a supported assembler. Using SOAPdenovo instead"%(selected_programs["assemble"])
-            selected_programs["assemble"] = "soap"
+            selected_programs["assemble"] = "soapdenovo"
 
         
     elif o in ("-g","--genecaller"):

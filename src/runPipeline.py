@@ -37,7 +37,7 @@ from ruffus import *
 t1 = time.time()
 
 def usage():
-    print "usage: runPipeline.py [options] -d projectdir"
+    print "usage: runPipeline [options] -d projectdir"
     print "   -h = <bool>:   print help [this message]"
     print "   -j = <bool>:   just output all of the programs and citations then exit (default = NO)"
     print "   -v = <bool>:   verbose output? (default = NO)"
@@ -158,7 +158,7 @@ except getopt.GetoptError, err:
 
 supported_programs = {}
 supported_genecallers = ["fraggenescan","metagenemark","glimmermg"]
-supported_assemblers = ["soapdenovo","newbler","ca","velvet","metavelvet",\
+supported_assemblers = ["soapdenovo","newbler","ca","velvet","velvet-sc","metavelvet",\
                             "metaidba","sparseassembler","minimus"]
 supported_mappers = ["bowtie"]
 supported_abundance = ["metaphyler"]
@@ -175,7 +175,7 @@ supported_programs["scaffold"] = supported_scaffolders
 supported_taxonomic = ["kingdom", "phylum", "class", "order", "family", "genus", "species"]
 
 selected_programs = {}
-selected_programs["assemble"] = "soap"
+selected_programs["assemble"] = "soapdenovo"
 selected_programs["findorfs"] = "fraggenescan"
 selected_programs["mapreads"] = "bowtie"
 selected_programs["abundance"] = "metaphyler"
@@ -333,7 +333,7 @@ for o, a in opts:
         
         if not foundit:
             print "!!Sorry, %s is not a supported assembler. Using SOAPdenovo instead"%(selected_programs["assemble"])
-            selected_programs["assemble"] = "soap"
+            selected_programs["assemble"] = "soapdenovo"
 
         
     elif o in ("-g","--genecaller"):

@@ -37,7 +37,7 @@ from ruffus import *
 t1 = time.time()
 
 def usage():
-    print "usage: runPipeline.py [options] -d projectdir"
+    print "usage: runPipeline [options] -d projectdir"
     print "   -h = <bool>:   print help [this message]"
     print "   -j = <bool>:   just output all of the programs and citations then exit (default = NO)"
     print "   -v = <bool>:   verbose output? (default = NO)"
@@ -158,7 +158,7 @@ except getopt.GetoptError, err:
 
 supported_programs = {}
 supported_genecallers = ["fraggenescan","metagenemark","glimmermg"]
-supported_assemblers = ["soapdenovo","newbler","ca","velvet","metavelvet",\
+supported_assemblers = ["soapdenovo","newbler","ca","velvet","velvet-sc","metavelvet",\
                             "metaidba","sparseassembler","minimus"]
 supported_mappers = ["bowtie"]
 supported_abundance = ["metaphyler"]

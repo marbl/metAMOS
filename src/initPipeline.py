@@ -64,7 +64,7 @@ class readLib:
         pass
 
 def usage():
-    print "usage: createProject.py -f/-q -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500 "
+    print "usage: initPipeline -f/-q -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500 "
     print "options: -s -c -q, -f, -1, -2, -d, -m, -i"
     print "-1: either non-paired file of reads or first file in pair, can be list of multiple separated by a comma"
     print "-2: second paired read file, can be list of multiple separated by a comma"

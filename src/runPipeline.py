@@ -268,7 +268,8 @@ for o, a in opts:
     elif o in ("-n", "--skipsteps"):
         skipsteps = a.split(",")
     elif o in ("-p", "--threads"):
-        utils.Settings.threads = int(a)
+        if int(a) > 0:
+            utils.Settings.threads = int(a)
     elif o in ("-d", "--projectdir"):
         utils.Settings.rundir = os.path.abspath(a)
         if not os.path.exists(a):
@@ -561,6 +562,8 @@ if "Propagate" in forcesteps:
 
 if __name__ == "__main__":
     print "Starting metAMOS pipeline"
+    if settings.threads < 1:
+        settings.threads = 1
     settings = utils.initConfig(settings.kmer, settings.threads, settings.rundir, settings.taxa_level, settings.VERBOSE, settings.OUTPUT_ONLY)
 
     import preprocess

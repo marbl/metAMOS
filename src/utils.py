@@ -491,7 +491,16 @@ def run_process(settings,command,step=""):
           else:
               p = subprocess.Popen(command, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,close_fds=True,executable="/bin/bash", cwd=workingDir)
           fstdout,fstderr = p.communicate()
-
+          rc = p.returncode
+          if rc != 0 and "rm " not in command:
+              print "**ERROR**"
+              print "The following command failed:"
+              print ">>",command
+              print "Please veryify input data and restart MetAMOS. If the problem persists please contact the MetAMOS development team."
+              print "**ERROR**"
+              print ""
+              print ""
+              sys.exit(rc)       
           if step == "":
               print fstdout,fstderr
           else:

@@ -492,7 +492,7 @@ def run_process(settings,command,step=""):
               p = subprocess.Popen(command, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,close_fds=True,executable="/bin/bash", cwd=workingDir)
           fstdout,fstderr = p.communicate()
           rc = p.returncode
-          if rc != 0 and "rm " not in command:
+          if rc != 0 and "rm " not in command and "ls " not in command and "unlink " not in command and "ln " not in command and "mkdir " not in command and "mv " not in command:
               print "**ERROR**"
               print "The following command failed:"
               print ">>",command

@@ -129,9 +129,9 @@ def runVelvet(velvetPath, name):
 
    # make symlinks
    run_process(_settings, "rm %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.PREFIX), "Assemble")
-   run_process(_settings, "ln -s %s/Assemble/out/velvet_asm.afg %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
+   run_process(_settings, "ln %s/Assemble/out/velvet_asm.afg %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
    run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")
-   run_process(_settings, "ln -s %s/Assemble/out/contigs.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
+   run_process(_settings, "ln %s/Assemble/out/contigs.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
 
 def runSparseAssembler(sparsePath, name):
    if not os.path.exists(sparsePath + os.sep + "SparseAssembler"):
@@ -150,13 +150,13 @@ def runSparseAssembler(sparsePath, name):
       if format == "fastq":
          libsAdded += 1
          if lib.mated:
-            run_process(_settings, "ln -s %s/Preprocess/out/lib%d.1.fastq %s/Assemble/out/lib%d.1.fastq"%(_settings.rundir,
+            run_process(_settings, "ln %s/Preprocess/out/lib%d.1.fastq %s/Assemble/out/lib%d.1.fastq"%(_settings.rundir,
  lib.id, _settings.rundir, lib.id), "Assemble")
-            run_process(_settings, "ln -s %s/Preprocess/out/lib%d.2.fastq %s/Assemble/out/lib%d.2.fastq"%(_settings.rundir,
+            run_process(_settings, "ln %s/Preprocess/out/lib%d.2.fastq %s/Assemble/out/lib%d.2.fastq"%(_settings.rundir,
  lib.id, _settings.rundir, lib.id), "Assemble")
             sparseLibLine += "p1 lib%d.1.fastq p2 lib%d.2.fastq"%(lib.id, lib.id)
          else:
-            run_process(_settings, "ln -s %s/Preprocess/out/lib%d.seq %s/Assemble/out/lib%d.seq"%(_settings,rundir, lib.id, settings_rundir, lib.id), "Assemble")
+            run_process(_settings, "ln %s/Preprocess/out/lib%d.seq %s/Assemble/out/lib%d.seq"%(_settings,rundir, lib.id, settings_rundir, lib.id), "Assemble")
             sparseLibLine += "f lib%d.fastq"%(lib.id)
 
    if libsAdded == 0:
@@ -174,7 +174,7 @@ def runSparseAssembler(sparsePath, name):
 
    # create symlinks
    run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")
-   run_process(_settings, "ln -s %s/Assemble/out/Contigs.txt %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
+   run_process(_settings, "ln %s/Assemble/out/Contigs.txt %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
 
 def runMetaVelvet(velvetPath, metavelvetPath, name):
    # check for metavelvet
@@ -209,9 +209,9 @@ def runMetaVelvet(velvetPath, metavelvetPath, name):
 
    # make symlinks
    run_process(_settings, "rm %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.PREFIX), "Assemble")
-   run_process(_settings, "ln -s %s/Assemble/out/meta-velvetg.asm.afg %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
+   run_process(_settings, "ln %s/Assemble/out/meta-velvetg.asm.afg %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
    run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")
-   run_process(_settings, "ln -s %s/Assemble/out/meta-velvetg.contigs.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
+   run_process(_settings, "ln %s/Assemble/out/meta-velvetg.contigs.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
        
 @posttask(touch_file("%s/Logs/assemble.ok"%(_settings.rundir))) 
 @files("%s/Preprocess/out/preprocess.success"%(_settings.rundir),["%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX)])
@@ -330,11 +330,11 @@ def Assemble(input,output):
     
       # make symlink for subsequent steps
       run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")
-      run_process(_settings, "ln -s %s/Assemble/out/assembly/454AllContigs.fna %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
+      run_process(_settings, "ln %s/Assemble/out/assembly/454AllContigs.fna %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
       if mated == True:
-         run_process(_settings, "ln -s %s/Assemble/out/assembly/454Scaffolds.fna %s/Assemble/out/%s.asm.scafSeq"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
+         run_process(_settings, "ln %s/Assemble/out/assembly/454Scaffolds.fna %s/Assemble/out/%s.asm.scafSeq"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
       else:
-         run_process(_settings, "ln -s %s/Assemble/out/assembly/454AllContigs.fna %s/Assemble/out/%s.asm.scafSeq"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
+         run_process(_settings, "ln %s/Assemble/out/assembly/454AllContigs.fna %s/Assemble/out/%s.asm.scafSeq"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
 
    elif _asm == "amos":
       run_process(_settings, "rm -rf %s/Assemble/in/%s.bnk"%(_settings.rundir, _settings.PREFIX), "Assemble")
@@ -369,7 +369,7 @@ def Assemble(input,output):
       run_process(_settings, "%s/gatekeeper -dumpfrg -allreads %s.gkpStore > %s.frg"%(_settings.CA, _settings.PREFIX, _settings.PREFIX),"Assemble")
       run_process(_settings, "%s/terminator -g %s.gkpStore -t %s.tigStore/ 2 -o %s"%(_settings.CA, _settings.PREFIX, _settings.PREFIX, _settings.PREFIX),"Assemble")
       run_process(_settings, "%s/asmOutputFasta -p %s < %s.asm"%(_settings.CA, _settings.PREFIX, _settings.PREFIX), "Assemble")
-      run_process(_settings, "ln -s %s.utg.fasta %s.asm.contig"%(_settings.PREFIX, _settings.PREFIX), "Assemble")
+      run_process(_settings, "ln %s.utg.fasta %s.asm.contig"%(_settings.PREFIX, _settings.PREFIX), "Assemble")
    elif _asm == "velvet":
       runVelvet(_settings.VELVET, "velvet")
    elif _asm == "velvet-sc":

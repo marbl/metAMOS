@@ -42,7 +42,7 @@ def LCS(S1, S2):
     return S1[x_longest-longest: x_longest]
 
 def convertFastaToFastq(libID, mated):
-   run_process(_settings, "ln -s %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.fasta"%(_settings.rundir, libID, _settings.rundir, libID), "Preprocess")
+   run_process(_settings, "ln %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.fasta"%(_settings.rundir, libID, _settings.rundir, libID), "Preprocess")
    run_process(_settings, "java -cp %s convertFastaAndQualToFastq %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.seq.qual > %s/Preprocess/out/lib%d.fastq"%(_settings.METAMOS_JAVA, _settings.rundir, libID, _settings.rundir, libID, _settings.rundir, libID), "Preprocess")
    if mated:
       run_process(_settings, "java -cp %s convertFastaAndQualToFastq %s/Preprocess/out/lib%d.1.fasta %s/Preprocess/out/lib%d.1.fasta.qual > %s/Preprocess/out/lib%d.1.fastq"%(_settings.METAMOS_JAVA, _settings.rundir, libID, _settings.rundir, libID, _settings.rundir, libID), "Preprocess")
@@ -50,7 +50,7 @@ def convertFastaToFastq(libID, mated):
 
 def convertFastqToFasta(libID, mated):
    # convert to fasta
-   run_process(_settings, "ln -s %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.fastq"%(_settings.rundir, libID, _settings.rundir, libID), "Preprocess")
+   run_process(_settings, "ln %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.fastq"%(_settings.rundir, libID, _settings.rundir, libID), "Preprocess")
    run_process(_settings, "java -cp %s convertFastqToFasta %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.fasta %s/Preprocess/out/lib%d.fasta.qual"%(_settings.METAMOS_JAVA, _settings.rundir, libID, _settings.rundir, libID, _settings.rundir, libID), "Preprocess")
    if mated:
       run_process(_settings, "java -cp %s convertFastqToFasta %s/Preprocess/out/lib%d.1.fastq %s/Preprocess/out/lib%d.1.fasta %s/Preprocess/out/lib%d.1.fasta.qual"%(_settings.METAMOS_JAVA, _settings.rundir, libID, _settings.rundir, libID, _settings.rundir, libID), "Preprocess")
@@ -181,7 +181,7 @@ def Preprocess(input,output):
    if "Preprocess" in _skipsteps or "preprocess" in _skipsteps:
        for lib in _readlibs:
            for read in lib.reads:
-               run_process(_settings, "ln -s -t %s/Preprocess/out/ %s/Preprocess/in/%s"%(_settings.rundir,_settings.rundir,read.fname),"Preprocess")
+               run_process(_settings, "ln -t %s/Preprocess/out/ %s/Preprocess/in/%s"%(_settings.rundir,_settings.rundir,read.fname),"Preprocess")
        return 0
    run_process(_settings, "rm %s/Preprocess/out/all.seq.mates"%(_settings.rundir), "Preprocess")
 
@@ -534,16 +534,16 @@ def Preprocess(input,output):
    else:
        for lib in _readlibs:
            for read in lib.reads:
-               run_process(_settings, "ln -s -t %s/Preprocess/out/ %s/Preprocess/in/%s"%(_settings.rundir,_settings.rundir,read.fname),"Preprocess")
+               run_process(_settings, "ln -t %s/Preprocess/out/ %s/Preprocess/in/%s"%(_settings.rundir,_settings.rundir,read.fname),"Preprocess")
                if (lib.format == "fasta"): 
-                  run_process(_settings, "ln -s -t %s/Preprocess/out/ %s/Preprocess/in/%s.qual"%(_settings.rundir,_settings.rundir,read.fname),"Preprocess")
+                  run_process(_settings, "ln -t %s/Preprocess/out/ %s/Preprocess/in/%s.qual"%(_settings.rundir,_settings.rundir,read.fname),"Preprocess")
    #PUNT HERE
    for lib in _readlibs:
       if 1:
            #this means interleaved, single file
            if lib.format == "sff":
                run_process(_settings, "unlink %s/Preprocess/out/lib%d.sff"%(_settings.rundir, lib.id), "Preprocess")
-               run_process(_settings, "ln -s %s/Preprocess/in/%s %s/Preprocess/out/lib%d.sff"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")
+               run_process(_settings, "ln %s/Preprocess/in/%s %s/Preprocess/out/lib%d.sff"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")
 
                if _asm == "newbler":
                   if _run_fastqc:
@@ -574,9 +574,9 @@ def Preprocess(input,output):
                   run_process(_settings, "%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3\"\t\"$5}' >> %s/Preprocess/out/all.seq.mates"%(_settings.CA, _settings.rundir, _settings.PREFIX, _settings.rundir),"Preprocess")
                   run_process(_settings, "%s/gatekeeper -dumpfragments -tabular %s/Preprocess/out/%s.gkpStore|awk '{if ($3 != 0 && match($1, \"UID\")==0 && $1 < $3) print $1\"\t\"$3}' > %s/Preprocess/out/lib%d.seq.mates"%(_settings.CA, _settings.rundir, _settings.PREFIX, _settings.rundir, lib.id), "Preprocess")
                   run_process(_settings, "unlink %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.id),"Preprocess")
-                  run_process(_settings, "ln -s %s/Preprocess/out/lib%d.fna %s/Preprocess/out/lib%d.fasta"%(_settings.rundir,lib.id,_settings.rundir,lib.id),"Preprocess")
-                  run_process(_settings, "ln -s %s/Preprocess/out/lib%d.fna %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.id,_settings.rundir,lib.id),"Preprocess")
-                  run_process(_settings, "ln -s %s/Preprocess/out/lib%d.fna.qual %s/Preprocess/out/lib%d.fasta.qual"%(_settings.rundir,lib.id,_settings.rundir,lib.id),"Preprocess")
+                  run_process(_settings, "ln %s/Preprocess/out/lib%d.fna %s/Preprocess/out/lib%d.fasta"%(_settings.rundir,lib.id,_settings.rundir,lib.id),"Preprocess")
+                  run_process(_settings, "ln %s/Preprocess/out/lib%d.fna %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.id,_settings.rundir,lib.id),"Preprocess")
+                  run_process(_settings, "ln %s/Preprocess/out/lib%d.fna.qual %s/Preprocess/out/lib%d.fasta.qual"%(_settings.rundir,lib.id,_settings.rundir,lib.id),"Preprocess")
                   run_process(_settings, "rm -rf %s/Preproces/out/%s.gkpStore"%(_settings.rundir, _settings.PREFIX),"Preprocess")
                   run_process(_settings, "cat %s/Preprocess/out/lib%d.seq.mates >> %s/Preprocess/out/all.seq.mates"%(_settings.rundir, lib.id, _settings.rundir), "Preprocess")
 
@@ -589,18 +589,18 @@ def Preprocess(input,output):
                         lib.f2 = Read(lib.format,"%s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir, lib.id),lib.mated,lib.interleaved) 
                         run_process(_settings, "perl %s/perl/shuffleSequences_fasta.pl  %s/Preprocess/out/lib%d.1.fastq %s/Preprocess/out/lib%d.2.fastq %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id, _settings.rundir,lib.id,_settings.rundir, lib.id), "Preprocess")
                      else:
-                        run_process(_settings, "ln -s %s/Preprocess/out/lib%d.unmated.fastq %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.id, _settings.rundir, lib.id), "Preproces")
-                        run_process(_settings, "ln -s %s/Preprocess/out/lib%d.unmated.fastq %s/Preprocess/out/lib%d.fastq"%(_settings.rundir, lib.id, _settings.rundir, lib.id), "Preprocess")
+                        run_process(_settings, "ln %s/Preprocess/out/lib%d.unmated.fastq %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.id, _settings.rundir, lib.id), "Preproces")
+                        run_process(_settings, "ln %s/Preprocess/out/lib%d.unmated.fastq %s/Preprocess/out/lib%d.fastq"%(_settings.rundir, lib.id, _settings.rundir, lib.id), "Preprocess")
                         lib.f1 = Read(lib.format,"%s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.id),lib.mated,lib.interleaved)  
 
            elif lib.format == "fasta" and not lib.mated:
-               run_process(_settings, "ln -s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.f1.fname,_settings.rundir,lib.id),"Preprocess")
-               run_process(_settings, "ln -s %s/Preprocess/out/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.rundir,lib.f1.fname,_settings.rundir,lib.id),"Preprocess")
+               run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.f1.fname,_settings.rundir,lib.id),"Preprocess")
+               run_process(_settings, "ln %s/Preprocess/out/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.rundir,lib.f1.fname,_settings.rundir,lib.id),"Preprocess")
                run_process(_settings, "touch %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir,lib.id),"Preprocess")
                convertFastaToFastq(lib.id, lib.mated)
 
            elif lib.format == "fastq" and not lib.mated:
-               run_process(_settings, "ln -s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")
+               run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "touch %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir, lib.id), "Preprocess")
                convertFastqToFasta(lib.id, lib.mated)
 
@@ -608,8 +608,8 @@ def Preprocess(input,output):
                #FIXME, make me faster!filter
                run_process(_settings, "perl %s/perl/shuffleSequences_fasta.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname, _settings.rundir,lib.f2.fname,_settings.rundir,lib.id),"Preprocess")
                run_process(_settings, "perl %s/perl/shuffleSequences_fasta.pl  %s/Preprocess/out/%s.qual %s/Preprocess/out/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname, _settings.rundir,lib.f2.fname,_settings.rundir,lib.id),"Preprocess")
-               run_process(_settings, "ln -s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.1.fasta"%(_settings.rundir, lib.f1.name, _settings.rundir, lib.id), "Preprocess")
-               run_process(_settings, "ln -s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.2.fasta"%(_settings.rundir, lib.f2.name, _settings.rundir, lib.id), "Preprocess")
+               run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.1.fasta"%(_settings.rundir, lib.f1.name, _settings.rundir, lib.id), "Preprocess")
+               run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.2.fasta"%(_settings.rundir, lib.f2.name, _settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "python %s/python/extract_mates_from_fasta.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
                run_process(_settings, "unlink %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir, lib.id),"Preprocess")
                run_process(_settings, "ln -t %s/Preprocess/out/ -s %s/Preprocess/in/lib%d.seq.mates"%(_settings.rundir,_settings.rundir,lib.id),"Preprocess")
@@ -618,8 +618,8 @@ def Preprocess(input,output):
            elif lib.format == "fastq" and lib.mated and not lib.interleaved:
                #extract mates from fastq
                run_process(_settings, "perl %s/perl/shuffleSequences_fastq.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname, _settings.rundir,lib.f2.fname,_settings.rundir,lib.id),"Preprocess")
-               run_process(_settings, "ln -s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.1.fastq"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")
-               run_process(_settings, "ln -s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir, lib.f2.fname, _settings.rundir, lib.id), "Preprocess")
+               run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.1.fastq"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")
+               run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir, lib.f2.fname, _settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "python %s/python/extract_mates_from_fastq.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
                convertFastqToFasta(lib.id, lib.mated)
 

@@ -90,7 +90,7 @@ def Scaffold(input,output):
    if _mated == False and numMates == 0:
        print "No mate pair info available for scaffolding, skipping"
        run_process(_settings, "%s/bank2fasta -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.contigs"%(_settings.AMOS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
-       run_process(_settings, "ln -s %s/Scaffold/out/%s.contigs %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
+       run_process(_settings, "ln %s/Scaffold/out/%s.contigs %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
        #run_process(_settings, "touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX), "Scaffold")
        #_skipsteps.append("FindScaffoldORFS")
        #_skipsteps.append("Propagate")

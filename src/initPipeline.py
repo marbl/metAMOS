@@ -313,6 +313,11 @@ while i < len(readlibs):
             soaplib += "q=LIB%dQ1REPLACE\n"%(i+1)
         elif mylib.format == "fasta" and mylib.mated and mylib.interleaved:
             soaplib += "p=LIB%dQ1REPLACE\n"%(i+1)
+        elif mylib.format == "sff" and mylib.mated:
+            soaplib += "q1=LIB%dQ1REPLACE\n"%(i+1)
+            soaplib += "q2=LIB%dQ2REPLACE\n"%(i+1)
+        elif mylib.format == "sff":
+            soaplib += "q=LIB%dQ1REPLACE\n"%(i+1)
         soapf.write(soaplib)
         soapf.close()
     i+=1

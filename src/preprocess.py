@@ -564,9 +564,9 @@ def Preprocess(input,output):
                      sffToCACmd += "-clear 454 "
                   sffToCACmd += "-trim hard -libraryname lib%d -output %s/Preprocess/out/lib%d"%(lib.id, _settings.rundir, lib.id)
                   if (read.mated == True):
-                      run_process(_settings, "%s -linker %s -insertsize %d %d %s"%(sffToCACmd, lib.linkerType, lib.mean, lib.stdev, read.path),"Preprocess")
+                      run_process(_settings, "%s -linker %s -insertsize %d %d %s/Preprocess/in/%s"%(sffToCACmd, lib.linkerType, lib.mean, lib.stdev, _settings.rundir, lib.f1.fname),"Preprocess")
                   else:
-                      run_process(_settings, "%s %s"%(sffToCACmd, read.path),"Preprocess")
+                      run_process(_settings, "%s %s/Preprocess/in/%s"%(sffToCACmd, _settings.rundir, lib.f1.fname),"Preprocess")
                   run_process(_settings, "%s/gatekeeper -T -F -o %s/Preprocess/out/%s.gkpStore %s/Preprocess/out/lib%d.frg"%(_settings.CA, _settings.rundir, _settings.PREFIX, _settings.rundir, lib.id),"Preprocess")
                   run_process(_settings, "%s/gatekeeper -dumpnewbler %s/Preprocess/out/lib%d %s/Preprocess/out/%s.gkpStore"%(_settings.CA, _settings.rundir, lib.id, _settings.rundir, _settings.PREFIX),"Preprocess")
                   run_process(_settings, "%s/gatekeeper -dumpfastq   %s/Preprocess/out/lib%d %s/Preprocess/out/%s.gkpStore"%(_settings.CA, _settings.rundir, lib.id, _settings.rundir, _settings.PREFIX), "Preprocess")
@@ -587,7 +587,7 @@ def Preprocess(input,output):
                      if lib.mated:
                         lib.f1 = Read(lib.format,"%s/Preprocess/out/lib%d.1.fastq"%(_settings.rundir, lib.id),lib.mated,lib.interleaved) 
                         lib.f2 = Read(lib.format,"%s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir, lib.id),lib.mated,lib.interleaved) 
-                        run_process(_settings, "perl %s/perl/shuffleSequences_fasta.pl  %s/Preprocess/out/lib%d.1.fastq %s/Preprocess/out/lib%d.2.fastq %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id, _settings.rundir,lib.id,_settings.rundir, lib.id), "Preprocess")
+                        run_process(_settings, "perl %s/perl/shuffleSequences_fastq.pl  %s/Preprocess/out/lib%d.1.fastq %s/Preprocess/out/lib%d.2.fastq %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id, _settings.rundir,lib.id,_settings.rundir, lib.id), "Preprocess")
                      else:
                         run_process(_settings, "ln %s/Preprocess/out/lib%d.unmated.fastq %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.id, _settings.rundir, lib.id), "Preproces")
                         run_process(_settings, "ln %s/Preprocess/out/lib%d.unmated.fastq %s/Preprocess/out/lib%d.fastq"%(_settings.rundir, lib.id, _settings.rundir, lib.id), "Preprocess")

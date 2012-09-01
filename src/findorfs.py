@@ -251,8 +251,10 @@ def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS"):
 @files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.PREFIX))
 def FindORFS(input,output):
    if "FindORFS" in _skipsteps:
+      run_process(_settings, "touch %s/Logs/findorfs.skip"%(_settings.rundir), "FindORFS")
       run_process(_settings, "touch %s/FindRepeats/in/%s.fna"%(_settings.rundir, _settings.PREFIX),"FindORFS")
       run_process(_settings, "touch %s/FindORFS/out/%s.faa"%(_settings.rundir, _settings.PREFIX),"FindORFS")
+      run_process(_settings, "ln -t %s/Annotate/in -s %s/FindORFS/out/%s.faa"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "FindORFS")
       return 0
 
    if _asm == "soapdenovo":

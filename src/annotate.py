@@ -111,6 +111,22 @@ def Annotate(input,output):
        run_process(_settings, "cp %s/Annotate/out/%s.phm.tbl  %s/Postprocess/in/%s.hits"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Annotate")
        run_process(_settings, "mv %s/Annotate/out/%s.phm.tbl  %s/Annotate/out/%s.hits"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Annotate")
        #run_process(_settings, "mv %s/Annotate/out/%s.phm.tbl  %s/Annotate/out/%s.annotate"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX))
+   elif _cls == "metaphyler":
+       if not os.path.exists(_settings.BLAST + os.sep + "blastall"):
+           print "Error: BLAST not found in %s. Please check your path and try again.\n"%(_settings.BLAST)
+           raise(JobSignalledBreak)
+
+       if not os.path.exists("%s/DB/allprots.faa"%(_settings.METAMOS_UTILS)):
+          print "Error: You indicated you would like to run MetaPhyler but it depends on BLAST and DB allprots.faa not found in %s/DB. Please check your path and try again.\n"%(_settings.METAMOS_UTILS)
+          raise(JobSignalledBreak)
+
+       #run_process(_settings, "perl %s/perl/installMetaphyler.pl"%(_settings.METAMOS_UTILS)
+       run_process(_settings,"%s/blastall -p blastx -a %d -m 8 -b 1 -e 1e-2 -i %s/Annotate/in/%s.fna -d %s/perl/metaphyler/test/test.ref.protein > %s/Annotate/out/%s.query.blastx"%(_settings.BLAST,_settings.threads, _settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX))
+       run_process(_settings, "%s/metaphylerClassify %s/perl/metaphyler/markers/markers.blastx.classifier %s/perl/metaphyler/markers/markers.taxonomy %s/Annotate/out/%s.query.blastx > %s/Annotate/out/%s.classification"%(_settings.METAPHYLER,_settings.METAMOS_UTILS,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX) )
+       #Krona import Metaphyler script!
+       run_process(_settings, "cp %s/Annotate/out/%s.classification  %s/Postprocess/in/%s.hits"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Annotate")
+       run_process(_settings, "cp %s/Annotate/out/%s.classification  %s/Annotate/out/%s.hits"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Annotate")
+       
    elif _cls == "blast":
        if not os.path.exists(_settings.BLAST + os.sep + "blastall"):
           print "Error: BLAST not found in %s. Please check your path and try again.\n"%(_settings.BLAST)

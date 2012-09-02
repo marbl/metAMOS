@@ -47,6 +47,7 @@ class Settings:
    METAVELVET = ""
    SPARSEASSEMBLER = ""
 
+   METAPHYLER = ""
    BOWTIE = ""
    BOWTIE2 = ""
    SAMTOOLS = ""
@@ -101,6 +102,8 @@ class Settings:
       Settings.VELVET_SC     = "%s%scpp%s%s-%s%svelvet-sc"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
       Settings.METAVELVET    = "%s%scpp%s%s-%s%sMetaVelvet"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
       Settings.SPARSEASSEMBLER = "%s%scpp%s%s-%s%sSparseAssembler"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
+
+      Settings.METAPHYLER        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
 
       Settings.BOWTIE        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.BOWTIE2        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
@@ -403,7 +406,11 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
        Settings.METAGENEMARK = getFromPath("gmhmmp", "MetaGeneMark")
     gmhmmpMD5 = getMD5Sum(Settings.METAGENEMARK + os.sep + "gmhmmp")
     
-    
+    Settings.METAPHYLER = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+    if not os.path.exists(Settings.METAPHYLER + os.sep + "metaphylerClassify"):
+       Settings.METAPHYLER = getFromPath("metaphylerClassify", "metaphylerClassify")
+    metaphylerMD5 = getMD5Sum(Settings.METAPHYLER + os.sep + "metaphylerClassify")
+
     Settings.FRAGGENESCAN = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
     if not os.path.exists(Settings.FRAGGENESCAN + os.sep + "FragGeneScan"):
        Settings.FRAGGENESCAN = getFromPath("FragGeneScan","FragGeneScan")
@@ -449,6 +456,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
     conf.write("Velvet:\t\t\t%s\t%s\nVelvet-SC:\t\t%s\t%s\n"%(Settings.VELVET, velvetMD5, Settings.VELVET_SC, velvetSCMD5))
     conf.write("MetaVelvet:\t\t%s\t%s\n"%(Settings.METAVELVET, metaVelvetMD5))
     conf.write("SparseAssembler:\t%s\t%s\n"%(Settings.SPARSEASSEMBLER, sparseAssemblerMD5))
+    conf.write("metaphylerClassify:\t\t\t%s\t%s\n"%(Settings.METAPHYLER, metaphylerMD5))
     conf.write("Bowtie:\t\t\t%s\t%s\n"%(Settings.BOWTIE, bowtieMD5))
     conf.write("Bowtie2:\t\t\t%s\t%s\n"%(Settings.BOWTIE2, bowtie2MD5))
     conf.write("samtools:\t\t\t%s\t%s\n"%(Settings.SAMTOOLS, samtoolsMD5))

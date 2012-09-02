@@ -267,7 +267,7 @@ for o, a in opts:
     elif o in ("-f", "--forcesteps"):
         forcesteps = a.split(",")
     elif o in ("-n", "--skipsteps"):
-        skipsteps = a.split(",")
+        skipsteps.extend(a.split(","))
     elif o in ("-p", "--threads"):
         if int(a) > 0:
             utils.Settings.threads = int(a)
@@ -308,6 +308,10 @@ for o, a in opts:
                 selected_programs["classify"] = sc
                 foundit = True
                 break
+        if sc == "metaphyler":
+            #not quite ready for primetime, need krona import script and annots file
+            skipsteps.append("Propagate")
+            skipsteps.append("Classify")
         if not foundit:
             print "!!Sorry, %s is not a supported classification method. Using FCP instead"%(selected_programs["classify"])
             selected_programs["classify"] = "fcp"

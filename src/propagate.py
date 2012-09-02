@@ -25,13 +25,20 @@ def init(reads, skipsteps, cls):
    _skipsteps = skipsteps
    _cls = cls
 
+
+if "Propagate" in _skipsteps or _cls == None:
+   run_process(_settings, "touch %s/Annotate/out/%s.annots"%(_settings.rundir, _settings.PREFIX), "Propagate")
+
+
 @follows(Scaffold)
 @posttask(touch_file("%s/Logs/propagate.ok"%(_settings.rundir)))
 @files("%s/Annotate/out/%s.annots"%(_settings.rundir, _settings.PREFIX),"%s/Propagate/out/%s.clusters"%(_settings.rundir,_settings.PREFIX))
 def Propagate(input,output):
    #run propogate java script
    # create s12.annots from Metaphyler output
-
+   if "Propagate" in _skipsteps or _cls == None:
+       run_process(_settings, "touch %s/Logs/propagate.skip"%(_settings.rundir), "Propagate")
+       return 0
    if _cls == "metaphyler":
        run_process(_settings, "python %s/python/create_mapping.py %s/DB/class_key.tab %s/Abundance/out/%s.classify.txt %s/Propagate/in/%s.annots"%(_settings.METAMOS_UTILS,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Propagate")
    if _cls == "phylosift" or _cls == "PhyloSift" or _cls == "Phylosift" or _cls == "FCP" or _cls == "fcp":

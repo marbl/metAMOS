@@ -47,7 +47,19 @@ if (sys.version_info[0] < 2) or (sys.version_info[0] == 2 and sys.version_info[1
   sys.exit(1)
 
 #check for DBs, etc
-
+if not os.path.exists("./Utilities/cpp/%s-%s/metaphylerClassify"%(OSTYPE, MACHINETYPE)):
+    print "Metaphyler (latest version) not found, optional for Annotate, download now?"
+    if silentInstall:
+       dl = 'y'
+    else:
+       dl = raw_input("Enter Y/N: ")
+    if dl == 'y' or dl == 'Y':
+        os.system("wget http://metaphyler.cbcb.umd.edu/MetaPhylerV1.25.tar.gz -O metaphyler.tar.gz")
+        os.system("tar -C ./Utilities/perl/ -xvf metaphyler.tar.gz")
+        os.system("mv ./Utilities/perl/MetaPhylerV1.25 ./Utilities/perl/metaphyler")
+        os.system("perl ./Utilities/perl/metaphyler/installMetaphyler.pl")
+        os.system("cp ./Utilities/perl/metaphyler/metaphylerClassify ./Utilities/cpp/%s-%s/metaphylerClassify"%(OSTYPE, MACHINETYPE))
+        #os.system("cp ./Utilities/perl/metaphyler/metaphylerClassify ./Utilities/cpp/%s-%s/metaphylerClassify"%(OSTYPE, MACHINETYPE))
 if not os.path.exists("./FastQC"):
     print "FastQC not found, optional for Preprocess, download now?"
     if silentInstall:

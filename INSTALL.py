@@ -61,12 +61,13 @@ if not os.path.exists("./FastQC"):
         os.system("rm %s" % archive)
         os.system("chmod u+x FastQC/fastqc")
 
-if not os.path.exists("./Utilities/cpp/%s-%s/samtools"%(OSTYPE, MACHINETYPE)):
-       os.system("wget http://sourceforge.net/projects/samtools/files/samtools/0.1.17/samtools-0.1.17.tar.bz2 -O samtools.tar.bz2")
-       os.system("tar -C ./Utilities/cpp/%s-%s/ -xvf samtools.tar.bz2"%(OSTYPE, MACHINETYPE))
-       os.system("cd ./Utilities/cpp/%s-%s"%(OSTYPE,MACHINETYPE))
-       os.system("make")
-       os.system("rm samtools.tar.bz2")
+#not needed (for now)
+#if not os.path.exists("./Utilities/cpp/%s-%s/samtools"%(OSTYPE, MACHINETYPE)):
+#       os.system("wget http://sourceforge.net/projects/samtools/files/samtools/0.1.17/samtools-0.1.17.tar.bz2 -O samtools.tar.bz2")
+#       os.system("tar -C ./Utilities/cpp/%s-%s/ -xvf samtools.tar.bz2"%(OSTYPE, MACHINETYPE))
+#       os.system("cd ./Utilities/cpp/%s-%s"%(OSTYPE,MACHINETYPE))
+#       os.system("make")
+#       os.system("rm samtools.tar.bz2")
  
 if not os.path.exists("./Utilities/models"):
     print "Genome models not found, optional for FCP/NB, download now?"
@@ -131,7 +132,7 @@ if not os.path.exists("./Utilities/krona/taxonomy.tab"):
         os.system("./Utilities/krona/updateTaxonomy.sh")
         #os.system("rm *.dmp")
 
-if not os.path.exists("./AMOS") or 1:
+if not os.path.exists("./AMOS") or 0:
     print "AMOS binaries not found, needed for all steps, download now?"
     if silentInstall:
        dl = 'y'

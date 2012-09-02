@@ -55,7 +55,7 @@ import glob
 from operator import itemgetter
 from itertools import groupby
 from collections import defaultdict
-
+from time import strftime, gmtime
 if __name__ == '__main__':
     import sys
     sys.path.insert(0,".")
@@ -73,6 +73,47 @@ from ruffus_utility import *
 
 
 #88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
+import re
+
+#_________________________________________________________________________________________
+
+#   get_readable_path_str
+
+#_________________________________________________________________________________________
+def get_readable_path_str(original_path, max_len):
+    """
+    Truncates path to max_len characters if necessary
+    If the result is a path within nested directory, will remove partially
+        truncated directories names
+    """
+    if len(original_path) < max_len:
+        return original_path
+    truncated_name = original_path[-(max_len - 5):]
+    if "/" not in truncated_name:
+        return "[...]" + truncated_name
+    return "[...]" + re.sub("^[^/]+", "", truncated_name)
+
+
+
+#_________________________________________________________________________________________
+
+#   epoch_seconds_to_str
+
+#_________________________________________________________________________________________
+def epoch_seconds_to_str (epoch_seconds):
+    """
+    Converts seconds since epoch into nice string with date and time to 2 significant
+        digits for seconds
+    """
+    #   returns 24 char long  25 May 2011 23:37:40.12
+    time_str = strftime("%d %b %Y %H:%M:%S", gmtime(epoch_seconds))
+
+    #
+    fraction_of_second_as_str = ("%.2f" % (epoch_seconds - int(epoch_seconds)))[1:]
+    #   or fraction = ("%.2f" % (divmod(epoch_seconds, 1)[1]))[1:]
+    return (time_str + fraction_of_second_as_str)
+
+
 err_msg_no_regex_match = ("No jobs were run because no files names matched. "
                         "Please make sure that the regular expression is correctly specified.")
 err_msg_empty_files_parameter= ("@files() was empty, i.e. no files were specified. "
@@ -190,15 +231,17 @@ def check_input_files_exist (*params):
                 raise MissingInputFileError("No way to run job: "+
                                             "Input file ['%s'] does not exist" % f)
 
-#_________________________________________________________________________________________
-
-#   needs_update_check_modify_time
 
 #_________________________________________________________________________________________
-def needs_update_check_modify_time (*params):
+
+#   needs_update_check_exist
+
+#_________________________________________________________________________________________
+def needs_update_check_exist (*params):
     """
-    Given input and output files, see if all exist and whether output files are later than input files
+    Given input and output files, see if all exist
     Each can be
+
         #. string: assumed to be a filename "file1"
         #. any other type
         #. arbitrary nested sequence of (1) and (2)
@@ -206,7 +249,7 @@ def needs_update_check_modify_time (*params):
     """
     # missing output means build
     if len(params) < 2:
-        return True
+        return True, "i/o files not specified"
 
 
     i, o = params[0:2]
@@ -220,10 +263,14 @@ def needs_update_check_modify_time (*params):
         return True, "Missing output file"
 
     # missing input / output file means always build
+    missing_files = []
     for io in (i, o):
         for p in io:
             if not os.path.exists(p):
-                return True, "Missing file %s" % p
+                missing_files.append(p)
+    if len(missing_files):
+        return True, "Missing file%s [%s]" % ("s" if len(missing_files) > 1 else "",
+                                            ", ".join(missing_files))
 
     #
     #   missing input -> build only if output absent
@@ -232,26 +279,117 @@ def needs_update_check_modify_time (*params):
         return False, "Missing input files"
 
 
+    return False, "Up to date"
+
+
+#_________________________________________________________________________________________
+
+#   needs_update_check_modify_time
+
+#_________________________________________________________________________________________
+def needs_update_check_modify_time (*params):
+    """
+    Given input and output files, see if all exist and whether output files are later than input files
+    Each can be
+
+        #. string: assumed to be a filename "file1"
+        #. any other type
+        #. arbitrary nested sequence of (1) and (2)
+
+    """
+
+    needs_update, err_msg = needs_update_check_exist (*params)
+    if (needs_update, err_msg) != (False, "Up to date"):
+        return needs_update, err_msg
+
+    i, o = params[0:2]
+    i = get_strings_in_nested_sequence(i)
+    o = get_strings_in_nested_sequence(o)
+
     #
     #   get sorted modified times for all input and output files
     #
     filename_to_times = [[], []]
     file_times = [[], []]
-    for index, io in enumerate((i, o)):
-        for f in io:
-            mtime = os.path.getmtime(f)
-            file_times[index].append(mtime)
-            filename_to_times[index].append((mtime, f))
-        filename_to_times[index].sort()
+
+
+
+    #_____________________________________________________________________________________
+
+    #   pretty_io_with_date_times
+
+    #_____________________________________________________________________________________
+    def pretty_io_with_date_times (filename_to_times):
+
+        # sort
+        for io in range(2) :
+            filename_to_times[io].sort()
+
+
+        #
+        #   add asterisk for all files which are causing this job to be out of date
+        #
+        file_name_to_asterisk = dict()
+        oldest_output_mtime = filename_to_times[1][0][0]
+        for mtime, file_name in filename_to_times[0]:
+            file_name_to_asterisk[file_name] = "*" if mtime >= oldest_output_mtime else " "
+        newest_output_mtime = filename_to_times[0][-1][0]
+        for mtime, file_name  in filename_to_times[1]:
+            file_name_to_asterisk[file_name] = "*" if mtime <= newest_output_mtime else " "
+
+
+        #
+        #   try to fit in 100 - 15 = 85 char lines
+        #   date time ~ 25 characters so limit file name to 55 characters
+        #
+        msg = "\n"
+        category_names = "Input", "Output"
+        for io in range(2):
+            msg += "  %s files:\n" % category_names[io]
+            for mtime, file_name in filename_to_times[io]:
+                file_datetime_str = epoch_seconds_to_str(mtime)
+                msg += ("   " +                                         # indent
+                        file_name_to_asterisk[file_name] + " " +        # asterisked out of date files
+                        file_datetime_str + ": " +                      # date time of file
+                        get_readable_path_str(file_name, 55) + "\n")    # file name truncated to 55
+        return msg
+
 
     #
-    #   update if any input file >= (more recent) output fifle
+    #   Ignore output file if it is found in the list of input files
+    #       By definition they have the same timestamp,
+    #       and the job will otherwise appear to be out of date
     #
-    if max(file_times[0]) >= min(file_times[1]):
-        return True, "Need update file times= %s" % str(filename_to_times)
+    #   Symbolic links followed
+    real_input_file_names = set()
+    for input_file_name in i:
+        real_input_file_names.add(os.path.realpath(input_file_name))
+        mtime = os.path.getmtime(input_file_name)
+        filename_to_times[0].append((mtime, input_file_name))
+        file_times[0].append(mtime)
+
+    for output_file_name in o:
+        real_file_name = os.path.realpath(output_file_name)
+        mtime = os.path.getmtime(output_file_name)
+        if real_file_name not in real_input_file_names:
+            file_times[1].append(mtime)
+        filename_to_times[1].append((mtime, output_file_name))
+
+
+    #
+    #   Debug: Force print modified file names and times
+    #
+    #if len(file_times[0]) and len (file_times[1]):
+    #    print >>sys.stderr, pretty_io_with_date_times(filename_to_times), file_times, (max(file_times[0]) >= min(file_times[1]))
+    #else:
+    #    print >>sys.stderr, i, o
+
+    #
+    #   update if any input file >= (more recent) output file
+    #
+    if len(file_times[0]) and len (file_times[1]) and max(file_times[0]) >= min(file_times[1]):
+        return True, pretty_io_with_date_times(filename_to_times)
     return False, "Up to date"
-
-
 
 
 #_________________________________________________________________________________________
@@ -512,9 +650,11 @@ def split_param_factory (input_files_task_globs, output_files_task_globs, *extra
 def split_ex_param_factory (input_files_task_globs,
                             flatten_input,
                             regex,
+                            regex_or_suffix,
                             extra_input_files_task_globs,
                             replace_inputs,
-                            output_files_task_globs, *extra_specs):
+                            output_files_task_globs,
+                            *extra_specs):
     """
     Factory for task_split (advanced form)
     """

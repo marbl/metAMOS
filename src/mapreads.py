@@ -8,7 +8,7 @@ from preprocess import Preprocess
 from assemble import Assemble
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
-
+import pysam
 _readlibs = []
 _skipsteps = []
 _settings = Settings()
@@ -21,6 +21,7 @@ def init(reads, skipsteps, asm,mapper,savebtidx,ctgbpcov):
    global _skipsteps
    global _savebtidx
    global _ctgbpcov
+   global _mapper
    _mapper = mapper
    _readlibs = reads
    _skipsteps = skipsteps
@@ -97,58 +98,137 @@ def map2contig():
                     linecnt +=1
                 f1.close()
                 f2.close()
-            if "bowtie" not in _skipsteps and not _savebtidx:# and not os.path.exists("%s/Assemble/out/IDX.1.ebwt"%(_settings.rundir)):
-                run_process(_settings, "%s/bowtie-build -o 2 %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir),"MapReads")
-            #run_process(_settings, "%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir))
-            if "bowtie" not in _skipsteps and (lib.format == "fasta" or lib.format == "sff"):
-                if trim:
-                    run_process(_settings, "%s/bowtie -p %d -f -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+            if _mapper == "bowtie":
+                if "bowtie" not in _skipsteps and not _savebtidx:# and not os.path.exists("%s/Assemble/out/IDX.1.ebwt"%(_settings.rundir)):
+                    run_process(_settings, "%s/bowtie-build -o 2 %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir),"MapReads")
+                #run_process(_settings, "%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir))
+                if "bowtie" not in _skipsteps and (lib.format == "fasta" or lib.format == "sff"):
+                    if trim:
+                        run_process(_settings, "%s/bowtie -p %d -f -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                    else:
+                        run_process(_settings, "%s/bowtie -p %d -f -l 25 -e 140 --best --strata -m 10 -k 1 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                elif "bowtie" not in _skipsteps and lib.format != "fasta":
+                    if trim:
+                        run_process(_settings, "%s/bowtie  -p %d -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                    else:
+                        run_process(_settings, "%s/bowtie  -p %d -l 25 -e 140 --best --strata -m 10 -k 1 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                infile = open("%s/Assemble/out/lib%d.bout"%(_settings.rundir,lib.id),'r')
+                for line1 in infile.xreadlines():
+                    line1 = line1.replace("\n","")
+                    ldata = line1.split("\t")
+                    if "Warning" in line1 or "warning" in line1:
+                        continue 
+                    if len(ldata) < 6:
+                        continue
+                    read = ldata[0]
+                    strand = ldata[1]
+                    contig = ldata[2]
+                    spos = ldata[3]
+                    try:
+                        int(spos)
+                    except ValueError:
+                        #bowtie output for this line malformed, skip
+                        continue 
+                    read_seq = ldata[4]
+                    read_qual = ldata[5]
+                    read = read.split(" ")[0]
+                    try:
+                        epos = int(spos)+len(read_seq)
+                    except ValueError:
+                        continue
+                    mapped_reads[read] = 1
+                    strand_dict[read] = strand
+                    readcontig_dict[read] = contig
+                    if strand == "+":
+                        fiveprimeend_dict[read] = int(spos)
+                    else:
+                        fiveprimeend_dict[read] = int(epos)
+                    try:
+                        contigdict[contig].append([int(spos), int(epos), strand, read,len(read_seq),lib.id])
+                    except KeyError:
+                        contigdict[contig] = [[int(spos),int(epos),strand,read,len(read_seq),lib.id]]
+                    #print contig
+                    seqdict[read] = read_seq
+                    seqfile.write(">%s\n%s\n"%(read,read_seq))
+                    seqfile.flush()
+            elif _mapper == "bowtie2":
+                if not os.path.exists("%s/Assemble/out/IDX.1.bt2"%(_settings.rundir)):
+                    run_process(_settings, "%s/bowtie2-build -o 2 %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir),"MapReads")
+                if "bowtie" not in _skipsteps and lib.format == "fasta":
+                    run_process(_settings, "%s/bowtie2 -p %d -f -D 15 -R 2 -N 0 -L 20 -i S,1,1.10 --un %s/Assemble/out/unaligned.out %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq -S %s/Assemble/out/lib%d.sam"%(_settings.BOWTIE2,_settings.threads,_settings.rundir,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                elif "bowtie" not in _skipsteps and lib.format != "fasta":
+                    run_process(_settings, "%s/bowtie2 -p %d -D 15 -R 2 -N 0 -L 20 -i S,1,1.10 --un %s/Assemble/out/unaligned.out %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq -S %s/Assemble/out/lib%d.sam"%(_settings.BOWTIE2,_settings.threads,_settings.rundir,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads") 
+                if not os.path.exists("%s/Assemble/out/lib%d.sam"%(_settings.rundir,lib.id)):
+                    pass
                 else:
-                    run_process(_settings, "%s/bowtie -p %d -f -l 25 -e 140 --best --strata -m 10 -k 1 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
-            elif "bowtie" not in _skipsteps and lib.format != "fasta":
-                if trim:
-                    run_process(_settings, "%s/bowtie  -p %d -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
-                else:
-                    run_process(_settings, "%s/bowtie  -p %d -l 25 -e 140 --best --strata -m 10 -k 1 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
-            infile = open("%s/Assemble/out/lib%d.bout"%(_settings.rundir,lib.id),'r')
-            for line1 in infile.xreadlines():
-                line1 = line1.replace("\n","")
-                ldata = line1.split("\t")
-                if "Warning" in line1 or "warning" in line1:
-                    continue 
-                if len(ldata) < 6:
-                    continue
-                read = ldata[0]
-                strand = ldata[1]
-                contig = ldata[2]
-                spos = ldata[3]
-                try:
-                    int(spos)
-                except ValueError:
-                    #bowtie output for this line malformed, skip
-                    continue 
-                read_seq = ldata[4]
-                read_qual = ldata[5]
-                read = read.split(" ")[0]
-                try:
-                    epos = int(spos)+len(read_seq)
-                except ValueError:
-                    continue
-                mapped_reads[read] = 1
-                strand_dict[read] = strand
-                readcontig_dict[read] = contig
-                if strand == "+":
-                    fiveprimeend_dict[read] = int(spos)
-                else:
-                    fiveprimeend_dict[read] = int(epos)
-                try:
-                    contigdict[contig].append([int(spos), int(epos), strand, read,len(read_seq),lib.id])
-                except KeyError:
-                    contigdict[contig] = [[int(spos),int(epos),strand,read,len(read_seq),lib.id]]
-                #print contig
-                seqdict[read] = read_seq
-                seqfile.write(">%s\n%s\n"%(read,read_seq))
-                seqfile.flush()
+                   #create reference seq map                                                                                                                                                                                                   
+                   #refx= open(reffile,'r')
+                   #express_transcript_file = open("%s/barnaEXP/in/%s.genes.fa"%(_settings.rundir,_settings.PREFIX),'w')
+                   #refx.readline()
+                   #xdata = refx.read()
+                   #xdata = xdata.replace("\n","")
+                   #ref = xdata
+                   #create pileups corresponding to GFF CDS coords (+/- read length, 50bp for now)                                                                                                                                              #create gff file index                                                                                                                                                                                                       #gff_file = open("%s/Preprocess/in/%s"%(_settings.rundir,_settings.gffile),'r')                                                                                                                                             
+                   #if 1 or not os.path.exists("%s/Assemble/out/lib%d.bam"%(_settings.rundir,lib.id)):
+                   #    run_process(_settings,"%s/samtools view -b -S %s/Assemble/out/lib%d.sam > %s/Assemble/out/lib%d.bam"%(_settings.SAMTOOLS,_settings.rundir,lib.id,_settings.rundir,lib.id), "MapReads")
+                   #    print "%s/samtools view -b -S %s/Assemble/out/lib%d.sam > %s/Assemble/out/lib%d.bam"%(_settings.SAMTOOLS,_settings.rundir,lib.id,_settings.rundir,lib.id)
+                   #if 1 or not os.path.exists("%s/Assemble/out/lib%d.srt.bam"%(_settings.rundir,lib.id)):
+                   #    run_process(_settings,"%s/samtools sort  %s/Assemble/out/lib%d.bam %s/Assemble/out/lib%d.srt.bam"%(_settings.SAMTOOLS,_settings.rundir,lib.id,_settings.rundir,lib.id), "MapReads")
+                   #if 1 or not os.path.exists("%s/Assemble/out/lib%d.srt.bam.bai"%(_settings.rundir,lib.id)):
+                   #    run_process(_settings,"%s/samtools index %s/Assemble/out/lib%d.srt.bam %s/Assemble/out/lib%d.srt.bam.bai"%(_settings.SAMTOOLS,_settings.rundir,lib.id,_settings.rundir,lib.id), "MapReads")
+                   
+                   #samfile = pysam.Samfile("%s/barnaASM/out/%s.srt.bam"%(_settings.rundir,_settings.PREFIX),'rb')
+                   #samfile = pysam.Samfile("%s/Assemble/out/lib%d.srt.bam"%(_settings.rundir,lib.id),'rb')
+                   samfile = pysam.Samfile("%s/Assemble/out/lib%d.sam"%(_settings.rundir,lib.id),'r')
+                   allreads = samfile.fetch()
+                   #print len(allreads)
+                   cnt = 1
+                   for read in allreads:
+                       if read == None:
+                           continue
+
+                       #print cnt
+                       #print read
+                       cnt +=1
+                       read_seq = read.seq
+                       read_qual = read.qual
+                       readname = read.qname
+                       #print readname
+                       epos = read.pos+read.rlen
+                       spos = read.pos
+                       contig = ""
+                       if read.tid > 0:
+                           contig = samfile.getrname(read.tid)
+                       else:
+                           continue
+                       strand = "+"
+                       if read.is_reverse:
+                           strand = "-"
+                       mapped_reads[readname] = 1
+                       strand_dict[readname] = strand
+                       readcontig_dict[readname] = contig
+                       if strand == "+":
+                           fiveprimeend_dict[readname] = int(spos)
+                       else:
+                           fiveprimeend_dict[readname] = int(epos)
+                       try:
+                           contigdict[contig].append([int(spos), int(epos), strand, readname,len(read_seq),lib.id])
+                       except KeyError:
+                           contigdict[contig] = [[int(spos),int(epos),strand,readname,len(read_seq),lib.id]]
+
+                       seqdict[readname] = read_seq
+                       seqfile.write(">%s\n%s\n"%(readname,read_seq))
+                       seqfile.flush()
+                       print readname, "end"
+                   print "close sam"
+                   samfile.close()
+                   #pileup_columns = samfile.pileup( refg,spos,epos)
+                   #for pc in pileup_columns :
+                   #    perbp_cov.write('%s,%s\n' % (pc.pos, pc.n))
+                   #alignedreads = samfile.fetch(refg,spos,epos)
+
+
+
     else:
         if 0:
  
@@ -367,7 +447,7 @@ def MapReads(input,output):
 
    if "MapReads" in _skipsteps or "mapreads" in _skipsteps:
       return 0
-   if _mapper == "bowtie":
+   if _mapper == "bowtie" or _mapper == "bowtie2":
        map2contig()
    else:
        print "Read mapper not supported, time to exit"

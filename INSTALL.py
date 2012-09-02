@@ -61,6 +61,13 @@ if not os.path.exists("./FastQC"):
         os.system("rm %s" % archive)
         os.system("chmod u+x FastQC/fastqc")
 
+if not os.path.exists("./Utilities/cpp/%s-%s/samtools"%(OSTYPE, MACHINETYPE)):
+       os.system("wget http://sourceforge.net/projects/samtools/files/samtools/0.1.17/samtools-0.1.17.tar.bz2 -O samtools.tar.bz2")
+       os.system("tar -C ./Utilities/cpp/%s-%s/ -xvf samtools.tar.bz2"%(OSTYPE, MACHINETYPE))
+       os.system("cd ./Utilities/cpp/%s-%s"%(OSTYPE,MACHINETYPE))
+       os.system("make")
+       os.system("rm samtools.tar.bz2")
+ 
 if not os.path.exists("./Utilities/models"):
     print "Genome models not found, optional for FCP/NB, download now?"
     if silentInstall:
@@ -124,7 +131,7 @@ if not os.path.exists("./Utilities/krona/taxonomy.tab"):
         os.system("./Utilities/krona/updateTaxonomy.sh")
         #os.system("rm *.dmp")
 
-if not os.path.exists("./AMOS"):
+if not os.path.exists("./AMOS") or 1:
     print "AMOS binaries not found, needed for all steps, download now?"
     if silentInstall:
        dl = 'y'
@@ -135,6 +142,20 @@ if not os.path.exists("./AMOS"):
         os.system("tar -xvf amos-binaries.tar.gz")
         os.system("rm -rf amos-binaries.tar.gz")
 
+if 0 or not os.path.exists("./Utilities/python/pysam"):
+   print "pysam python moduels not found, necessary for bowtie2 alignments, download now?"
+   if silentInstall:
+       dl = 'y'
+   else:
+       dl = raw_input("Enter Y/N: ")
+   if dl == 'y' or dl == "Y":
+       os.system("wget http://pysam.googlecode.com/files/pysam-0.6.tar.gz -O ./pysam.tar.gz")
+       os.system("tar -C ./Utilities/python -xvf pysam.tar.gz")
+       os.system("mv ./Utilities/python/pysam-0.6 ./Utilities/python/pysam")
+       #need to install as root? change with --prefix to other dir
+       os.system("sudo python ./Utilities/python/pysam/setup.py install")
+       os.system("rm -rf pysam.tar.gz")
+       #os.system("ln -s %s/Utilities/python/taxonomy.txt %s/Utilities/models/taxonomy.txt"%(sys.path[0], sys.path[0]))
 if 0 or not os.path.exists("./phylosift"):
    print "PhyloSift binaries not found, optional for Annotate step, download now?"
    if silentInstall:
@@ -142,11 +163,13 @@ if 0 or not os.path.exists("./phylosift"):
    else:
       dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':
-      os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/phylosift-%s-%s-20120523.tar.bz2 -O ./phylosift.tar.bz2"%(OSTYPE, MACHINETYPE))
+      #os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/phylosift-Linux-x86_6-20120523.tar.bz2 -O ./phylosift.tar.bz2"%(OSTYPE, MACHINETYPE))
+      #phylosift OSX binaries included inside Linux X86_64 tarball..
+      os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/phylosift-Linux-x86_64-20120523.tar.bz2 -O ./phylosift.tar.bz2")
       os.system("tar -xvjf phylosift.tar.bz2")
       os.system("rm -rf phylosift.tar.bz2")
 
-if not os.path.exists("./CA"):
+if not os.path.exists("./CA") or 0:
    print "Celera Assembler binaries not found, optional for Assemble step, download now?"
    if silentInstall:
       dl = 'y'

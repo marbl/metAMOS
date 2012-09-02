@@ -19,6 +19,7 @@ DEFAULT_TAXA_LEVEL = "class"
 sys.path.append(INITIAL_SRC)
 import utils
 sys.path.append(utils.INITIAL_UTILS)
+sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam")
 
 ## The usual library dependencies
 import string
@@ -160,7 +161,7 @@ supported_programs = {}
 supported_genecallers = ["fraggenescan","metagenemark","glimmermg"]
 supported_assemblers = ["soapdenovo","newbler","ca","velvet","velvet-sc","metavelvet",\
                             "metaidba","sparseassembler","minimus"]
-supported_mappers = ["bowtie"]
+supported_mappers = ["bowtie","bowtie2"]
 supported_abundance = ["metaphyler"]
 supported_classifiers = ["fcp","phylosift","phmmer","blast",\
                              "metaphyler"]
@@ -294,6 +295,7 @@ for o, a in opts:
         if not foundit:
             print "!!Sorry, %s is not a supported read alignment method. Using bowtie instead"%(selected_programs["mapreads"])
             selected_programs["mapreads"] = "bowtie"
+        #mapper = a
     elif o in ("-r", "--retainBank"):
         retainBank = True
     elif o in ("-c", "--classifier"):

@@ -48,6 +48,8 @@ class Settings:
    SPARSEASSEMBLER = ""
 
    BOWTIE = ""
+   BOWTIE2 = ""
+   SAMTOOLS = ""
 
    METAGENEMARK = ""
    FRAGGENESCAN = ""
@@ -101,6 +103,8 @@ class Settings:
       Settings.SPARSEASSEMBLER = "%s%scpp%s%s-%s%sSparseAssembler"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
 
       Settings.BOWTIE        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.BOWTIE2        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.SAMTOOLS        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
 
       Settings.METAGENEMARK  = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.FRAGGENESCAN  = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
@@ -383,6 +387,16 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
        Settings.BOWTIE = getFromPath("bowtie", "Bowtie")
     bowtieMD5 = getMD5Sum(Settings.BOWTIE + os.sep + "bowtie")
 
+    Settings.BOWTIE2 = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+    if not os.path.exists(Settings.BOWTIE2 + os.sep + "bowtie2"):
+       Settings.BOWTIE2 = getFromPath("bowtie2", "Bowtie2")
+    bowtie2MD5 = getMD5Sum(Settings.BOWTIE + os.sep + "bowtie2")
+
+    Settings.SAMTOOLS = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+    if not os.path.exists(Settings.SAMTOOLS + os.sep + "samtools"):
+       Settings.SAMTOOLS = getFromPath("samtools", "samtools")
+    samtoolsMD5 = getMD5Sum(Settings.SAMTOOLS + os.sep + "samtools")
+
     # now for the annotation
     Settings.METAGENEMARK = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
     if not os.path.exists(Settings.METAGENEMARK + os.sep + "gmhmmp"):
@@ -436,6 +450,8 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
     conf.write("MetaVelvet:\t\t%s\t%s\n"%(Settings.METAVELVET, metaVelvetMD5))
     conf.write("SparseAssembler:\t%s\t%s\n"%(Settings.SPARSEASSEMBLER, sparseAssemblerMD5))
     conf.write("Bowtie:\t\t\t%s\t%s\n"%(Settings.BOWTIE, bowtieMD5))
+    conf.write("Bowtie2:\t\t\t%s\t%s\n"%(Settings.BOWTIE2, bowtie2MD5))
+    conf.write("samtools:\t\t\t%s\t%s\n"%(Settings.SAMTOOLS, samtoolsMD5))
     conf.write("METAGENEMARK:\t\t\t%s\t%s\n"%(Settings.METAGENEMARK, gmhmmpMD5))
     conf.write("FRAGGENESCAN:\t\t%s\t%s\n"%(Settings.FRAGGENESCAN, fraggenescanMD5))
     conf.write("FCP:\t\t\t%s\t%s\n"%(Settings.FCP, fcpMD5))

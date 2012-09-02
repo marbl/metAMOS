@@ -10,6 +10,7 @@ ca	Celera Assembler	Miller JR, Delcher AL, Koren S, Venter E, Walenz BP, Brownle
 bambus2	Bambus 2	Koren S, Treangen TJ, Pop M. Bambus 2: scaffolding metagenomes. Bioinformatics. 2011 Nov 1;27(21):2964-71. Epub 2011 Sep 16.
 fcp	FCP,Naive Bayesian Classifier	Macdonald NJ, Parks DH, Beiko RG. Rapid identification of high-confidence taxonomic assignments for metagenomic data. Nucleic Acids Res. 2012 Apr 24.
 bowtie	Bowtie	Langmead B, Trapnell C, Pop M, Salzberg SL. Ultrafast and memory-efficient alignment of short DNA sequences to the human genome. Genome Biol. 2009;10(3):R25. Epub 2009 Mar 4.
+bowtie2	Bowtie2	Langmead B, Salzberg SL. Fast gapped-read alignment with Bowtie 2. Nat Methods. 2012 Mar 4;9(4):357-9. doi: 10.1038/nmeth.1923.
 blast	BLAST	Altschul SF, Gish W, Miller W, Myers EW, Lipman DJ. Basic local alignment search tool. J Mol Biol. 1990 Oct 5;215(3):403-10.
 phmmer	PHMMER	Eddy SR. Accelerated Profile HMM Searches. PLoS Comput Biol. 2011 Oct;7(10):e1002195. Epub 2011 Oct 20.
 phylosift	PhyloSift	http://phylosift.wordpress.com/

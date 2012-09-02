@@ -16,6 +16,7 @@ phmmer	PHMMER	Eddy SR. Accelerated Profile HMM Searches. PLoS Comput Biol. 2011 
 phylosift	PhyloSift	http://phylosift.wordpress.com/
 minimus	Minimus	Sommer DD, Delcher AL, Salzberg SL, Pop M. Minimus: a fast, lightweight genome assembler. BMC Bioinformatics. 2007 Feb 26;8:64.
 glimmermg	Glimmer-MG	Kelley DR, Liu B, Delcher AL, Pop M, Salzberg SL. Gene prediction with Glimmer for metagenomic sequences augmented by classification and clustering. Nucleic Acids Res. 2012 Jan;40(1):e9. Epub 2011 Nov 18.
+samtools	SAMtools	Li H., Handsaker B.*, Wysoker A., Fennell T., Ruan J., Homer N., Marth G., Abecasis G., Durbin R. and 1000 Genome Project Data Processing Subgroup (2009) The Sequence alignment/map (SAM) format and SAMtools. Bioinformatics, 25, 2078-9
 sparseassembler	Sparse Assembler	Ye C, Ma ZS, Cannon CH, Pop M, Yu DW. Exploiting sparseness in de novo genome assembly. BMC Bioinformatics. 2012 Apr 19;13 Suppl 6:S1.
 metaphyler	MetaPhyler	Liu B, Gibbons T, Ghodsi M, Treangen T, Pop M. Accurate and fast estimation of taxonomic profiles from metagenomic shotgun sequences. BMC Genomics. 2011;12 Suppl 2:S4. Epub 2011 Jul 27.
 newbler	Newbler

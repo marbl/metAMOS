@@ -220,6 +220,7 @@ def runMetaVelvet(velvetPath, metavelvetPath, name):
 def Assemble(input,output):
    #pick assembler
    if "Assemble" in _skipsteps or "assemble" in _skipsteps:
+      run_process(_settings, "touch %s/Logs/assemble.skip"%(_settings.rundir), "Assemble")
       return 0
    if _asm == "none" or _asm == None:
       pass

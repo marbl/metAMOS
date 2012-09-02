@@ -446,6 +446,7 @@ def map2contig():
 def MapReads(input,output):
 
    if "MapReads" in _skipsteps or "mapreads" in _skipsteps:
+      run_process(_settings, "touch %s/Logs/mapreads.skip"%(_settings.rundir), "MapReads")
       return 0
    if _mapper == "bowtie" or _mapper == "bowtie2":
        map2contig()

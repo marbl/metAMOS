@@ -97,34 +97,39 @@ if __name__ == "__main__":
     steps.append("Classify")
 
     step_status = {}
-    step_status["Preprocess"] = True
-    step_status["Assemble"] = True
-    step_status["MapReads"] = True
-    step_status["FindORFS"] = True
-    step_status["FindRepeats"] = True
-    step_status["Scaffold"] = True
-    step_status["FindScaffoldORFS"] = True
-    step_status["Abundance"] = False
-    step_status["Annotate"] = False
-    step_status["Propagate"] = None
-    step_status["Classify"] = None
+    step_status["Preprocess"] = "OK"
+    step_status["Assemble"] = "OK"
+    step_status["MapReads"] = "OK"
+    step_status["FindORFS"] = "OK"
+    step_status["FindRepeats"] = "OK"
+    step_status["Scaffold"] = "OK"
+    step_status["FindScaffoldORFS"] = "OK"
+    step_status["Abundance"] = "FAIL"
+    step_status["Annotate"] = "FAIL" 
+    step_status["Propagate"] = "NONE"
+    step_status["Classify"] = "NONE"
     ##get status of each step from Log dir
     for step in steps:
         stepn = step.lower()
         started = False
         completed = False
+        skipped = False
         if os.path.exists("%s/Logs/%s.started"%(MA_dir,stepn)):
             started = True
         if os.path.exists("%s/Logs/%s.ok"%(MA_dir,stepn)):
             completed = True
-        if started and completed:
-            step_status[step] = True
+        if os.path.exists("%s/Logs/%s.skip"%(MA_dir,stepn)):
+            skipped = True
+        if started and completed and not skipped:
+            step_status[step] = "OK"
+        elif started and completed and skipped:
+            step_status[step] = "SKIP"
         elif started and not completed:
-            step_status[step] = False
+            step_status[step] = "FAIL"
         elif not started:
-            step_status[step] = None
+            step_status[step] = "NONE"
         else:
-            step_status[step] = None
+            step_status[step] = "NONE" 
 
     #+male1  /cbcb/project-scratch/sergek/metAMOS/individualAsms/m1_asm      proba   b-      metaphyler=1
     ## call Dan's script, for now on a single sample/run
@@ -495,12 +500,15 @@ if __name__ == "__main__":
        status = "NA"
        color = "gray"
        try:
-          if step_status[step] == True:
+          if step_status[step] == "OK":
              status = "OK"
              color = "green"
-          elif step_status[step] == False:
+          elif step_status[step] == "FAIL":
              status = "FAIL"
              color = "red"
+          elif step_status[step] == "SKIP":
+             status = "SKIPPED"
+             color = "blue"
        except KeyError:
           continue
 

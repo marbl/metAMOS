@@ -1,6 +1,19 @@
 import os, sys, string, subprocess, distutils.util
 
+user_home = os.environ["HOME"]
 print "<<Weclome to metAMOS install>>"
+
+#add access to utils.py, for utils dir
+INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
+sys.path.append(INITIAL_SRC)
+import utils
+sys.path.append(utils.INITIAL_UTILS)
+
+#add libs to pythonpath
+os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python:"
+os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam:"
+os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib:"
+os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python:"
 
 silentInstall=False
 if (len(sys.argv) > 1):
@@ -165,8 +178,11 @@ if 0 or not os.path.exists("./Utilities/python/pysam"):
        os.system("wget http://pysam.googlecode.com/files/pysam-0.6.tar.gz -O ./pysam.tar.gz")
        os.system("tar -C ./Utilities/python -xvf pysam.tar.gz")
        os.system("mv ./Utilities/python/pysam-0.6 ./Utilities/python/pysam")
-       #need to install as root? change with --prefix to other dir
-       os.system("sudo python ./Utilities/python/pysam/setup.py install")
+       #for root install
+       #os.system("sudo python ./Utilities/python/pysam/setup.py install")
+       os.system("cd ./Utilities/python/pysam")
+       os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
+       os.system("cd %s"%(sys.path[0]))
        os.system("rm -rf pysam.tar.gz")
        #os.system("ln -s %s/Utilities/python/taxonomy.txt %s/Utilities/models/taxonomy.txt"%(sys.path[0], sys.path[0]))
 if 0 or not os.path.exists("./phylosift"):

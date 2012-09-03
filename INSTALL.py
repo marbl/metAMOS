@@ -14,6 +14,7 @@ os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python:"
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam:"
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib:"
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python:"
+os.system("mkdir %s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
 
 silentInstall=False
 if (len(sys.argv) > 1):

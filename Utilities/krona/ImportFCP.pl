@@ -201,7 +201,7 @@ foreach my $input (@ARGV)
                         $contigID,
 			$taxonomy
 
-		) = split /\s/, $line;
+		) = split /\t/, $line;
                 if (!defined($taxonomy)) {
                    # done parsing
                    last;
@@ -234,10 +234,14 @@ foreach my $input (@ARGV)
                           while ( 1 ) {
                              my $confLine = <CONF>;
                              chomp $confLine;
+
                              my ($confID, $remainder) = split /\t/, $confLine, 2;
                              if ($confID eq $contigID) {
                                 $confidence = ( split/\t/, $confLine )[$index]; 
                                 last;
+                             }
+                             if (eof(CONF)) {
+                                die "Error confidence file is not in sync with output, could not find matching confidence value for $contigID\n";
                              }
                           }
                        }

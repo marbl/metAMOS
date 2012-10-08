@@ -246,6 +246,28 @@ def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS"):
     #    genecnt +=1
     #cvgg.close()
 
+def findFastaORFs(orf, contigs, outputFNA, outputFAA):
+   if orf == "metagenemark":
+       if not os.path.exists(_settings.METAGENEMARK + os.sep + "gmhmmp"):
+          print "Error: MetaGeneMark not found in %s. Please check your path and try again.\n"%(_settings.METAGENEMARK)
+          raise(JobSignalledBreak)
+       run_process(_settings, "%s/gmhmmp -o %s/FindORFS/out/%s.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s"%(_settings.METAGENEMARK,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,contigs),"FindORFS")
+       parse_genemarkout("%s/FindORFS/out/%s.orfs"%(_settings.rundir,_settings.PREFIX))
+       run_process(_settings, "mv %s/FindORFS/%s.fna %s/FindORFS/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputFNA), "FindORFS")
+       run_process(_settings, "mv %s/FindORFS/%s.faa %s/FindORFS/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputFAA), "FindORFS")
+   elif orf == "fraggenescan":
+       if not os.path.exists(_settings.FRAGGENESCAN + os.sep + "FragGeneScan"):
+          print "Error: FragGeneScan not found in %s. Please check your path and try again.\n"%(_settings.FRAGGENESCAN)
+          raise(JobSignalledBreak)
+       run_process(_settings,"%s/FragGeneScan -s %s -o %s/FindORFS/out/%s.orfs -w 0 -t complete"%(_settings.FRAGGENESCAN,contigs,_settings.rundir,_settings.PREFIX), "FindORFS")
+       
+       parse_fraggenescanout("%s/FindORFS/out/%s.orfs"%(_settings.rundir,_settings.PREFIX))
+       run_process(_settings,"mv %s/FindORFS/out/%s.orfs.ffn %s/FindORFS/out/%s"%(_settings.rundir,_settings.PREFIX,_settings.rundir,outputFNA), "FindORFS")
+       run_process(_settings,"mv %s/FindORFS/out/%s.orfs.faa %s/FindORFS/out/%s"%(_settings.rundir,_settings.PREFIX,_settings.rundir,outputFAA), "FindORFS")
+   else:
+       #not recognized
+       return 1
+
 @follows(MapReads)
 @posttask(touch_file("%s/Logs/findorfs.ok"%(_settings.rundir)))
 @files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.PREFIX))
@@ -257,8 +279,7 @@ def FindORFS(input,output):
       run_process(_settings, "ln -t %s/Annotate/in -s %s/FindORFS/out/%s.faa"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "FindORFS")
       return 0
 
-   if _asm == "soapdenovo":
-         
+   #if _asm == "soapdenovo":
        #if not os.path.exists("%s/Assemble/out/%s.asm.scafSeq.contigs"%(_settings.rundir,_settings.PREFIX)):
        #    run_process(_settings, "python %s/python/extract_soap_contigs.py %s/Assemble/out/%s.asm.scafSeq"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX))
        #run_process(_settings, "unlink %s/FindORFS/in/%s.asm.scafSeq.contigs"%(_settings.rundir,_settings.PREFIX))
@@ -266,33 +287,28 @@ def FindORFS(input,output):
        #run_process(_settings, "ln -t %s/FindORFS/in/ -s %s/Assemble/out/%s.asm.scafSeq.contigs"%(_settings.rundir, _settings.rundir,_settings.PREFIX))
        #run_process(_settings, "cp %s/FindORFS/in/%s.asm.scafSeq.contigs  %s/FindORFS/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX))
        #try using contigs instead of contigs extracted from scaffolds
-       run_process(_settings, "cp %s/Assemble/out/%s.asm.contig  %s/FindORFS/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")
-   else:
+       #run_process(_settings, "cp %s/Assemble/out/%s.asm.contig  %s/FindORFS/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")
+   #else:
+   run_process(_settings, "unlink %s/FindORFS/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"FindORFS")
+   run_process(_settings, "ln -t %s/FindORFS/in/ -s %s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
 
-       run_process(_settings, "unlink %s/FindORFS/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"FindORFS")
-       run_process(_settings, "ln -t %s/FindORFS/in/ -s %s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
+   findFastaORFs(_orf, "%s/FindORFS/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "%s.ctg.fna"%(_settings.PREFIX), "%s.ctg.faa"%(_settings.PREFIX))
 
+   for lib in _readlibs:
+      run_process(_settings, "ln -t %s/FindORFS/in/ -s %s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir,_settings.rundir,lib.id),"FindORFS")
+      findFastaORFs(_orf, "%s/FindORFS/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id), "%s.lib%d.fna"%(_settings.PREFIX, lib.id), "%s.lib%d.faa"%(_settings.PREFIX, lib.id))
 
-   #run_process(_settings, "ln -t %s/FindORFS/in/ -s %s/Assemble/out/%s.asm.scafSeq.contigs"%(_settings.rundir,_settings.rundir,_settings.PREFIX))
-   if _orf == "metagenemark":
-       run_process(_settings, "%s/gmhmmp -o %s/FindORFS/out/%s.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s/FindORFS/in/%s.asm.contig"%(_settings.METAGENEMARK,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX),"FindORFS")
-       parse_genemarkout("%s/FindORFS/out/%s.orfs"%(_settings.rundir,_settings.PREFIX))
-       run_process(_settings, "unlink %s/Annotate/in/%s.faa"%(_settings.rundir,_settings.PREFIX),"FindORFS")
-       run_process(_settings, "unlink %s/Annotate/in/%s.fna"%(_settings.rundir,_settings.PREFIX),"FindORFS")
-       run_process(_settings, "unlink %s/FindRepeats/in/%s.fna"%(_settings.rundir,_settings.PREFIX),"FindORFS")
-       run_process(_settings, "ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
-       run_process(_settings, "ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
-       run_process(_settings, "ln -t %s/FindRepeats/in/ -s %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
-   elif _orf == "fraggenescan":
-       run_process(_settings,"%s/FragGeneScan -s %s/FindORFS/in/%s.asm.contig -o %s/FindORFS/out/%s.orfs -w 0 -t complete"%(_settings.FRAGGENESCAN,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX), "FindORFS")
-       
-       parse_fraggenescanout("%s/FindORFS/out/%s.orfs"%(_settings.rundir,_settings.PREFIX))
-       run_process(_settings,"cp %s/FindORFS/out/%s.orfs.ffn %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")
-       run_process(_settings,"cp %s/FindORFS/out/%s.orfs.faa %s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")
-       run_process(_settings,"cp %s/FindORFS/out/%s.orfs.ffn %s/Annotate/in/%s.fna"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")
-       run_process(_settings,"cp %s/FindORFS/out/%s.orfs.faa %s/Annotate/in/%s.faa"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")
-       run_process(_settings,"cp %s/FindORFS/out/%s.orfs.ffn %s/FindRepeats/in/%s.fna"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")
-       run_process(_settings,"cp %s/FindORFS/out/%s.orfs.faa %s/FindRepeats/in/%s.faa"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")
-   else:
-       #not recognized
-       return 1
+   # merge results
+   run_process(_settings, "rm -r %s/FindORFS/out/%s.fna"%(_settings.rundir, _settings.PREFIX), "FindORFS")
+   run_process(_settings, "cat %s/FindORFS/out/%s*.fna > %s/FindORFS/out/%s.fna"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "FindORFS")
+   run_process(_settings, "rm -r %s/FindORFS/out/%s.faa"%(_settings.rundir, _settings.PREFIX), "FindORFS")
+   run_process(_settings, "cat %s/FindORFS/out/%s*.faa > %s/FindORFS/out/%s.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "FindORFS")
+
+   run_process(_settings, "unlink %s/Annotate/in/%s.faa"%(_settings.rundir,_settings.PREFIX),"FindORFS")
+   run_process(_settings, "unlink %s/Annotate/in/%s.fna"%(_settings.rundir,_settings.PREFIX),"FindORFS")
+   run_process(_settings, "unlink %s/FindRepeats/in/%s.fna"%(_settings.rundir,_settings.PREFIX),"FindORFS")
+   run_process(_settings, "ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
+   run_process(_settings, "ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
+   run_process(_settings, "ln -t %s/FindRepeats/in/ -s %s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
+   run_process(_settings, "ln -t %s/FindRepeats/in/ -s %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
+

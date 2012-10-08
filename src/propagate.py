@@ -54,3 +54,8 @@ def Propagate(input,output):
       run_process(_settings, "ln %s/Propagate/in/%s.clusters %s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Propagate")
    else:
       run_process(_settings, "%s/FilterEdgesByCluster -b %s/Scaffold/in/%s.bnk -clusters %s/Propagate/in/%s.clusters -noRemoveEdges > %s/Propagate/out/%s.clusters"%(_settings.AMOS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Propagate")
+
+   # now add the headers to the propagated file
+   run_process(_settings, "head -n 1 %s/Propagate/in/%s.annots | cat - %s/Propagate/out/%s.clusters > %s/Propagate/out/%s.tmp && mv %s/Propagate/out/%s.tmp %s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Propagate")
+
+  # here we should also propagate to the reads within contigs

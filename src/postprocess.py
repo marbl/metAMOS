@@ -115,12 +115,86 @@ def Postprocess(input,output):
    #webbrowser.open_new(output.html)
    #webbrowser.open_new_tab(output.html)
 
-   run_process(_settings, "ln %s/Annotate/out/%s.annots %s/Postprocess/out/"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
+   # add annotations for contigs and reads
+   run_process(_settings, "ln %s/Annotate/out/%s.annots %s/Postprocess/out/%s.original.annots"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.taxa_level), "Postprocess")
+   run_process(_settings, "ln %s/Propagate/out/%s.clusters %s/Postprocess/out/%s.propagated.annots"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.taxa_level), "Postprocess")
    run_process(_settings, "cp %s/Abundance/out/%s.classify.txt %s/Postprocess/out/. "%(_settings.rundir,_settings.PREFIX,_settings.rundir),"Postprocess")
+   readctg_dict = {}
+   annots_dict = {}
+   for lib in _readlibs:
+     ctgfile = open("%s/Assemble/out/%s.lib%dcontig.reads"%(_settings.rundir, _settings.PREFIX, lib.id), 'r')
+     for line in ctgfile.xreadlines():
+        line = line.replace("\n","")
+        read, ctg = line.split()
+        if ctg in readctg_dict:
+           readctg_dict[ctg].append(read)
+        else:
+           readctg_dict[ctg] = [read,]
+     ctgfile.close()
+
+   annotsfile = open("%s/Postprocess/out/%s.original.annots"%(_settings.rundir, _settings.taxa_level), 'r')
+   annotreads = open("%s/Postprocess/out/%s.original.reads.annots"%(_settings.rundir, _settings.taxa_level), 'w')
+   for line in annotsfile.xreadlines():
+     line = line.replace("\n", "")
+     ctg, annot = line.split()
+     annots_dict[ctg] = True
+     if ctg in readctg_dict:
+        for x in readctg_dict[ctg]:
+           annotreads.write("%s\t%s\n"%(x, annot))
+   annotsfile.close()
+   annotsfile = open("%s/Postprocess/out/%s.original.annots"%(_settings.rundir, _settings.taxa_level), 'r')
+   for line in annotsfile.xreadlines():
+      line = line.replace("\n", "")
+      ctg, annot = line.split()
+      if ctg not in annots_dict:
+         annotreads.write("%s\t%s\n"%(ctg, annot))
+   annotsfile.close()
+   annotreads.close()
+   annots_dict.clear()
+
+   annotsfile = open("%s/Postprocess/out/%s.propagated.annots"%(_settings.rundir, _settings.taxa_level), 'r')
+   maxClassID = 0
+   for line in annotsfile.xreadlines():
+      line = line.replace("\n", "")
+      ctg, annot = line.split()
+
+      try:
+         if int(annot) > maxClassID:
+            maxClassID = int(annot)
+      except ValueError:
+         maxClassID = maxClassID
+
+   annotsfile.seek(0,0)
+   annotreads = open("%s/Postprocess/out/%s.propagated.reads.annots"%(_settings.rundir, _settings.taxa_level), 'w')
+   for line in annotsfile.xreadlines():
+     line = line.replace("\n", "")
+     ctg, annot = line.split()
+     try:
+        if int(annot) == maxClassID:
+           annot = 0
+     except ValueError:
+        continue
+     annots_dict[ctg] = True
+     if ctg in readctg_dict:
+        for x in readctg_dict[ctg]:
+           annotreads.write("%s\t%s\n"%(x, annot))
+   annotsfile.close()
+   annotsfile = open("%s/Postprocess/out/%s.original.annots"%(_settings.rundir, _settings.taxa_level), 'r')
+   for line in annotsfile.xreadlines():
+      line = line.replace("\n", "")
+      ctg, annot = line.split()
+      if ctg not in annots_dict:
+         annotreads.write("%s\t%s\n"%(ctg, annot))
+   annotsfile.close()
+   annotreads.close()
+   annots_dict.clear()
+   readctg_dict.clear()
+
+   # add links to assembled contigs and scaffolds
    run_process(_settings, "cp %s/Scaffold/out/%s.linearize.scaffolds.final %s/Postprocess/out/%s.scf.fa"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Postprocess")
    run_process(_settings, "cp %s/Scaffold/out/%s.contigs %s/Postprocess/out/%s.ctg.fa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
+   run_process(_settings, "cp %s/Assemble/out/%s.contig.cvg %s/Postprocess/out/%s.ctg.cvg"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
    run_process(_settings, "ln -t %s/Postprocess/out/ -s %s/Scaffold/in/%s.bnk "%(_settings.rundir,_settings.rundir,_settings.PREFIX),"Postprocess")
-   # todo: add coverage
 
 #   print "python %s/python/create_report.py %s/Abundance/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/ %s/Postprocess/out/%s.scf.fa %s %s %d"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.AMOS, len(_readlibs))
 

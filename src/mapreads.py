@@ -79,6 +79,7 @@ def map2contig():
             read_lookup[readcnt] = mate1
             read_lookup[readcnt+1] = mate2
             readcnt += 2
+
     if bowtie_mapping == 1:
         for lib in _readlibs:
             seqfile = open("%s/Preprocess/out/lib%d.seq.btfilt"%(_settings.rundir,lib.id),'w')
@@ -104,15 +105,19 @@ def map2contig():
                 #run_process(_settings, "%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir))
                 if "bowtie" not in _skipsteps and (lib.format == "fasta" or lib.format == "sff"):
                     if trim:
-                        run_process(_settings, "%s/bowtie -p %d -f -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                        run_process(_settings, "%s/bowtie -p %d -f -v 1 -M 2 --un %s/Assemble/out/lib%d.unaligned.fasta %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,lib.id_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                     else:
-                        run_process(_settings, "%s/bowtie -p %d -f -l 25 -e 140 --best --strata -m 10 -k 1 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                        run_process(_settings, "%s/bowtie -p %d -f -l 25 -e 140 --best --strata -m 10 -k 1 --un %s/Assemble/out/lib%d.unaligned.fasta %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                 elif "bowtie" not in _skipsteps and lib.format != "fasta":
                     if trim:
-                        run_process(_settings, "%s/bowtie  -p %d -v 1 -M 2 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                        run_process(_settings, "%s/bowtie  -p %d -v 1 -M 2 --un %s/Assemble/out/lib%d.unaligned.seq %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                     else:
-                        run_process(_settings, "%s/bowtie  -p %d -l 25 -e 140 --best --strata -m 10 -k 1 %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                        run_process(_settings, "%s/bowtie  -p %d -l 25 -e 140 --best --strata -m 10 -k 1 --un %s/Assemble/out/lib%d.unaligned.seq %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                    run_process(_settings, "java -cp %s convertFastqToFasta %s/Assemble/out/lib%d.unaligned.seq %s/Assemble/out/lib%d.unaligned.fasta %s/Assemble/out/lib%d.unaligned.fasta.qual"%(_settings.METAMOS_JAVA, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id), "MapReads")
+
                 infile = open("%s/Assemble/out/lib%d.bout"%(_settings.rundir,lib.id),'r')
+                readctgfile =  open("%s/Assemble/out/%s.lib%dcontig.reads"%(_settings.rundir,_settings.PREFIX, lib.id),'w')
+
                 for line1 in infile.xreadlines():
                     line1 = line1.replace("\n","")
                     ldata = line1.split("\t")
@@ -139,6 +144,7 @@ def map2contig():
                     mapped_reads[read] = 1
                     strand_dict[read] = strand
                     readcontig_dict[read] = contig
+                    readctgfile.write("%s\t%s\n"%(read, contig))
                     if strand == "+":
                         fiveprimeend_dict[read] = int(spos)
                     else:
@@ -151,13 +157,16 @@ def map2contig():
                     seqdict[read] = read_seq
                     seqfile.write(">%s\n%s\n"%(read,read_seq))
                     seqfile.flush()
+                readctgfile.close()
             elif _mapper == "bowtie2":
                 if not os.path.exists("%s/Assemble/out/IDX.1.bt2"%(_settings.rundir)):
                     run_process(_settings, "%s/bowtie2-build -o 2 %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir),"MapReads")
                 if "bowtie" not in _skipsteps and lib.format == "fasta":
-                    run_process(_settings, "%s/bowtie2 -p %d -f -D 15 -R 2 -N 0 -L 20 -i S,1,1.10 --un %s/Assemble/out/unaligned.out %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq -S %s/Assemble/out/lib%d.sam"%(_settings.BOWTIE2,_settings.threads,_settings.rundir,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                    run_process(_settings, "%s/bowtie2 -p %d -f -D 15 -R 2 -N 0 -L 20 -i S,1,1.10 --un %s/Assemble/out/lib%d.unaligned.fasta %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq -S %s/Assemble/out/lib%d.sam"%(_settings.BOWTIE2,_settings.threads,_settings.rundir,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                 elif "bowtie" not in _skipsteps and lib.format != "fasta":
-                    run_process(_settings, "%s/bowtie2 -p %d -D 15 -R 2 -N 0 -L 20 -i S,1,1.10 --un %s/Assemble/out/unaligned.out %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq -S %s/Assemble/out/lib%d.sam"%(_settings.BOWTIE2,_settings.threads,_settings.rundir,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads") 
+                    run_process(_settings, "%s/bowtie2 -p %d -D 15 -R 2 -N 0 -L 20 -i S,1,1.10 --un %s/Assemble/out/lib%d.unaligned.seq %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq -S %s/Assemble/out/lib%d.sam"%(_settings.BOWTIE2,_settings.threads,_settings.rundir,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads") 
+                    run_process(_settings, "java -cp %s convertFastqToFasta %s/Assemble/out/lib%d.unaligned.seq %s/Assemble/out/lib%d.unaligned.fasta %s/Assemble/out/lib%d.unaligned.fasta.qual"%(_settings.METAMOS_JAVA, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id), "MapReads") 
+
                 if not os.path.exists("%s/Assemble/out/lib%d.sam"%(_settings.rundir,lib.id)):
                     pass
                 else:
@@ -180,6 +189,8 @@ def map2contig():
                    #samfile = pysam.Samfile("%s/barnaASM/out/%s.srt.bam"%(_settings.rundir,_settings.PREFIX),'rb')
                    #samfile = pysam.Samfile("%s/Assemble/out/lib%d.srt.bam"%(_settings.rundir,lib.id),'rb')
                    samfile = pysam.Samfile("%s/Assemble/out/lib%d.sam"%(_settings.rundir,lib.id),'r')
+                   readctgfile =  open("%s/Assemble/out/%s.lib%dcontig.reads"%(_settings.rundir,_settings.PREFIX, lib.id),'w') 
+
                    allreads = samfile.fetch()
                    #print len(allreads)
                    cnt = 1
@@ -199,6 +210,7 @@ def map2contig():
                        contig = ""
                        if read.tid > 0:
                            contig = samfile.getrname(read.tid)
+                           readctgfile.write("%s\t%s\n"%(readname, contig))
                        else:
                            continue
                        strand = "+"
@@ -222,6 +234,7 @@ def map2contig():
                        print readname, "end"
                    print "close sam"
                    samfile.close()
+                   readctgfile.close()
                    #pileup_columns = samfile.pileup( refg,spos,epos)
                    #for pc in pileup_columns :
                    #    perbp_cov.write('%s,%s\n' % (pc.pos, pc.n))

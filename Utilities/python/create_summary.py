@@ -140,7 +140,7 @@ if __name__ == "__main__":
 
     ##update counts
     #count reads
-    os.system("grep -c \">\" %s/Preprocess/out/*.seq > readcount.txt"%(MA_dir))
+    os.system("grep -c \">\" %s/Preprocess/out/*.fasta > readcount.txt"%(MA_dir))
     readcount = open("readcount.txt",'r').read().replace("\n","")  
     #print readcount
     os.system("rm readcount.txt")

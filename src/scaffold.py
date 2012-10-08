@@ -89,7 +89,7 @@ def Scaffold(input,output):
    # after the banks are created, skip the scaffolding when we have no mates
    if _mated == False and numMates == 0:
        print "No mate pair info available for scaffolding, skipping"
-       run_process(_settings, "%s/bank2fasta -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.contigs"%(_settings.AMOS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
+       run_process(_settings, "%s/bank2fasta -eid -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.contigs"%(_settings.AMOS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
        run_process(_settings, "ln %s/Scaffold/out/%s.contigs %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
        #run_process(_settings, "touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX), "Scaffold")
        #_skipsteps.append("FindScaffoldORFS")
@@ -110,7 +110,7 @@ def Scaffold(input,output):
    run_process(_settings, "%s/OrientContigs %s -b %s/Scaffold/in/%s.bnk -repeats %s/Scaffold/in/%s.reps "%(_settings.BAMBUS2,orientContigParams,_settings.rundir,_settings.PREFIX, _settings.rundir, _settings.PREFIX),"Scaffold")
 
    # output results
-   run_process(_settings, "%s/bank2fasta  -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.contigs"%(_settings.AMOS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
+   run_process(_settings, "%s/bank2fasta -eid  -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.contigs"%(_settings.AMOS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
    run_process(_settings, "%s/OutputMotifs -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.motifs"%(_settings.BAMBUS2,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
    run_process(_settings, "%s/OutputResults -b %s/Scaffold/in/%s.bnk -p %s/Scaffold/out/%s "%(_settings.BAMBUS2,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
    run_process(_settings, "%s/OutputScaffolds -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.scaffolds.final"%(_settings.BAMBUS2,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")

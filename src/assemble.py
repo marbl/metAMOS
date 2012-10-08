@@ -109,7 +109,10 @@ def runVelvet(velvetPath, name):
          velvethCommandLine += "-fastq"
 
       if lib.mated:
-         velvethCommandLine += " -shortPaired%s "%(currLibString)
+         if lib.innie:
+            velvethCommandLine += " -shortPaired%s "%(currLibString)
+         else:
+            velvethCommandLine += " -shortMatePaired%s "%(currLibString)
       else:
          velvethCommandLine += " -short%s "%(currLibString)
       velvethCommandLine += "%s/Preprocess/out/lib%d.seq "%(_settings.rundir, lib.id)
@@ -214,7 +217,7 @@ def runMetaVelvet(velvetPath, metavelvetPath, name):
    run_process(_settings, "ln %s/Assemble/out/meta-velvetg.contigs.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
        
 @posttask(touch_file("%s/Logs/assemble.ok"%(_settings.rundir))) 
-@files("%s/Preprocess/out/preprocess.success"%(_settings.rundir),["%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX)])
+@files("%s/Preprocess/out/preprocess.success"%(_settings.rundir),["%s/Logs/assemble.ok"%(_settings.rundir)])
 #@posttask(create_symlink,touch_file("completed.flag"))
 @follows(Preprocess)
 def Assemble(input,output):
@@ -275,7 +278,9 @@ def Assemble(input,output):
               print "Warning: meta-IDBA requires reads to be in (interleaved) fasta format, converting library"
           #apparently connect = scaffold? need to convert fastq to interleaved fasta to run, one lib per run??
           #print "%s/metaidba --read %s/Preprocess/out/lib%d.fasta --output  %s/Assemble/out/%s.asm --mink 21 --maxk %d --cover 1 --connect"%(_settings.METAIDBA,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX,_settings.kmer)
-          run_process(_settings, "%s/metaidba --read %s/Preprocess/out/lib%d.fasta --output  %s/Assemble/out/%s.asm --mink 21 --maxk %d --cover 1 --connect"%(_settings.METAIDBA,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX,_settings.kmer),"Assemble")
+
+          metaidbaOptions = getProgramParams(_settings.METAMOS_UTILS, "metaidba.spec", "", "--")
+          run_process(_settings, "%s/metaidba --read %s/Preprocess/out/lib%d.fasta --output  %s/Assemble/out/%s.asm %s --maxk %d"%(_settings.METAIDBA,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX,metaidbaOptions,_settings.kmer),"Assemble")
           run_process(_settings, "mv %s/Assemble/out/%s.asm-contig.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Assemble")
 
    elif _asm == "newbler":
@@ -353,18 +358,18 @@ def Assemble(input,output):
       frglist = ""
       matedString = ""
       for lib in _readlibs:
-          for read in lib.reads:
-              if read.format == "fastq":
-                  if lib.mated:
-                      matedString = "-insertsize %d %d -%s -mates"%(lib.mean, lib.stdev, "innie" if lib.innie else "outtie") 
-                  else:
-                     matedString = "-reads"
-                  run_process(_settings, "%s/fastqToCA -libraryname %s -technology illumina %s %s/Preprocess/out/lib%d.seq > %s/Preprocess/out/lib%d.frg"%(_settings.CA, lib.sid, matedString, _settings.rundir, lib.id, _settings.rundir, lib.id),"Assemble")
-              elif read.format == "fasta":
-                  if lib.mated:
-                      matedString = "-mean %d -stddev %d -m %s/Preprocess/out/lib%d.seq.mates"%(lib.mean, lib.stdev, _settings.rundir, lib.id)
-                  run_process(_settings, "%s/convert-fasta-to-v2.pl -l %s %s -s %s/Preprocess/out/lib%d.seq -q %s/Preprocess/out/lib%d.seq.qual > %s/Preprocess/out/lib%d.frg"%(_settings.CA, lib.sid, matedString, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id),"Assemble")
-              frglist += "%s/Preprocess/out/lib%d.frg "%(_settings.rundir, lib.id)
+         if lib.format == "fastq":
+            if lib.mated:
+               matedString = "-insertsize %d %d -%s -mates"%(lib.mean, lib.stdev, "innie" if lib.innie else "outtie") 
+            else:
+               matedString = "-reads"
+            run_process(_settings, "%s/fastqToCA -libraryname %s -technology illumina %s %s/Preprocess/out/lib%d.seq > %s/Preprocess/out/lib%d.frg"%(_settings.CA, lib.sid, matedString, _settings.rundir, lib.id, _settings.rundir, lib.id),"Assemble")
+         elif lib.format == "fasta":
+            if lib.mated:
+               matedString = "-mean %d -stddev %d -m %s/Preprocess/out/lib%d.seq.mates"%(lib.mean, lib.stdev, _settings.rundir, lib.id)
+            run_process(_settings, "%s/convert-fasta-to-v2.pl -l %s %s -s %s/Preprocess/out/lib%d.seq -q %s/Preprocess/out/lib%d.seq.qual > %s/Preprocess/out/lib%d.frg"%(_settings.CA, lib.sid, matedString, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id),"Assemble")
+         frglist += "%s/Preprocess/out/lib%d.frg "%(_settings.rundir, lib.id)
+
       run_process(_settings, "%s/runCA -p %s -d %s/Assemble/out/ -s %s/config/asm.spec %s"%(_settings.CA,_settings.PREFIX,_settings.rundir,_settings.METAMOS_UTILS,frglist),"Assemble")
       #convert CA to AMOS
       run_process(_settings, "%s/gatekeeper -dumpfrg -allreads %s.gkpStore > %s.frg"%(_settings.CA, _settings.PREFIX, _settings.PREFIX),"Assemble")

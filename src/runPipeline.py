@@ -373,7 +373,6 @@ if not os.path.exists(settings.rundir) or settings.rundir == "":
     sys.exit(1)
 
 #remove started & ok flags in Logs
-os.system("rm %s%sLogs%s*.ok"%(settings.rundir,os.sep,os.sep))
 os.system("rm %s%sLogs%s*.started"%(settings.rundir,os.sep,os.sep))
 #parse frag/libs out of pipeline.ini out of rundir
 inifile = settings.rundir+os.sep+"pipeline.ini"
@@ -508,6 +507,7 @@ for lib in readlibs:
 if "Preprocess" in forcesteps:
    for path in readpaths:
       utils.run_process(settings, "touch %s"%(path),"RunPipeline")
+   os.system("rm %s%sLogs%s*.ok"%(settings.rundir,os.sep,os.sep))
 utils.Settings.readpaths = readpaths
 
 asmfiles = []

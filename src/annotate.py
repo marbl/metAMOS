@@ -180,7 +180,7 @@ def Annotate(input,output):
 
    run_process(_settings, "touch %s/Annotate/out/%s.annots"%(_settings.rundir, _settings.PREFIX), "Annotate")
    run_process(_settings, "unlink %s/Annotate/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "Annotate")
-   run_process(_settings, "ln -t %s/Annotate/in/ -s %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
+   run_process(_settings, "ln -s %s/Assemble/out/%s.asm.contig %s/Annotate/in/"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Annotate")
    run_process(_settings, "unlink %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")
 
    annotateSeq(_cls, "%s/Annotate/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "%s/Annotate/in/%s.faa"%(_settings.rundir, _settings.PREFIX), "%s/Annotate/in/%s.fna"%(_settings.rundir, _settings.PREFIX), "%s.ctg"%(_settings.PREFIX))

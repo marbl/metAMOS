@@ -41,17 +41,22 @@ def LCS(S1, S2):
                 M[x][y] = 0
     return S1[x_longest-longest: x_longest]
 
-def convertFastaToFastq(libID, mated):
-   run_process(_settings, "ln %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.fasta"%(_settings.rundir, libID, _settings.rundir, libID), "Preprocess")
-   run_process(_settings, "java -cp %s convertFastaAndQualToFastq %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.seq.qual > %s/Preprocess/out/lib%d.fastq"%(_settings.METAMOS_JAVA, _settings.rundir, libID, _settings.rundir, libID, _settings.rundir, libID), "Preprocess")
-   if mated:
-      run_process(_settings, "java -cp %s convertFastaAndQualToFastq %s/Preprocess/out/lib%d.1.fasta %s/Preprocess/out/lib%d.1.fasta.qual > %s/Preprocess/out/lib%d.1.fastq"%(_settings.METAMOS_JAVA, _settings.rundir, libID, _settings.rundir, libID, _settings.rundir, libID), "Preprocess")
-      run_process(_settings, "java -cp %s convertFastaAndQualToFastq %s/Preprocess/out/lib%d.2.fasta %s/Preprocess/out/lib%d.2.fasta.qual > %s/Preprocess/out/lib%d.2.fastq"%(_settings.METAMOS_JAVA, _settings.rundir, libID, _settings.rundir,libID, _settings.rundir, libID), "Preprocess")
+def convertFastaToFastq(fastaFile, qualFile, outputFile, stepName):
+   run_process(_settings, "java -cp %s convertFastaAndQualToFastq %s %s > %s"%(_settings.METAMOS_JAVA, fastaFile, qualFile, outputFile), stepName)
 
-def convertFastqToFasta(libID, mated):
-   # convert to fasta
+def convertInputFastaToFastq(libID, mated):
+   run_process(_settings, "ln %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.fasta"%(_settings.rundir, libID, _settings.rundir, libID), "Preprocess")
+   convertFastaToFastq("%s/Preprocess/out/lib%d.seq"%(_settings.rundir, libID), "%s/Preprocess/out/lib%d.seq.qual"%(_settings.rundir, libID), "%s/Preprocess/out/lib%d.fastq"%(_settings.rundir, libID), "Preprocess")
+   if mated:
+      convertFastaToFastq("%s/Preprocess/out/lib%d.1.fasta"%(_settings.rundir, libID), "%s/Preprocess/out/lib%d.1.fasta.qual"%(_settings.rundir, libID), "%s/Preprocess/out/lib%d.1.fastq"%(_settings.rundir, libID), "Preprocess")
+      convertFastaToFastq("%s/Preprocess/out/lib%d.2.fasta"%(_settings.rundir, libID), "%s/Preprocess/out/lib%d.2.fasta.qual"%(_settings.rundir, libID), "%s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir, libID), "Preprocess")
+
+def convertFastqToFasta(fastqFile, fastaFile, qualFile, stepName):
+   run_process(_settings, "java -cp %s convertFastqToFasta %s %s %s"%(_settings.METAMOS_JAVA, fastqFile, fastaFile, qualFile), stepName)
+
+def convertInputFastqToFasta(libID, mated):
    run_process(_settings, "ln %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.fastq"%(_settings.rundir, libID, _settings.rundir, libID), "Preprocess")
-   run_process(_settings, "java -cp %s convertFastqToFasta %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.fasta %s/Preprocess/out/lib%d.fasta.qual"%(_settings.METAMOS_JAVA, _settings.rundir, libID, _settings.rundir, libID, _settings.rundir, libID), "Preprocess")
+   convertFastqToFasta("%s/Preprocess/out/lib%d.seq"%(_settings.rundir, libID), "%s/Preprocess/out/lib%d.fasta"%(_settings.rundir, libID), "%s/Preprocess/out/lib%d.fasta.qual"%(_settings.rundir, libID), "Preprocess")
    if mated:
       run_process(_settings, "java -cp %s convertFastqToFasta %s/Preprocess/out/lib%d.1.fastq %s/Preprocess/out/lib%d.1.fasta %s/Preprocess/out/lib%d.1.fasta.qual"%(_settings.METAMOS_JAVA, _settings.rundir, libID, _settings.rundir, libID, _settings.rundir, libID), "Preprocess")
       run_process(_settings, "java -cp %s convertFastqToFasta %s/Preprocess/out/lib%d.2.fastq %s/Preprocess/out/lib%d.2.fasta %s/Preprocess/out/lib%d.2.fasta.qual"%(_settings.METAMOS_JAVA, _settings.rundir, libID, _settings.rundir, libID, _settings.rundir, libID), "Preprocess")
@@ -597,12 +602,12 @@ def Preprocess(input,output):
                run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.f1.fname,_settings.rundir,lib.id),"Preprocess")
                run_process(_settings, "ln %s/Preprocess/out/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.rundir,lib.f1.fname,_settings.rundir,lib.id),"Preprocess")
                run_process(_settings, "touch %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir,lib.id),"Preprocess")
-               convertFastaToFastq(lib.id, lib.mated)
+               convertInputFastaToFastq(lib.id, lib.mated)
 
            elif lib.format == "fastq" and not lib.mated:
                run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "touch %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir, lib.id), "Preprocess")
-               convertFastqToFasta(lib.id, lib.mated)
+               convertInputFastqToFasta(lib.id, lib.mated)
 
            elif lib.format == "fasta" and lib.mated and not lib.interleaved:
                #FIXME, make me faster!filter
@@ -612,8 +617,8 @@ def Preprocess(input,output):
                run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.2.fasta"%(_settings.rundir, lib.f2.name, _settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "python %s/python/extract_mates_from_fasta.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
                run_process(_settings, "unlink %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir, lib.id),"Preprocess")
-               run_process(_settings, "ln -s %s/Preprocess/in/lib%d.seq.mates %s/Preprocess/out/"%(_settings.rundir,lib.id,_settings.rundir),"Preprocess")
-               convertFastaToQual(lib.id, lib.mated)
+               run_process(_settings, "ln -t %s/Preprocess/out/ -s %s/Preprocess/in/lib%d.seq.mates"%(_settings.rundir,_settings.rundir,lib.id),"Preprocess")
+               convertInputFastaToQual(lib.id, lib.mated)
 
            elif lib.format == "fastq" and lib.mated and not lib.interleaved:
                #extract mates from fastq
@@ -621,7 +626,7 @@ def Preprocess(input,output):
                run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.1.fastq"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir, lib.f2.fname, _settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "python %s/python/extract_mates_from_fastq.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
-               convertFastqToFasta(lib.id, lib.mated)
+               convertInputFastqToFasta(lib.id, lib.mated)
 
            elif lib.mated and lib.interleaved:
                run_process(_settings, "cp %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.f1.fname,_settings.rundir,lib.id),"Preprocess")
@@ -629,14 +634,14 @@ def Preprocess(input,output):
                    run_process(_settings, "python %s/python/extract_mates_from_fastq.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
                    # unshuffle the sequences
                    run_process(_settings, "perl %s/perl/split_fastq.pl %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.1.fastq %s/Preprocess/out/lib%d.2.fastq"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id), "Preprocess")
-                   convertFastqToFasta(lib.id, lib.mated)
+                   convertInputFastqToFasta(lib.id, lib.mated)
                else:
                    run_process(_settings, "cp %s/Preprocess/out/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.rundir,lib.f1.fname,_settings.rundir,lib.id),"Preprocess")
                    run_process(_settings, "python %s/python/extract_mates_from_fasta.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
                    # unshuffle the sequences
                    run_process(_settings, "perl %s/perl/split_fasta.pl %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.1.fasta %s/Preprocess/out/lib%d.2.fasta"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id), "Preprocess")
                    run_process(_settings, "perl %s/perl/split_fasta.pl %s/Preprocess/out/lib%d.seq.qual %s/Preprocess/out/lib%d.1.fasta.qual %s/Preprocess/out/lib%d.2.fasta.qual"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id), "Preprocess")
-                   convertFastaToFastq(lib.id, lib.mated)
+                   convertInputFastaToFastq(lib.id, lib.mated)
 
            #update_soap_config()
            #elif _asm == "ca":

@@ -245,7 +245,6 @@ def concatContig(ctgfile):
     out_file.close()
     contig_file.close()
 
-
 def str2bool(v):
   return v.lower() in ("yes", "true", "t", "1")
 
@@ -524,7 +523,10 @@ def run_process(settings,command,step=""):
               print "**ERROR**"
               print ""
               print ""
-              sys.exit(rc)       
+
+              # also make sure this step will be re-run on restart
+              os.system("rm %s%sLogs%s%s.ok"%(settings.rundir, os.sep, os.sep, step.lower())) 
+              sys.exit(rc)
           if step == "":
               print fstdout,fstderr
           else:

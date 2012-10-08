@@ -60,6 +60,8 @@ for line in class_file:
 
 
 for key in contigs_by_class:
+    if key not in id_class:
+       continue
     class_name = id_class[key]
     path = out_dir + os.sep + class_name + os.sep
     if not os.path.exists(path):

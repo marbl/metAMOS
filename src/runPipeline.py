@@ -528,7 +528,7 @@ utils.Settings.asmfiles = asmfiles
 
 if "Assemble" not in skipsteps and "Assemble" in forcesteps:
     utils.run_process(settings, \
-          "rm %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX),\
+          "rm %s/Logs/assemble.ok"%(settings.rundir),\
           "RunPipeline")
 
 if "FINDORFS" in forcesteps or "findorfs" in forcesteps or "FindORFS" in forcesteps:

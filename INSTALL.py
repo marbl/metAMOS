@@ -10,6 +10,8 @@ import utils
 sys.path.append(utils.INITIAL_UTILS)
 
 #add libs to pythonpath
+if "PYTHONPATH" not in os.environ:
+  os.environ["PYTHONPATH"] = ""
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python:"
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam:"
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib:"

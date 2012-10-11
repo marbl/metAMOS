@@ -276,7 +276,7 @@ def FindORFS(input,output):
       run_process(_settings, "touch %s/Logs/findorfs.skip"%(_settings.rundir), "FindORFS")
       run_process(_settings, "touch %s/FindRepeats/in/%s.fna"%(_settings.rundir, _settings.PREFIX),"FindORFS")
       run_process(_settings, "touch %s/FindORFS/out/%s.faa"%(_settings.rundir, _settings.PREFIX),"FindORFS")
-      run_process(_settings, "ln -t %s/Annotate/in -s %s/FindORFS/out/%s.faa"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "FindORFS")
+      run_process(_settings, "ln -s %s/FindORFS/out/%s.faa %s/Annotate/in"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "FindORFS")
       return 0
 
    #if _asm == "soapdenovo":
@@ -290,12 +290,12 @@ def FindORFS(input,output):
        #run_process(_settings, "cp %s/Assemble/out/%s.asm.contig  %s/FindORFS/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")
    #else:
    run_process(_settings, "unlink %s/FindORFS/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"FindORFS")
-   run_process(_settings, "ln -t %s/FindORFS/in/ -s %s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
+   run_process(_settings, "ln -s %s/Assemble/out/%s.asm.contig %s/FindORFS/in/"%(_settings.rundir,_settings.PREFIX,_settings.rundir),"FindORFS")
 
    findFastaORFs(_orf, "%s/FindORFS/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "%s.ctg.fna"%(_settings.PREFIX), "%s.ctg.faa"%(_settings.PREFIX))
 
    for lib in _readlibs:
-      run_process(_settings, "ln -t %s/FindORFS/in/ -s %s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir,_settings.rundir,lib.id),"FindORFS")
+      run_process(_settings, "ln -s %s/Assemble/out/lib%d.unaligned.fasta %s/FindORFS/in/"%(_settings.rundir,lib.id,_settings.rundir),"FindORFS")
       findFastaORFs(_orf, "%s/FindORFS/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id), "%s.lib%d.fna"%(_settings.PREFIX, lib.id), "%s.lib%d.faa"%(_settings.PREFIX, lib.id))
 
    # merge results
@@ -307,8 +307,8 @@ def FindORFS(input,output):
    run_process(_settings, "unlink %s/Annotate/in/%s.faa"%(_settings.rundir,_settings.PREFIX),"FindORFS")
    run_process(_settings, "unlink %s/Annotate/in/%s.fna"%(_settings.rundir,_settings.PREFIX),"FindORFS")
    run_process(_settings, "unlink %s/FindRepeats/in/%s.fna"%(_settings.rundir,_settings.PREFIX),"FindORFS")
-   run_process(_settings, "ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
-   run_process(_settings, "ln -t %s/Annotate/in/ -s %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
-   run_process(_settings, "ln -t %s/FindRepeats/in/ -s %s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
-   run_process(_settings, "ln -t %s/FindRepeats/in/ -s %s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.rundir,_settings.PREFIX),"FindORFS")
+   run_process(_settings, "ln -s %s/FindORFS/out/%s.faa %s/Annotate/in/"%(_settings.rundir,_settings.PREFIX,_settings.rundir),"FindORFS")
+   run_process(_settings, "ln -s %s/FindORFS/out/%s.fna %s/Annotate/in/"%(_settings.rundir,_settings.PREFIX,_settings.rundir),"FindORFS")
+   run_process(_settings, "ln -s %s/FindORFS/out/%s.faa %s/FindRepeats/in/"%(_settings.rundir,_settings.PREFIX,_settings.rundir),"FindORFS")
+   run_process(_settings, "ln -s %s/FindORFS/out/%s.fna %s/FindRepeats/in/"%(_settings.rundir,_settings.PREFIX,_settings.rundir),"FindORFS")
 

@@ -111,7 +111,7 @@ if not os.path.exists("./Utilities/models"):
         #os.system("mv %s ./Utilities/models/." % archive)
         os.system("tar -C ./Utilities/ -xvf %s" % archive)
         os.system("rm %s"%archive)
-        os.system("ln -s %s/Utilities/python/taxonomy.txt %s/Utilities/models/taxonomy.txt"%(sys.path[0], sys.path[0]))
+        os.system("cp %s/Utilities/python/taxonomy.txt %s/Utilities/models/taxonomy.txt"%(sys.path[0], sys.path[0]))
         #os.system("chmod u+x Utlities/models")
 
 if not os.path.exists("./Utilities/glimmer-mg"):

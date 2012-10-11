@@ -186,6 +186,7 @@ foreach my $input (@ARGV)
 
         my $taxID = undef;
         my $taxonomy = undef;
+        my $confidences = undef;
         my $contigID = undef;
 	my $magnitude = 0;
         my $taxa = 0;
@@ -199,19 +200,22 @@ foreach my $input (@ARGV)
 		my
 		(
                         $contigID,
-			$taxonomy
+			$taxonomy,
+                        $confidences
 
 		) = split /\t/, $line;
                 if (!defined($taxonomy)) {
                    # done parsing
                    last;
                 } else { 
+
                    if (defined($magnitudes{$contigID})) {
                       $magnitude = $magnitudes{$contigID};
                     } else {
                       $magnitude = 1;
                     }
                     # pick the lowest classified level to use
+                    my $bestIndex = -1;
                     my $bestTaxa = undef;
                     my $bestTaxaName = undef;
                     foreach my $taxa (split/;/, $taxonomy) {
@@ -221,6 +225,7 @@ foreach my $input (@ARGV)
                        $bestTaxa = $ids{$taxa};
                        $bestTaxaName = $taxa;
                        $bestTaxaName =~ s/\s/_/g;
+                       $bestIndex++;
 
                        if ($classes[$bestTaxa] eq $taxonomicLevel) {
                           print ANNOTS "$contigID\t$bestTaxa\n";
@@ -229,7 +234,10 @@ foreach my $input (@ARGV)
 
                     if (defined($bestTaxa)) {
                        my $confidence = 0;
-                       if ($includeConfidence && defined($names{$bestTaxaName})) {
+                       if (defined($confidences)) {
+                          my @confs = split/;/, $confidences;
+                          $confidence = $confs[$bestIndex];
+                       } elsif ($includeConfidence && defined($names{$bestTaxaName})) {
                           my $index = $names{$bestTaxaName};
                           while ( 1 ) {
                              my $confLine = <CONF>;

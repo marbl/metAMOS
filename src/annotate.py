@@ -193,7 +193,7 @@ def Annotate(input,output):
          annotateSeq(_cls, "%s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id), "", "", "%s.lib%d"%(_settings.PREFIX, lib.id))
 
    # merge results
-   run_process(_settings, "cat %s/Annotate/out/*.hits |sort -k1,1 -s > %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
+   run_process(_settings, "cat %s/Annotate/out/*.hits > %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
  
    if _cls == "phylosift":
        if not os.path.exists(_settings.KRONA + os.sep + "ImportPhyloSift.pl"):
@@ -206,10 +206,9 @@ def Annotate(input,output):
        if not os.path.exists(_settings.KRONA + os.sep + "ImportFCP.pl"):
           print "Error: Krona importer for FCP not found in %s. Please check your path and try again.\n"%()
           raise(JobSignalledBreak)
-       run_process(_settings, "cat %s/Annotate/out/*.epsilon-nb_results.txt |sort -k1,1 -s > %s/Annotate/out/%s.epsilon-nb_results.txt"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
-       run_process(_settings, "cat %s/Annotate/out/*.nb_results.txt |sort -k1,1 -s > %s/Annotate/out/%s.nb_results.txt"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
+       run_process(_settings, "cat %s/Annotate/out/*.epsilon-nb_results.txt > %s/Annotate/out/%s.epsilon-nb_results.txt"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
 
-       run_process(_settings, "perl %s/ImportFCP.pl -c -v -i -p %s/Annotate/out/%s.epsilon-nb_results.txt:%s/Assemble/out/%s.contig.cnt:%s"%(_settings.KRONA,_settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate")
+       run_process(_settings, "perl %s/ImportFCP.pl -c -v -i %s/Annotate/out/%s.epsilon-nb_results.txt:%s/Assemble/out/%s.contig.cnt:%s"%(_settings.KRONA,_settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate")
 
    run_process(_settings, "unlink %s/Postprocess/in/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")
    run_process(_settings, "unlink %s/Postprocess/out/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")

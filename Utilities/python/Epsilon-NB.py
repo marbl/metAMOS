@@ -39,6 +39,9 @@ for line in  fileinput.input(['taxonomy.txt']):
 # calculate epsilon-NB classification
 print 'Calculating epsilon-NB classification for each fragment...'
 topTaxonomies = {}
+# SK - begin changes for metAMOS
+topLogTaxonomies = {}
+# SK - end changes for metAMOS
 bHeaderLine = True
 strains = []
 for line in fileinput.input([nbResults]):
@@ -62,6 +65,13 @@ for line in fileinput.input([nbResults]):
 	
 	# find all NB models within a given distance of the maximum likelihood model
 	topTaxonomy = list(strainToTaxonomy[topModel])
+
+        # SK - begin changes for metAMOS - we create an array initialized to the likelyhood for each taxonomy level
+        topLogTaxonomy = list(strainToTaxonomy[topModel])
+        for r in xrange(0, 8):
+           topLogTaxonomy[r] = topLogLikelihood
+        # SK - end changes for metAMOS
+
 	for i in xrange(3, len(lineSplit)):
 		logLikelihood = float(lineSplit[i])
 
@@ -71,8 +81,15 @@ for line in fileinput.input([nbResults]):
 			for r in xrange(0, 8):
 				if topTaxonomy[r] != t[r]:
 					topTaxonomy[r] = 'unclassified'
+                                        # SK - begin metAMOS changes
+                                        if logLikelihood < topLogTaxonomy[r]:
+                                           topLogTaxonomy[r] = logLikelihood
+                                        # SK - end metAMOS changes
 								
 	topTaxonomies[fragmentId] = topTaxonomy
+        # SK - begin changes for metAMOS
+        topLogTaxonomies[fragmentId] = topLogTaxonomy
+        # SK - end changes for metAMOS
 
 # write out classification results
 print 'Writing out results...'
@@ -84,6 +101,13 @@ for fragmentId in topTaxonomies:
 	topTaxonomy = topTaxonomies[fragmentId]
 	for r in xrange(0, 8):
 		fout.write(topTaxonomy[r] + ';')
+
+        # SK - begin changes for metAMOS
+        topLogTaxonomy = topLogTaxonomies[fragmentId]
+        fout.write('\t')
+        for r in xrange(0, 8):
+                fout.write("%f;"%(topLogTaxonomy[r]))
+        # SK - end changes for metAMOS
 	fout.write('\n')
 		
 fout.close()

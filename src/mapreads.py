@@ -431,6 +431,10 @@ def map2contig():
            lmax = max(insertlens)
            lavg = sum(insertlens)/len(insertlens)
            lmean,lstdev = meanstdv(insertlens)
+           lib.mmin = lmin
+           lib.mmax = lmax
+           lib.mean = lmean
+           lib.stdev = lstdev
            #if lavg * 1.2 < lmax or lavg * 0.8 > lmin:
            #    lmin = 
            

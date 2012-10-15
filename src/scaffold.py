@@ -64,7 +64,7 @@ def Scaffold(input,output):
                elif lib.format == "fastq":
                    matedStr = ""
                    if lib.mated:
-                      matedStr = "-i --min %d --max %d --libname lib%d"%(lib.min, lib.max, lib.id) 
+                      matedStr = "-i --min %d --max %d --libname lib%d"%(lib.mmin, lib.mmax, lib.id) 
                    run_process(_settings, "%s/toAmos_new -Q %s/Preprocess/out/lib%d.seq %s -b %s/Scaffold/in/%s.bnk "%(_settings.AMOS,_settings.rundir,lib.id,matedStr,_settings.rundir,_settings.PREFIX),"Scaffold")
 
            run_process(_settings, "%s/toAmos_new -c %s/Assemble/out/%s.asm.tigr -b %s/Scaffold/in/%s.bnk "%(_settings.AMOS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")

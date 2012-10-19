@@ -9,20 +9,11 @@
 
 use strict;
 
-# get the path of this script; dependencies are relative
-#
-my $scriptPath;
-BEGIN
-{
-	use Cwd 'abs_path';
-	abs_path($0) =~ /(.*)\//;
-	$scriptPath = $1;
-}
-#use lib "$scriptPath/../lib";
-use lib "$scriptPath/";
+my $libPath = `ktGetLibPath`;
+use lib `ktGetLibPath`;
+use KronaTools;
 
 use Getopt::Long;
-use Krona;
 
 my $includeConfidence;
 my $totalMag;
@@ -30,16 +21,19 @@ my $outFile = 'report.krona.html';
 my $include;
 my $combine;
 my $local;
-my $verbose;
 
 GetOptions(
 	'o=s' => \$outFile,
 	'i'   => \$include,
 	'c'   => \$combine,
-        'p'   => \$includeConfidence,
+	'p'   => \$includeConfidence,
 	'l'   => \$local,
-	'v'   => \$verbose
 	);
+
+setOption('out', $outFile);
+setOption('local', $local);
+setOption('combine', $combine);
+setOption('name', "Root");
 
 if
 (
@@ -61,10 +55,9 @@ ktImportMetaPhyler [options] \
 
 Input:
 
-   metaphyler_output     File containing MetaPhyler results in tabular format.
-	            If running BLAST
-                    locally, subject IDs in the local database must contain GI
-                    numbers in "gi|12345" format.
+   metaphyler_output  File containing MetaPhyler results in tabular format. If
+                      running BLAST locally, subject IDs in the local database
+                      must contain GI numbers in "gi|12345" format.
    
 Options:
 
@@ -81,8 +74,6 @@ Options:
    [-l]           Create a local chart, which does not require an internet
                   connection to view (but will only work on this computer).
 
-   [-v]           Verbose.
-
 ';
 	exit;
 }
@@ -94,8 +85,9 @@ my %tree;
 print "Loading taxonomy...\n";
 loadTaxonomy();
 
+
 print "Loading name to taxonomy index...\n";
-open INFO, "<$scriptPath/taxonomy.tab" or die
+open INFO, "<$libPath/../taxonomy/taxonomy.tab" or die
 	"Taxonomy not found.  Was updateTaxonomy.sh run?";
 my %ids;
 my @classes;
@@ -176,14 +168,14 @@ foreach my $input (@ARGV)
                     # pick the lowest classified level to use
                     my $bestTaxa = $ids{lc($taxName)};
                     $totalMagnitude += $magnitude;
-                    add($set, \%tree, $bestTaxa, $magnitude, 0);
+                    addByTaxID(\%tree, $set, $bestTaxa, $magnitude, 0);
                     last;
                 }
 	}
         close metaPhyl;
  
         if ($totalMagnitude == 0) {
-           add($set, \%tree, 1, 1, 0);
+           addByTaxID(\%tree, $set, 1, undef, 1, 0);
         }
 	
 	if ( $include && $totalMagnitude )
@@ -204,34 +196,26 @@ if ( $zeroEVal )
 
 my @attributeNames =
 (
+	'magnitude',
 	'taxon',
 	'rank',
-        'score',
-	'magnitude'
+	'score',
 );
 
 my @attributeDisplayNames =
 (
+	'Total',
 	'Taxon',
 	'Rank',
-        'Confidence',
-	'Total'
+	'Confidence',
 );
-
-print "Writing $outFile...\n";
 
 writeTree
 (
 	\%tree,
-	'Root',
-	$outFile,
-	$local,
-	'magnitude',
 	\@attributeNames,
 	\@attributeDisplayNames,
 	\@datasetNames,
-        0,
-        'score',
-        0,
-	1
+	0,
+	120
 );

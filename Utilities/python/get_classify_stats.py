@@ -73,6 +73,7 @@ for line in class_file:
 # output stats
 # todo: add info on ORFs and read counts
 summary = markup.page()
+summary.init(bodyattrs={'style':"margin:0px"})
 summary.p("Originally classified contigs:")
 summary.table(border="1")
 for key in origContigsByClass:
@@ -86,6 +87,7 @@ summary.tr.close()
 summary.table.close()
 
 classify = markup.page()
+classify.init(bodyattrs={'style':"margin:0px"})
 classify.p("Classified contigs:")
 classify.table(border="1")
 for key in contigs_by_class:
@@ -104,8 +106,8 @@ if additional >= 0:
 else:
    summary.p("Total contigs classified as unknown from known: %d"%(abs(additional)))
 summary.p.close();
-orig_out.write("var propagateHTML = '%s'"%(summary.__str__().replace("\n", "\\\n")))
-out.write("var classifyHTML = '%s'"%(classify.__str__().replace("\n", "\\\n")))
+orig_out.write(summary.__str__())
+out.write(classify.__str__())
 
 orig_out.close()
 out.close()

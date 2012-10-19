@@ -1,0 +1,258 @@
+body
+{
+	margin:0px;
+	background-color:#E8E8E8;
+}
+
+a.menuLink
+{
+	text-decoration:none;
+}
+
+iframe
+{
+	border: none;
+	width:100%;
+	height:100%;
+}
+/*
+td.main::after
+{
+    position: absolute;
+    top:0px;
+    left:0px;
+    right:0px;
+    bottom:0px;
+    content: "";
+    z-index: 2;
+    pointer-events: none;
+}
+*/
+
+div.stats
+{
+	border: 1px solid gray;
+	background-color:white;
+	margin-left:10px;
+	margin-right:10px;
+/*	box-shadow:inset 0px 0px 6px #888888;
+	padding: 2px;*/
+}
+
+table.stats
+{
+	font-size:14px;
+}
+
+table.stats td
+{
+	border: 1px solid #CCCCCC;
+	padding:2px 3px 2px 3px;
+}
+
+table.stats tr:first-child td
+{
+  border-top: 0;
+}
+
+table.stats tr:last-child td
+{
+  border-bottom: 0;
+}
+
+table.stats tr td:first-child
+{
+  border-left: 0;
+}
+
+table.stats tr td:last-child
+{
+  border-right: 0;
+}
+
+td.number
+{
+	text-align:right;
+}
+
+.notes
+{
+	width:88%;
+	margin-left:auto;
+}
+
+img.chart
+{
+	width:95%;
+	border: 1px solid gray;
+	margin: 8px 0px 8px 0px;
+	display:block;
+	margin-left:auto;
+	margin-right:auto;
+}
+
+td.main
+{
+	background-color:white;
+}
+
+td.corner
+{
+	min-width:8px;
+	height:8px;
+}
+
+td.inset
+{
+	width:100%;
+	height:100%;
+}
+
+.shadow
+{
+	border:solid gray;
+	border-width: 0px 1px 1px 1px;
+	height:100%;
+	width:auto;
+	box-shadow: inset 0px 0px 8px #AAAAAA;
+	position:relative;
+}
+
+table
+{
+	border-collapse:collapse;
+}
+
+table td
+{
+	padding:0px;
+}
+
+table.menu
+{
+	width:90%;
+	margin-left:auto;
+	border-collapse:collapse;
+/*	border:1px solid gray;
+	border-width:0px 0px 1px 0px;*/
+}
+
+table.menu td
+{
+	padding:0px;
+	font-family:sans-serif;
+}
+
+td.menuItemTd
+{
+	border:solid gray;
+	border-width:1px 1px 1px 1px;
+}
+
+.menuItem
+{
+/*	border:solid gray;
+	border-width: 1px 1px 0px 0px;*/
+}
+
+.menuItemUnselected
+{
+	padding:3px 3px 3px 5px;
+}
+
+.menuItemSelected
+{
+	padding:5px 1px 1px 7px;
+	box-shadow:inset 2px 2px 8px #888888;
+}
+
+.markerSelected
+{
+	padding-left:2px;
+	font-size:20px;
+	color:gray;
+}
+
+.markerUnselected
+{
+	padding-left:2px;
+	font-size:20px;
+	visibility:hidden;
+}
+
+.title
+{
+	background-image:url("blocks.jpg");
+	background-repeat:repeat-x;
+}
+
+.ok
+{
+	background-color:#DDFFDD;
+}
+
+.ok.menuItemSelected
+{
+	background-color:#EEFFEE;
+}
+
+.okText
+{
+	color:#007700;
+}
+
+.ok:hover
+{
+	background-color:#EEFFEE;
+}
+
+.fail
+{
+	background-color:#FFDDDD;
+}
+
+.failText
+{
+	color:#770000;
+}
+
+.fail:hover
+{
+	background-color:#FFDDDD;
+}
+
+.na
+{
+	background-color:#FFFFFF;
+}
+
+.naText
+{
+	color:#BBBBBB;
+}
+
+.na:hover
+{
+	background-color:#F5F5F5;
+}
+
+.skipped
+{
+	background-color:#DDDDFF;
+}
+
+.skippedText
+{
+	color:#000077;
+}
+
+.step
+{
+	font-size:14px;
+/*	color:#000000;*/
+}
+
+.status
+{
+	font-size:10px;
+}

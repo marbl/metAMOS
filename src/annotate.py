@@ -193,7 +193,7 @@ def Annotate(input,output):
          annotateSeq(_cls, "%s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id), "", "", "%s.lib%d"%(_settings.PREFIX, lib.id))
 
    # merge results
-   run_process(_settings, "cat %s/Annotate/out/*.hits |sort -k1,1 -s > %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
+   run_process(_settings, "cat %s/Annotate/out/*.hits > %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
  
    if _cls == "phylosift":
        if not os.path.exists(_settings.KRONA + os.sep + "ImportPhyloSift.pl"):

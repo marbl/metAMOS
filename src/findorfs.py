@@ -31,7 +31,7 @@ def init(reads, skipsteps, asm, orf, min_ctg_len, min_ctg_cvg):
    _min_ctg_cvg = min_ctg_cvg
    _min_ctg_len = min_ctg_len
 
-def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
+def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS",min_len=_min_ctg_len,min_cvg=_min_ctg_cvg):
     coverageFile = open("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, _settings.PREFIX), 'r')
     cvg_dict = {} 
     for line in coverageFile:
@@ -135,11 +135,13 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
         outf2 = open("%s/FindScaffoldORFS/out/%s.fna"%(_settings.rundir,_settings.PREFIX),'w')
         #cvgf = open("%s/FindScaffoldORFS/out/%s.contig.cvg"%(_settings.rundir,_settings.PREFIX),'w')
         cvgg = open("%s/FindScaffoldORFS/out/%s.gene.cvg"%(_settings.rundir,_settings.PREFIX),'w')
+        genectg = open("%s/FindScaffoldORFS/out/%s.gene.map"%(_settings.rundir, _settings.PREFIX), 'w')
     else:
         outf = open("%s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.PREFIX),'w')
         outf2 = open("%s/FindORFS/out/%s.fna"%(_settings.rundir,_settings.PREFIX),'w')
         #cvgf = open("%s/FindORFS/out/%s.contig.cvg"%(_settings.rundir,_settings.PREFIX),'w')
         cvgg = open("%s/FindORFS/out/%s.gene.cvg"%(_settings.rundir,_settings.PREFIX),'w')
+        genectg = open("%s/FindORFS/out/%s.gene.map"%(_settings.rundir, _settings.PREFIX), 'w')
     #print len(gene_dict.keys())
     orfs = {}
 
@@ -155,10 +157,10 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
 
             #min aa length, read depth
             if key in cvg_dict:
-                if len(gene) < _min_ctg_len/3 or cvg_dict[key] < _min_ctg_cvg:# or cvg_dict[key] < 5:
+                if len(gene) < min_len/3 or cvg_dict[key] < min_cvg:# or cvg_dict[key] < 5:
                    continue
             else:
-                if len(gene) < _min_ctg_len/3 or 1 >= _min_ctg_cvg: 
+                if len(gene) < min_len/3 or 1 > min_cvg: 
                    continue
             try:
                 #print "contig"+key
@@ -166,6 +168,7 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
             except KeyError:
                 orfs["%s"%(key)] =1
             outf.write(">%s_gene%d\n%s"%(key,genecnt,gene))
+            genectg.write("%s\t%s_gene%d\n"%(key, key, genecnt))
 
             genecnt +=1
     for key in fna_dict.keys():
@@ -173,19 +176,21 @@ def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS"):
         for gene in fna_dict[key].keys():
             #gene = fna_dict[key][gkey]
             if key in cvg_dict:
-                if len(gene) < _min_ctg_len or cvg_dict[key] < _min_ctg_cvg:# or cvg_dict[key] < 5:
+                if len(gene) < min_len or cvg_dict[key] < min_cvg:# or cvg_dict[key] < 5:
                     continue
             else:
-                if len(gene) < _min_ctg_len or 1 >= _min_ctg_cvg:
+                if len(gene) < min_len or 1 > min_cvg:
                    continue;
             outf2.write(">%s_gene%d\n%s"%(key,genecnt,gene))
             genecnt +=1
 
 #        print gene_dict[key][0]
     outf.close()
+    outf2.close()
+    genectg.close()
     cvgg.close()
 
-def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS"):
+def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS",min_len=_min_ctg_len,min_cvg=_min_ctg_cvg):
     coverageFile = open("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, _settings.PREFIX), 'r')
     cvg_dict = {} 
     len_dict = {}
@@ -198,8 +203,10 @@ def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS"):
     if is_scaff:
         genefile = open("%s/FindScaffoldORFS/out/%s.orfs.ffn"%(_settings.rundir,_settings.PREFIX),'r')
         cvgg = open("%s/FindScaffoldORFS/out/%s.gene.cvg"%(_settings.rundir,_settings.PREFIX),'w')
+        genectg = open("%s/FindScaffoldORFS/out/%s.gene.map"%(_settings.rundir, _settings.PREFIX), 'w')
     else:
         genefile = open("%s/FindORFS/out/%s.orfs.ffn"%(_settings.rundir,_settings.PREFIX),'r')
+        genectg = open("%s/FindORFS/out/%s.gene.map"%(_settings.rundir, _settings.PREFIX), 'w')
         cvgg = open("%s/FindORFS/out/%s.gene.cvg"%(_settings.rundir,_settings.PREFIX),'w')
     orfs = {}
   
@@ -223,14 +230,16 @@ def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS"):
        #orfval = '_'.join(hdr.split('_')[2:])
        orfhdrs[orfkey]=hdr
 
+       genectg.write("%s\t%s\n"%(orfkey, hdr))
        if orfkey in cvg_dict:
-           if len_dict[hdr] > _min_ctg_len and cvg_dict[orfkey] >=  _min_ctg_cvg:
+           if len_dict[hdr] > min_len and cvg_dict[orfkey] >=  min_cvg:
                cvgg.write("%s\t%.2f\n"%(hdr,len_dict[hdr]*cvg_dict[orfkey]))
        else:
-           if len_dict[hdr] > _min_ctg_len and 1 >=  _min_ctg_cvg:
+           if len_dict[hdr] > min_len and min_cvg >= 1:
                cvgg.write("%s\t%s\n"%((key + orfhdrs[key]),str(1.0)))
 
     cvgg.close()
+    genectg.close()
     #for key in gene_ids:
     #    genecnt = 1
     #    gkey = ""
@@ -246,24 +255,28 @@ def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS"):
     #    genecnt +=1
     #cvgg.close()
 
-def findFastaORFs(orf, contigs, outputFNA, outputFAA):
+def findFastaORFs(orf, contigs, outputFNA, outputFAA, outputCVG, outputMAP, min_len, min_cvg):
    if orf == "metagenemark":
        if not os.path.exists(_settings.METAGENEMARK + os.sep + "gmhmmp"):
           print "Error: MetaGeneMark not found in %s. Please check your path and try again.\n"%(_settings.METAGENEMARK)
           raise(JobSignalledBreak)
        run_process(_settings, "%s/gmhmmp -o %s/FindORFS/out/%s.orfs -m %s/config/MetaGeneMark_v1.mod -d -a %s"%(_settings.METAGENEMARK,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,contigs),"FindORFS")
-       parse_genemarkout("%s/FindORFS/out/%s.orfs"%(_settings.rundir,_settings.PREFIX))
-       run_process(_settings, "mv %s/FindORFS/%s.fna %s/FindORFS/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputFNA), "FindORFS")
-       run_process(_settings, "mv %s/FindORFS/%s.faa %s/FindORFS/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputFAA), "FindORFS")
+       parse_genemarkout("%s/FindORFS/out/%s.orfs"%(_settings.rundir,_settings.PREFIX), 0, "FindORFS", min_len, min_cvg)
+       run_process(_settings, "mv %s/FindORFS/out/%s.fna %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputFNA), "FindORFS")
+       run_process(_settings, "mv %s/FindORFS/out/%s.faa %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputFAA), "FindORFS")
+       run_process(_settings,"mv %s/FindORFS/out/%s.gene.cvg %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputCVG), "FindORFS")
+       run_process(_settings,"mv %s/FindORFS/out/%s.gene.map %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputMAP), "FindORFS")
    elif orf == "fraggenescan":
        if not os.path.exists(_settings.FRAGGENESCAN + os.sep + "FragGeneScan"):
           print "Error: FragGeneScan not found in %s. Please check your path and try again.\n"%(_settings.FRAGGENESCAN)
           raise(JobSignalledBreak)
        run_process(_settings,"%s/FragGeneScan -s %s -o %s/FindORFS/out/%s.orfs -w 0 -t complete"%(_settings.FRAGGENESCAN,contigs,_settings.rundir,_settings.PREFIX), "FindORFS")
        
-       parse_fraggenescanout("%s/FindORFS/out/%s.orfs"%(_settings.rundir,_settings.PREFIX))
+       parse_fraggenescanout("%s/FindORFS/out/%s.orfs"%(_settings.rundir,_settings.PREFIX),0, "FindORFS", min_len, min_cvg)
        run_process(_settings,"mv %s/FindORFS/out/%s.orfs.ffn %s/FindORFS/out/%s"%(_settings.rundir,_settings.PREFIX,_settings.rundir,outputFNA), "FindORFS")
        run_process(_settings,"mv %s/FindORFS/out/%s.orfs.faa %s/FindORFS/out/%s"%(_settings.rundir,_settings.PREFIX,_settings.rundir,outputFAA), "FindORFS")
+       run_process(_settings,"mv %s/FindORFS/out/%s.gene.cvg %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputCVG), "FindORFS")
+       run_process(_settings,"mv %s/FindORFS/out/%s.gene.map %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputMAP), "FindORFS")
    else:
        #not recognized
        return 1
@@ -292,17 +305,28 @@ def FindORFS(input,output):
    run_process(_settings, "unlink %s/FindORFS/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"FindORFS")
    run_process(_settings, "ln -s %s/Assemble/out/%s.asm.contig %s/FindORFS/in/"%(_settings.rundir,_settings.PREFIX,_settings.rundir),"FindORFS")
 
-   findFastaORFs(_orf, "%s/FindORFS/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "%s.ctg.fna"%(_settings.PREFIX), "%s.ctg.faa"%(_settings.PREFIX))
+   findFastaORFs(_orf, "%s/FindORFS/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "%s.ctg.fna"%(_settings.PREFIX), "%s.ctg.faa"%(_settings.PREFIX), "%s.ctg.gene.cvg"%(_settings.PREFIX), "%s.ctg.gene.map"%(_settings.PREFIX), _min_ctg_len, _min_ctg_cvg)
 
    for lib in _readlibs:
       run_process(_settings, "ln -s %s/Assemble/out/lib%d.unaligned.fasta %s/FindORFS/in/"%(_settings.rundir,lib.id,_settings.rundir),"FindORFS")
-      findFastaORFs(_orf, "%s/FindORFS/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id), "%s.lib%d.fna"%(_settings.PREFIX, lib.id), "%s.lib%d.faa"%(_settings.PREFIX, lib.id))
+      findFastaORFs(_orf, "%s/FindORFS/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id), "%s.lib%d.fna"%(_settings.PREFIX, lib.id), "%s.lib%d.faa"%(_settings.PREFIX, lib.id), "%s.lib%d.gene.cvg"%(_settings.PREFIX, lib.id), "%s.lib%d.gene.map"%(_settings.PREFIX, lib.id), 0, 1)
 
    # merge results
    run_process(_settings, "rm -r %s/FindORFS/out/%s.fna"%(_settings.rundir, _settings.PREFIX), "FindORFS")
    run_process(_settings, "cat %s/FindORFS/out/%s*.fna > %s/FindORFS/out/%s.fna"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "FindORFS")
+   run_process(_settings, "rm -r %s/FindORFS/out/%s.fna.bnk"%(_settings.rundir, _settings.PREFIX), "FindORFS")
+   run_process(_settings, "%s/toAmos_new -s %s/FindORFS/out/%s.fna -b %s/FindORFS/out/%s.fna.bnk"%(_settings.AMOS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "FindORFS")
+
    run_process(_settings, "rm -r %s/FindORFS/out/%s.faa"%(_settings.rundir, _settings.PREFIX), "FindORFS")
    run_process(_settings, "cat %s/FindORFS/out/%s*.faa > %s/FindORFS/out/%s.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "FindORFS")
+   run_process(_settings, "rm -r %s/FindORFS/out/%s.faa.bnk"%(_settings.rundir, _settings.PREFIX), "FindORFS")
+   run_process(_settings, "%s/toAmos_new -s %s/FindORFS/out/%s.faa -b %s/FindORFS/out/%s.faa.bnk"%(_settings.AMOS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "FindORFS")
+
+   run_process(_settings, "rm -r %s/FindORFS/out/%s.gene.cvg"%(_settings.rundir, _settings.PREFIX), "FindORFS")
+   run_process(_settings, "cat %s/FindORFS/out/%s*.gene.cvg > %s/FindORFS/out/%s.gene.cvg"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "FindORFS")
+
+   run_process(_settings, "rm -r %s/FindORFS/out/%s.gene.map"%(_settings.rundir, _settings.PREFIX), "FindORFS")
+   run_process(_settings, "cat %s/FindORFS/out/%s*.gene.map > %s/FindORFS/out/%s.gene.map"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "FindORFS")
 
    run_process(_settings, "unlink %s/Annotate/in/%s.faa"%(_settings.rundir,_settings.PREFIX),"FindORFS")
    run_process(_settings, "unlink %s/Annotate/in/%s.fna"%(_settings.rundir,_settings.PREFIX),"FindORFS")

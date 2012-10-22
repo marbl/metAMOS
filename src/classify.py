@@ -34,9 +34,10 @@ def Classify(input,output):
    if "Classify" in _skipsteps or _cls == None:
        run_process(_settings, "touch %s/Logs/classify.skip"%(_settings.rundir), "Classify")       
        return 0
+
    if _cls == "FCP" or _cls == "fcp" or _cls == "phylosift" or _cls == "PhyloSift" or _cls == "Phylosift":
-       run_process(_settings, "python %s/python/sort_contigs.py %s/Propagate/in/%s.clusters %s/Propagate/out/%s.clusters %s/DB/tax_key.tab %s/Classify/out %s/Scaffold/in/%s.bnk %s"%(_settings.METAMOS_UTILS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.METAMOS_UTILS,_settings.rundir, _settings.rundir, _settings.PREFIX,_settings.AMOS),"Classify")
+       run_process(_settings, "python %s/python/sort_contigs.py %s/Propagate/in/%s.clusters %s/Propagate/out/%s.clusters %s/Propagate/out/%s.reads.clusters %s/DB/tax_key.tab %s/Classify/out %s/Scaffold/in/%s.bnk %s"%(_settings.METAMOS_UTILS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.METAMOS_UTILS,_settings.rundir, _settings.rundir, _settings.PREFIX,_settings.AMOS),"Classify")
 
    else:
-       run_process(_settings, "python %s/python/sort_contigs.py %s/Propagate/in/%s.clusters %s/Propagate/out/%s.clusters %s/DB/class_key.tab %s/Classify/out %s/Scaffold/in/%s.bnk %s"%(_settings.METAMOS_UTILS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.METAMOS_UTILS,_settings.rundir, _settings.rundir, _settings.PREFIX,_settings.AMOS),"Classify")
+       run_process(_settings, "python %s/python/sort_contigs.py %s/Propagate/in/%s.clusters %s/Propagate/out/%s.clusters %s/Propagate/out/%s.reads.clusters %s/DB/class_key.tab %s/Classify/out %s/Scaffold/in/%s.bnk %s"%(_settings.METAMOS_UTILS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.METAMOS_UTILS,_settings.rundir, _settings.rundir, _settings.PREFIX,_settings.AMOS),"Classify")
 

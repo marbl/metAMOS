@@ -116,43 +116,14 @@ def Postprocess(input,output):
    #webbrowser.open_new_tab(output.html)
 
    # add annotations for contigs and reads
+   run_process(_settings, "unlink %s/Postprocess/out/%s.original.annots"%(_settings.rundir, _settings.taxa_level), "Postprocess")
    run_process(_settings, "ln %s/Annotate/out/%s.annots %s/Postprocess/out/%s.original.annots"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.taxa_level), "Postprocess")
-   run_process(_settings, "ln %s/Propagate/out/%s.clusters %s/Postprocess/out/%s.propagated.annots"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.taxa_level), "Postprocess")
-   run_process(_settings, "cp %s/Abundance/out/%s.classify.txt %s/Postprocess/out/. "%(_settings.rundir,_settings.PREFIX,_settings.rundir),"Postprocess")
-   readctg_dict = {}
-   annots_dict = {}
-   for lib in _readlibs:
-     ctgfile = open("%s/Assemble/out/%s.lib%dcontig.reads"%(_settings.rundir, _settings.PREFIX, lib.id), 'r')
-     for line in ctgfile.xreadlines():
-        line = line.replace("\n","")
-        read, ctg = line.split()
-        if ctg in readctg_dict:
-           readctg_dict[ctg].append(read)
-        else:
-           readctg_dict[ctg] = [read,]
-     ctgfile.close()
 
-   annotsfile = open("%s/Postprocess/out/%s.original.annots"%(_settings.rundir, _settings.taxa_level), 'r')
-   annotreads = open("%s/Postprocess/out/%s.original.reads.annots"%(_settings.rundir, _settings.taxa_level), 'w')
-   for line in annotsfile.xreadlines():
-     line = line.replace("\n", "")
-     ctg, annot = line.split()
-     annots_dict[ctg] = True
-     if ctg in readctg_dict:
-        for x in readctg_dict[ctg]:
-           annotreads.write("%s\t%s\n"%(x, annot))
-   annotsfile.close()
-   annotsfile = open("%s/Postprocess/out/%s.original.annots"%(_settings.rundir, _settings.taxa_level), 'r')
-   for line in annotsfile.xreadlines():
-      line = line.replace("\n", "")
-      ctg, annot = line.split()
-      if ctg not in annots_dict:
-         annotreads.write("%s\t%s\n"%(ctg, annot))
-   annotsfile.close()
-   annotreads.close()
-   annots_dict.clear()
+   run_process(_settings, "unlink %s/Postprocess/out/%s.original.reads.annots"%(_settings.rundir, _settings.taxa_level), "Postprocess")
+   run_process(_settings, "ln %s/Annotate/out/%s.reads.annots %s/Postprocess/out/%s.original.reads.annots"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.taxa_level), "Postprocess")
 
-   annotsfile = open("%s/Postprocess/out/%s.propagated.annots"%(_settings.rundir, _settings.taxa_level), 'r')
+   annotatedCtgs = {}
+   annotsfile = open("%s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
    maxClassID = 0
    for line in annotsfile.xreadlines():
       line = line.replace("\n", "")
@@ -161,34 +132,46 @@ def Postprocess(input,output):
       try:
          if int(annot) > maxClassID:
             maxClassID = int(annot)
+         annotatedCtgs[ctg] = annot
       except ValueError:
          maxClassID = maxClassID
-
-   annotsfile.seek(0,0)
-   annotreads = open("%s/Postprocess/out/%s.propagated.reads.annots"%(_settings.rundir, _settings.taxa_level), 'w')
-   for line in annotsfile.xreadlines():
-     line = line.replace("\n", "")
-     ctg, annot = line.split()
-     try:
-        if int(annot) == maxClassID:
-           annot = 0
-     except ValueError:
-        continue
-     annots_dict[ctg] = True
-     if ctg in readctg_dict:
-        for x in readctg_dict[ctg]:
-           annotreads.write("%s\t%s\n"%(x, annot))
    annotsfile.close()
-   annotsfile = open("%s/Postprocess/out/%s.original.annots"%(_settings.rundir, _settings.taxa_level), 'r')
+
+   run_process(_settings, "unlink %s/Postprocess/out/%s.propagated.annots"%(_settings.rundir, _settings.taxa_level), "Postprocess") 
+   annotsfile = open("%s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
+   annotsout = open("%s/Postprocess/out/%s.propagated.annots"%(_settings.rundir, _settings.taxa_level), 'w')
+
    for line in annotsfile.xreadlines():
       line = line.replace("\n", "")
-      ctg, annot = line.split()
-      if ctg not in annots_dict:
-         annotreads.write("%s\t%s\n"%(ctg, annot))
+      ctg,annot = line.split()
+
+      try:
+         if int(annot) == maxClassID:
+            annot = 0
+      except ValueError:
+          continue
+      annotsout.write("%s\t%s\n"%(ctg, annot))   
    annotsfile.close()
-   annotreads.close()
-   annots_dict.clear()
-   readctg_dict.clear()
+   annotsout.close()
+
+   run_process(_settings, "unlink %s/Postprocess/out/%s.propagated.reads.annots"%(_settings.rundir, _settings.taxa_level), "Postprocess") 
+   annotsfile = open("%s/Propagate/out/%s.reads.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
+   annotsout = open("%s/Postprocess/out/%s.propagated.reads.annots"%(_settings.rundir, _settings.taxa_level), 'w')
+
+   for line in annotsfile.xreadlines():
+      line = line.replace("\n", "")
+      ctg,annot = line.split()
+
+      try:
+         if int(annot) == maxClassID:
+            annot = 0
+      except ValueError:
+          continue
+      annotsout.write("%s\t%s\n"%(ctg, annot))
+   annotsfile.close()
+   annotsout.close()
+
+   run_process(_settings, "cp %s/Abundance/out/%s.classify.txt %s/Postprocess/out/. "%(_settings.rundir,_settings.PREFIX,_settings.rundir),"Postprocess")
 
    # add links to assembled contigs and scaffolds
    run_process(_settings, "cp %s/Scaffold/out/%s.linearize.scaffolds.final %s/Postprocess/out/%s.scf.fa"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Postprocess")

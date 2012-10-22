@@ -124,9 +124,9 @@ if __name__ == "__main__":
             completed = True
         if os.path.exists("%s/Logs/%s.skip"%(MA_dir,stepn)):
             skipped = True
-        if started and completed and not skipped:
+        if completed and not skipped:
             step_status[step] = "OK"
-        elif started and completed and skipped:
+        elif skipped:
             step_status[step] = "SKIP"
         elif started and not completed:
             step_status[step] = "FAIL"
@@ -144,7 +144,7 @@ if __name__ == "__main__":
 
     ##update counts
     #count reads
-    os.system("cat %s/Preprocess/out/*.fasta | grep -c \">\" > readcount.txt"%(MA_dir))
+    os.system("cat %s/Preprocess/out/*.*.fasta | grep -c \">\" > readcount.txt"%(MA_dir))
     readcount = open("readcount.txt",'r').read().replace("\n","")  
     #print readcount
     os.system("rm readcount.txt")
@@ -164,7 +164,7 @@ if __name__ == "__main__":
     #print motifcount
     os.system("rm motifcount.txt")
     #count ORFs
-    os.system("grep -c \">\" %s/FindORFS/out/proba.orfs.faa > orfcount.txt"%(MA_dir))
+    os.system("grep -c \">\" %s/FindORFS/out/proba.fna > orfcount.txt"%(MA_dir))
     orfcount = open("orfcount.txt",'r').read().replace("\n","")  
     #print orfcount
     os.system("rm orfcount.txt")

@@ -1,4 +1,4 @@
-import sys, os, string
+import sys, os, string, locale
 ROOT = os.path.dirname(os.path.abspath(__file__))
 #sys.path.insert(0, os.path.join(ROOT, '..'))
 #sys.path.append(ROOT+"/lib")
@@ -14,6 +14,14 @@ from datetime import datetime, date, time
 
 import settings
 import helper
+
+locale.setlocale(locale.LC_ALL, 'en_US')
+
+def intOrZero(string):
+    if string:
+        return locale.format("%d", int(string), grouping=True)
+    else:
+        return '0'
 
 def outputLibraryInfo(html_prefix, markupFile, outputHeader, libcnt, format, mated, interleaved, mmin, mmax, outputFastQC):
    if outputHeader:
@@ -53,8 +61,9 @@ if __name__ == "__main__":
     if len(sys.argv) < 5:
         print "usage: create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm> <Utils dir> <run dir> <# of libs> <taxa level of classifications>"
         sys.exit(0)
-    rund = sys.argv[6]
+    rund = sys.argv[7]
     utils = sys.argv[5]
+    img = sys.argv[6]
 
     prefix = sys.argv[3]
     html_prefix = prefix
@@ -63,8 +72,8 @@ if __name__ == "__main__":
     MA_dir = MA_dir.replace("/Postprocess/out","")
     ref_asm = sys.argv[4]
     mp = open(sys.argv[1],'r')
-    nLibs = int(sys.argv[7])
-    taxa_level = sys.argv[8]
+    nLibs = int(sys.argv[8])
+    taxa_level = sys.argv[9]
     #mp2 = open(sys.argv[1].replace("s12","s3"),'r')    
 
     # set working dir
@@ -72,14 +81,9 @@ if __name__ == "__main__":
 
     if not os.path.exists(html_prefix+"asmstats.out"):
         libPath = rund.replace("bin", "lib")
-        os.system("perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,sys.argv[4],html_prefix))        
+        print "perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,sys.argv[4],html_prefix)
+        os.system("perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,sys.argv[4],html_prefix))
     report = open(html_prefix+"asmstats.out",'r')
-
-    # define colors and style elements
-    textColor = "solid black"
-    backgroundColor = "#E8E8E8"
-    selectedColor = "yellow"
-    mouseOverColor = "#cdcdcd"
 
     initialStep = "Annotate"
 
@@ -120,9 +124,9 @@ if __name__ == "__main__":
             completed = True
         if os.path.exists("%s/Logs/%s.skip"%(MA_dir,stepn)):
             skipped = True
-        if started and completed and not skipped:
+        if completed and not skipped:
             step_status[step] = "OK"
-        elif started and completed and skipped:
+        elif skipped:
             step_status[step] = "SKIP"
         elif started and not completed:
             step_status[step] = "FAIL"
@@ -140,7 +144,7 @@ if __name__ == "__main__":
 
     ##update counts
     #count reads
-    os.system("grep -c \">\" %s/Preprocess/out/*.fasta > readcount.txt"%(MA_dir))
+    os.system("cat %s/Preprocess/out/*.*.fasta | grep -c \">\" > readcount.txt"%(MA_dir))
     readcount = open("readcount.txt",'r').read().replace("\n","")  
     #print readcount
     os.system("rm readcount.txt")
@@ -160,23 +164,30 @@ if __name__ == "__main__":
     #print motifcount
     os.system("rm motifcount.txt")
     #count ORFs
-    os.system("grep -c \">\" %s/FindORFS/out/proba.orfs.faa > orfcount.txt"%(MA_dir))
+    os.system("grep -c \">\" %s/FindORFS/out/proba.fna > orfcount.txt"%(MA_dir))
     orfcount = open("orfcount.txt",'r').read().replace("\n","")  
     #print orfcount
     os.system("rm orfcount.txt")
     ##copy stuff
     for step in steps:
-        step = step.lower()
-        os.system("cp %s/javascript/%s.js %s/."%(utils,step,html_prefix))
+#        step = step.lower()
+        os.system("cp %s/javascript/%s.html %s/"%(utils,step,html_prefix))
     os.system("cp %s/Logs/COMMANDS.log %s/pipeline.commands"%(MA_dir,html_prefix))
     os.system("cp %s/pipeline.run %s/pipeline.summary"%(MA_dir,html_prefix))
+    os.system("ln -sf %s/javascript/style.css %s/"%(utils,html_prefix)) # TEMP: change back to cp
+    os.system("cp -r %s/../KronaTools/src %s/../KronaTools/img %s/"%(utils, utils, html_prefix)) # TODO: unhack KronaTools path
+#    os.system("cp %s/blocks.jpg %s/"%(img,html_prefix))
+#    os.system("cp %s/blocks_small.jpg %s/"%(img,html_prefix))
+    os.system("cp %s/blocks_dark_tiny.png %s/"%(img,html_prefix))
+    os.system("cp %s/name.png %s/"%(img,html_prefix))
 
     # generate dynamic java scripts
     # first classify and propagate
-    os.system("python %s/python/get_classify_stats.py %s/propagate.in.clusters %s/propagate.out.clusters %s/DB/tax_key.tab %s classify.js propagate.js %s"%(utils, html_prefix, html_prefix, utils, html_prefix, taxa_level)) 
+    os.system("python %s/python/get_classify_stats.py %s/propagate.in.clusters %s/propagate.out.clusters %s/DB/tax_key.tab %s Classify.html Propagate.html %s"%(utils, html_prefix, html_prefix, utils, html_prefix, taxa_level)) 
 
     # generate preprocess
     preprocess = markup.page()
+    preprocess.init()#bodyattrs={'style':"margin:0px"})
     preprocess.p()
 
     nQC = 0
@@ -242,15 +253,16 @@ if __name__ == "__main__":
     preprocess.table.close()
     summary.close()
 
-    preprocess_out = open("%s/preprocess.js"%(html_prefix), 'w')
-    preprocess_out.write("preprocessHTML = '%s'"%(preprocess.__str__().replace("\n", "\\\n")))
+    preprocess_out = open("%s/Preprocess.html"%(html_prefix), 'w')
+    preprocess_out.write(preprocess.__str__())
     preprocess_out.close()
     
     # todo, need to add report for MapReads including # reads mapped (%), contig coverage histogram, and % reads between contigs and number of links histogram. Also re-estimated insert sizes for each lib
     mapreads = markup.page()
+    mapreads.init(bodyattrs={'style':"margin:0px"})
     mapreads.img(src_="hist_ctgcvg.png",height_="100%",width_="100%")
-    mapreads_out = open("%s/mapreads.js"%(html_prefix), 'w')
-    mapreads_out.write("mapreadsHTML = '%s'"%(mapreads.__str__().replace("\n", "\\\n")))
+    mapreads_out = open("%s/MapReads.html"%(html_prefix), 'w')
+    mapreads_out.write(mapreads.__str__())
 
     ##This will create ScaffoldSizes.png,ContigSizes.png
     
@@ -370,50 +382,30 @@ if __name__ == "__main__":
         print "Warning: could not download bar-phylum.png"
     
     dt = datetime.now()
-    ds = dt.strftime("%A, %d. %B %Y %I:%M%p")
-    title = "metAMOS: a metagenomic assembly pipeline for AMOS"
+    ds = dt.strftime("%d %b %Y,<br/>%l:%M%p")
+    title = "metAMOS report"
     # header is blank for now
     header = []
 
     # write the javascript we need on the page
     script = []
     script.append("<script type=\"text/javascript\">")
-    script.append("moverColor = \"%s\""%(mouseOverColor))
-    script.append("selectedColor = \"%s\""%(selectedColor))
-    script.append("defaultColor = \"%s\""%(backgroundColor))
-    script.append("bgcolor = \"white\"")
-    script.append("selected = \"\"")
-    script.append("")
-    script.append("function load(fileName) {")
-    script.append("   if (selected != \"\" && selected == fileName) {")
-    script.append("      return;");
-    script.append("   }");
-    script.append("   $('#krona').html(window[fileName.concat('HTML')]);")
-    script.append("   $('#links tr').each(function(){")
-    script.append("      $(this).find('td').each(function(){")
-    script.append("      if (($(this).attr('id')).toLowerCase() == fileName) {")
-    script.append("         $(this).css(\"background-color\", selectedColor);")
-    script.append("         bgcolor = selectedColor;")
-    script.append("         selected = fileName;")
+    script.append("var steps = ['%s'];"%("','".join(steps)))
+    script.append("function load(step) {")
+    script.append("   for (var i = 0; i < steps.length; i++) {")
+    script.append("      var current = steps[i].toLowerCase();")
+    script.append("      if (current == step) {")
+    script.append("         document.getElementById(step + 'Button').className = 'menuItemSelected';")
+    script.append("         document.getElementById(step).style.display = 'block';")
+    script.append("         document.getElementById(step + 'Marker').className = 'markerSelected';")
     script.append("      } else {")
-    script.append("         $(this).css(\"background-color\", defaultColor);")
+    script.append("         document.getElementById(current + 'Button').className = 'menuItemUnselected';")
+    script.append("         document.getElementById(current).style.display = 'none';")
+    script.append("         document.getElementById(current + 'Marker').className = 'markerUnselected';")
     script.append("      }")
-    script.append("   })")
-    script.append("})")
-    script.append("}")
-    script.append("")
-    script.append("function mover(aa) {")
-    script.append("   bgcolor = aa.style.backgroundColor;")
-    script.append("   aa.style.backgroundColor = moverColor;")
-    script.append("}")
-    script.append("")
-    script.append("function mout(aa) {")
-    script.append("   if (bgcolor == selectedColor) {")
-    script.append("      aa.style.backgroundColor = selectedColor;")
-    script.append("   } else {")
-    script.append("      aa.style.backgroundColor = defaultColor;")
     script.append("   }")
     script.append("}")
+    script.append("")
     script.append("</script>")
 
     #<link rel="shortcut icon" href="../assets/ico/favicon.ico">
@@ -424,8 +416,8 @@ if __name__ == "__main__":
 
     # generate the dictionary of javascript pages we need
     scripts = {}
-    scripts["file://%s/javascript/jquery-latest.js"%(utils)] = "javascript"
-    scripts["http://code.jquery.com/jquery-latest.js"] = "javascript"
+#    scripts["file://%s/javascript/jquery-latest.js"%(utils)] = "javascript"
+#    scripts["http://code.jquery.com/jquery-latest.js"] = "javascript"
     # now a javascript for each page
     for step in steps:
        scripts["%s.js"%(step.lower())] = "javascript"
@@ -437,7 +429,7 @@ if __name__ == "__main__":
     # the footer for the page
 
     footer = ""#"Generated %s"%(ds)
-    styles = ( 'style2.css')#'./html/bootstrap.css', './html/boostrap-responsive.css')#'style2.css')#'layout.css', 'alt.css', 'images.css' )
+    #styles = ( 'style2.css')#'./html/bootstrap.css', './html/boostrap-responsive.css')#'style2.css')#'layout.css', 'alt.css', 'images.css' )
     #styles = ( 'layout.css', 'alt.css', 'images.css' )
     #meta = ('viewport':"width=device-width, initial-scale=1.0",'description':'','author':'')
 
@@ -447,6 +439,7 @@ if __name__ == "__main__":
     page.add("\n".join(script))
     # initialize the rest of the body/html headers
     page.init( title=title,   \
+               css='style.css', \
                script=scripts,\
                header='\n'.join(header), \
                bodyattrs=body, \
@@ -455,11 +448,19 @@ if __name__ == "__main__":
 #    page.br()
     #page.div( class_ = 'navbar navbar-fixed-top')
     #page.div( class_ = 'navbar-inner')
-    page.div( class_ = 'container', style_='width:100%;height=100%')
+    
+    #page.div( class_ = 'container', style_='width:100%;height=100%')
+    
     #page.div.close()
     #page.div.close()
     #page.div.close()
     #page.div( id_='page' )
+    
+    # header
+    
+#    page.add('<table style="width:100%;"><tr><td><img src="blocks_small.jpg"/></td><td><a target="_blank" href="https://github.com/treangen/metAMOS/wiki"><div><img src="name.jpg"/><br/>Under peer review</a></div></td><td class="title" style="width:100%"></td></tr></table>')
+    
+    '''
     page.div( id_='header', style="background-color:#B8B8B8;clear:both;text-align:center;width:100%;height:7%;border:1px solid black") 
     page.h1("<u>MetAMOS <font color=\"blue\">v1.0</font> metagenomic assembly & analysis report</u>" , style_="text-align:center;vertical-align:top")
     page.h1.close()
@@ -467,7 +468,8 @@ if __name__ == "__main__":
     #page.font( size=14)
     #page.br( )
     page.div.close()
-
+    '''
+    
     #<frameset rows="40%,60%"cols="80%,20%">
     #<frame src="report.krona.html">
     #<frameset rows="20%,20%">
@@ -477,7 +479,7 @@ if __name__ == "__main__":
     #<frameset rows="60%" cols="40%,40%">
     #<frame src="report.krona.html">
     #<frame src="report.krona2.html">
-    #</frameset>
+    #</frameset>f
     #<frameset rows="20%,20%,20%" cols="20%">
     #<frame src="report.krona.html">
     #<frame src="report.krona.html">
@@ -489,41 +491,143 @@ if __name__ == "__main__":
     #page.div.close()
     #page.frameset( rows_="40%,60%", cols_ = "80%,20%")
     #page.div()
-    page.div( id_="menu", style_="background-color:%s;text-align:left;width:10%%;height:88%%;float:left;border:1px %s"%(backgroundColor, textColor))
+    
+    page.table(style_="width:100%;height:100%;")
+    page.tr()
+    page.td( id_="menu", style_="padding:0px;")
+    page.div(style_="height:100%;")
+    
+#    page.table(style_="height:100%")
+#    page.tr()
+#    page.td()#style_="border-right:1px solid black")
+#    page.div(style_="box-shadow:inset -1px -1px 5px #555555;")
+    page.add("<a target=\"_blank\" href=\"https://github.com/treangen/metAMOS/wiki\"><img style=\"padding-top:5px;\" src=\"name.png\"/>")
+    page.add("<img src=\"blocks_dark_tiny.png\"/></a>")
+#    page.add("<img src=\"blocks_tiny2.jpg\"/>")
+    page.add("<div style=\"padding:2px;font-size:12px;\"><a target=\"_blank\" href=\"https://github.com/treangen/metAMOS/wiki\">Treangen and Koren et al. Under peer review</a></div>")
+    page.add("<br/>")
+#    page.div.close()
+#    page.td.close()
+#    page.tr.close()
     
     #items = ["<a href=\"http://cbcb.umd.edu/software/metamos\">metAMOS website</a>", ]
     #page.ul()
-    page.p("<u>Pipeline status</u><br>")
-    page.table( id_="links" )
+#    page.tr()
+#    page.td(style_="padding:0px;")
+    page.table( id_="links", class_="menu" )
     for step in steps:
        page.tr()
        status = "NA"
-       color = "gray"
        try:
           if step_status[step] == "OK":
              status = "OK"
-             color = "green"
           elif step_status[step] == "FAIL":
              status = "FAIL"
-             color = "red"
           elif step_status[step] == "SKIP":
              status = "SKIPPED"
-             color = "blue"
        except KeyError:
           continue
 
        tableHTML = []
-       tableHTML.append("<td id=\"%s\" onmouseover=\"mover(this);\" onmouseout=\"mout(this);\">"%(step.lower()))
-       tableHTML.append("<a href=\"javascript:void(0)\" onclick=\"load('%s');\">%s</a>"%(step.lower(), step))
+       tableHTML.append("<td class=\"menuItemTd\"><a class=\"menuLink\" href=\"javascript:void(0)\"><div class=\"menuItem %s\"><div id=\"%sButton\" class=\"menuItemUnselected\" onclick=\"load('%s');\">"%(status.lower(), step.lower(), step.lower()))
+       tableHTML.append("<table style='width:100%%;'><tr><td style='width:100%%;'><span class='step %sText'>%s</span>"%(status.lower(), step))
        tableHTML.append("<br>")
-       tableHTML.append("<font color=\"%s\">%s</font>"%(color, status))
-       tableHTML.append("</td>")
+       tableHTML.append("<span class='status %sText'>%s</span></td></tr></table>"%(status.lower(), status))
+       tableHTML.append("</div></div></a></td><td><div id='%sMarker' class='markerUnselected'>&#x25CF;</div></td>"%(step.lower()))
        page.add("\n".join(tableHTML))
        page.tr.close()
 
     page.table.close()
+#    page.td.close()
+#    page.tr.close()
     #page.ul.close()
+    
+#    page.tr()
+#    page.td(style_="height:100%;")#border-right:1px solid black")
+    page.div(class_="notes")
+    page.add("<div style=\"font-size:14px;\"><br/><a target=\"_blank\" href=\"pipeline.summary\">Pipeline summary</a><br/>")
+    page.add("<a target=\"_blank\" href=\"pipeline.commands\">Run commands</a><br/><br/></div>")
+    tableHTML = []
+    tableHTML.append("<table style=\"font-size:12px\"><tr>")
+    tableHTML.append("<tr><td>Version:</td><td>1.0</td></tr>")
+    tableHTML.append("<tr><td>Created:<br/>&nbsp;</td><td>%s</td></tr>"%(ds))
+    tableHTML.append("</table>")
+    page.add("\n".join(tableHTML))
     page.div.close()
+#    page.td.close()
+#    page.tr.close()
+#    page.table.close()
+    
+    page.div.close()
+    page.td.close()
+    
+    page.td( id_="krona", style_="width:100%;height:100%padding:0px;")
+    page.table(class_="charts",style_="width:100%;height:100%")
+    page.tr()
+    page.td(class_="main", style_="height:100%", colspan_="4")
+    page.div(class_="shadow")
+    page.table(style_="width:100%;height:100%")
+    page.tr()
+    page.td(class_="corner")
+    page.td.close()
+    page.td()
+    page.td.close()
+    page.td(class_="corner")
+    page.td.close()
+    page.tr.close()
+    page.tr()
+    page.td()
+    page.td.close()
+    page.td(class_="inset")
+    for step in steps:
+        page.iframe( id_=step.lower(), src_="%s.html"%(step), style_="display:none;" )
+        page.iframe.close()
+    page.td.close()
+    page.td()
+    page.td.close()
+    page.tr.close()
+    page.tr()
+    page.td(class_="corner")
+    page.td.close()
+    page.td()
+    page.td.close()
+    page.td(class_="corner")
+    page.td.close()
+    page.tr.close()
+    page.table.close()
+    page.div.close()
+    page.td.close()
+    page.tr.close()
+    page.tr()
+    #page.div(id_="sideplots")#, style_="background-color:#FFFFFF;width:20.5%%;height:88%%;float:right;border:1px")
+    #page.div(id_="sideplot1", style_="background-color:#FFFFFF;width:20.5%;height:22%;float:right")
+    page.td(style_="width:25%")
+    page.img(class_="chart", src_="ContigSizes.png")
+    page.td.close()
+    page.td(style_="width:25%")
+    #page.div.close()
+    #page.div(id_="sideplot2", style_="background-color:#FFFFFF;width:20.5%;height:22%;float:right")
+    page.img(class_="chart", src_="hist_contigs.png")
+    page.td.close()
+    page.td(style_="width:25%")
+    #page.div.close()
+    #page.div(id_="sideplot3", style_="background-color:#FFFFFF;width:20.5%;height:22%;float:right")
+    page.img(class_="chart", src_="ScaffoldSizes.png")
+    page.td.close()
+    page.td(style_="width:25%")
+    #page.div.close()
+    #page.div(id_="sideplot4", style_="background-color:#FFFFFF;width:20.5%;height:22%;float:right")
+    page.img(class_="chart", src_="hist_scaffold.png")
+    page.td.close()
+    #page.div.close()
+    #page.div.close()
+    #page.td.close()
+    page.tr.close()
+    page.table.close()
+    #page.iframe(src_="bar-phylum.png",style_="width:100%;height:100%;hspace=10")
+    #page.frameset(rows_="100%" ,cols_="100%")
+    page.td.close()
+    
     #page.li("<a target=\"_blank\" href=\"http://cbcb.umd.edu/software/metamos\">metAMOS website</a>")    
     #page.li("<a href=\"http://cbcb.umd.edu/~mpop/Software.shtml\">Related software</a>")
     #page.li("<a href=\"http://cbcb.umd.edu\">CBCB</a>")
@@ -531,11 +635,8 @@ if __name__ == "__main__":
 #    page.li( items[1] )
     #page.ul.close( )
     #page.div.close()
-    page.div( id_="content", style="background-color:#FFFFFF;float:left;width:58%%;height:12%%;border:1px %s"%(textColor))
-
-    # TODO: do we want this? also, test -BDO
-    #if os.path.exists("%s/Annotate/out/report.krona.html"%prefix):
-    #    page.iframe(src="%s/Annotate/out/report.krona.html"%prefix, width="100%", height="600px")
+    
+    page.div( id_="content")
 
     #page.div( id_='wrapper')
     #page.div( id_="content")
@@ -561,11 +662,11 @@ if __name__ == "__main__":
 
 
             cnt +=1
-
+    '''
     #page.table.close()        
     #page.p( paragraphs )
     #page.p(style_="font-size:6px")
-    page.table(border="2",width="80%")
+    page.table(border="0")
     #page.tr()
     #page.(
     if 1:
@@ -592,52 +693,34 @@ if __name__ == "__main__":
         #page.p( table_html )    
     #page.p.close()
     page.div.close()
-    page.div( id_="quick", style_="background-color:%s;text-align:left;width:11%%;height:88%%;float:right;border:1px %s"%(backgroundColor, textColor))
-    
+    '''
+    page.td( id_="quick" )
+    page.div(style_="height:100%")
     #items = ["<a href=\"http://cbcb.umd.edu/software/metamos\">metAMOS website</a>", ]
     #page.ul()
-    page.p("<u>Quick summary</u><br>")
-    page.p("#Reads:<br>%s"%readcount)
-    page.p("#Contigs:<br>%s"%contigcount)
-    page.p("#Scaffolds:<br>%s"%scaffoldcount)
-    page.p("#ORFs:<br>%s"%orfcount)
-    page.p("#Motifs:<br>%s"%motifcount)
-    page.p("<a href=\"pipeline.summary\">Pipeline summary</a>")
-    page.p("<a href=\"pipeline.commands\">Run commands</a>")
-    page.p("<a href=\"https://github.com/treangen/metAMOS/wiki\">MetAMOS website</a>")
+    page.br()
+    page.div(class_="stats")
+    page.table(class_="stats")
+    page.add("<tr><td class=\"number\">%s</td><td>Reads</td></tr>"%intOrZero(readcount))
+    page.add("<tr><td class=\"number\">%s</td><td>Contigs</td></tr>"%intOrZero(contigcount))
+    page.add("<tr><td class=\"number\">%s</td><td>Scaffolds</td></tr>"%intOrZero(scaffoldcount))
+    page.add("<tr><td class=\"number\">%s</td><td>ORFs</td></tr>"%intOrZero(orfcount))
+    page.add("<tr><td class=\"number\">%s</td><td>Motifs</td></tr>"%intOrZero(motifcount))
+    page.table.close()
     page.div.close()
-    page.div(id_="sideplots", style_="background-color:#FFFFFF;width:20.5%%;height:88%%;float:right;border:1px %s"%(textColor))
-    #page.frameset(rows_="20%,20%,20%" ,cols_="100%")
-    #page.div(id_="sideplot1", style_="background-color:#FFFFFF;width:20.5%;height:22%;float:right")
-    page.img(src_="ContigSizes.png",height_="25%",width_="100%")
-    #page.div.close()
-    #page.div(id_="sideplot2", style_="background-color:#FFFFFF;width:20.5%;height:22%;float:right")
-    page.img(src_="hist_contigs.png",width_="100%",height_="25%")
-    #page.div.close()
-    #page.div(id_="sideplot3", style_="background-color:#FFFFFF;width:20.5%;height:22%;float:right")
-    page.img(src_="ScaffoldSizes.png",width_="100%",height_="25%")
-    #page.div.close()
-    #page.div(id_="sideplot4", style_="background-color:#FFFFFF;width:20.5%;height:22%;float:right")
-    page.img(src_="hist_scaffold.png",width_="100%",height_="25%")
-    page.div.close()
-    #page.frameset.close()    
-    #page.div.close()
 
-
-    page.div( id_="krona", style="float:left;width:58%;height:74%")
-    #page.iframe(src_="bar-phylum.png",style_="width:100%;height:100%;hspace=10")
-    #page.frameset(rows_="100%" ,cols_="100%")
     page.div.close()
+    page.td.close()
+    page.tr.close()
+    page.table.close()
 
     #page.div( id_="metaphyler", style="float:left;width:28%;height:70%")
     #page.img(  hspace=10, alt='Abundance', src='bar-phylum.png' )
     #page.div.close()
 
-    page.div(id="footer", style="background-color:#B8B8B8;clear:both;text-align:center;width:100%%;height:5%%;border:1px %s;vertical-align:middle"%(textColor))
-    page.p("Generated %s"%(ds))
-    page.div.close()
     #page.img( hspace=10, width=600, height=500, alt='Abundance', src='bar-phylum.png' )
-    page.div.close()
+    
+    #page.div.close()
 
     fout = open(html_prefix+"summary.html",'w')
     fout.write(page.__str__())

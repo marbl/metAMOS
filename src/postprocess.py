@@ -80,8 +80,8 @@ def Postprocess(input,output):
        #   print "Error: Krona importer for FCP not found in %s. Please check your path and try again.\n"%()
        #   raise(JobSignalledBreak)
        #run_process(_settings, "perl %s/ImportFCP.pl -c -v -i -p %s/Postprocess/in/%s.epsilon-nb_results.txt"%(_settings.KRONA,_settings.rundir,_settings.PREFIX),"Postprocess")
-       run_process(_settings, "unlink %s/Postprocess/out/report.krona.html"%(_settings.rundir), "Postprocess")
-       run_process(_settings, "ln %s/Annotate/out/report.krona.html %s/Postprocess/out/report.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
+       run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")
+       run_process(_settings, "ln %s/Annotate/out/report.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
    elif _cls == 'phymm':
        if not os.path.exists(_settings.KRONA + os.sep + "ImportPHYMM.pl"):
           print "Error: Krona importer for PHYMM not found in %s. Please check your path and try again.\n"%()
@@ -94,8 +94,8 @@ def Postprocess(input,output):
        #    print "Error: Krona importer for PhyloSift not found in %s. Please check your path and try again.\n"%()
        #    raise(JobSignalledBreak)
        #run_process(_settings, "perl %s/ImportPhyloSift.pl -c -v -i %s/Postprocess/in/%s.hits:%s/Assemble/out/%s.contig.cvg"%(_settings.KRONA,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX), "Postprocess") 
-       run_process(_settings, "unlink %s/Postprocess/out/report.krona.html"%(_settings.rundir), "Postprocess")
-       run_process(_settings, "ln %s/Annotate/out/report.krona.html %s/Postprocess/out/report.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
+       run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")
+       run_process(_settings, "ln %s/Annotate/out/report.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
 
    # create sym links
    run_process(_settings, "unlink %s/Postprocess/out/abundance.krona.html"%(_settings.rundir), "Postprocess")
@@ -106,12 +106,12 @@ def Postprocess(input,output):
 
    #command to open webbrowser?
    #try to open Krona output
-   if openbrowser:
-       if os.path.exists(_settings.rundir + os.sep + "Postprocess" + os.sep + "out" + os.sep + "report.krona.html"):
+   #if openbrowser:
+   #    if os.path.exists(_settings.rundir + os.sep + "Postprocess" + os.sep + "out" + os.sep + "report.krona.html"):
            #webbrowser.open_new("%s%sPostprocess%sout%sreport.krona.html"%(_settings.rundir, os.sep, os.sep, os.sep))
-           pass
-       else:
-           print "ERROR: No Krona html file available! skipping"
+   #        pass
+   #    else:
+   #        print "ERROR: No Krona html file available! skipping"
    #webbrowser.open_new(output.html)
    #webbrowser.open_new_tab(output.html)
 
@@ -188,10 +188,10 @@ def Postprocess(input,output):
    # create necessary links to higher-level dir
    run_process(_settings, "unlink %s/Postprocess/out/html/%s.classified"%(_settings.rundir, _settings.taxa_level), "Postprocess")
    run_process(_settings, "ln %s/Postprocess/out/%s.classified %s/Postprocess/out/html/%s.classified"%(_settings.rundir, _settings.taxa_level, _settings.rundir, _settings.taxa_level), "Postprocess")
-   run_process(_settings, "unlink %s/Postprocess/out/html/report.krona.html"%(_settings.rundir), "Postprocess")
-   run_process(_settings, "ln %s/Postprocess/out/report.krona.html %s/Postprocess/out/html/"%(_settings.rundir, _settings.rundir), "Postprocess")
-   run_process(_settings, "unlink %s/Postprocess/out/html/abundance.krona.html"%(_settings.rundir), "Postprocess")
-   run_process(_settings, "ln %s/Postprocess/out/abundance.krona.html %s/Postprocess/out/html/"%(_settings.rundir, _settings.rundir), "Postprocess")
+   run_process(_settings, "unlink %s/Postprocess/out/html/Annotate.html"%(_settings.rundir), "Postprocess")
+   run_process(_settings, "ln %s/Postprocess/out/annotate.krona.html %s/Postprocess/out/html/Annotate.html"%(_settings.rundir, _settings.rundir), "Postprocess")
+   run_process(_settings, "unlink %s/Postprocess/out/html/Abundance.html"%(_settings.rundir), "Postprocess")
+   run_process(_settings, "ln %s/Postprocess/out/abundance.krona.html %s/Postprocess/out/html/Abundance.html"%(_settings.rundir, _settings.rundir), "Postprocess")
 
    # create html-only files
    run_process(_settings, "mv %s/Preprocess/out/*.fastqc %s/Postprocess/out/html"%(_settings.rundir, _settings.rundir), "Postprocess")
@@ -200,7 +200,7 @@ def Postprocess(input,output):
    run_process(_settings, "unlink %s/Postprocess/out/html/propagate.out.clusters"%(_settings.rundir), "Postprocess")
    run_process(_settings, "ln %s/Propagate/out/%s.clusters %s/Postprocess/out/html/propagate.out.clusters"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
 
-   run_process(_settings, "python %s/python/create_summary.py %s/Abundance/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/html/ %s/Postprocess/out/%s.scf.fa %s %s %d %s"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.AMOS, len(_readlibs), _settings.taxa_level),"Postprocess")
+   run_process(_settings, "python %s/python/create_summary.py %s/Abundance/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/html/ %s/Postprocess/out/%s.scf.fa %s %s/img %s %d %s"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.METAMOSDIR,_settings.AMOS, len(_readlibs), _settings.taxa_level),"Postprocess")
    #webbrowser.open_new_tab(createreport.html)
    if openbrowser:
        if os.path.exists("%s/Postprocess/out/html/summary.html"%(_settings.rundir)):

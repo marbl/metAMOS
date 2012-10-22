@@ -231,6 +231,8 @@ annotate_unassembled = False
 output_programs = 0
 settings = utils.Settings(DEFAULT_KMER, multiprocessing.cpu_count() - 1, "", DEFAULT_TAXA_LEVEL)
 
+sys.path.append(utils.Settings.KRONA)
+
 for o, a in opts:
     if o in ("-v","--verbose"):
         utils.Settings.VERBOSE = True

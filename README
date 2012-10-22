@@ -1,291 +1,331 @@
-metAMOS v1.0b README
-Last updated: June 21st 2012
-
-NEWS:
-
-*MetaVelvet now supported
-*FCP now supported
-*Glimmer-MG now supported
-*PhymmBL now supported
-
-> SUMMARY
-        * A/ HARDWARE REQUIREMENTS
-        * B/ SOFTWARE REQUIREMENTS
-        * C/ INSTALLING metAMOS
-        * D/ QUICK START
-        * E/ TEST SUITE
-        * F/ EXAMPLE OUTPUT
-        * G/ CONTACT
-        * H/ CITING
-
-----------------------------------------------------------------------------------
-A/ HARDWARE REQUIREMENTS
-
-metAMOS was designed to work on any standard 64bit Linx
-environment. To use metAMOS for tutorial/teaching purposes, a minimum
-of 8 GB RAM is required. To get started on real data sets a minimum of
-32 GB of RAM is recommened, and anywhere from 64-512 GB may be
-necessary for larger datasets. In our experience, for most 50-60
-million read datasets, 64 GB is a good place to start (68 GB of memory
-available on High Memory Instance at Amazon Elastic Compute Cloud ).
-
-----------------------------------------------------------------------------------
-B/ SOFTWARE REQUIREMENTS
-
-The main prequisite software is python2.6+ and AMOS (available from
-http://amos.sf.net). Once python2.6+ and AMOS are installed, there
-should not be any other major prerequisites as most everything that is
-needed is distributed with metAMOS inside of the /Utilities
-directory. However, there is some software that metAMOS can
-incorporate into its pipeline that we are not allowed to distribute,
-such as MetaGeneMark. To get a license to use MetaGeneMark, plesae
-visit: http://exon.gatech.edu/license_download.cgi.
-
-----------------------------------------------------------------------------------
-C/ INSTALLING metAMOS
-
-To download the software, go to https://github.com/treangen/metAMOS
-and click on Downloads. Once downloaded, simply unpack the files and
-open the metAMOS directory. Once inside the metAMOS directory, run:
-
-python INSTALL.py
-
-This will download and install any external dependencies (or they can
-be refused by answering NO), which may take minutes or hours to
-download depending on your connection speed.
-
-----------------------------------------------------------------------------------
-D/ QUICK START
-
-Before you get started using metAMOS a brief review of its design will
-help clarify its intended use. metAMOS gas two main components:
-
-1) initPipeline
-2) runPipeline
-
-The first component, initPipeline, is for creating new projects and
-also initiliazing sequence libraries. Currently interleaved &
-non-interleaved fasta, fastq, and SFF files are supported. The file-type flags (-f, -q, and -s)
-must be specified before the file. Once specified, they remain in effect
-until a different file type is specified.
-
-usage: initPipeline -f/-q -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500 
-options: -s -c -q, -f, -1, -2, -d, -m, -i
--1: either non-paired file of reads or first file in pair, can be list of multiple separated by a comma
--2: second paired read file, can be list of multiple separated by a comma
--c:  fasta file containing contigs
--d: output project directory (required)
--f: boolean, reads are in fasta format (default is fastq)
--h: display help message
--i: insert size of library, can be list separated by commas for multiple libraries
--l: SFF linker type
--m: interleaved file of paired reads
--o: reads are in outtie orientation (default innie)
--q: boolean, reads are in fastq format (default is fastq)
--s/--sff: boolean, reads are in SFF format (default is fastq)
-
-For example, to input a:
-(non-interleaved fastq, single library)
-initPipeline -q -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500
-
-(non-interleaved fasta, single library)
-initPipeline -f -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500
-
-(interleaved fastq, single library)
-initPipeline -q -m file.fastq.12  -d projectDir -i 300:500
-
-(interleaved fastq, multiple libraries)
-initPipeline -q -m file.fastq.12,file2.fastq.12  -d projectDir -i 300:500,1000:2000
-
-(interleaved fastq, multiple libraries, existing assembly)
-initPipeline -q -m file.fastq.12,file2.fastq.12 -c file.contig.fa -d projectDir -i 300:500,1000:2000
-
-The second component, runPipeline, takes a project directory as
-input and runs the following steps by default:
-
-1. Preprocess
-2. Assemble
-3. FindORFs
-4. FindRepeats
-5. Abundance
-6. Annotate
-7. Scaffold
-8. Propagate 
-9. FindScaffoldORFs
-10. Classify 
-11. Postprocess
-
-usage info:
-
-usage: runPipeline [options] -d projectdir
-   -h = <bool>:   print help [this message]
-   -j = <bool>:   just output all of the programs and citations then exit (default = NO)
-   -v = <bool>:   verbose output? (default = NO)
-   -d = <string>: directory created by initPipeline (REQUIRED)
-
-[options]: [pipeline_opts] [misc_opts]
-
-[pipeline_opts]: options that affect the pipeline execution
-Pipeline consists of the following steps:
-  Preprocess, Assemble, FindORFS, MapReads, Abundance, Annotate,
-  Scaffold, Propagate, Classify, Postprocess
-Each of these steps can be referred to by the following options:
-   -f = <string>: force this step to be run (default = NONE)
-   -s = <string>: start at this step in the pipeline (default = Preprocess)
-   -e = <string>: end at this step in the pipeline (default = Postprocess)
-   -n = <string>: step to skip in pipeline (default=NONE)
-
-For each step you can fine-tune the execution as follows
-[Preprocess]
-   -t = <bool>:   filter input reads? (default = NO)
-   -q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)
-[Assemble]
-   -a = <string>: genome assembler to use (default = SOAPdenovo)
-   -k = <kmer size>: k-mer size to be used for assembly (default = 31)
-   -o = <int>:    min overlap length
-[MapReads]
-   -m = <string>: read mapper to use? (default = bowtie)
-   -i = <bool>:   save bowtie (i)ndex? (default = NO)
-   -b = <bool>:   create library specific per bp coverage of assembled contigs (default = NO)
-[FindORFS]
-   -g = <string>: gene caller to use (default=FragGeneScan)
-   -l = <int>:    min contig length to use for ORF call (default = 300)
-   -x = <int>:    min contig coverage to use for ORF call (default = 3X)
-[Annotate]
-   -c = <string>: classifier to use for annotation (default = FCP)
-   -u = <bool>:   annotate unassembled reads? (default = NO)
-[Classify]
-   -z = <string>: taxonomic level to categorize at (default = class)
+SYSTEM REQUIREMENTS:
+
+- You'll need a local copy of the standalone BLAST+
+  software; this can be downloaded for your local
+  platform from
+   
+   ftp://ftp.ncbi.nih.gov/blast/executables/blast+/LATEST/
+
+  PhymmBL formally supports versions from 2.2.25 up to
+  the latest release, but should work with all BLAST+
+  installations that share the 2.2.25 syntax.
+
+- A minimum of 120GB of disk space should be available
+  for the default installation; 200GB is recommended,
+  especially if you're adding your own custom sequence
+  data to the local database (see below).
+
+- 4GB of free memory is preferred; 1GB should suffice;
+  500MB or less will likely cause problems.
+
+- You'll need to have a relatively modern version
+  of Perl installed, including the Net::FTP package.
+
+- Your system will need to have the (free) UNIX utility
+  "wget" installed.  This utility is included in
+  many Linux/UNIX distributions, but please note that it
+  isn't included with Mac OS (even in the developer toolkit);
+  the website for the software is
+   
+   http://www.gnu.org/software/wget/
+
+INSTALLATION:
+
+To install, run "phymmblSetup.pl" from this directory and follow
+the prompts.
+
+The installer will download all the current bacterial &
+archaeal genomic data from RefSeq, set up needed metadata,
+and build the ICMs that comprise the core of the Phymm component
+of PhymmBL.
+
+It'll also build a local BLAST database representing
+all the genomic data from RefSeq.
+
+ADDING YOUR OWN GENOMIC DATA:
+
+To add your own genomic data (input as sequences in FastA/
+multi-FastA format) to PhymmBL's local database, run
+"customGenomicData.pl" from the installation directory.  This
+script has two modes: single-organism mode and batch mode.
+
+ Single-organism mode:
+
+   As the label implies, you can only add one organism at a
+   time using this mode.  Note that you *can* add multiple
+   sequences at once, as long as they're all from the same
+   organism.  To use this mode, just run "customGenomicData.pl"
+   with no arguments.
+
+ Batch mode:
+
+   This mode allows you to add multiple organisms at once.
+
+   First, create a configuration file that will tell the
+   script the locations of FastA-formatted sequence files
+   to be used as input, as well as taxonomic metadata for
+   the organisms to be added.  The configuration file
+   format requires one line per file location*, with nine
+   fields per line, separated by tab characters.
+
+   *"File location" can refer either to a single source file OR
+   to a directory containing multiple FastA files all belonging
+   to the same organism.  If you specify a directory, all files
+   in that directory will be incorporated into the models built
+   for the current organism.
+
+   An example configuration file is provided at
+
+      http://www.cbcb.umd.edu/software/phymm/exampleConfig.txt .
+
+   The nine fields on each line are:
+
+   1. File location.  This can be either an absolute path
+   or a path relative to your PhymmBL installation directory.
+
+   2. "Combine files" flag: the value of this field is either
+   0 or 1.  If 0, a separate ICM will be built for each
+   input file, leading (assuming you have multiple input files)
+   to multiple models for your organism, each representing a
+   different portion of your organism's genome.  If 1, one
+   single ICM will be built from all of the specified sequence
+   data for your organism.  Anecdotally, we can advise you that
+   option 0 occasionally leads to slightly better accuracy,
+   especially in the case of large organisms like eukaryotes.
+   On the other hand, having more models increases processing time,
+   which will slow down your analysis runs.  A synthetic
+   classification experiment in which results from a set of
+   about 250 models of different segments of the human genome
+   were compared to results from a single model of the
+   entire human genome produced an improvement in accuracy
+   that was less than 2%.  Bottom line: we recommend using
+   a value of 1 in this field unless you have a truly compelling
+   reason to do otherwise.
+
+   3-9. Phylum, class, order, family, genus, species and strain
+   labels, respectively, for your organism.
+
+      IMPORTANT: If there's no entry in the taxonomy for your
+      organism at a certain clade level, enter NO_VALUE in the
+      field corresponding to that level.  DO NOT LEAVE ANY FIELDS
+      BLANK.  Cf. the example config file (linked above), in which
+      a few field entries have been (artificially) replaced with
+      NO_VALUE entries.
+
+      ALSO IMPORTANT: The "species" field is meant to contain ONLY
+      the species-level label for your organism, e.g. "coli" for E.
+      coli or "sapiens" for Homo sapiens.  If you enter the entire
+      (genus+species) binomial name for your organism in this
+      field, then classification will be performed in exactly the
+      same way as it otherwise would be, but your result files will
+      look strangely redundant, because the software automatically
+      reconstructs binomial names from the values listed in the
+      individual fields, and you (presumably) don't want to be
+      modeling "Salmonella Salmonella typhimurium" or
+      "Escherichia Escherichia coli."
+
+UPDATING YOUR DATABASE WITH NEW REFSEQ CONTENT:
+
+Re-run "phymmblSetup.pl" and follow the prompts; if you so choose,
+you'll be able to update your local genomic database with only
+those RefSeq sequences that have been added or changed since
+your last update.  You can also completely overwrite your
+local database with the current copy of the RefSeq collection,
+if you like.  Note that this WILL NOT affect any custom user-added
+content.
+
+MANUALLY REBUILDING THE BLAST DATABASE:
+
+Run "rebuildBlastDB.pl" from your PhymmBL directory.  This
+might be useful if, for example, you've added multiple organisms
+with multiple runs of "customGenomicData.pl", declining each
+time to automatically regenerate the local BLAST database,
+in favor of doing it just once when you've finished adding
+the entire batch of new organisms.
+
+TO CLASSIFY READS:
+
+With your set of query reads saved into a multi-FastA
+file (make sure each read has a *unique* identifier
+immediately following the '>' on its comment line),
+run "scoreReads.pl <query-read file>".  Result files
+will be generated for Phymm, BLAST (using the local
+database constructed during installation), and PhymmBL
+(the final score, a weighted combination of the two
+sub-components designed to maximize accuracy).
+
+TAKING ADVANTAGE OF MATE PAIRS:
+
+Providing more sequence information to Phymm will generally
+result in more accurate classification; if you have mate-pair
+data, we recommend concatenating each pair, with a string
+of 5 or 10 'N's linking the two (regardless of actual expected
+insert length).
+
+PARALLELIZATION:
+
+The Phymm portion of the PhymmBL package is currently
+a single-processor program.
+
+If you have multiple processors available and wish
+to parallelize your classification runs, scoreReads.pl
+is designed to allow multiple copies to run in parallel;
+you can split your input data (FastA sequences) into
+as many files as your system can comfortably handle,
+then run scoreReads.pl separately, in parallel, on each
+one.  This will substantially improve processing time.
+
+Example scenario: Your sequence data is in a file called
+"queryReads.fasta".  You have six processors available on
+your system, and you want to use, say, four of them for
+classification.
+
+Break up "queryReads.fasta" into four roughly equally-sized
+multi-FastA files, say "queryReads_1.fasta", "queryReads_2.fasta",
+etc., one for each processor to be used.  Then run
+scoreReads.pl separately on each of the four input chunks, e.g.:
+
+   nohup scoreReads.pl queryReads_1.fasta &
+   nohup scoreReads.pl queryReads_2.fasta &
+   nohup scoreReads.pl queryReads_3.fasta &
+   nohup scoreReads.pl queryReads_4.fasta &
+
+The 'nohup' keyword at the beginning of each line
+directs the system not to kill PhymmBL if you log out
+or you lose your terminal connection before the process is
+finished; this is recommended, wherever possible, when
+launching long-running processes like PhymmBL, since you
+*really* don't want to have to start over if something ends
+up going wrong with your connection that wouldn't otherwise
+have affected the outcome.
+
+The '&' character at the end will send each process to the
+background, so you can regain control of your terminal before
+the process is finished, which is necessary if you don't want
+to open four separate terminals.  The only drawback to this,
+if you log out after starting the process, is that you'll
+have to manually check to see whether or not scoreReads.pl
+has finished; it's done when the PhymmBL output has appeared,
+which is contained in files named
+
+   "results.03.combined_[INPUT_FILE_NAME].txt".
+
+(If you do remain logged in after launching PhymmBL, your terminal
+will send you a message when each chunk has been completed.)
+
+CONFIDENCE SCORES:
+
+PhymmBL output ("results.03.*") now contains confidence scores
+along with taxonomic predictions.  One score, a real number
+between 0 and 1, is given for each clade level prediction (genus
+and above), under the headers "GENUS_CONF," "FAMILY_CONF," etc.
+
+CRITICAL NOTE: the scores are NOT p-values, and should not be
+directly interpreted as such.
+
+What they *do* provide is a bounded, linearly-scaled confidence
+estimate: a prediction with a confidence score of 0.4 is roughly
+half as confident as one with a confidence score of 0.8.
+
+The scores are the values of polynomial functions which have
+been fitted to experimental accuracy results, with one fitted
+function for each clade level.
+
+If we label the following statements concerning a single
+query read as shown:
+
+   A: The query read length is between 100 bp and 1000 bp, inclusive.
+   B: The exact /species/ from which the read has been sampled is
+      *not* in the PhymmBL database.
+   C: Some other member of the /genus/ of the organism from which
+      the read has been sampled *is* in the PhymmBL database.
+   D: The taxonomic label assigned to the read by PhymmBL is correct.
+
+Then the confidence score associated with each clade-level
+prediction for the query read represents a *rough* fitted
+estimate of:
+
+   P(D given A, B and C).
+
+The observed standard deviation of the error between the fitted
+estimates and actual observed experimental accuracy results ranged
+between 12-15% (for 100-bp reads) and 1-6% (for 1000-bp reads).
+Standard deviation of error is fairly consistent across clade
+levels, and depends mostly on read length.
+
+Because the estimates were computed for the precise situation
+described by statements B and C above, please note that
+actual p-values may differ from the estimates by more than
+the listed standard deviations, depending on what's in the
+database.  For example, if the source species for a read *is*
+in the PhymmBL database, confidence values may be overestimating
+actual p-values; likewise, if the entire genus of the source
+species is missing from the PhymmBL database (a far more common
+case in metagenomics analysis), confidence values may be
+/underestimating/ actual p-values.  Conclusion: if you use
+confidence scores as a predictive cutoff, don't set your
+cutoff too high, because more often than not, the confidence
+values will be conservatively lowballing actual p-values.
+
+A more organic way to set cutoffs is as follows:
+
+1. Run your read set through PhymmBL.
+2. Pick a mid-range clade level like family.
+3. Sort the predicted taxonomic labels at your chosen
+   level by abundance.
+4. Pick a small percentage cutoff (say 0.75%), and treat
+   all predictions whose abundance is higher than your 
+   chosen cutoff as confident, and the rest as suspect.
+
+If you want to be really careful about cutoffs, you might
+try first performing the abundance cutoff described above,
+followed by comparing the confidence scores associated
+with the "confident set" and the "suspect set."  If the
+confidence scores separate well into two ranges, with those
+of the "confident set" higher than those of the "suspect set,"
+then you now have a numeric confidence-score threshold
+which can then be used, for example, to pull in high-confidence
+predictions even from clades with very low predicted abundance,
+ultimately enhancing your final "confident set" results.
+
+PERFORMANCE NOTES:
+
+Please note that the ICM-construction portion of
+installation is particularly computationally intensive;
+full installation (including ICM construction) took
+about 24 hours on an Altus 3400 server with a 4x Opteron
+850 processor, 32GB of memory, and no significant
+competing processes running during that time.
+
+Breakdown of our test installation, on the server
+described above, measured in wall-clock time:
+
+   BEGIN			       00h 00m 00s
+   
+   RefSeq download complete	       00h 15m 43s
+   
+   .genomeData/ directory populated
+   with downloaded data, organism
+   directory-names standardized,
+   taxonomic metadata files for
+   Phymm generated, and included
+   GLIMMER code compiled	       00h 41m 10s
+
+   ICM construction complete	       22h 56m 14s
+
+   local BLAST database construction
+   complete (END)		       23h 00m 34s
+
+Note that after the installer has assessed whether it
+should use a new copy of the RefSeq data or work from
+an existing one, the interactive portion of the installation
+is complete, and you won't need to actively monitor the
+installation.
+
+For classification, in the worst case, Phymm runs in
+time comparable to BLAST; 5,730 100-bp query reads took
+36.3 minutes to classify with Phymm, and the same set took
+26.9 minutes to search for matches in the local database
+using BLAST.  For longer reads, BLAST's running time will
+usually be several times that of Phymm.
 
-[misc_opts]: Miscellaneous options
-   -r = <bool>:   retain the AMOS bank?  (default = NO)
-   -p = <int>:    number of threads to use (be greedy!) (default=1)
-   -4 = <bool>:   454 data? (default = NO)
-
-For example, to enable read filtering:
-
--t
-
-and to enable meta-IDBA as the assembler:
-
--a metaidba
-
-And to use PhyloSift to annotate:
-
--c phylosift
-
-Any single step in the pipeline can be skipped by passing the
-following parameter to runPipeline:
-
--n,--skipsteps=Step1,..
-
-metAMOS reruns steps based on timestamp information, so if the input
-files for a step in the pipeline hasn't changed since the last run, it
-will be skipped automatically. However, you can forefully run any step
-in the pipeline by passing the following parameter to runPipeline:
-
--f,--force=Step1,..
-
-metAMOS stores a summary of the input libraries in pipeline.ini 
-in the working directory. The pipeline.conf file stores the list 
-of programs available to metAMOS. Finally, pipeline.run stores the 
-selected parameters and programs for the current run. metAMOS also stores 
-detailed logs of all commands executed by the pipeline in Logs/COMMANDS.log 
-and a log for each step of the pipeline in Logs/<STEP NAME>.log
-
-Upon completion, all of the final results will be stored in the
-Postprocess/out directory. A component, create_summary.py, takes
-this directory as input and as output, generates an HTML page with
-with summary statistics and a few plots. An optional component, create_plots.py,
-takes one or multiple Posprocess/out directories as input and generates
-comparative plots.
-
-
-----------------------------------------------------------------------------------
-E/ Test suite
-
-We have developed a set of scripts for testing the various features of
-metAMOS. All of these regression test scripts are available inside the
-/Test directory and include all necessary datasets to run them. Here
-is a brief listing of the test scripts we currently include:
-
-*Test initPipeline
-./Test/test_create.sh
-
-*Vanilla test
-./Test/run_test.sh
-
-*Test PhlyoSift
-./Test/test_amphora.sh
-
-*Test Minimus
-./Test/test_minimus.sh
-
-*Test Preprocess filtration of non-interleaved fastq files
-./Test/test_filter_noninterleaved_fastq.s
-
-*Test Newbler (if available)
-./Test/test_newbler.sh
-
-*Test CA (fasta)
-./Test/test_ca_fasta.sh
-
-*Test CA (fastq)
-./Test/test_ca.sh
-
-*Test SOAPdenovo
-./Test/test_soap.sh
-
-*Test MetaVelvet
-./Test/test_metavelvet.sh
-
-*Test SparseAssembler
-./Test/test_sparse.sh
-
-*Test Velvet
-./Test/test_velvet.sh
-
-*Test FCP
-./Test/test_fcp.sh
-
-..more on the way!
-
-----------------------------------------------------------------------------------
-F/ Example output
-
-metAMOS generates an interactive webpage once a run successfully completes:
-http://www.cbcb.umd.edu/software/metamos/summary.html
-
-This includes summary statistics and taxonomic information based on Krona
-Krona publication: Ondov BD, Bergman NH, Phillippy AM.. Interactive
-metagenomic visualization in a Web browser. BMC Bioinformatics. 2011
-Sep 30;12:385.  PMID: 21961884
-
-Additionally, since metAMOS stores all of its results in an AMOS bank,
-the assemblies can be visualized with Hawkeye.
-
-----------------------------------------------------------------------------------
-G/ BUGS
-
-If you encounter any problems/bugs, please check the wiki page:
-https://github.com/treangen/metAMOS/wiki
-and the known issues pages:
-https://github.com/treangen/metAMOS/issues?direction=desc&sort=created&state=open
-to see if it has already been documented.
-
-If not, please report the issue either using the contact information below or 
-by submitting a new issue online. Please include information on your run,
-any output produced by runPipeline, as well as the pipeline.* files and the 
-Log/<LAST_STEP> file (if not too large).
-
-H/ CONTACT
-
-Who to contact to report bugs, forward complaints, feature requests:
-
-Todd Treangen: treangen@gmail.com
-Sergey Koren: sergek@umd.edu
-
-----------------------------------------------------------------------------------
-I/ CITE
-
-Coming soon!

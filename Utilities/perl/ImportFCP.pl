@@ -9,20 +9,11 @@
 
 use strict;
 
-# get the path of this script; dependencies are relative
-#
-my $scriptPath;
-BEGIN
-{
-	use Cwd 'abs_path';
-	abs_path($0) =~ /(.*)\//;
-	$scriptPath = $1;
-}
-#use lib "$scriptPath/../lib";
-use lib "$scriptPath/";
+my $libPath = `ktGetLibPath`;
+use lib `ktGetLibPath`;
+use KronaTools;
 
 use Getopt::Long;
-use Krona;
 
 my $includeConfidence;
 my $totalMag;
@@ -30,15 +21,15 @@ my $outFile = 'report.krona.html';
 my $include;
 my $combine;
 my $local;
-my $verbose;
+my $url;
 
 GetOptions(
 	'o=s' => \$outFile,
 	'i'   => \$include,
 	'c'   => \$combine,
-        'p'   => \$includeConfidence,
+	'p'   => \$includeConfidence,
 	'l'   => \$local,
-	'v'   => \$verbose
+	'u=s' => \$url
 	);
 
 if
@@ -81,10 +72,18 @@ Options:
    [-l]           Create a local chart, which does not require an internet
                   connection to view (but will only work on this computer).
 
-   [-v]           Verbose.
-
 ';
 	exit;
+}
+
+setOption('out', $outFile);
+setOption('local', $local);
+setOption('combine', $combine);
+setOption('name', "Root");
+
+if ( defined $url )
+{
+	setOption('url', $url);
 }
 
 my %tree;
@@ -96,7 +95,7 @@ loadTaxonomy();
 
 print "Loading name to taxonomy index...\n";
 # FCP outputs common names not GI numbers so we have to load the taxonomy and find the gi
-open INFO, "<$scriptPath/taxonomy.tab" or die
+open INFO, "<$libPath/../taxonomy/taxonomy.tab" or die
 	"Taxonomy not found.  Was updateTaxonomy.sh run?";
 my %ids;
 my @classes;
@@ -252,7 +251,11 @@ foreach my $input (@ARGV)
                              }
                           }
                        }
-                       add($set, \%tree, $bestTaxa, $magnitude, $confidence);
+                       addByTaxID(\%tree, $set, $bestTaxa, $contigID, $magnitude, $confidence);
+                    }
+                    else
+                    {
+                       addByTaxID(\%tree, $set, 1, $contigID, $magnitude, 0);
                     }
                     $totalMagnitude += $magnitude;
                 }
@@ -281,34 +284,30 @@ if ( $zeroEVal )
 
 my @attributeNames =
 (
+	'magnitude',
+	'count',
+	'unassigned',
+	'score',
 	'taxon',
-	'rank',
-        'score',
-	'magnitude'
+	'rank'
 );
 
 my @attributeDisplayNames =
 (
+	'Raw reads',
+	'Contigs & singletons',
+	'Unassigned',
+	'Confidence',
 	'Taxon',
-	'Rank',
-        'Confidence',
-	'Total'
+	'Rank'
 );
-
-print "Writing $outFile...\n";
 
 writeTree
 (
 	\%tree,
-	'Root',
-	$outFile,
-	$local,
-	'magnitude',
 	\@attributeNames,
 	\@attributeDisplayNames,
 	\@datasetNames,
-        0,
-        'score',
-        0,
-	1
+	0,
+	120
 );

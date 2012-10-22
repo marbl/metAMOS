@@ -30,6 +30,7 @@ ALLOW_FAST=True
 OSTYPE="Linux"
 OSVERSION="1"
 MACHINETYPE="x86_64"
+kronaTools = "KronaTools-2.2"
 
 #identify machine type
 p = subprocess.Popen("echo `uname`", shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -151,17 +152,6 @@ if not os.path.exists("./Utilities/DB/refseq_protein.pal"):
         print "    running fastacmd (might take a few min)..."
         os.system("fastacmd -d ./Utilities/DB/refseq_protein -p T -a T -D 1 -o ./Utilities/DB/allprots.faa")
 
-if not os.path.exists("./Utilities/krona/taxonomy.tab"):
-    print "ncbi taxonomy file not found, needed for Postprocess, download now?"
-    if silentInstall:
-       dl = 'y'
-    else:
-       dl = raw_input("Enter Y/N: ")
-    if dl == 'y' or dl == 'Y':
-        print "Download and install ncbi taxonomy.."
-        os.system("./Utilities/krona/updateTaxonomy.sh")
-        #os.system("rm *.dmp")
-
 if not os.path.exists("./AMOS") or 0:
     print "AMOS binaries not found, needed for all steps, download now?"
     if silentInstall:
@@ -229,6 +219,29 @@ if not os.path.exists("./CA") or 0:
          os.system("cd wgs-7.0/kmer && ./configure.sh && gmake install")
          os.system("cd wgs-7.0/src && gmake")
       os.system("mv wgs-7.0 CA")
+
+if not os.path.exists("KronaTools") or 0:
+    print "KronaTools not found, needed for Postprocess, download now?"
+    if silentInstall:
+       dl = 'y'
+    else:
+       dl = raw_input("Enter Y/N: ")
+    if dl == 'y' or dl == 'Y':
+        # TODO: KronaTools should be on the FTP site for robustness to URL changes
+        os.system("wget 'http://downloads.sourceforge.net/project/krona/KronaTools%20%28Mac%2C%20Linux%29/" + kronaTools + ".tar?r=&ts=1350316432&use_mirror=superb-dca3' -O %s"%(kronaTools))
+        os.system("tar -xvf %s.tar"%(kronaTools))
+        os.system("rm -rf %s.tar"%(kronaTools))
+        os.system("mv %s KronaTools"%(kronaTools))
+        os.system("cd KronaTools && ./install.pl --prefix=.")
+
+if not os.path.exists("KronaTools/taxonomy/taxonomy.tab") or 0:
+    print "KronaTools taxonomy data not found, needed for Postprocess, download now (will take around 20 minutes)?"
+    if silentInstall:
+       dl = 'y'
+    else:
+       dl = raw_input("Enter Y/N: ")
+    if dl == 'y' or dl == 'Y':
+        os.system("cd KronaTools && ./updateTaxonomy.sh")
 
 # make sure we have setuptools available
 sys.path.append(sys.path[0] + os.sep + "Utilities" + os.sep + "python")

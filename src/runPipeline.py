@@ -20,7 +20,6 @@ sys.path.append(INITIAL_SRC)
 import utils
 sys.path.append(utils.INITIAL_UTILS)
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam")
-sys.path.append(utils.KRONA)
 
 ## The usual library dependencies
 import string
@@ -215,6 +214,8 @@ min_ctg_cvg = 3
 annotate_unassembled = False
 output_programs = 0
 settings = utils.Settings(DEFAULT_KMER, multiprocessing.cpu_count() - 1, "", DEFAULT_TAXA_LEVEL)
+
+sys.path.append(utils.Settings.KRONA)
 
 for o, a in opts:
     if o in ("-v","--verbose"):

@@ -214,3 +214,30 @@ def Annotate(input,output):
    run_process(_settings, "unlink %s/Postprocess/out/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")
    run_process(_settings, "ln %s/Annotate/out/%s.hits %s/Postprocess/in/%s.hits"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Annotate")
    run_process(_settings, "ln %s/Annotate/out/%s.hits %s/Postprocess/out/%s.hits"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Annotate")
+
+   # generate taxonomic-level annots
+   readctg_dict = {}
+   for lib in _readlibs:
+      ctgfile = open("%s/Assemble/out/%s.lib%dcontig.reads"%(_settings.rundir, _settings.PREFIX, lib.id), 'r')
+      for line in ctgfile.xreadlines():
+         line = line.replace("\n","")
+         read, ctg = line.split()
+         if ctg in readctg_dict:
+            readctg_dict[ctg].append(read)
+         else:
+            readctg_dict[ctg] = [read,]
+   ctgfile.close()
+
+   annotsfile = open("%s/Annotate/out/%s.annots"%(_settings.rundir, _settings.PREFIX), 'r')
+   annotreads = open("%s/Annotate/out/%s.reads.annots"%(_settings.rundir, _settings.PREFIX), 'w')
+   for line in annotsfile.xreadlines():
+     line = line.replace("\n", "")
+     ctg, annot = line.split()
+     if ctg in readctg_dict:
+        for x in readctg_dict[ctg]:
+           annotreads.write("%s\t%s\n"%(x, annot))
+     else:
+        annotreads.write("%s\t%s\n"%(ctg, annot))
+   annotsfile.close()
+   annotreads.close()
+   readctg_dict.clear()

@@ -189,7 +189,6 @@ foreach my $input (@ARGV)
         my %bestTaxa;
         my %bestScores;
 
-        print ANNOTS "contigID\t" . $taxonomicLevel . "ID\n";
 	while ( 1 )
 	{
 		my $line = <BLAST>;

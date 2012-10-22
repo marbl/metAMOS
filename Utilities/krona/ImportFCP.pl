@@ -191,7 +191,6 @@ foreach my $input (@ARGV)
 	my $magnitude = 0;
         my $taxa = 0;
 
-        print ANNOTS "contigID\t". $taxonomicLevel . "ID\n";
 	while ( 1 )
 	{
 		my $line = <FCP>;

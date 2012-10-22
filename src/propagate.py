@@ -55,9 +55,6 @@ def Propagate(input,output):
    else:
       run_process(_settings, "%s/FilterEdgesByCluster -b %s/Scaffold/in/%s.bnk -clusters %s/Propagate/in/%s.clusters -noRemoveEdges > %s/Propagate/out/%s.clusters"%(_settings.AMOS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Propagate")
 
-   # now add the headers to the propagated file
-   run_process(_settings, "head -n 1 %s/Propagate/in/%s.annots | cat - %s/Propagate/out/%s.clusters > %s/Propagate/out/%s.tmp && mv %s/Propagate/out/%s.tmp %s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Propagate")
-
    # here we also propagate to the reads within contigs
    readctg_dict = {}
    for lib in _readlibs:
@@ -70,6 +67,20 @@ def Propagate(input,output):
         else:
            readctg_dict[ctg] = [read,]
      ctgfile.close()
+
+   read_annots = {}
+   annotsfile = open("%s/Propagate/in/%s.annots"%(_settings.rundir, _settings.PREFIX), "r")
+   for line in annotsfile.xreadlines():
+     line = line.replace("\n", "")
+     ctg, annot = line.split()
+     if ctg not in readctg_dict.keys():
+        read_annots[ctg] = annot
+   annotsfile.close()
+
+   annotsfile = open("%s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), 'a')
+   for ctg in read_annots:
+       annotsfile.write("%s\t%s\n"%(ctg, read_annots[ctg]))
+   annotsfile.close()
 
    annotsfile = open("%s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
    annotreads = open("%s/Propagate/out/%s.reads.clusters"%(_settings.rundir, _settings.PREFIX), 'w')

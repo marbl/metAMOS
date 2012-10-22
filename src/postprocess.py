@@ -137,15 +137,6 @@ def Postprocess(input,output):
          maxClassID = maxClassID
    annotsfile.close()
 
-   read_annots = {}
-   annotsfile = open("%s/Postprocess/out/%s.original.annots"%(_settings.rundir, _settings.taxa_level), "r")
-   for line in annotsfile.xreadlines():
-     line = line.replace("\n", "")
-     ctg, annot = line.split()
-     if ctg not in annotatedCtgs.keys():
-        read_annots[ctg] = annot
-   annotsfile.close()
-
    run_process(_settings, "unlink %s/Postprocess/out/%s.propagated.annots"%(_settings.rundir, _settings.taxa_level), "Postprocess") 
    annotsfile = open("%s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
    annotsout = open("%s/Postprocess/out/%s.propagated.annots"%(_settings.rundir, _settings.taxa_level), 'w')
@@ -161,8 +152,6 @@ def Postprocess(input,output):
           continue
       annotsout.write("%s\t%s\n"%(ctg, annot))   
    annotsfile.close()
-   for ctg in read_annots:
-      annotsout.write("%s\t%s\n"%(ctg, read_annots[ctg]))
    annotsout.close()
 
    run_process(_settings, "unlink %s/Postprocess/out/%s.propagated.reads.annots"%(_settings.rundir, _settings.taxa_level), "Postprocess") 
@@ -180,8 +169,6 @@ def Postprocess(input,output):
           continue
       annotsout.write("%s\t%s\n"%(ctg, annot))
    annotsfile.close()
-   for ctg in read_annots:
-      annotsout.write("%s\t%s\n"%(ctg, read_annots[ctg]))
    annotsout.close()
 
    run_process(_settings, "cp %s/Abundance/out/%s.classify.txt %s/Postprocess/out/. "%(_settings.rundir,_settings.PREFIX,_settings.rundir),"Postprocess")

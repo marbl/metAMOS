@@ -526,10 +526,31 @@ for lib in readlibs:
 
 utils.Settings.asmfiles = asmfiles
 
-if "Assemble" not in skipsteps and "Assemble" in forcesteps:
+if "Propagate" in forcesteps:
+    utils.run_process(settings, "touch %s/Annotate/out/%s.annots"%(settings.rundir, settings.PREFIX),\
+                      "RunPipeline")
+
+if "FindScaffoldORFS" in forcesteps:
     utils.run_process(settings, \
-          "rm %s/Logs/assemble.ok"%(settings.rundir),\
+          "touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(settings.rundir,settings.PREFIX),\
           "RunPipeline")
+
+if "Scaffold" in forcesteps:
+    utils.run_process(settings, \
+          "rm %s/Scaffold/out/%s.linearize.scaffolds.final"%(settings.rundir,settings.PREFIX),\
+          "RunPipeline")
+
+if "Abundance" in forcesteps:
+   utils.run_process(settings, \
+          "touch %s/FindORFS/out/%s.faa"%(settings.rundir,settings.PREFIX),\
+          "RunPipeline")
+   utils.run_process(settings, \
+          "rm %s/Abundance/out/%s.taxprof.pct.txt"%(settings.rundir,settings.PREFIX),\
+          "RunPipeline")
+
+if "Annotate" in forcesteps:
+   utils.run_process(settings, \
+          "rm %s/Annotate/out/%s.hits"%(settings.rundir,settings.PREFIX),"RunPipeline")
 
 if "FINDORFS" in forcesteps or "findorfs" in forcesteps or "FindORFS" in forcesteps:
    utils.run_process(settings, \
@@ -540,31 +561,10 @@ if "FINDORFS" in forcesteps or "findorfs" in forcesteps or "FindORFS" in forcest
           "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX),\
           "RunPipeline")
 
-if "Annotate" in forcesteps:
-   utils.run_process(settings, \
-          "rm %s/Annotate/out/%s.hits"%(settings.rundir,settings.PREFIX),"RunPipeline")
-
-if "Abundance" in forcesteps:
-   utils.run_process(settings, \
-          "touch %s/FindORFS/out/%s.faa"%(settings.rundir,settings.PREFIX),\
-          "RunPipeline")
-   utils.run_process(settings, \
-          "rm %s/Abundance/out/%s.taxprof.pct.txt"%(settings.rundir,settings.PREFIX),\
-          "RunPipeline")
-
-if "Scaffold" in forcesteps:
+if "Assemble" not in skipsteps and "Assemble" in forcesteps:
     utils.run_process(settings, \
-          "rm %s/Scaffold/out/%s.scaffolds.final"%(settings.rundir,settings.PREFIX),\
+          "rm %s/Logs/assemble.ok"%(settings.rundir),\
           "RunPipeline")
-
-if "FindScaffoldORFS" in forcesteps:
-    utils.run_process(settings, \
-          "touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(settings.rundir,settings.PREFIX),\
-          "RunPipeline")
-
-if "Propagate" in forcesteps:
-    utils.run_process(settings, "touch %s/DB/class_key.tab"%(settings.METAMOS_UTILS),\
-                      "RunPipeline")
 
 if __name__ == "__main__":
     print "Starting metAMOS pipeline"

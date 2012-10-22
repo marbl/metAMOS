@@ -91,7 +91,10 @@ classify.init(bodyattrs={'style':"margin:0px"})
 classify.p("Classified contigs:")
 classify.table(border="1")
 for key in contigs_by_class:
-    class_name = id_class[key]
+    try:
+        class_name = id_class[key]
+    except KeyError:
+        continue
     classify.tr()
     classify.add("<td align=\"left\"><a target=\"_blank\" href=\"%s.classified/%s/%s.fasta\">%s</a></td><td align=\"right\">%d</td><td align=\"right\">%3.2f%%</td>"%(taxa_level, class_name, class_name, class_name, contigs_by_class[key], contigs_by_class[key]/float(classifiedCount)*100))
     classify.tr.close()

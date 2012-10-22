@@ -114,6 +114,20 @@ def printConfiguration(fileName=None):
               configurationText.append("\t" + utils.Settings.METAMOS_UTILS + "\n")           
            configurationText.append("\t" + citation + "\n\n")
 
+    # add step-indepent citations that are always run
+    configurationText.append("[other]\n")
+    for prog in always_run_programs:
+       if prog == None or prog == "none":
+          configurationText.append("None\n\n")
+       else:
+          (progName, citation) = utils.getProgramCitations(settings, prog)
+          configurationText.append(progName + "\n")
+          try:
+             configurationText.append("\t" + eval("utils.Settings.%s"%(prog.upper()))+"\n")
+          except AttributeError:
+             configurationText.append("\t" + utils.Settings.METAMOS_UTILS + "\n")
+          configurationText.append("\t" + citation + "\n\n")
+
     if fileName == "" or fileName == None:
         print ''.join(configurationText)
     else:
@@ -182,6 +196,8 @@ selected_programs["mapreads"] = "bowtie"
 selected_programs["abundance"] = "metaphyler"
 selected_programs["classify"] = "fcp"
 selected_programs["scaffold"] = "bambus2"
+
+always_run_programs = ["krona"]
 
 allsteps = ["Preprocess","Assemble","MapReads","FindORFS","Abundance","Annotate",\
                 "Scaffold","Propagate","Classify","Postprocess"]

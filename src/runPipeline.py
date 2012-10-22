@@ -20,6 +20,7 @@ sys.path.append(INITIAL_SRC)
 import utils
 sys.path.append(utils.INITIAL_UTILS)
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam")
+sys.path.append(utils.KRONA)
 
 ## The usual library dependencies
 import string

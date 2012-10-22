@@ -207,10 +207,9 @@ def Annotate(input,output):
        if not os.path.exists(importFCP):
           print "Error: Krona importer for FCP not found in %s. Please check your path and try again.\n"%(importFCP)
           raise(JobSignalledBreak)
-       run_process(_settings, "cat %s/Annotate/out/*.epsilon-nb_results.txt | grep -v 'Fragment Id' |sort -k1,1 -s > %s/Annotate/out/%s.epsilon-nb_results.txt"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
-       run_process(_settings, "cat %s/Annotate/out/*.nb_results.txt | grep -v 'Fragment Id' |sort -k1,1 -s > %s/Annotate/out/%s.nb_results.txt"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
+       run_process(_settings, "cat %s/Annotate/out/*.epsilon-nb_results.txt | grep -v 'Fragment Id' > %s/Annotate/out/%s.epsilon-nb_results.txt"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
 
-       run_process(_settings, "perl %s -c -v -i -p %s/Annotate/out/%s.epsilon-nb_results.txt:%s/Assemble/out/%s.contig.cnt:%s"%(importFCP, _settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate") # TODO: local url (after next KronaTools release)
+       run_process(_settings, "perl %s -c -v -i %s/Annotate/out/%s.epsilon-nb_results.txt:%s/Assemble/out/%s.contig.cnt:%s"%(importFCP, _settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate") # TODO: local url (after next KronaTools release)
 
    run_process(_settings, "unlink %s/Postprocess/in/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")
    run_process(_settings, "unlink %s/Postprocess/out/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")

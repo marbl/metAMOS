@@ -232,9 +232,11 @@ foreach my $input (@ARGV)
 
                     if (defined($bestTaxa)) {
                        my $confidence = 0;
+                       my $conf2 = 0;
                        if (defined($confidences)) {
                           my @confs = split/;/, $confidences;
                           $confidence = $confs[$bestIndex];
+                          $conf2 = -1*log(-1*$confidence);
                        } elsif ($includeConfidence && defined($names{$bestTaxaName})) {
                           my $index = $names{$bestTaxaName};
                           while ( 1 ) {
@@ -244,6 +246,7 @@ foreach my $input (@ARGV)
                              my ($confID, $remainder) = split /\t/, $confLine, 2;
                              if ($confID eq $contigID) {
                                 $confidence = ( split/\t/, $confLine )[$index]; 
+                                $conf2 = -1*log(-1*$confidence);
                                 last;
                              }
                              if (eof(CONF)) {
@@ -251,7 +254,7 @@ foreach my $input (@ARGV)
                              }
                           }
                        }
-                       addByTaxID(\%tree, $set, $bestTaxa, $contigID, $magnitude, $confidence);
+                       addByTaxID(\%tree, $set, $bestTaxa, $contigID, $magnitude, $conf2);
                     }
                     else
                     {

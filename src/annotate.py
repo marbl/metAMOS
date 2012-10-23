@@ -196,10 +196,11 @@ def Annotate(input,output):
    run_process(_settings, "cat %s/Annotate/out/*.hits > %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
  
    if _cls == "phylosift":
-       if not os.path.exists(_settings.KRONA + os.sep + "ImportPhyloSift.pl"):
+       importPS = "%s%sperl%sImportPhyloSift.pl"%(_settings.METAMOS_UTILS, os.sep, os.sep)
+       if not os.path.exists(importPS):
            print "Error: Krona importer for PhyloSift not found in %s. Please check your path and try again.\n"%(_settings.KRONA)
            raise(JobSignalledBreak)
-       run_process(_settings, "perl %s/ImportPhyloSift.pl -c -v -i %s/Annotate/out/%s.hits:%s/Assemble/out/%s.contig.cnt:%s"%(_settings.KRONA,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX, _settings.taxa_level), "Annotate")
+       run_process(_settings, "perl %s -c -v -i %s/Annotate/out/%s.hits:%s/Assemble/out/%s.contig.cnt:%s"%(importPS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX, _settings.taxa_level), "Annotate")
 
    elif _cls == "fcp":
        # generate Krona output

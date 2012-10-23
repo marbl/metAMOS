@@ -231,8 +231,6 @@ annotate_unassembled = False
 output_programs = 0
 settings = utils.Settings(DEFAULT_KMER, multiprocessing.cpu_count() - 1, "", DEFAULT_TAXA_LEVEL)
 
-sys.path.append(utils.Settings.KRONA)
-
 for o, a in opts:
     if o in ("-v","--verbose"):
         utils.Settings.VERBOSE = True
@@ -589,6 +587,10 @@ if __name__ == "__main__":
     if settings.threads < 1:
         settings.threads = 1
     settings = utils.initConfig(settings.kmer, settings.threads, settings.rundir, settings.taxa_level, settings.VERBOSE, settings.OUTPUT_ONLY)
+    # add krona to system path
+    currPath = os.environ["PATH"]
+    if utils.Settings.KRONA not in currPath:
+       os.environ["PATH"]="%s:%s"%(currPath, utils.Settings.KRONA)
 
     import preprocess
     import assemble

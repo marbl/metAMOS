@@ -178,7 +178,7 @@ supported_assemblers = ["soapdenovo","newbler","ca","velvet","velvet-sc","metave
 supported_mappers = ["bowtie","bowtie2"]
 supported_abundance = ["metaphyler"]
 supported_classifiers = ["fcp","phylosift","phmmer","blast",\
-                             "metaphyler"]
+                             "metaphyler", "phymm"]
 supported_scaffolders = ["bambus2"]
 supported_programs["findorfs"] = supported_genecallers
 supported_programs["assemble"] = supported_assemblers

@@ -13,6 +13,7 @@ bowtie	Bowtie	Langmead B, Trapnell C, Pop M, Salzberg SL. Ultrafast and memory-e
 bowtie2	Bowtie2	Langmead B, Salzberg SL. Fast gapped-read alignment with Bowtie 2. Nat Methods. 2012 Mar 4;9(4):357-9. doi: 10.1038/nmeth.1923.
 blast	BLAST	Altschul SF, Gish W, Miller W, Myers EW, Lipman DJ. Basic local alignment search tool. J Mol Biol. 1990 Oct 5;215(3):403-10.
 phmmer	PHMMER	Eddy SR. Accelerated Profile HMM Searches. PLoS Comput Biol. 2011 Oct;7(10):e1002195. Epub 2011 Oct 20.
+phymm	PHYMM	Brady A, Salzberg SL. PhymmBL expanded: confidence scores, custom databases, parallelization and more. Nat Methods. 2011 May;8(5):367.
 phylosift	PhyloSift	http://phylosift.wordpress.com/
 minimus	Minimus	Sommer DD, Delcher AL, Salzberg SL, Pop M. Minimus: a fast, lightweight genome assembler. BMC Bioinformatics. 2007 Feb 26;8:64.
 glimmermg	Glimmer-MG	Kelley DR, Liu B, Delcher AL, Pop M, Salzberg SL. Gene prediction with Glimmer for metagenomic sequences augmented by classification and clustering. Nucleic Acids Res. 2012 Jan;40(1):e9. Epub 2011 Nov 18.

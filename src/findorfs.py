@@ -236,7 +236,7 @@ def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS",min_l
                cvgg.write("%s\t%.2f\n"%(hdr,len_dict[hdr]*cvg_dict[orfkey]))
        else:
            if len_dict[hdr] > min_len and min_cvg >= 1:
-               cvgg.write("%s\t%s\n"%((key + orfhdrs[key]),str(1.0)))
+               cvgg.write("%s\t%s\n"%(hdr,str(1.0)))
 
     cvgg.close()
     genectg.close()

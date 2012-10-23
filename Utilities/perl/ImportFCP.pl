@@ -10,7 +10,7 @@
 use strict;
 
 my $libPath = `ktGetLibPath`;
-use lib `ktGetLibPath`;
+use lib (`ktGetLibPath`);
 use KronaTools;
 
 use Getopt::Long;

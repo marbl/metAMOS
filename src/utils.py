@@ -376,6 +376,10 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
        Settings.SPARSEASSEMBLER = getFromPath("SparseAssembler", "SparseAssembler")
     sparseAssemblerMD5 = getMD5Sum(Settings.SPARSEASSEMBLER + os.sep + "SparseAssembler")
 
+    Settings.KRONA         = "%s%sKronaTools%sbin"%(Settings.METAMOSDIR,os.sep,os.sep)
+    if not os.path.exists(Settings.KRONA + os.sep + "ktImportTaxonomy"):
+       Settings.KRONA = getFromPath("Krona", "ktImportTaxonomy")
+    kronaMD5 = getMD5Sum(Settings.KRONA + os.sep + "ktImportTaxonomy")
 
     # now for repeatoire
     Settings.REPEATOIRE = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
@@ -476,6 +480,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
     conf.write("FASTQC:\t\t\t%s\t%s\n"%(Settings.FASTQC, fastqcMD5))
 
     conf.write("REPEATOIRE:\t\t%s\t%s\n"%(Settings.REPEATOIRE, repeatoireMD5))
+    conf.write("KRONA:\t\t\t%s\t%s\n"%(Settings.KRONA, kronaMD5))
     conf.close()
 
     return Settings
@@ -532,6 +537,14 @@ def run_process(settings,command,step=""):
               print ""
               print ""
 
+              # flush all error/output streams
+              outf.flush()
+              outf.write(fstdout+fstderr)
+              outf.close()
+              commandf.flush()
+              commandf.write(command+"\n")
+              commandf.close()
+              
               # also make sure this step will be re-run on restart
               os.system("rm %s%sLogs%s%s.ok"%(settings.rundir, os.sep, os.sep, step.lower())) 
               sys.exit(rc)

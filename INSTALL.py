@@ -228,7 +228,7 @@ if not os.path.exists("KronaTools") or 0:
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         # TODO: KronaTools should be on the FTP site for robustness to URL changes
-        os.system("wget 'http://downloads.sourceforge.net/project/krona/KronaTools%20%28Mac%2C%20Linux%29/" + kronaTools + ".tar?r=&ts=1350316432&use_mirror=superb-dca3' -O %s"%(kronaTools))
+        os.system("wget 'ftp://ftp.cbcb.umd.edu/pub/data/metamos/" + kronaTools + ".tar' -O %s.tar"%(kronaTools))
         os.system("tar -xvf %s.tar"%(kronaTools))
         os.system("rm -rf %s.tar"%(kronaTools))
         os.system("mv %s KronaTools"%(kronaTools))

@@ -56,6 +56,7 @@ class Settings:
    FRAGGENESCAN = ""
    FCP = ""
    PHMMER = ""
+   PHYMM = ""
    BLAST = ""
    PHYLOSIFT = ""
 
@@ -102,6 +103,7 @@ class Settings:
       Settings.VELVET_SC     = "%s%scpp%s%s-%s%svelvet-sc"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
       Settings.METAVELVET    = "%s%scpp%s%s-%s%sMetaVelvet"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
       Settings.SPARSEASSEMBLER = "%s%scpp%s%s-%s%sSparseAssembler"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
+      Settings.PHYMM = "%s%sperl%sphymm%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, os.sep)
 
       Settings.METAPHYLER        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
 
@@ -425,6 +427,11 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
        Settings.PHMMER = getFromPath("phmmer", "PHmmer")
     phmmerMD5 = getMD5Sum(Settings.PHMMER + os.sep + "phmmer")
 
+    Settings.PHYMM = "%s%sperl%sphymm%s"%(Settings.METAMOS_UTILS, os.sep, os.sep,os.sep)
+    if not os.path.exists(Settings.PHYMM + os.sep + "scoreReads.pl"):
+       Settings.PHYMM = getFromPath("phymm", "Phymm")
+    phymmMD5 = getMD5Sum(Settings.PHYMM + os.sep + "scoreReads.pl")
+
     Settings.BLAST = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
     if not os.path.exists(Settings.BLAST + os.sep + "blastall"):
        Settings.BLAST = getFromPath("blastall", "blast")
@@ -463,6 +470,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
     conf.write("FRAGGENESCAN:\t\t%s\t%s\n"%(Settings.FRAGGENESCAN, fraggenescanMD5))
     conf.write("FCP:\t\t\t%s\t%s\n"%(Settings.FCP, fcpMD5))
     conf.write("PHMMER:\t\t\t%s\t%s\n"%(Settings.PHMMER, phmmerMD5))
+    conf.write("PHYMM:\t\t\t%s\t%s\n"%(Settings.PHYMM, phymmMD5))
     conf.write("BLAST:\t\t\t%s\t%s\n"%(Settings.BLAST, blastMD5))
     conf.write("PHYLOSIFT:\t\t%s\t%s\n"%(Settings.PHYLOSIFT, phylosiftMD5))
     conf.write("FASTQC:\t\t\t%s\t%s\n"%(Settings.FASTQC, fastqcMD5))

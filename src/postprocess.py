@@ -176,8 +176,19 @@ def Postprocess(input,output):
    # add links to assembled contigs and scaffolds
    run_process(_settings, "cp %s/Scaffold/out/%s.linearize.scaffolds.final %s/Postprocess/out/%s.scf.fa"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Postprocess")
    run_process(_settings, "cp %s/Scaffold/out/%s.contigs %s/Postprocess/out/%s.ctg.fa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
-   run_process(_settings, "cp %s/Assemble/out/%s.contig.cvg %s/Postprocess/out/%s.ctg.cvg"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
    run_process(_settings, "ln -t %s/Postprocess/out/ -s %s/Scaffold/in/%s.bnk "%(_settings.rundir,_settings.rundir,_settings.PREFIX),"Postprocess")
+
+   # add links to sequence info
+   for lib in _readlibs:
+      run_process(_settings, "unlink %s/Postprocess/out/%s.lib%d.contig.reads"%(_settings.rundir, _settings.PREFIX, lib.id), "Postprocess")
+      run_process(_settings, "ln %s/Assemble/out/%s.lib%dcontig.reads %s/Postprocess/out/%s.lib%d.contig.reads"%(_settings.rundir, _settings.PREFIX, lib.id, _settings.rundir, _settings.PREFIX, lib.id), "Postprocess")
+      run_process(_settings, "unlink %s/Postprocess/out/%s.lib%d.unaligned.fasta"%(_settings.rundir, _settings.PREFIX, lib.id), "Postprocess")
+      run_process(_settings, "ln %s/Assemble/out/lib%d.unaligned.fasta %s/Postprocess/out/%s.lib%d.unaligned.fasta"%(_settings.rundir, lib.id, _settings.rundir, _settings.PREFIX, lib.id), "Postprocess")
+
+   run_process(_settings, "unlink %s/Postprocess/out/%s.ctg.cnt"%(_settings.rundir, _settings.PREFIX), "Postprocess")
+   run_process(_settings, "ln %s/Assemble/out/%s.contig.cnt %s/Postprocess/out/%s.ctg.cnt"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
+   run_process(_settings, "unlink %s/Postprocess/out/%s.ctg.cvg"%(_settings.rundir, _settings.PREFIX), "Postprocess")
+   run_process(_settings, "ln %s/Assemble/out/%s.contig.cvg %s/Postprocess/out/%s.ctg.cvg"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess") 
 
 #   print "python %s/python/create_report.py %s/Abundance/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/ %s/Postprocess/out/%s.scf.fa %s %s %d"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.AMOS, len(_readlibs))
 

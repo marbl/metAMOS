@@ -100,7 +100,7 @@ if not os.path.exists("./FastQC"):
 #       os.system("make")
 #       os.system("rm samtools.tar.bz2")
  
-if not os.path.exists("./Utilities/models"):
+if not os.path.exists("./Utilities/models") or not os.path.exists("./Utilities/DB/blast_data"):
     print "Genome models not found, optional for FCP/NB, download now?"
     if silentInstall:
        dl = 'y'
@@ -109,11 +109,10 @@ if not os.path.exists("./Utilities/models"):
     if dl == 'y' or dl == 'Y':
         archive = "fcp_models.tar.gz"
         os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -O %s" %(archive, archive))
-        #os.system("mv %s ./Utilities/models/." % archive)
+        os.system("rm -rf ./Utilities/DB/blast_data")
+        os.system("rm -rf ./Utilities/models")
         os.system("tar -C ./Utilities/ -xvf %s" % archive)
         os.system("rm %s"%archive)
-        os.system("cp %s/Utilities/python/taxonomy.txt %s/Utilities/models/taxonomy.txt"%(sys.path[0], sys.path[0]))
-        #os.system("chmod u+x Utlities/models")
 
 if not os.path.exists("./Utilities/glimmer-mg"):
     print "Glimmer-MG not found, optional for FindORFS step. Caution, this will take approx. 24 hours to complete, including Phymm download & install. download & install now?"

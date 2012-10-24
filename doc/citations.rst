@@ -7,7 +7,7 @@ metaidba	Meta-IDBA	Peng Y, Leung HCM, Yiu SM, Chin FYL: Meta-IDBA: a de Novo ass
 velvet	Velvet	Zerbino DR, Birney E. Velvet: algorithms for de novo short read assembly using de Bruijn graphs. Genome Res. 2008 May;18(5):821-9. Epub 2008 Mar 18.
 metavelvet	MetaVelvet	Namiki T, Hachiya T, Tanaka H, Sakakibara Y: MetaVelvet : An extension of Velvet assembler to de novo metagenome assembly from short sequence reads. In; 2011.
 ca	Celera Assembler	Miller JR, Delcher AL, Koren S, Venter E, Walenz BP, Brownley A, Johnson J, Li K, Mobarry C, Sutton G. Aggressive assembly of pyrosequencing reads with mates.Bioinformatics. 2008 Dec 15;24(24):2818-24. Epub 2008 Oct 24.
-bambus2	Bambus 2	Koren S, Treangen TJ, Pop M. Bambus 2: scaffolding metagenomes. Bioinformatics. 2011 Nov 1;27(21):2964-71. Epub 2011 Sep 16.
+bambus2	Bambus 2	Koren S, Treangen TJ, Pop M. Bambus 2: scaffolding metagenomes. Bioinformatics 27(21): 2964-2971 2011.
 fcp	FCP,Naive Bayesian Classifier	Macdonald NJ, Parks DH, Beiko RG. Rapid identification of high-confidence taxonomic assignments for metagenomic data. Nucleic Acids Res. 2012 Apr 24.
 bowtie	Bowtie	Langmead B, Trapnell C, Pop M, Salzberg SL. Ultrafast and memory-efficient alignment of short DNA sequences to the human genome. Genome Biol. 2009;10(3):R25. Epub 2009 Mar 4.
 bowtie2	Bowtie2	Langmead B, Salzberg SL. Fast gapped-read alignment with Bowtie 2. Nat Methods. 2012 Mar 4;9(4):357-9. doi: 10.1038/nmeth.1923.

@@ -1,7 +1,7 @@
 import os, sys, string, subprocess, distutils.util
 
 user_home = os.environ["HOME"]
-print "<<Weclome to metAMOS install>>"
+print "<<Welcome to metAMOS install>>"
 
 #add access to utils.py, for utils dir
 INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
@@ -17,8 +17,10 @@ os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam:"
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib:"
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python:"
 #lib dir for pysam and others
-os.system("mkdir %s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib")
-os.system("mkdir %s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
+if not os.path.exists("%s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"):
+    os.system("mkdir %s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib")
+if not os.path.exists("%s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"):
+    os.system("mkdir %s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
 
 silentInstall=False
 if (len(sys.argv) > 1):
@@ -100,6 +102,19 @@ if not os.path.exists("./FastQC"):
 #       os.system("make")
 #       os.system("rm samtools.tar.bz2")
  
+if not os.path.exists("./Utilities/DB/uniprot_sprot.fasta"):
+    print "Uniprot/Swissprot DB not found, optional for Functional Annotation, download now?"
+    if silentInstall:
+       dl = 'y'
+    else:
+       dl = raw_input("Enter Y/N: ")
+    if dl == 'y' or dl == 'Y':
+        archive = "uniprot.tar.gz"
+        os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -O %s" %(archive, archive))
+        os.system("tar -C ./Utilities/DB/ -xvf %s" % archive)
+        os.system("rm %s"%archive)
+
+
 if not os.path.exists("./Utilities/models") or not os.path.exists("./Utilities/DB/blast_data"):
     print "Genome models not found, optional for FCP/NB, download now?"
     if silentInstall:

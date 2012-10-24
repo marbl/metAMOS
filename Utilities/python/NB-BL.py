@@ -122,6 +122,9 @@ for fragmentId in fragmentScores:
 	fout.write(fragmentId + '\t')
 	for r in xrange(0, 8):
 		fout.write(topTaxonomy[r] + ';')
+        fout.write("\t")
+        for r in xrange(0, 8):
+                fout.write("%f;"%(topScore))
 	fout.write('\n')
 		
 fout.close()

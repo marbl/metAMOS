@@ -22,6 +22,7 @@ my $include;
 my $combine;
 my $local;
 my $url;
+my $fastaClassified;
 
 GetOptions(
 	'o=s' => \$outFile,
@@ -29,7 +30,8 @@ GetOptions(
 	'c'   => \$combine,
 	'p'   => \$includeConfidence,
 	'l'   => \$local,
-	'u=s' => \$url
+	'u=s' => \$url,
+        'f=s' => \$fastaClassified
 	);
 
 if
@@ -92,6 +94,22 @@ my %tree;
 
 print "Loading taxonomy...\n";
 loadTaxonomy();
+
+# load set of what we could have classified
+my %classified;
+if (defined($fastaClassified)) {
+   my @files = split /:/, $fastaClassified;
+   foreach my $file (@files) {
+      open F, "<$file" or die $!;
+      while (my $line = <F>) {
+         chomp $line;
+         if ($line =~ /^>(\S*)/) {
+           $classified{$1} = 1;
+         }
+      }
+      close(F)
+   }
+}
 
 print "Loading name to taxonomy index...\n";
 # FCP outputs common names not GI numbers so we have to load the taxonomy and find the gi
@@ -255,10 +273,12 @@ foreach my $input (@ARGV)
                           }
                        }
                        addByTaxID(\%tree, $set, $bestTaxa, $contigID, $magnitude, $conf2);
+                       $classified{$contigID} = 0;
                     }
                     else
                     {
                        addByTaxID(\%tree, $set, 1, $contigID, $magnitude, 0);
+                       $classified{$contigID} = 0;
                     }
                     $totalMagnitude += $magnitude;
                 }
@@ -269,6 +289,14 @@ foreach my $input (@ARGV)
            close CONF;
         }
 	
+        foreach my $id (keys %classified) {
+           if ($classified{$id} == 1) {
+              my $magnitude = (defined($magnitudes{$id}) ? $magnitudes{$id} : 1);
+              addByTaxID(\%tree, $set, 0, $id, $magnitude, 0);
+              $totalMagnitude+=$magnitude;
+           }
+        }
+
 	if ( $include && $totalMagnitude )
 	{
 		$tree{'magnitude'}[$set] = $totalMagnitude;

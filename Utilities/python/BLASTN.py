@@ -23,7 +23,6 @@ resultsFile = sys.argv[3]
 
 print 'Running BLASTN...'
 
-#os.system(blastnEXE + ' -query ' + queryFile + ' -db ./blast_data/BacteriaAndArchaeaGenomesDB -evalue 10 -outfmt 7 -task blastn -out ' + resultsFile)
-os.system(blastnEXE + ' -i ' + queryFile + ' -d ./blast_data/BacteriaAndArchaeaGenomesDB -e 10 -m 8 -a 16 -p blastn -o ' + resultsFile)
+os.system(blastnEXE + ' -query ' + queryFile + ' -db ./blast_data/BacteriaAndArchaeaGenomesDB -evalue 10 -outfmt 7 -task blastn -out ' + resultsFile)
 
 print 'Done.'

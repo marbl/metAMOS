@@ -1,2 +1,3 @@
-../initPipeline -q -1 test1.fq -2 test2.fq  -d test_phylosift  -i 150:450
-../runPipeline -a soap -c phylosift -p 4 -d test_phylosift -k 45 -t -f Postprocess
+#bzip2 -d test4.sff.bz2
+../initPipeline -l flx -f -m carsonella_pe_filt.fna -d test_phylosift -i 3000:4000 
+../runPipeline -r -v -c phylosift -p 8 -a soap -d test_phylosift -k 55 -t -f Preprocess -z phylum

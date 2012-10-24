@@ -48,6 +48,7 @@ my $combine;
 my $local;
 my $verbose;
 my $url;
+my $fastaClassified;
 
 GetOptions(
 	'o=s' => \$outFile,
@@ -56,6 +57,7 @@ GetOptions(
 	'c'   => \$combine,
 	'l'   => \$local,
 	'v'   => \$verbose,
+        'f=s' => \$fastaClassified,
         'u=s' => \$url
 	);
 
@@ -130,6 +132,22 @@ my %tree;
 print "Loading taxonomy...\n";
 loadTaxonomy();
 
+# load set of what we could have classified
+my %classified;
+if (defined($fastaClassified)) {
+   my @files = split /:/, $fastaClassified;
+   foreach my $file (@files) {
+      open F, "<$file" or die $!;
+      while (my $line = <F>) {
+         chomp $line;
+         if ($line =~ /^>(\S*)/) {
+           $classified{$1} = 1; 
+         }
+      }
+      close(F)
+   }
+}
+ 
 # parse BLAST results
 
 my $set = 0;
@@ -237,6 +255,7 @@ foreach my $input (@ARGV)
                           }
                        }
                     }
+                    $classified{$currCtg} = 0;
                     addByTaxID(\%tree, $set, $bestTaxon, $currCtg, $magnitude, $bestScores{$bestName});
 
                     $totalMagnitude += $magnitude;
@@ -257,6 +276,14 @@ foreach my $input (@ARGV)
                         $currCtg = $contigID; 
 		}
 	}
+
+        foreach my $id (keys %classified) {
+           if ($classified{$id} == 1) {
+              my $magnitude = (defined($magnitudes{$id}) ? $magnitudes{$id} : 1);
+              addByTaxID(\%tree, $set, 0, $id, $magnitude, 0);
+              $totalMagnitude+=$magnitude;
+           }
+        }
 	
 	if ( $include && $totalMagnitude )
 	{

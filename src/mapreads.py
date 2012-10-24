@@ -105,14 +105,14 @@ def map2contig():
                 #run_process(_settings, "%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir))
                 if "bowtie" not in _skipsteps and (lib.format == "fasta" or lib.format == "sff"):
                     if trim:
-                        run_process(_settings, "%s/bowtie -p %d -f -v 1 -M 2 --un %s/Assemble/out/lib%d.unaligned.fasta %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,lib.id_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                        run_process(_settings, "%s/bowtie -p %d -f -v 1 -M 2 --un %s/Assemble/out/lib%d.unaligned.fasta %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,lib.id_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                     else:
-                        run_process(_settings, "%s/bowtie -p %d -f -l 25 -e 140 --best --strata -m 10 -k 1 --un %s/Assemble/out/lib%d.unaligned.fasta %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                        run_process(_settings, "%s/bowtie -p %d -f -l 25 -e 140 --best --strata -m 10 -k 1 --un %s/Assemble/out/lib%d.unaligned.fasta %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                 elif "bowtie" not in _skipsteps and lib.format != "fasta":
                     if trim:
-                        run_process(_settings, "%s/bowtie  -p %d -v 1 -M 2 --un %s/Assemble/out/lib%d.unaligned.seq %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                        run_process(_settings, "%s/bowtie  -p %d -v 1 -M 2 --un %s/Assemble/out/lib%d.unaligned.seq %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                     else:
-                        run_process(_settings, "%s/bowtie  -p %d -l 25 -e 140 --best --strata -m 10 -k 1 --un %s/Assemble/out/lib%d.unaligned.seq %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq &> %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                        run_process(_settings, "%s/bowtie  -p %d -l 25 -e 140 --best --strata -m 10 -k 1 --un %s/Assemble/out/lib%d.unaligned.seq %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                     run_process(_settings, "java -cp %s convertFastqToFasta %s/Assemble/out/lib%d.unaligned.seq %s/Assemble/out/lib%d.unaligned.fasta %s/Assemble/out/lib%d.unaligned.fasta.qual"%(_settings.METAMOS_JAVA, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id), "MapReads")
 
                 infile = open("%s/Assemble/out/lib%d.bout"%(_settings.rundir,lib.id),'r')

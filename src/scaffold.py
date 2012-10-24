@@ -6,7 +6,7 @@ from operator import itemgetter
 from utils import *
 from findreps import FindRepeats
 from annotate import Annotate
-
+from fannotate import FunctionalAnnotation
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
 
@@ -34,7 +34,7 @@ def init(reads, skipsteps, retainBank, asm):
          _mated = True
          break
 
-@follows(FindRepeats,Annotate)
+@follows(FindRepeats,Annotate,FunctionalAnnotation)
 @posttask(touch_file("%s/Logs/scaffold.ok"%(_settings.rundir)))
 @files(["%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX)],"%s/Scaffold/out/%s.scaffolds.final"%(_settings.rundir,_settings.PREFIX))
 def Scaffold(input,output):

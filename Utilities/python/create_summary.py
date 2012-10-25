@@ -97,6 +97,7 @@ if __name__ == "__main__":
     steps.append("FindScaffoldORFS")
     steps.append("Abundance")
     steps.append("Annotate")
+    steps.append("FunctionalAnnotation")
     steps.append("Propagate")
     steps.append("Classify")
 
@@ -110,6 +111,7 @@ if __name__ == "__main__":
     step_status["FindScaffoldORFS"] = "OK"
     step_status["Abundance"] = "FAIL"
     step_status["Annotate"] = "FAIL" 
+    step_status["FunctionalAnnotation"] = "FAIL" 
     step_status["Propagate"] = "NONE"
     step_status["Classify"] = "NONE"
     ##get status of each step from Log dir
@@ -171,7 +173,8 @@ if __name__ == "__main__":
     ##copy stuff
     for step in steps:
 #        step = step.lower()
-        os.system("cp %s/javascript/%s.html %s/"%(utils,step,html_prefix))
+        if os.path.exists("%s/javascript/%s.html %s/"%(utils,step,html_prefix)):
+            os.system("cp %s/javascript/%s.html %s/"%(utils,step,html_prefix))
     os.system("cp %s/Logs/COMMANDS.log %s/pipeline.commands"%(MA_dir,html_prefix))
     os.system("cp %s/pipeline.run %s/pipeline.summary"%(MA_dir,html_prefix))
     os.system("ln -sf %s/javascript/style.css %s/"%(utils,html_prefix)) # TEMP: change back to cp

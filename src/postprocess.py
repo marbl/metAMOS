@@ -83,10 +83,12 @@ def Postprocess(input,output):
        run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")
        run_process(_settings, "ln %s/Annotate/out/report.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
    elif _cls == 'phymm':
-       if not os.path.exists(_settings.KRONA + os.sep + "ImportPHYMM.pl"):
-          print "Error: Krona importer for PHYMM not found in %s. Please check your path and try again.\n"%()
-          raise(JobSignalledBreak)
-       run_process(_settings, "perl %s/ImportPhymmBL.pl -c -v -i %s/Postprocess/in/%s.hits"%(_settings.KRONA,_settings.rundir,_settings.PREFIX),"Postprocess")
+       run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")
+       run_process(_settings, "ln %s/Annotate/out/phymmbl.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
+       #if not os.path.exists(_settings.KRONA + os.sep + "ImportPHYMM.pl"):
+       #   print "Error: Krona importer for PHYMM not found in %s. Please check your path and try again.\n"%()
+       #   raise(JobSignalledBreak)
+       #run_process(_settings, "perl %s/ImportPhymmBL.pl -c -v -i %s/Postprocess/in/%s.hits"%(_settings.KRONA,_settings.rundir,_settings.PREFIX),"Postprocess")
    elif _cls == 'phylosift':
        #now ran in Annotate step to generate file for Propogate/Classsify
        pass

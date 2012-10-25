@@ -16,11 +16,11 @@ def init(skipsteps):
    _skipsteps = skipsteps
 
 @follows(Annotate)
-@posttask(touch_file("%s/Logs/fannotate.ok"%(_settings.rundir)))
+@posttask(touch_file("%s/Logs/functionalannotation.ok"%(_settings.rundir)))
 @files("%s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.PREFIX),["%s/FunctionalAnnotation/out/blast.out"%(_settings.rundir),"%s/FunctionalAnnotation/out/krona.ec.input"%(_settings.rundir)])
 def FunctionalAnnotation(input,output):
    if "FunctionalAnnotation" in _skipsteps:
-      run_process(_settings, "touch %s/Logs/fannotate.skip"%(_settings.rundir), "FunctionalAnnotation")
+      run_process(_settings, "touch %s/Logs/functionalannotation.skip"%(_settings.rundir), "FunctionalAnnotation")
       run_process(_settings, "touch %s/FunctionalAnnotation/out/blast.out"%(_settings.rundir), "FunctionalAnnotation")
       return 0
    # uniprot_sprot_enz_set
@@ -71,6 +71,6 @@ def FunctionalAnnotation(input,output):
    foutput.close() 
    #for top hit for each seq, report id, e-vlue and EC value
    #create krona plot
-   run_process(settings,"%s/KronaTools/bin/ktImportEC %s/FunctionalAnnotation/out/krona.ec.input"%(_settings.METAMOSDIR,_settings.rundir))
+   run_process(_settings,"%s/KronaTools/bin/ktImportEC %s/FunctionalAnnotation/out/krona.ec.input"%(_settings.METAMOSDIR,_settings.rundir))
    
  

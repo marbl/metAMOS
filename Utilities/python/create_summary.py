@@ -173,7 +173,7 @@ if __name__ == "__main__":
     ##copy stuff
     for step in steps:
 #        step = step.lower()
-        if os.path.exists("%s/javascript/%s.html %s/"%(utils,step,html_prefix)):
+        if os.path.exists("%s/javascript/%s.html"%(utils,step)):
             os.system("cp %s/javascript/%s.html %s/"%(utils,step,html_prefix))
     os.system("cp %s/Logs/COMMANDS.log %s/pipeline.commands"%(MA_dir,html_prefix))
     os.system("cp %s/pipeline.run %s/pipeline.summary"%(MA_dir,html_prefix))

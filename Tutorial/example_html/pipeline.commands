@@ -1,0 +1,562 @@
+# [RUNPIPELINE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/in/carsonella_pe_filt.fna
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [PREPROCESS]
+java -cp /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/java:.:. outputDefaultQuality /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/in/carsonella_pe_filt.fna > /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/in/carsonella_pe_filt.fna.qual
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/all.seq.mates
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/carsonella_pe_filt.fna /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.seq
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/carsonella_pe_filt.fna.qual /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.seq.qual
+python /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/python/extract_mates_from_fasta.py /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.seq
+perl /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/perl/split_fasta.pl /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.seq /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.1.fasta /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.2.fasta
+perl /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/perl/split_fasta.pl /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.seq.qual /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.1.fasta.qual /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.2.fasta.qual
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.seq /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.fasta
+java -cp /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/java:. convertFastaAndQualToFastq /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.seq /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.seq.qual > /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.fastq
+java -cp /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/java:. convertFastaAndQualToFastq /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.1.fasta /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.1.fasta.qual > /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.1.fastq
+java -cp /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/java:. convertFastaAndQualToFastq /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.2.fasta /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.2.fasta.qual > /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.2.fastq
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/preprocess.success
+# [ASSEMBLE]
+/cbcb/project-scratch/treangen/metAMOS_tip/Utilities/cpp/Linux-x86_64/SOAPdenovo-63mer all -p 8 -R -d -K 55 -R  -M 3 -D  -d   -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/soapconfig.txt -o /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.asm
+# [MAPREADS]
+/cbcb/project-scratch/treangen/metAMOS_tip/Utilities/cpp/Linux-x86_64/bowtie-build -o 2 /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.asm.contig /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/IDX
+/cbcb/project-scratch/treangen/metAMOS_tip/Utilities/cpp/Linux-x86_64/bowtie -p 8 -f -l 25 -e 140 --best --strata -m 10 -k 1 --un /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/lib1.unaligned.fasta /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/IDX /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.seq &> /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/lib1.bout
+cat /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.lib1.mappedmates >> /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.lib1.hdr 
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.lib1.hdr /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.lib1.mappedmates 
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/mapreads.success
+# [FINDORFS]
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/in/proba.asm.contig
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.asm.contig /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/in/
+/cbcb/project-scratch/treangen/metAMOS_tip/Utilities/cpp/Linux-x86_64/FragGeneScan -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/in/proba.asm.contig -o /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.orfs -w 0 -t complete
+mv /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.orfs.ffn /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.ctg.fna
+mv /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.orfs.faa /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.ctg.faa
+mv /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.gene.cvg /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.ctg.gene.cvg
+mv /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.gene.map /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.ctg.gene.map
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/lib1.unaligned.fasta /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/in/
+/cbcb/project-scratch/treangen/metAMOS_tip/Utilities/cpp/Linux-x86_64/FragGeneScan -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/in/lib1.unaligned.fasta -o /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.orfs -w 0 -t complete
+mv /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.orfs.ffn /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.lib1.fna
+mv /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.orfs.faa /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.lib1.faa
+mv /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.gene.cvg /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.lib1.gene.cvg
+mv /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.gene.map /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.lib1.gene.map
+rm -r /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.fna
+cat /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba*.fna > /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.fna
+rm -r /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.fna.bnk
+/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/toAmos_new -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.fna -b /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.fna.bnk
+rm -r /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.faa
+cat /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba*.faa > /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.faa
+rm -r /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.faa.bnk
+/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/toAmos_new -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.faa -b /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.faa.bnk
+rm -r /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.gene.cvg
+cat /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba*.gene.cvg > /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.gene.cvg
+rm -r /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.gene.map
+cat /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba*.gene.map > /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.gene.map
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/in/proba.faa
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/in/proba.fna
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindRepeats/in/proba.fna
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.faa /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/in/
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.fna /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/in/
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.faa /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindRepeats/in/
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.fna /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindRepeats/in/
+# [FINDREPEATS]
+/cbcb/project-scratch/treangen/metAMOS_tip/Utilities/cpp/Linux-x86_64/repeatoire --minreplen=200 --z=17 --sequence=/cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindRepeats/in/proba.fna.merged --xmfa=/cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindRepeats/in/proba.fna.xmfa
+# [ANNOTATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/in/proba.asm.contig
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.asm.contig /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/in/
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.hits
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/models
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/models/taxonomy.txt
+/cbcb/project-scratch/treangen/metAMOS_tip/Utilities/cpp/Linux-x86_64/nb-classify -q /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/in/proba.asm.contig -m /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/models/models.txt -r /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.ctg.nb_results.txt
+python /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/python/Epsilon-NB.py /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.ctg.nb_results.txt 1E5 /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.ctg.epsilon-nb_results.txt
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.ctg.hits
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.ctg.epsilon-nb_results.txt /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.ctg.hits
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/models
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/models/taxonomy.txt
+/cbcb/project-scratch/treangen/metAMOS_tip/Utilities/cpp/Linux-x86_64/nb-classify -q /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/lib1.unaligned.fasta -m /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/models/models.txt -r /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.lib1.nb_results.txt
+python /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/python/Epsilon-NB.py /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.lib1.nb_results.txt 1E5 /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.lib1.epsilon-nb_results.txt
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.lib1.hits
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.lib1.epsilon-nb_results.txt /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.lib1.hits
+cat /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/*.hits > /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.hits
+cat /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/*.epsilon-nb_results.txt | grep -v 'Fragment Id' > /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.epsilon-nb_results.txt
+perl /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/perl/ImportFCP.pl -c -v -i /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.epsilon-nb_results.txt:/cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.contig.cnt:phylum
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/in/proba.hits
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.hits
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.hits /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/in/proba.hits
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.hits /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.hits
+# [FUNCTIONALANNOTATION]
+/cbcb/project-scratch/treangen/metAMOS_tip/Utilities/cpp/Linux-x86_64/blastall -p blastp -i /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.faa -d /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/DB/uniprot_sprot.fasta -a 8 -e 0.001 -m 8 -b 1 > ./FunctionalAnnotation/out/blast.out
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [FUNCTIONALANNOTATION]
+/cbcb/project-scratch/treangen/metAMOS_tip/Utilities/cpp/Linux-x86_64/blastall -p blastp -i /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.faa -d /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/DB/uniprot_sprot.fasta -a 8 -e 0.001 -m 8 -b 1 > /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FunctionalAnnotation/out/blast.out
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [SCAFFOLD]
+rm -rf /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk
+/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/toAmos_new -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/lib1.seq -m /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.lib1.mappedmates -b /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk 
+/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/toAmos_new -c /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.asm.tigr -b /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk 
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [SCAFFOLD]
+perl /cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/bank-unlock /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/CTE.*
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/CTL.*
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/MTF.*
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/SCF.*
+/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/asmQC -b /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk -scaff -recompute -update -numsd 2 
+perl /cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/bank-unlock /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [SCAFFOLD]
+perl /cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/bank-unlock /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/CTE.*
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/CTL.*
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/MTF.*
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/SCF.*
+/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/asmQC -b /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk -scaff -recompute -update -numsd 2 
+perl /cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/bank-unlock /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [SCAFFOLD]
+perl /cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/bank-unlock /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/CTE.*
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/CTL.*
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/MTF.*
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/SCF.*
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [SCAFFOLD]
+perl /cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/bank-unlock /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/CTE.*
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/CTL.*
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/MTF.*
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/SCF.*
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [SCAFFOLD]
+perl /cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/bank-unlock /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/CTE.*
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/CTL.*
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/MTF.*
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/SCF.*
+/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/asmQC -b /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk -scaff -recompute -update -numsd 2 
+perl /cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/bank-unlock /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [SCAFFOLD]
+perl /cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/bank-unlock /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/CTE.*
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/CTL.*
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/MTF.*
+rm /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk/SCF.*
+/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/asmQC -b /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk -scaff -recompute -update -numsd 2 
+perl /cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/bank-unlock /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk
+/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/clk -b /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk
+/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/Bundler -b /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk
+/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/MarkRepeats -redundancy 50  -b /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk > /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.reps
+/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/OrientContigs -minRedundancy 5 -all  -redundancy 10  -b /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk -repeats /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.reps 
+/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/bank2fasta -eid  -b /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk > /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/out/proba.contigs
+/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/OutputMotifs -b /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk > /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/out/proba.motifs
+/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/OutputResults -b /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk -p /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/out/proba 
+/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/OutputScaffolds -b /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk > /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/out/proba.scaffolds.final
+/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/Linearize -b /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk
+/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/OutputResults -b /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk -p /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/out/proba.linearize 
+/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin/OutputScaffolds -b /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk > /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/out/proba.linearize.scaffolds.final
+# [FINDSCAFFOLDORFS]
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.ffn /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.fna
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.faa /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.faa
+python /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/python/sort_contigs.py /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/in/proba.clusters /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.reads.clusters /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/DB/tax_key.tab /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.fna.bnk /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.faa.bnk /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.gene.map /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Classify/out /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk /cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin
+# [RUNPIPELINE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [FINDSCAFFOLDORFS]
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.ffn /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.fna
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.faa /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.faa
+python /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/python/sort_contigs.py /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/in/proba.clusters /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.reads.clusters /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/DB/tax_key.tab /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.fna.bnk /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.faa.bnk /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.gene.map /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Classify/out /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk /cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [FINDSCAFFOLDORFS]
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.ffn /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.fna
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.faa /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.faa
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Logs/classify.skip
+# [ABUNDANCE]
+/cbcb/project-scratch/treangen/metAMOS_tip/Utilities/cpp/Linux-x86_64/formatdb  -p T -i /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/DB/markers.pfasta
+/cbcb/project-scratch/treangen/metAMOS_tip/Utilities/cpp/Linux-x86_64/blastall -p blastp -i /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.faa -d /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/DB/markers.pfasta -m 8 -b 10 -v 10 -a 8 -o /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/proba.blastp
+perl /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/perl/metaphyler_contigs.pl /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/proba.blastp proba /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindORFS/out/proba.gene.cvg /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out /cbcb/project-scratch/treangen/metAMOS_tip/Utilities
+perl /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/perl/ImportMetaPhyler.pl -c -v -i -p /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/proba.taxprof.pct.txt:phylum
+# [POSTPROCESS]
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/report.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/report.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Classify/out /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.annots
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.reads.annots
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.reads.annots /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.reads.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.propagated.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.propagated.reads.annots
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [FINDSCAFFOLDORFS]
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.ffn /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.fna
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.faa /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.faa
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Logs/classify.skip
+# [POSTPROCESS]
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/report.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/report.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Classify/out /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.annots
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.reads.annots
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.reads.annots /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.reads.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.propagated.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.propagated.reads.annots
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [FINDSCAFFOLDORFS]
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.ffn /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.fna
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.faa /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.faa
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Logs/classify.skip
+# [POSTPROCESS]
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/report.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/report.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Classify/out /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.annots
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.reads.annots
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.reads.annots /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.reads.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.propagated.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.propagated.reads.annots
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [FINDSCAFFOLDORFS]
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.ffn /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.fna
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.faa /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.faa
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Logs/classify.skip
+# [POSTPROCESS]
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/report.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/report.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Classify/out /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.annots
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.reads.annots
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.reads.annots /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.reads.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.propagated.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.propagated.reads.annots
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/proba.classify.txt /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/. 
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/out/proba.linearize.scaffolds.final /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.scf.fa
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/out/proba.contigs /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.fa
+ln -t /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/ -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk 
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.contig.reads
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.lib1contig.reads /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.contig.reads
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.unaligned.fasta
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/lib1.unaligned.fasta /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.unaligned.fasta
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cnt
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.contig.cnt /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cnt
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cvg
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.contig.cvg /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cvg
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html
+mkdir  /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/phylum.classified
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/phylum.classified
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Annotate.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Annotate.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Abundance.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Abundance.html
+mv /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/*.fastqc /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.in.clusters
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/in/proba.clusters /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.in.clusters
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.out.clusters
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.out.clusters
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/functionalannotation.html
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [FINDSCAFFOLDORFS]
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.ffn /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.fna
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.faa /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.faa
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Logs/classify.skip
+# [POSTPROCESS]
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/report.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/report.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Classify/out /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.annots
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.reads.annots
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.reads.annots /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.reads.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.propagated.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.propagated.reads.annots
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/proba.classify.txt /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/. 
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/out/proba.linearize.scaffolds.final /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.scf.fa
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/out/proba.contigs /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.fa
+ln -t /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/ -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk 
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.contig.reads
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.lib1contig.reads /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.contig.reads
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.unaligned.fasta
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/lib1.unaligned.fasta /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.unaligned.fasta
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cnt
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.contig.cnt /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cnt
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cvg
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.contig.cvg /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cvg
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html
+mkdir  /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/phylum.classified
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/phylum.classified
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Annotate.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Annotate.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Abundance.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Abundance.html
+mv /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/*.fastqc /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.in.clusters
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/in/proba.clusters /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.in.clusters
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.out.clusters
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.out.clusters
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/functionalannotation.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FunctionalAnnotation/out/ec.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/functionalannotation.html
+python /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/python/create_summary.py /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/proba.taxprof.pct.txt  /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.bnk /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/ /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.scf.fa /cbcb/project-scratch/treangen/metAMOS_tip/Utilities /cbcb/project-scratch/treangen/metAMOS_tip/img /cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin 1 phylum
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [FINDSCAFFOLDORFS]
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.ffn /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.fna
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.faa /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.faa
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Logs/classify.skip
+# [POSTPROCESS]
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/report.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/report.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Classify/out /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.annots
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.reads.annots
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.reads.annots /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.reads.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.propagated.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.propagated.reads.annots
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/proba.classify.txt /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/. 
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/out/proba.linearize.scaffolds.final /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.scf.fa
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/out/proba.contigs /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.fa
+ln -t /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/ -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk 
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.contig.reads
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.lib1contig.reads /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.contig.reads
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.unaligned.fasta
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/lib1.unaligned.fasta /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.unaligned.fasta
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cnt
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.contig.cnt /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cnt
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cvg
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.contig.cvg /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cvg
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html
+mkdir  /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/phylum.classified
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/phylum.classified
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Annotate.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Annotate.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Abundance.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Abundance.html
+mv /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/*.fastqc /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.in.clusters
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/in/proba.clusters /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.in.clusters
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.out.clusters
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.out.clusters
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/functionalannotation.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/ec.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/functionalannotation.html
+python /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/python/create_summary.py /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/proba.taxprof.pct.txt  /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.bnk /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/ /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.scf.fa /cbcb/project-scratch/treangen/metAMOS_tip/Utilities /cbcb/project-scratch/treangen/metAMOS_tip/img /cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin 1 phylum
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Logs/classify.skip
+# [FINDSCAFFOLDORFS]
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.ffn /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.fna
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.faa /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.faa
+# [POSTPROCESS]
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/report.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/report.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Classify/out /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.annots
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.reads.annots
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.reads.annots /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.reads.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.propagated.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.propagated.reads.annots
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/proba.classify.txt /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/. 
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/out/proba.linearize.scaffolds.final /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.scf.fa
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/out/proba.contigs /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.fa
+ln -t /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/ -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk 
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.contig.reads
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.lib1contig.reads /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.contig.reads
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.unaligned.fasta
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/lib1.unaligned.fasta /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.unaligned.fasta
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cnt
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.contig.cnt /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cnt
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cvg
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.contig.cvg /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cvg
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html
+mkdir  /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/phylum.classified
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/phylum.classified
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Annotate.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Annotate.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Abundance.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Abundance.html
+mv /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/*.fastqc /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.in.clusters
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/in/proba.clusters /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.in.clusters
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.out.clusters
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.out.clusters
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/functionalannotation.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/ec.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/functionalannotation.html
+python /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/python/create_summary.py /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/proba.taxprof.pct.txt  /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.bnk /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/ /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.scf.fa /cbcb/project-scratch/treangen/metAMOS_tip/Utilities /cbcb/project-scratch/treangen/metAMOS_tip/img /cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin 1 phylum
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [FINDSCAFFOLDORFS]
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.ffn /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.fna
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.faa /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.faa
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Logs/classify.skip
+# [POSTPROCESS]
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/report.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/report.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Classify/out /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.annots
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.reads.annots
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.reads.annots /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.reads.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.propagated.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.propagated.reads.annots
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/proba.classify.txt /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/. 
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/out/proba.linearize.scaffolds.final /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.scf.fa
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/out/proba.contigs /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.fa
+ln -t /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/ -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk 
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.contig.reads
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.lib1contig.reads /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.contig.reads
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.unaligned.fasta
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/lib1.unaligned.fasta /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.unaligned.fasta
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cnt
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.contig.cnt /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cnt
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cvg
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.contig.cvg /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cvg
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html
+mkdir  /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/phylum.classified
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/phylum.classified
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Annotate.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Annotate.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Abundance.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Abundance.html
+mv /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/*.fastqc /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.in.clusters
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/in/proba.clusters /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.in.clusters
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.out.clusters
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.out.clusters
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/functionalannotation.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/ec.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/functionalannotation.html
+python /cbcb/project-scratch/treangen/metAMOS_tip/Utilities/python/create_summary.py /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/proba.taxprof.pct.txt  /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.bnk /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/ /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.scf.fa /cbcb/project-scratch/treangen/metAMOS_tip/Utilities /cbcb/project-scratch/treangen/metAMOS_tip/img /cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin 1 phylum
+# [PROPAGATE]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots
+# [CLASSIFY]
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters
+# [FINDSCAFFOLDORFS]
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.ffn /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.fna
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.orfs.faa /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/FindScaffoldORFS/out/proba.faa
+touch /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Logs/classify.skip
+# [POSTPROCESS]
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/report.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/report.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified
+ln -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Classify/out /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.annots
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.annots /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.reads.annots
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Annotate/out/proba.reads.annots /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.original.reads.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.propagated.annots
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.propagated.reads.annots
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Abundance/out/proba.classify.txt /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/. 
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/out/proba.linearize.scaffolds.final /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.scf.fa
+cp /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/out/proba.contigs /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.fa
+ln -t /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/ -s /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Scaffold/in/proba.bnk 
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.contig.reads
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.lib1contig.reads /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.contig.reads
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.unaligned.fasta
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/lib1.unaligned.fasta /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.lib1.unaligned.fasta
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cnt
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.contig.cnt /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cnt
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cvg
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Assemble/out/proba.contig.cvg /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/proba.ctg.cvg
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html
+mkdir  /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/phylum.classified
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/phylum.classified /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/phylum.classified
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Annotate.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/annotate.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Annotate.html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Abundance.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/abundance.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/Abundance.html
+mv /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Preprocess/out/*.fastqc /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.in.clusters
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/in/proba.clusters /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.in.clusters
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.out.clusters
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Propagate/out/proba.clusters /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/propagate.out.clusters
+unlink /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/functionalannotation.html
+ln /cbcb/project-scratch/treangen/metAMOS_tip/Test/ec.krona.html /cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp/Postprocess/out/html/functionalannotation.html

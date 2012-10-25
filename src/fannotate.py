@@ -24,7 +24,7 @@ def FunctionalAnnotation(input,output):
       run_process(_settings, "touch %s/FunctionalAnnotation/out/blast.out"%(_settings.rundir), "FunctionalAnnotation")
       return 0
    # uniprot_sprot_enz_set
-   #run_process(_settings,"%s/blastall -p blastp -i %s/FindORFS/out/proba.faa -d %s/DB/uniprot_sprot.fasta -a %s -e 0.001 -m 8 -b 1 > %s/FunctionalAnnotation/out/blast.out"%(_settings.BLAST,_settings.rundir,_settings.METAMOS_UTILS,_settings.threads,_settings.rundir),"FunctionalAnnotation")
+   run_process(_settings,"%s/blastall -p blastp -i %s/FindORFS/out/proba.faa -d %s/DB/uniprot_sprot.fasta -a %s -e 0.001 -m 8 -b 1 > %s/FunctionalAnnotation/out/blast.out"%(_settings.BLAST,_settings.rundir,_settings.METAMOS_UTILS,_settings.threads,_settings.rundir),"FunctionalAnnotation")
    #run_process(_settings,"%s/blastall -p blastx -a %d -m 8 -b 1 -e 1e-2 -i %s -d %s/perl/metaphyler/test/test.ref.protein > %s/Annotate/out/%s.query.blastx"%(_settings.BLAST,_settings.threads,orfFA,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX))
    #create index of EC codes
    ecdata = open("%s/DB/uniprot_sprot_enz_set"%(_settings.METAMOS_UTILS),'r')

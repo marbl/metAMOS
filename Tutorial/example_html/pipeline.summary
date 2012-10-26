@@ -1,0 +1,47 @@
+metAMOS configuration summary:
+Time and Date:		2012-10-24
+Working directory:	/cbcb/project-scratch/treangen/metAMOS_tip/Test/test_fcp
+Prefix:			proba
+K-Mer:			55
+Threads:		8
+Taxonomic level:	phylum
+Verbose:		True
+Steps to skip:		Classify, Propagate
+Steps to force:		FunctionalAnnotation, Postprocess
+
+Step-specific configuration:
+[abundance]
+MetaPhyler
+	/cbcb/project-scratch/treangen/metAMOS_tip/Utilities/cpp/Linux-x86_64
+	Liu B, Gibbons T, Ghodsi M, Treangen T, Pop M. Accurate and fast estimation of taxonomic profiles from metagenomic shotgun sequences. BMC Genomics. 2011;12 Suppl 2:S4. Epub 2011 Jul 27.
+
+[scaffold]
+Bambus 2
+	/cbcb/project-scratch/treangen/metAMOS_tip/AMOS/Linux-x86_64/bin
+	Koren S, Treangen TJ, Pop M. Bambus 2: scaffolding metagenomes. Bioinformatics 27(21): 2964-2971 2011.
+
+[findorfs]
+FragGeneScan
+	/cbcb/project-scratch/treangen/metAMOS_tip/Utilities/cpp/Linux-x86_64
+	Rho M, Tang H, Ye Y: FragGeneScan: predicting genes in short and error-prone reads. Nucleic Acids Research 2010, 38:e191-e191.
+
+[mapreads]
+Bowtie
+	/cbcb/project-scratch/treangen/metAMOS_tip/Utilities/cpp/Linux-x86_64
+	Langmead B, Trapnell C, Pop M, Salzberg SL. Ultrafast and memory-efficient alignment of short DNA sequences to the human genome. Genome Biol. 2009;10(3):R25. Epub 2009 Mar 4.
+
+[assemble]
+SOAPdenovo
+	/cbcb/project-scratch/treangen/metAMOS_tip/Utilities
+	Li Y, Hu Y, Bolund L, Wang J: State of the art de novo assembly of human genomes from massively parallel sequencing data.Human genomics 2010, 4:271-277.
+
+[classify]
+FCP,Naive Bayesian Classifier
+	/cbcb/project-scratch/treangen/metAMOS_tip/Utilities/cpp/Linux-x86_64
+	Macdonald NJ, Parks DH, Beiko RG. Rapid identification of high-confidence taxonomic assignments for metagenomic data. Nucleic Acids Res. 2012 Apr 24.
+
+[other]
+Krona
+	/cbcb/project-scratch/treangen/metAMOS_tip/KronaTools/bin
+	Ondov BD, Bergman NH, Phillippy AM. Interactive metagenomic visualization in a Web browser. BMC Bioinformatics. 2011 Sep 30;12:385.
+

@@ -177,14 +177,17 @@ def annotateSeq(cls, contigs, orfAA, orfFA, output):
        if not os.path.exists("%s"%(_settings.PHYMM)):
            print "Error: Phymm not found in %s but selected as classifier. Please check your path and try again.\n"%(_settings.PHYMM)
            raise(JobSignalledBreak)
-       os.chdir("%s"%(_settings.PHYMM))
-       run_process(_settings, "perl scoreReads.pl %s > %s/Annotate/out/%s.phymm.out"%(contigs,_settings.rundir,output),"")
-       run_process(_settings, "echo PHYMM > %s/Annotate/out/results.03.phymm.out"%(_settings.rundir),"")
-       run_process(_settings, "cat results.03.phymmBL* | grep -v \"QUERY_ID\" >> %s/Annotate/out/results.03.phymm.out"%(_settings.rundir),"")
-       run_process(_settings, "ln %s/Annotate/out/results.03.phymm.out %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.rundir, output), "Annotate")
-       #run_process(_settings, "mv results.03.phymmBL* %/Annotate/out/."%(_settings.rundir),"")
-       os.chdir("%s"%(_settings.rundir))
-       #perl scoreReads.pl mammoth17.fna > mammoth17.fna.out &
+       # link to the files phymm expects locally
+       run_process(_settings, "ln -s %s/.blastData"%(_settings.PHYMM), "Annotate")
+       run_process(_settings, "ln -s %s/.genomeData"%(_settings.PHYMM), "Annotate")
+       run_process(_settings, "ln -s %s/.scripts"%(_settings.PHYMM), "Annotate")
+       run_process(_settings, "ln -s %s/.taxonomyData"%(_settings.PHYMM), "Annotate")
+       run_process(_settings, "mkdir -f %sAnnotate/out/.logs"%(_settings.rundir), "Annotate")
+
+       run_process(_settings, "perl %s/scoreReads.pl %s > %s/Annotate/out/%s.phymm.err"%(_settings.PHYMM, contigs,_settings.rundir,output),"Annotate")
+       run_process(_settings, "cat results.03.phymmBL* | grep -v \"QUERY_ID\" > %s/Annotate/out/%s.phymm.out"%(_settings.rundir, output),"Annotate")
+       run_process(_settings, "ln %s/Annotate/out/%s.phymm.out %s/Annotate/out/%s.hits"%(_settings.rundir, output, _settings.rundir, output), "Annotate")
+       run_process(_settings, "rm %s/Annotate/out/results.03.phymmBL* "%(_settings.rundir),"Annotate")
        
    elif cls == None:
        print "No method specified, skipping"
@@ -224,7 +227,7 @@ def Annotate(input,output):
        if not os.path.exists(importPS):
            print "Error: Krona importer for PhyloSift not found in %s. Please check your path and try again.\n"%(_settings.KRONA)
            raise(JobSignalledBreak)
-       run_process(_settings, "perl %s -c -v -i -f %s %s/Annotate/out/%s.hits:%s/Assemble/out/%s.contig.cnt:%s"%(importPS,listOfFiles,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX, _settings.taxa_level), "Annotate")
+       run_process(_settings, "perl %s -c -i -f %s %s/Annotate/out/%s.hits:%s/Assemble/out/%s.contig.cnt:%s"%(importPS,listOfFiles,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX, _settings.taxa_level), "Annotate")
 
    elif _cls == "fcp":
        # generate Krona output
@@ -234,17 +237,16 @@ def Annotate(input,output):
           raise(JobSignalledBreak)
        run_process(_settings, "cat %s/Annotate/out/*.epsilon-nb_results.txt | grep -v 'Fragment Id' > %s/Annotate/out/%s.epsilon-nb_results.txt"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
 
-       run_process(_settings, "perl %s -c -v -i -f %s %s/Annotate/out/%s.epsilon-nb_results.txt:%s/Assemble/out/%s.contig.cnt:%s"%(importFCP, listOfFiles, _settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate") # TODO: local url (after next KronaTools release)
+       run_process(_settings, "perl %s -c -i -f %s %s/Annotate/out/%s.epsilon-nb_results.txt:%s/Assemble/out/%s.contig.cnt:%s"%(importFCP, listOfFiles, _settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate") # TODO: local url (after next KronaTools release)
 
    elif _cls == "phymm":
        # generate Krona output ImportPhymmBL.pl
-       importPhymm = "%s%sKronaTools%sscripts%sImportPhymmBL.pl"%(_settings.METAMOSDIR, os.sep, os.sep,os.sep)
+       importPhymm = "%s%sperl%sImportPhymmBL.pl"%(_settings.METAMOS_UTILS, os.sep, os.sep)
        if not os.path.exists(importPhymm):
           print "Error: Krona importer for Phymm not found in %s. Please check your path and try again.\n"%(importPhymm)
           raise(JobSignalledBreak)
-       #run_process(_settings, "cat %s/Annotate/out/*.epsilon-nb_results.txt | grep -v 'Fragment Id' > %s/Annotate/out/%s.epsilon-nb_results.txt"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
-       #run_process(_settings, "cat %s/Annotate/out/*.epsilon-nb_results.txt | grep -v 'Fragment Id' > %s/Annotate/out/%s.epsilon-nb_results.txt"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
-       run_process(_settings, "perl %s %s/Annotate/out/results.03.phymm.out"%(importPhymm, _settings.rundir),"Annotate") # TODO: local url (after next KronaTools release)
+       run_process(_settings, "cat %s/Annotate/out/*.phymm.out > %s/Annotate/out/%s.phymm.out"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
+       run_process(_settings, "perl %s -f %s %s/Annotate/out/%s.phymm.out:%s/Assemble/out/%s.contig.cnt:%s"%(importPhymm, listOfFiles,_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate") # TODO: local url (after next KronaTools release)
 
    run_process(_settings, "unlink %s/Postprocess/in/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")
    run_process(_settings, "unlink %s/Postprocess/out/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")

@@ -100,6 +100,7 @@ if __name__ == "__main__":
     steps.append("FunctionalAnnotation")
     steps.append("Propagate")
     steps.append("Classify")
+    steps.append("Browse Results")
 
     step_status = {}
     step_status["Preprocess"] = "OK"
@@ -114,8 +115,11 @@ if __name__ == "__main__":
     step_status["FunctionalAnnotation"] = "FAIL" 
     step_status["Propagate"] = "NONE"
     step_status["Classify"] = "NONE"
+    step_status["Browse Results"] = "OK"
     ##get status of each step from Log dir
     for step in steps:
+        if step == "Browse Results":
+            continue
         stepn = step.lower()
         started = False
         completed = False
@@ -583,7 +587,10 @@ if __name__ == "__main__":
     page.td.close()
     page.td(class_="inset")
     for step in steps:
-        page.iframe( id_=step.lower(), src_="%s.html"%(step), style_="display:none;" )
+        if step == "Browse Results":
+            page.iframe( id_=step.lower(), src_="../.", style_="display:none;" )
+        else:
+            page.iframe( id_=step.lower(), src_="%s.html"%(step), style_="display:none;" )
         page.iframe.close()
     page.td.close()
     page.td()

@@ -179,12 +179,14 @@ supported_mappers = ["bowtie","bowtie2"]
 supported_abundance = ["metaphyler"]
 supported_classifiers = ["fcp","phylosift","phmmer","blast",\
                              "metaphyler", "phymm"]
+supported_fannotate = ["blast"]
 supported_scaffolders = ["bambus2"]
 supported_programs["findorfs"] = supported_genecallers
 supported_programs["assemble"] = supported_assemblers
 supported_programs["mapreads"] = supported_mappers
 supported_programs["abundance"] = supported_abundance
 supported_programs["classify"] = supported_classifiers
+supported_programs["fannotate"] = supported_fannotate
 supported_programs["scaffold"] = supported_scaffolders
 
 supported_taxonomic = ["kingdom", "phylum", "class", "order", "family", "genus", "species"]
@@ -195,12 +197,13 @@ selected_programs["findorfs"] = "fraggenescan"
 selected_programs["mapreads"] = "bowtie"
 selected_programs["abundance"] = "metaphyler"
 selected_programs["classify"] = "fcp"
+selected_programs["fannotate"] = "blast"
 selected_programs["scaffold"] = "bambus2"
 
 always_run_programs = ["krona"]
 
 allsteps = ["Preprocess","Assemble","MapReads","FindORFS","Abundance","Annotate",\
-                "Scaffold","Propagate","Classify","Postprocess"]
+                "FunctionalAnnotation","Scaffold","Propagate","Classify","Postprocess"]
 
 ## Need comments here and further down
 
@@ -599,6 +602,7 @@ if __name__ == "__main__":
     import findreps
     import abundance
     import annotate
+    import fannotate
     import scaffold
     import findscforfs
     import propagate
@@ -612,6 +616,7 @@ if __name__ == "__main__":
     findorfs.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["findorfs"], min_ctg_len, min_ctg_cvg)
     findreps.init(readlibs, skipsteps)
     annotate.init(readlibs, skipsteps, selected_programs["classify"])
+    fannotate.init(skipsteps)
     abundance.init(readlibs, skipsteps, forcesteps, selected_programs["classify"])
     scaffold.init(readlibs, skipsteps, retainBank, selected_programs["assemble"])
     findscforfs.init(readlibs, skipsteps, selected_programs["findorfs"])
@@ -624,7 +629,7 @@ if __name__ == "__main__":
        pipeline_printout(sys.stdout,[preprocess.Preprocess,assemble.Assemble, \
                          mapreads.MapReads, \
                          findorfs.FindORFS, findreps.FindRepeats, annotate.Annotate, \
-                         abundance.Abundance, scaffold.Scaffold, \
+                         abundance.Abundance, fannotate.FunctionalAnnotation, scaffold.Scaffold, \
                          findscforfs.FindScaffoldORFS, propagate.Propagate, \
                          classify.Classify, postprocess.Postprocess], verbose=1)
 
@@ -641,7 +646,7 @@ if __name__ == "__main__":
        pipeline_run([preprocess.Preprocess, assemble.Assemble,findorfs.FindORFS, \
                     mapreads.MapReads, \
                     findreps.FindRepeats, annotate.Annotate, abundance.Abundance, \
-                    scaffold.Scaffold, findscforfs.FindScaffoldORFS, \
+                    fannotate.FunctionalAnnotation, scaffold.Scaffold, findscforfs.FindScaffoldORFS, \
                     propagate.Propagate, classify.Classify, postprocess.Postprocess],\
                     verbose = 2)
 

@@ -213,8 +213,8 @@ def Postprocess(input,output):
    run_process(_settings, "unlink %s/Postprocess/out/html/propagate.out.clusters"%(_settings.rundir), "Postprocess")
    run_process(_settings, "ln %s/Propagate/out/%s.clusters %s/Postprocess/out/html/propagate.out.clusters"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
 
-   run_process(_settings, "unlink %s/Postprocess/out/html/functionalannotation.html"%(_settings.rundir), "Postprocess")
-   run_process(_settings, "ln %s/ec.krona.html %s/Postprocess/out/html/functionalannotation.html"%(os.getcwd(), _settings.rundir), "Postprocess")
+   run_process(_settings, "unlink %s/Postprocess/out/html/FunctionalAnnotation.html"%(_settings.rundir), "Postprocess")
+   run_process(_settings, "ln %s/ec.krona.html %s/Postprocess/out/html/FunctionalAnnotation.html"%(os.getcwd(), _settings.rundir), "Postprocess")
 
    
    run_process(_settings, "python %s/python/create_summary.py %s/Abundance/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/html/ %s/Postprocess/out/%s.scf.fa %s %s/img %s %d %s"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.METAMOSDIR,_settings.AMOS, len(_readlibs), _settings.taxa_level),"Postprocess")

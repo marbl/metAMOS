@@ -67,6 +67,17 @@ if (sys.version_info[0] < 2) or (sys.version_info[0] == 2 and sys.version_info[1
   print "Python version is %s. metAMOS requires at least 2.6"%(sys.version)
   sys.exit(1)
 
+
+if not os.path.exists("./Utilities/config/usage.ok"):
+    print "MetAMOS would like to record anonymous usage statistics, is this ok ? "
+    dl = 'n'
+    if silentInstall:
+       dl = 'y'
+    else:
+       dl = raw_input("Enter Y/N: ")
+    if dl == 'y' or dl == 'Y':
+        os.system("echo ok > ./Utilities/config/usage.ok")
+
 #check for DBs, etc
 if not os.path.exists("./Utilities/cpp/%s-%s/metaphylerClassify"%(OSTYPE, MACHINETYPE)):
     print "Metaphyler (latest version) not found, optional for Annotate, download now?"

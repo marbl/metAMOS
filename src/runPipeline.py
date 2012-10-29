@@ -8,6 +8,7 @@
 ##first imports
 import os,sys
 
+
 ## Setting up paths
 INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
 ## Hardcode a k-mer size
@@ -21,6 +22,10 @@ import utils
 sys.path.append(utils.INITIAL_UTILS)
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam")
 
+
+
+   
+
 ## The usual library dependencies
 import string
 import time
@@ -33,6 +38,7 @@ import webbrowser
 import multiprocessing
 from operator import itemgetter
 from ruffus import *
+
 
 ## Get start time
 t1 = time.time()
@@ -49,7 +55,7 @@ def usage():
 
     print "Pipeline consists of the following steps:"
     print "  Preprocess, Assemble, FindORFS, MapReads, Abundance, Annotate,"
-    print "  Scaffold, Propagate, Classify, Postprocess"
+    print "  FunctionalAnnotation, Scaffold, Propagate, Classify, Postprocess"
 
     print "Each of these steps can be referred to by the following options:" 
     print "   -f = <string>: force this step to be run (default = NONE)"
@@ -84,6 +90,17 @@ def usage():
     print "   -r = <bool>:   retain the AMOS bank?  (default = NO)"
     print "   -p = <int>:    number of threads to use (be greedy!) (default=1)"
     print "   -4 = <bool>:   454 data? (default = NO)"    
+
+def updateCounter():
+    ##if user says its ok, create MetAMOS counter git repo and update counter each time its run!
+    if os.path.exists("%s/config/usage.ok"%(utils.Settings.METAMOS_UTILS)):
+        FORMAT = '%Y%m%d%H%M%S'
+        filestamp = datetime.datetime.now().strftime(FORMAT)
+        #print filestamp, utils.Settings.METAMOS_UTILS
+        #"%s/pipeline.run"%(settings.rundir)) 
+        os.system("cat %s/pipeline.run > %s/%s.txt"%(utils.Settings.rundir,utils.Settings.rundir,filestamp))
+        #print "%s/config/updateftpcounter.sh %s/%s.txt %s.txt"%(utils.Settings.METAMOS_UTILS,utils.Settings.rundir,filestamp,filestamp)
+        os.system("%s/config/updateftpcounter.sh %s/%s.txt %s.txt >& ftp.out"%(utils.Settings.METAMOS_UTILS,utils.Settings.rundir,filestamp,filestamp))
 
 def printConfiguration(fileName=None):
     configurationText = []
@@ -199,7 +216,7 @@ selected_programs["scaffold"] = "bambus2"
 
 always_run_programs = ["krona"]
 
-allsteps = ["Preprocess","Assemble","MapReads","FindORFS","Abundance","Annotate",\
+allsteps = ["Preprocess","Assemble","MapReads","FindORFS","Abundance","Annotate","FunctionalAnnotation",\
                 "Scaffold","Propagate","Classify","Postprocess"]
 
 ## Need comments here and further down
@@ -599,6 +616,7 @@ if __name__ == "__main__":
     import findreps
     import abundance
     import annotate
+    import fannotate
     import scaffold
     import findscforfs
     import propagate
@@ -612,6 +630,7 @@ if __name__ == "__main__":
     findorfs.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["findorfs"], min_ctg_len, min_ctg_cvg)
     findreps.init(readlibs, skipsteps)
     annotate.init(readlibs, skipsteps, selected_programs["classify"])
+    fannotate.init(skipsteps)
     abundance.init(readlibs, skipsteps, forcesteps, selected_programs["classify"])
     scaffold.init(readlibs, skipsteps, retainBank, selected_programs["assemble"])
     findscforfs.init(readlibs, skipsteps, selected_programs["findorfs"])
@@ -623,7 +642,7 @@ if __name__ == "__main__":
        dlist = []
        pipeline_printout(sys.stdout,[preprocess.Preprocess,assemble.Assemble, \
                          mapreads.MapReads, \
-                         findorfs.FindORFS, findreps.FindRepeats, annotate.Annotate, \
+                         findorfs.FindORFS, findreps.FindRepeats, annotate.Annotate, fannotate.FunctionalAnnotation, \
                          abundance.Abundance, scaffold.Scaffold, \
                          findscforfs.FindScaffoldORFS, propagate.Propagate, \
                          classify.Classify, postprocess.Postprocess], verbose=1)
@@ -636,11 +655,11 @@ if __name__ == "__main__":
 
        printConfiguration()
        printConfiguration("%s/pipeline.run"%(settings.rundir))
-
+       updateCounter()
 
        pipeline_run([preprocess.Preprocess, assemble.Assemble,findorfs.FindORFS, \
                     mapreads.MapReads, \
-                    findreps.FindRepeats, annotate.Annotate, abundance.Abundance, \
+                    findreps.FindRepeats, annotate.Annotate, abundance.Abundance, fannotate.FunctionalAnnotation, \
                     scaffold.Scaffold, findscforfs.FindScaffoldORFS, \
                     propagate.Propagate, classify.Classify, postprocess.Postprocess],\
                     verbose = 2)

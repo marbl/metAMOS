@@ -194,6 +194,7 @@ foreach my $input (@ARGV)
            }
         }
 
+        my %outputAnnot = { };
         my $annotFile = $fileName;
         $annotFile =~ s/epsilon-nb_results.txt/annots/;
         open ANNOTS, ">$annotFile" or die $!;	
@@ -243,8 +244,9 @@ foreach my $input (@ARGV)
                        $bestTaxaName =~ s/\s/_/g;
                        $bestIndex++;
 
-                       if ($classes[$bestTaxa] eq $taxonomicLevel) {
+                       if (!defined($outputAnnot{$contigID}) && $classes[$bestTaxa] eq $taxonomicLevel) {
                           print ANNOTS "$contigID\t$bestTaxa\n";
+                          $outputAnnot{$contigID} = 1;
                        }
                     }
 

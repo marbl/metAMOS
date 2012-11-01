@@ -564,6 +564,7 @@ for lib in readlibs:
 utils.Settings.asmfiles = asmfiles
 
 if "Propagate" in forcesteps:
+    utils.run_process(settings, "rm %s/Logs/propagate.ok"%(settings.rundir), "RunPipeline")
     utils.run_process(settings, "touch %s/Annotate/out/%s.annots"%(settings.rundir, settings.PREFIX),\
                       "RunPipeline")
 

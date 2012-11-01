@@ -34,7 +34,7 @@ def init(reads, skipsteps, retainBank, asm):
          _mated = True
          break
 
-@follows(FindRepeats,Annotate,FunctionalAnnotation)
+@follows(FunctionalAnnotation)
 @posttask(touch_file("%s/Logs/scaffold.ok"%(_settings.rundir)))
 @files(["%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX)],"%s/Scaffold/out/%s.scaffolds.final"%(_settings.rundir,_settings.PREFIX))
 def Scaffold(input,output):

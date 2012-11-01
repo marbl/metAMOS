@@ -187,12 +187,15 @@ foreach my $input ( @ARGV )
 			}
 		}
 		
+
+		my $printed = 0;
 		for ( my $i = 0; $i < @lineage; $i++ )
 		{
 			$lineage[$i] = decode($lineage[$i]);
 
-                        if (defined($lineage[$i]) && $lineage[$i] ne "" && lc($ranks[$i]) eq $taxonomicLevel) {
+                        if (!$printed && defined($lineage[$i]) && $lineage[$i] ne "" && lc($ranks[$i]) eq $taxonomicLevel) {
                                 print ANNOTS "$readID\t$ids{$lineage[$i]}\n";
+				$printed = 1;
 			}
 		}
 		

@@ -144,13 +144,12 @@ foreach my $input ( @ARGV )
 	
 	open INFILE, "<$fileName" or die $!;
 	
-	<INFILE>; # eat header
-	
 	while ( my $line = <INFILE> )
 	{
 		chomp $line;
-		
+
 		my @values = split /\t/, $line;
+                if ($values[0] =~ /QUERY_ID/) { next; } # eat header
 		my @lineage;
 		my $scores;
 		

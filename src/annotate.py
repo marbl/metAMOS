@@ -2,6 +2,7 @@
 
 import os, sys, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser
 from operator import itemgetter
+from math import ceil
 
 from utils import *
 from findreps import FindRepeats
@@ -9,6 +10,12 @@ from findreps import FindRepeats
 
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
+
+
+from multiprocessing import *
+
+_MIN_SEQ_LENGTH = 10000000
+_USE_GRID = 0
 
 _readlibs = []
 _skipsteps = []
@@ -88,6 +95,7 @@ def parse_phmmerout(phmmerout):
 def annotateSeq(cls, contigs, orfAA, orfFA, output):
    #annotate contigs > 1000bp with FCP
    #lets start by annotating ORFs with phmmer
+
    if cls == "phmmer":
        if not os.path.exists(_settings.PHMMER + os.sep + "phmmer"):
           print "Error: PHMMER not found in %s. Please check your path and try again.\n"%(_settings.PHMMER)
@@ -155,7 +163,7 @@ def annotateSeq(cls, contigs, orfAA, orfFA, output):
        run_process(_settings, "ln -s %s/models/taxonomy.txt"%(_settings.METAMOS_UTILS), "Annotate")
 
        # normal nb classify
-       run_process(_settings, "%s/nb-classify -q %s -m %s/models/models.txt -r %s/Annotate/out/%s.nb_results.txt"%(_settings.FCP,contigs,_settings.METAMOS_UTILS,_settings.rundir,output), "Annotate")
+       run_process(_settings, "%s/nb-classify -q %s -m %s/models/models.txt -r %s/Annotate/out/%s.nb_results.txt -e %s"%(_settings.FCP,contigs,_settings.METAMOS_UTILS,_settings.rundir,output,output), "Annotate")
 
        # for blast options
        if os.path.exists("%s/DB/blast_data/BacteriaAndArchaeaGenomesDB.nin"%(_settings.METAMOS_UTILS)):
@@ -185,13 +193,32 @@ def annotateSeq(cls, contigs, orfAA, orfFA, output):
        run_process(_settings, "mkdir -f %sAnnotate/out/.logs"%(_settings.rundir), "Annotate")
 
        run_process(_settings, "perl %s/scoreReads.pl %s > %s/Annotate/out/%s.phymm.err"%(_settings.PHYMM, contigs,_settings.rundir,output),"Annotate")
-       run_process(_settings, "cat results.03.phymmBL* | grep -v \"QUERY_ID\" > %s/Annotate/out/%s.phymm.out"%(_settings.rundir, output),"Annotate")
+       run_process(_settings, "cat results.03.phymmBL_%s.txt | grep -v \"QUERY_ID\" > %s/Annotate/out/%s.phymm.out"%(contigs.replace(os.sep, "_").replace(".", "_"), _settings.rundir, output), "Annotate")
        run_process(_settings, "ln %s/Annotate/out/%s.phymm.out %s/Annotate/out/%s.hits"%(_settings.rundir, output, _settings.rundir, output), "Annotate")
-       run_process(_settings, "rm %s/Annotate/out/results.03.phymmBL* "%(_settings.rundir),"Annotate")
+       run_process(_settings, "rm %s/Annotate/out/*_%s.txt "%(_settings.rundir, contigs.replace(os.sep, "_").replace(".","_")),"Annotate")
        
    elif cls == None:
        print "No method specified, skipping"
 
+def parallelWrapper(params):
+   try:
+      jobID = params["jobID"]
+      result = {}
+      result["jobID"] = jobID
+      result["status"] = 0
+ 
+      annotateSeq(params["cls"], params["contigs"], params["orfAA"], params["orfFA"], params["out"])
+
+      result["status"] = 1
+      return result
+   except KeyboardInterrupt:
+      result["status"] = 0
+      print "Keyboard error in thread %d, quitting\n"%(jobID)
+      return result
+   except Exception:
+      result["status"] = 0
+      print "Other error in thread %d, quitting\n"%(jobID)
+      return result
 
 @follows(FindRepeats)
 @posttask(touch_file("%s/Logs/annotate.ok"%(_settings.rundir)))
@@ -209,7 +236,125 @@ def Annotate(input,output):
    run_process(_settings, "ln -s %s/Assemble/out/%s.asm.contig %s/Annotate/in/"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Annotate")
    run_process(_settings, "unlink %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")
 
-   annotateSeq(_cls, "%s/Annotate/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "%s/Annotate/in/%s.faa"%(_settings.rundir, _settings.PREFIX), "%s/Annotate/in/%s.fna"%(_settings.rundir, _settings.PREFIX), "%s.ctg"%(_settings.PREFIX))
+   pool = Pool(processes=_settings.threads)
+   tasks = []
+
+   if "fcp" in _cls or "phymm" in _cls:
+      # hack to use gridX
+      if _USE_GRID:
+         size = sizeFastaFile("%s/Annotate/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX))
+         perThread = ceil(float(size) / 200)
+         print "The size of the contigs is %d per thread %d\n"%(size, perThread)
+         run_process(_settings, "python %s/python/splitfasta.py %s/Annotate/in/%s.asm.contig %d %s/Annotate/in/%s %d"%(_settings.METAMOS_UTILS, _settings.rundir, _settings.PREFIX, perThread, _settings.rundir, _settings.PREFIX, 1), "Annotate")
+         totalJobs = 0
+         for partFile in os.listdir("%s/Annotate/in/"%(_settings.rundir)):
+            if "_part" in partFile and "%s_part"%(_settings.PREFIX) in partFile:
+               print "A file I have to process is %s\n"%(partFile)
+               totalJobs += 1
+
+         for lib in _readlibs:
+            listOfFiles += ":%s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id)
+            run_process(_settings, "ln %s/Assemble/out/lib%d.unaligned.fasta %s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id, _settings.rundir, lib.id), "Annotate")
+            size = sizeFastaFile("%s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id))
+            perThread = ceil(float(size) / 200)
+            print "The size of the lib %d is %d per one %d\n"%(lib.id, size, perThread)
+            run_process(_settings, "python %s/python/splitfasta.py %s/Annotate/in/lib%d.unaligned.fasta %d %s/Annotate/in/%s %d"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, perThread, _settings.rundir, _settings.PREFIX, totalJobs+1), "Annotate")
+
+         totalJobs = 0
+         for partFile in os.listdir("%s/Annotate/in/"%(_settings.rundir)):
+            if "_part" in partFile and "%s_part"%(_settings.PREFIX) in partFile:
+               print "A file I have to process is %s\n"%(partFile)
+               totalJobs += 1
+
+         cmdfile = open("%s/Annotate/out/runAnnot.sh"%(_settings.rundir), "w")
+         cmdfile.write("#!/bin/sh\n")
+         cmdfile.write("\n")
+         cmdfile.write("jobid=$GRID_TASK\n")
+         cmdfile.write("if [ x$jobid = x -o x$jobid = xundefined -o x$jobid = 0 ]; then\n")
+         cmdfile.write("   jobid=$1\n")
+         cmdfile.write("fi\n")
+         cmdfile.write("if test x$jobid = x; then\n")
+         cmdfile.write("  echo Error: I need a job index on the command line\n")
+         cmdfile.write("  exit 1\n")
+         cmdfile.write("fi\n")
+         cmdfile.write("if [ $jobid -gt %d ]; then\n"%(totalJobs))
+         cmdfile.write("   echo Job id $jobid is out of range %d\n"%(totalJobs))
+         cmdfile.write("   exit 0\n")
+         cmdfile.write("fi\n")
+         cmdfile.write("if test -e %s/Annotate/out/$jobid.success ; then\n"%(_settings.rundir))
+         cmdfile.write("   echo Job previously completed successfully.\n")
+         cmdfile.write("else\n")
+         cmdfile.write("ln -s %s/.blastData\n"%(_settings.PHYMM))
+         cmdfile.write("ln -s %s/.genomeData\n"%(_settings.PHYMM))
+         cmdfile.write("ln -s %s/.scripts\n"%(_settings.PHYMM))
+         cmdfile.write("ln -s %s/.taxonomyData\n"%(_settings.PHYMM))
+         cmdfile.write("mkdir .logs\n")
+         cmdfile.write("perl %s/scoreReads.pl %s/Annotate/in/%s_part$jobid.fa"%(_settings.PHYMM,_settings.rundir,_settings.PREFIX))
+         cmdfile.write(" && touch %s/Annotate/out/$jobid.success\n"%(_settings.rundir))
+         cmdfile.write("fi\n")
+         cmdfile.close()
+         run_process(_settings, "chmod u+x %s/Annotate/out/runAnnot.sh"%(_settings.rundir), "Annotate")
+
+         #run_process(_settings, "gridx -p %d -r %d -T -c %s/Annotate/out/runAnnot.sh"%(min(totalJobs+1, 200), totalJobs+1, _settings.rundir), "Annotate")
+         run_process(_settings, "cat %s/Annotate/out/gridx-ibissub00*/wrk_*/results.03.phymmBL_%s_Annotate_in_*%s* | grep -v \"QUERY_ID\" > %s/Annotate/out/%s.phymm.out"%(_settings.rundir, _settings.rundir.replace(os.sep, "_").replace(".", "_"), _settings.PREFIX, _settings.rundir, _settings.PREFIX))
+         run_process(_settings, "ln %s/Annotate/out/%s.phymm.out %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX))
+
+         # for now we only work as phymm
+         # generate Krona output ImportPhymmBL.pl
+         importPhymm = "%s%sperl%sImportPhymmBL.pl"%(_settings.METAMOS_UTILS, os.sep, os.sep)
+         if not os.path.exists(importPhymm):
+            print "Error: Krona importer for Phymm not found in %s. Please check your path and try again.\n"%(importPhymm)
+            raise(JobSignalledBreak)
+         run_process(_settings, "perl %s -f %s %s/Annotate/out/%s.phymm.out:%s/Assemble/out/%s.contig.cnt:%s"%(importPhymm, listOfFiles,_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate") # TODO: local url (after next KronaTools release)
+
+         # generate taxonomic-level annots
+         readctg_dict = {}
+         for lib in _readlibs:
+            ctgfile = open("%s/Assemble/out/%s.lib%dcontig.reads"%(_settings.rundir, _settings.PREFIX, lib.id), 'r')
+            for line in ctgfile.xreadlines():
+               line = line.replace("\n","")
+               read, ctg = line.split()
+               if ctg in readctg_dict:
+                  readctg_dict[ctg].append(read)
+               else:
+                  readctg_dict[ctg] = [read,]
+            ctgfile.close()
+
+         annotsfile = open("%s/Annotate/out/%s.annots"%(_settings.rundir, _settings.PREFIX), 'r')
+         annotreads = open("%s/Annotate/out/%s.reads.annots"%(_settings.rundir, _settings.PREFIX), 'w')
+         for line in annotsfile.xreadlines():
+            line = line.replace("\n", "")
+            ctg, annot = line.split()
+            if ctg in readctg_dict:
+               for x in readctg_dict[ctg]:
+                  annotreads.write("%s\t%s\n"%(x, annot))
+            else:
+               annotreads.write("%s\t%s\n"%(ctg, annot))
+         annotsfile.close()
+         annotreads.close()
+         readctg_dict.clear()
+
+         return 
+      # we should also split the fna and faa file but for now this is good enough
+      size = sizeFastaFile("%s/Annotate/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX))
+      perThread = max(ceil(float(size) / _settings.threads), _MIN_SEQ_LENGTH)
+      print "The size of the contigs is %d per thread %d\n"%(size, perThread)
+      run_process(_settings, "python %s/python/splitfasta.py %s/Annotate/in/%s.asm.contig %d"%(_settings.METAMOS_UTILS, _settings.rundir, _settings.PREFIX, perThread), "Annotate")
+      for partFile in os.listdir("%s/Annotate/in/"%(_settings.rundir)):
+         if "_part" in partFile and "%s.asm.contig"%(_settings.PREFIX) in partFile:
+            partStart = partFile.find("_part")+5
+            partEnd = partFile.find(".fa", partStart, len(partFile))
+            partNumber = int(partFile[partStart:partEnd])
+            params = {}
+            params["jobID"] = len(tasks) 
+            params["cls"] = _cls
+            params["contigs"] = "%s/Annotate/in/%s"%(_settings.rundir, partFile)
+            params["orfAA"] = ""
+            params["orfFA"] = ""
+            params["out"] = "%s.ctg_%d"%(_settings.PREFIX, partNumber)
+            tasks.append(params) 
+   else:
+      annotateSeq(_cls, "%s/Annotate/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "%s/Annotate/in/%s.faa"%(_settings.rundir, _settings.PREFIX), "%s/Annotate/in/%s.fna"%(_settings.rundir, _settings.PREFIX), "%s.ctg"%(_settings.PREFIX))
 
    # annotate all the unmapped sequences using FCP
    if _cls == "blast" or _cls == "phmmer":
@@ -217,7 +362,37 @@ def Annotate(input,output):
    else:
       for lib in _readlibs:
          listOfFiles += ":%s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id)
-         annotateSeq(_cls, "%s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id), "", "", "%s.lib%d"%(_settings.PREFIX, lib.id))
+         run_process(_settings, "ln %s/Assemble/out/lib%d.unaligned.fasta %s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id, _settings.rundir, lib.id), "Annotate")
+
+         if "fcp" in _cls or "phymm" in _cls:
+            size = sizeFastaFile("%s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id))
+            perThread = max(ceil(float(size) / _settings.threads), _MIN_SEQ_LENGTH)
+            run_process(_settings, "python %s/python/splitfasta.py %s/Annotate/in/lib%d.unaligned.fasta %d"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, perThread), "Annotate")
+            for partFile in os.listdir("%s/Annotate/in/"%(_settings.rundir)):
+               if "_part" in partFile and "lib%d.unaligned.fasta"%(lib.id) in partFile:
+                  partStart = partFile.find("_part")+5
+                  partEnd = partFile.find(".fa", partStart, len(partFile))
+                  partNumber = int(partFile[partStart:partEnd])
+                  params = {}
+                  params["jobID"] = len(tasks)
+                  params["cls"] = _cls
+                  params["contigs"] = "%s/Annotate/in/%s"%(_settings.rundir, partFile)
+                  params["orfAA"] = ""
+                  params["orfFA"] = ""
+                  params["out"] = "%s.lib%d_%d"%(_settings.PREFIX, lib.id, partNumber)
+                  tasks.append(params)
+         else:
+            annotateSeq(_cls, "%s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id), "", "", "%s.lib%d"%(_settings.PREFIX, lib.id))
+   if "fcp" in _cls or "phymm" in _cls:
+         result = pool.map_async(parallelWrapper, tasks).get(sys.maxint)
+         for i in result:
+            if (i["status"] == 1):
+               run_process(_settings, "rm %s"%(tasks[i["jobID"]]["contigs"]), "Annotate")
+            else:
+               print "Error: parallel annotation job %d failed\n"%(i["jobID"])
+               raise(JobSignalledBreak)
+   pool.close()
+   pool.join()
 
    # merge results
    run_process(_settings, "cat %s/Annotate/out/*.hits > %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
@@ -264,7 +439,7 @@ def Annotate(input,output):
             readctg_dict[ctg].append(read)
          else:
             readctg_dict[ctg] = [read,]
-   ctgfile.close()
+      ctgfile.close()
 
    annotsfile = open("%s/Annotate/out/%s.annots"%(_settings.rundir, _settings.PREFIX), 'r')
    annotreads = open("%s/Annotate/out/%s.reads.annots"%(_settings.rundir, _settings.PREFIX), 'w')

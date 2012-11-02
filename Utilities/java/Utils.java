@@ -157,6 +157,13 @@ public class Utils {
 
 
   public static BufferedReader getFile(String fileName, String postfix) throws Exception {
+      String[] array = new String[1];
+      array[0] = postfix;
+
+      return getFile(fileName, array);
+   }
+
+   public static BufferedReader getFile(String fileName, String[] postfix) throws Exception {
        BufferedReader bf = null;
 
        if (fileName.endsWith("bz2")) {
@@ -165,9 +172,17 @@ public class Utils {
           Process p = Runtime.getRuntime().exec("bzip2 -dc " + new File(fileName).getAbsolutePath() + " |");
           bf = new BufferedReader(new InputStreamReader(p.getInputStream()));
           System.err.println(bf.ready());
-        } else if (fileName.endsWith(postfix)){
-           bf = new BufferedReader(new FileReader(fileName));
         } else {
+           int i = 0;
+           for (i = 0; i < postfix.length; i++) {
+              if (fileName.endsWith(postfix[i])){
+                 bf = new BufferedReader(new FileReader(fileName));
+                 break;
+              }
+           }
+           if (i == postfix.length) {
+              System.err.println("Unknown fiile format " + fileName + " Skipping!");
+           }
         }
 
         return bf;

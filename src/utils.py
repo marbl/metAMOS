@@ -250,6 +250,18 @@ def concatContig(ctgfile):
 def str2bool(v):
   return v.lower() in ("yes", "true", "t", "1")
 
+def sizeFastaFile(fileName):
+   if not os.path.exists(fileName):
+      return 0
+
+   p = subprocess.Popen("java -cp %s/java:. SizeFasta -t %s"%(Settings.METAMOS_UTILS, fileName), shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   (checkStdout, checkStderr) = p.communicate()
+   if checkStderr != "":
+      print "Warning: cannot size file, return size 0\n"
+      return 0
+   else:
+      return int(checkStdout)
+
 def getMD5Sum(fileName):
    if not os.path.exists(fileName):
       return ""
@@ -530,7 +542,7 @@ def run_process(settings,command,step=""):
           rc = p.returncode
           if rc != 0 and "rm " not in command and "ls " not in command and "unlink " not in command and "ln " not in command and "mkdir " not in command and "mv " not in command:
               print "**ERROR**"
-              print "The following command failed:"
+              print "The following command failed with return code %d:"%(rc)
               print ">>",command
               print "Please veryify input data and restart MetAMOS. If the problem persists please contact the MetAMOS development team."
               print "**ERROR**"
@@ -547,7 +559,8 @@ def run_process(settings,command,step=""):
               
               # also make sure this step will be re-run on restart
               os.system("rm %s%sLogs%s%s.ok"%(settings.rundir, os.sep, os.sep, step.lower())) 
-              sys.exit(rc)
+              #sys.exit(rc)
+              raise (JobSignalledBreak)
           if step == "":
               print fstdout,fstderr
           else:

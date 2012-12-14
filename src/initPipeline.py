@@ -184,7 +184,27 @@ if len(readlibs) == 0:
 # now go through all our libs and set their insert sizes
 i = 0
 j = 0
+filesOK = True
+errorMessage = ""
+
 while i < len(readlibs):
+    mylib = readlibs[i]
+    if mylib.interleaved:
+        if not os.path.exists(mylib.f12):
+            filesOK = False
+            errorMessage += "File %s from library %d does not exist\n"%(mylib.f12, i)
+    elif mylib.mated:
+        if not os.path.exists(mylib.f1) or not os.path.exists(mylib.f2):
+            filesOK = False
+            if not os.path.exists(mylib.f1):
+                errorMessage += "File %s from library %d does not exist\n"%(mylib.f1, i)
+            if not os.path.exists(mylib.f2):
+                errorMessage += "File %s from library %d does not exist\n"%(mylib.f2, i)
+    else:
+        if not os.path.exists(mylib.f1):
+            filesOK = False  
+            errorMessage += "File %s from library %d does not exist\n"%(mylib.f1, i)
+     
     if readlibs[i].mated:
         if (len(inserts) <= j):
            print "Error: no insert size specified for library %d\n"%(i)
@@ -192,6 +212,9 @@ while i < len(readlibs):
         readlibs[i].setMinMax(int(inserts[j][0]), int(inserts[j][1]))
         j += 1
     i += 1
+if filesOK == False:
+    print "Error, provided files do not exist: \n%s"%(errorMessage)
+    sys.exit(1)
 
 if len(contigs) > 1 and not os.path.exists(contigs):
     print "Error, provided contig file does not exist: ", contigs

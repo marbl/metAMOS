@@ -192,18 +192,18 @@ while i < len(readlibs):
     if mylib.interleaved:
         if not os.path.exists(mylib.f12):
             filesOK = False
-            errorMessage += "File %s from library %d does not exist\n"%(mylib.f12, i)
+            errorMessage += "File %s from library %d does not exist\n"%(mylib.f12, i+1)
     elif mylib.mated:
         if not os.path.exists(mylib.f1) or not os.path.exists(mylib.f2):
             filesOK = False
             if not os.path.exists(mylib.f1):
-                errorMessage += "File %s from library %d does not exist\n"%(mylib.f1, i)
+                errorMessage += "File %s from library %d does not exist\n"%(mylib.f1, i+1)
             if not os.path.exists(mylib.f2):
-                errorMessage += "File %s from library %d does not exist\n"%(mylib.f2, i)
+                errorMessage += "File %s from library %d does not exist\n"%(mylib.f2, i+1)
     else:
         if not os.path.exists(mylib.f1):
             filesOK = False  
-            errorMessage += "File %s from library %d does not exist\n"%(mylib.f1, i)
+            errorMessage += "File %s from library %d does not exist\n"%(mylib.f1, i+1)
      
     if readlibs[i].mated:
         if (len(inserts) <= j):

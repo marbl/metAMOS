@@ -697,4 +697,20 @@ def Preprocess(input,output):
                    print "Warning: FastQC did not generate %s.\n"%reportFile
                    #raise(JobSignalledBreak)
 
+   # before quitting make sure all the reads were not filtered out
+   haveReads = False
+   for lib in _readlibs:
+      fileSize = os.stat("%s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.id)).st_size
+      if fileSize > 0:
+         haveReads = True
+      else:
+         print "Warning: library %d has no sequences\n"%(lib.id)
+   if haveReads == False:
+      print "**ERROR**"
+      print "All input sequences were empty\n"
+      print "**ERROR**"
+      print ""
+      print ""
+      raise (JobSignalledBreak)
+
    run_process(_settings, "touch %s/Preprocess/out/preprocess.success"%(_settings.rundir),"Preprocess")

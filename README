@@ -1,12 +1,14 @@
-metAMOS v1.0b README
-Last updated: June 21st 2012
+metAMOS v1.1 README
+Last updated: December 14th 2012
 
 NEWS:
 
-*MetaVelvet now supported
-*FCP now supported
-*Glimmer-MG now supported
-*PhymmBL now supported
+*HTML report vastly improved
+*FunctionalAnnotation step added
+*Added Bowtie2 support
+*Updated to ruffus version 2.3b
+*Fixed Issues #69,71
+*Various other minor bug fixes
 
 > SUMMARY
         * A/ HARDWARE REQUIREMENTS

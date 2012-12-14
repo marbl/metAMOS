@@ -188,8 +188,26 @@ if not os.path.exists("./AMOS") or 0:
         os.system("tar -xvf amos-binaries.tar.gz")
         os.system("rm -rf amos-binaries.tar.gz")
 
-if 0 or not os.path.exists("./Utilities/python/pysam"):
-   print "pysam python moduels not found, necessary for bowtie2 alignments, download now?"
+if not os.path.exists("./Utilities/python/cython"):
+   print "cython modules not found, necessary for c-compiling python code, download now?"
+   if silentInstall:
+       dl = 'y'
+   else:
+       dl = raw_input("Enter Y/N: ")
+   if dl == 'y' or dl == "Y":
+       os.system("wget https://github.com/cython/cython/archive/master.zip -O ./cython.zip")
+       os.system("mv cython.zip ./Utilities/python/. ")
+       os.system("unzip ./Utilities/python/cython.zip")
+       os.system("mv ./Utilities/python/cython-master ./Utilities/python/cython")
+       os.system("cd ./Utilities/python/cython")
+       os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
+       os.system("cd %s"%(sys.path[0]))
+       os.system("rm -rf cython.zip")
+       #os.system("tar -C ./Utilities/python -xvf cython.tar.gz")
+       #os.system("mv ./Utilities/python/pysam-0.6 ./Utilities/python/pysam")
+
+if 1 or not os.path.exists("./Utilities/python/pysam"):
+   print "pysam python modules not found, necessary for bowtie2 alignments, download now?"
    if silentInstall:
        dl = 'y'
    else:

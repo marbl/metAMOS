@@ -554,7 +554,7 @@ def Preprocess(input,output):
                   if _run_fastqc:
                      print "Warning: FastQC cannot run on SFF files, skipping."
                      _run_fastqc = false
-                  run_process(_settings, "touch %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.id), "Preprocess")
+                  run_process(_settings, "ln %s/Preprocess/out/lib%d.sff %s/Preprocess/out/lib%d.seq"%(_settings.rundir, lib.id,_settings.rundir, lib.id), "Preprocess")
                else:
                   if not os.path.exists(_settings.CA + os.sep + "sffToCA"):
                      print "Error: CA not found in %s. It is needed to convert SFF files to fasta.\n"%(_settings.CA)

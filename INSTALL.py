@@ -206,7 +206,7 @@ if not os.path.exists("./Utilities/python/cython"):
        #os.system("tar -C ./Utilities/python -xvf cython.tar.gz")
        #os.system("mv ./Utilities/python/pysam-0.6 ./Utilities/python/pysam")
 
-if 1 or not os.path.exists("./Utilities/python/pysam"):
+if not os.path.exists("./Utilities/python/pysam"):
    print "pysam python modules not found, necessary for bowtie2 alignments, download now?"
    if silentInstall:
        dl = 'y'

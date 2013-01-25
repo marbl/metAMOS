@@ -89,7 +89,7 @@ today = datetime.datetime.now()
 timestamp = "P_"+today.isoformat().replace("-","_").replace(".","").replace(":","").replace("T","_")
 #print timestamp
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hfsq1:2:m:c:i:d:orl:", ["help", "fasta","fastq","sff","f1=","f2=","matelib=","asmcontig=","insertlen=","dir=","outtie=","readlen="])
+    opts, args = getopt.getopt(sys.argv[1:], "hfsq1:2:m:c:i:d:or:l:", ["help", "fasta","fastq","sff","f1=","f2=","matelib=","asmcontig=","insertlen=","dir=","outtie=","readlen="])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"

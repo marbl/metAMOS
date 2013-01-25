@@ -196,9 +196,8 @@ if not os.path.exists("./Utilities/python/cython"):
        dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == "Y":
        os.system("wget https://github.com/cython/cython/archive/master.zip -O ./cython.zip")
-       os.system("mv cython.zip ./Utilities/python/. ")
-       os.system("unzip ./Utilities/python/cython.zip")
-       os.system("mv ./Utilities/python/cython-master ./Utilities/python/cython")
+       os.system("unzip ./cython.zip")
+       os.system("mv ./cython-master ./Utilities/python/cython")
        os.system("cd ./Utilities/python/cython")
        os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
        os.system("cd %s"%(sys.path[0]))

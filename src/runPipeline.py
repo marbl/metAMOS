@@ -126,7 +126,7 @@ def printConfiguration(fileName=None):
            (progName, citation) = utils.getProgramCitations(settings, prog)
            configurationText.append(progName + "\n")
            try:
-              configurationText.append("\t" + eval("utils.Settings.%s"%(prog.upper()))+"\n")
+              configurationText.append("\t" + eval("utils.Settings.%s"%(prog.replace("-", "_").upper()))+"\n")
            except AttributeError:
               configurationText.append("\t" + utils.Settings.METAMOS_UTILS + "\n")           
            configurationText.append("\t" + citation + "\n\n")
@@ -612,7 +612,7 @@ if __name__ == "__main__":
     # add krona to system path
     currPath = os.environ["PATH"]
     if utils.Settings.KRONA not in currPath:
-       os.environ["PATH"]="%s:%s"%(currPath, utils.Settings.KRONA)
+       os.environ["PATH"]="%s:%s"%(utils.Settings.KRONA, currPath)
 
     import preprocess
     import assemble

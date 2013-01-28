@@ -256,7 +256,7 @@ foreach my $input (@ARGV)
                        if (defined($confidences)) {
                           my @confs = split/;/, $confidences;
                           $confidence = $confs[$bestIndex];
-                          $conf2 = log(-1*$confidence);
+                          $conf2 = ($confidence == 0 ? 0 : log(-1*$confidence));
                        } elsif ($includeConfidence && defined($names{$bestTaxaName})) {
                           my $index = $names{$bestTaxaName};
                           while ( 1 ) {
@@ -266,7 +266,7 @@ foreach my $input (@ARGV)
                              my ($confID, $remainder) = split /\t/, $confLine, 2;
                              if ($confID eq $contigID) {
                                 $confidence = ( split/\t/, $confLine )[$index]; 
-                                $conf2 = log(-1*$confidence);
+                                $conf2 = ($confidence == 0 ? 0 : log(-1*$confidence));
                                 last;
                              }
                              if (eof(CONF)) {

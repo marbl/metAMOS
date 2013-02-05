@@ -168,7 +168,7 @@ def annotateSeq(cls, contigs, orfAA, orfFA, output):
        # for blast options
        if os.path.exists("%s/DB/blast_data/BacteriaAndArchaeaGenomesDB.nin"%(_settings.METAMOS_UTILS)):
           run_process(_settings, "ln -s %s/DB/blast_data blast_data"%(_settings.METAMOS_UTILS), "Annotate")
-          run_process(_settings, "python %s/python/BLASTN.py %s/blastn %s %s/Annotate/out/%s.bl_results.txt"%(_settings.METAMOS_UTILS, _settings.BLAST, contigs, _settings.rundir, output), "Annotate") 
+          run_process(_settings, "python %s/python/BLASTN.py %s/blastn %s %s/Annotate/out/%s.bl_results.txt %d"%(_settings.METAMOS_UTILS, _settings.BLAST, contigs, _settings.rundir, output, _settings.threads), "Annotate") 
 
           #combine the results
           run_process(_settings, "python %s/python/NB-BL.py %s/Annotate/out/%s.nb_results.txt %s/Annotate/out/%s.bl_results.txt %s/Annotate/out/%s.epsilon-nb_results.txt"%(_settings.METAMOS_UTILS, _settings.rundir, output, _settings.rundir, output, _settings.rundir, output), "Annotate")

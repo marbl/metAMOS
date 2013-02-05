@@ -153,7 +153,7 @@ def printConfiguration(fileName=None):
         conf.close()
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hrjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iul:x:z:",\
+    opts, args = getopt.getopt(sys.argv[1:], "hrjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iul:x:yz:",\
                                    ["help", \
                                         "retainBank", \
                                         "libspeccov",\
@@ -179,6 +179,7 @@ try:
                                         "mincov", \
                                         "justprogs", \
                                         "what", \
+                                        "nofcpblast",\
                                         "taxalevel"])
 except getopt.GetoptError, err:
     # print help information and exit:
@@ -240,6 +241,7 @@ skipsteps = []
 run_fastqc = False
 runfast = False
 retainBank = False
+nofcpblast = False
 fff = ""
 readlen = 75
 fqlibs = {}
@@ -260,6 +262,8 @@ for o, a in opts:
         sys.exit()
     elif o in ("-i","--indexbowtie"):
         bowtie_mapping = 1
+    elif o in ("-y","--nofcpblast"):
+        nofcpblast = True
     elif o in ("-w","--what"):
         utils.Settings.OUTPUT_ONLY = True
     elif o in ("-j","--justprogs"):
@@ -634,7 +638,7 @@ if __name__ == "__main__":
     mapreads.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["mapreads"], savebtidx,ctgbpcov)
     findorfs.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["findorfs"], min_ctg_len, min_ctg_cvg)
     findreps.init(readlibs, skipsteps)
-    annotate.init(readlibs, skipsteps, selected_programs["classify"])
+    annotate.init(readlibs, skipsteps, selected_programs["classify"], nofcpblast)
     fannotate.init(skipsteps)
     abundance.init(readlibs, skipsteps, forcesteps, selected_programs["classify"])
     scaffold.init(readlibs, skipsteps, retainBank, selected_programs["assemble"])

@@ -21,16 +21,16 @@ _readlibs = []
 _skipsteps = []
 _settings = Settings()
 _cls = None
-
-def init(reads, skipsteps, cls):
+_noblast = False
+def init(reads, skipsteps, cls, noblast):
    global _readlibs
    global _skipsteps
    global _cls
-
+   global _noblast
    _readlibs = reads
    _skipsteps = skipsteps
    _cls = cls
-
+   _noblast = noblast
 def parse_phmmerout(phmmerout):
 
     hit_dict = {}
@@ -166,7 +166,7 @@ def annotateSeq(cls, contigs, orfAA, orfFA, output):
        run_process(_settings, "%s/nb-classify -q %s -m %s/models/models.txt -r %s/Annotate/out/%s.nb_results.txt -e %s"%(_settings.FCP,contigs,_settings.METAMOS_UTILS,_settings.rundir,output,output), "Annotate")
 
        # for blast options
-       if os.path.exists("%s/DB/blast_data/BacteriaAndArchaeaGenomesDB.nin"%(_settings.METAMOS_UTILS)):
+       if not _noblast and os.path.exists("%s/DB/blast_data/BacteriaAndArchaeaGenomesDB.nin"%(_settings.METAMOS_UTILS)):
           run_process(_settings, "ln -s %s/DB/blast_data blast_data"%(_settings.METAMOS_UTILS), "Annotate")
           run_process(_settings, "python %s/python/BLASTN.py %s/blastn %s %s/Annotate/out/%s.bl_results.txt %d"%(_settings.METAMOS_UTILS, _settings.BLAST, contigs, _settings.rundir, output, _settings.threads), "Annotate") 
 

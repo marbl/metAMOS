@@ -1,4 +1,4 @@
-import os, sys, string, subprocess, distutils.util
+import os, sys, string, subprocess, distutils.util, check_install
 
 user_home = os.environ["HOME"]
 print "<<Welcome to metAMOS install>>"
@@ -318,3 +318,6 @@ os.system("python setup.py install_scripts --install-dir=`pwd` build_ext")
 #os.system("chmod a+wrx runPipeline.pyo")
 os.system("mv runPipeline.py runPipeline")
 os.system("mv initPipeline.py initPipeline")
+
+#print sys.path[0]
+check_install.validate_dir(sys.path[0].strip(),'required_file_list.txt')

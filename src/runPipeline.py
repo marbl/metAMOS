@@ -21,6 +21,11 @@ OKGREEN = CSI+'32m'
 WARNING = CSI+'31m'
 ENDC = CSI+'0m'
 sys.path.append(INITIAL_SRC)
+import check_install
+rt = check_install.validate_dir(sys.path[0].strip(),sys.path[0]+os.sep+'required_file_list.txt')
+if rt == -1:
+    print "MetAMOS not properly installed, please reinstall or contact development team for assistance"
+    sys.exit(1)
 import utils
 sys.path.append(utils.INITIAL_UTILS)
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python")
@@ -50,9 +55,9 @@ avram = (freemem/1000000000)
 print "[Available RAM: %d GB]"%(avram)
 lowmem= False
 nofcpblast = False
-if avram < 32:
-    print WARNING+"\t*Only %d GB of RAM available, suggested minimum of 32 GB"%(avram)+ENDC
-    print WARNING+"\t*Enabling low MEM mode, might slow down several steps in pipeline"+ENDC
+if avram <= 64:
+    print WARNING+"\tThere is *%d GB of RAM available on this machine, suggested minimum of 64 GB"%(avram)+ENDC
+    print WARNING+"\t*Enabling low MEM mode, might slow down some steps in pipeline"+ENDC
     lowmem= True
 else:
     print OKGREEN+"\t*ok"+ENDC

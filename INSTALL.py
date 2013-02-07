@@ -320,4 +320,9 @@ os.system("mv runPipeline.py runPipeline")
 os.system("mv initPipeline.py initPipeline")
 
 #print sys.path[0]
-check_install.validate_dir(sys.path[0].strip(),'required_file_list.txt')
+
+rt = check_install.validate_dir(sys.path[0].strip(),'required_file_list.txt')
+if rt == -1:
+    print "MetAMOS not properly installed, please reinstall or contact development team for assistance"
+    sys.exit(1)
+    

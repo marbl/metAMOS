@@ -9,6 +9,7 @@ sys.path.append(INITIAL_SRC)
 import utils
 sys.path.append(utils.INITIAL_UTILS)
 
+
 #add libs to pythonpath
 if "PYTHONPATH" not in os.environ:
    os.environ["PYTHONPATH"] = ""
@@ -16,6 +17,10 @@ os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python:"
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam:"
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib:"
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python:"
+sys.path.append(utils.INITIAL_UTILS+os.sep+"python")
+sys.path.append(utils.INITIAL_UTILS+os.sep+"python" + os.sep+"pysam")
+sys.path.append(utils.INITIAL_UTILS+os.sep+"python" + os.sep+"lib"+ os.sep+"python")
+sys.path.append(utils.INITIAL_UTILS+os.sep+"python" + os.sep+"psutils")
 #lib dir for pysam and others
 if not os.path.exists("%s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"):
     os.system("mkdir %s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib")
@@ -79,7 +84,7 @@ if not os.path.exists("./Utilities/config/usage.ok"):
         os.system("echo ok > ./Utilities/config/usage.ok")
 
 #check for DBs, etc
-if not os.path.exists("./Utilities/cpp/%s-%s/metaphylerClassify"%(OSTYPE, MACHINETYPE)):
+if not os.path.exists("./Utilities/cpp/%s-%s/metaphylerClassify"%(OSTYPE, MACHINETYPE)) or not os.path.exists("./Utilities/perl/metaphyler/markers/markers.protein") or not os.path.exists("./Utilities/perl/metaphyler/markers/markers.dna"):
     print "Metaphyler (latest version) not found, optional for Annotate, download now?"
     if silentInstall:
        dl = 'y'
@@ -188,6 +193,21 @@ if not os.path.exists("./AMOS") or 0:
         os.system("tar -xvf amos-binaries.tar.gz")
         os.system("rm -rf amos-binaries.tar.gz")
 
+if not os.path.exists("./Utilities/python/psutil"):
+   print "psutil not found, required for memory usage estimation, download now?"
+   if silentInstall:
+       dl = 'y'
+   else:
+       dl = raw_input("Enter Y/N: ")
+   if dl == 'y' or dl == "Y":
+
+       os.system("wget http://psutil.googlecode.com/files/psutil-0.6.1.tar.gz -O ./psutil.tar.gz")
+       os.system("tar -C ./Utilities/python -xvf psutil.tar.gz")
+       os.system("mv ./Utilities/python/psutil-0.6.1 ./Utilities/python/psutil")
+       os.system("cd ./Utilities/python/psutil")
+       os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
+       os.system("cd %s"%(sys.path[0]))
+       os.system("rm -rf psutil.tar.gz")
 if not os.path.exists("./Utilities/python/cython"):
    print "cython modules not found, necessary for c-compiling python code, download now?"
    if silentInstall:

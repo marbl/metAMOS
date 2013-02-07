@@ -15,16 +15,20 @@ INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
 DEFAULT_KMER  = 31
 ## Hardcode a default taxonomic classification level
 DEFAULT_TAXA_LEVEL = "class"
-
-
+CSI="\x1B["
+reset=CSI+"m"
+OKGREEN = CSI+'32m'
+WARNING = CSI+'31m'
+ENDC = CSI+'0m'
 sys.path.append(INITIAL_SRC)
 import utils
 sys.path.append(utils.INITIAL_UTILS)
+sys.path.append(utils.INITIAL_UTILS+os.sep+"python")
+sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam")
+sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"psutil")
+sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"psutil"+os.sep+"psutil")
 
-
-
-   
 
 ## The usual library dependencies
 import string
@@ -36,9 +40,34 @@ import re
 import subprocess
 import webbrowser
 import multiprocessing
+import psutil
 from operator import itemgetter
 from ruffus import *
-
+memusage =  `psutil.phymem_usage()`.split(",")
+freemem = long(memusage[2].split("free=")[-1])
+percentfree = float(memusage[3].split("percent=")[-1].split(")")[0])
+avram = (freemem/1000000000)
+print "[Available RAM: %d GB]"%(avram)
+lowmem= False
+nofcpblast = False
+if avram < 32:
+    print WARNING+"\t*Only %d GB of RAM available, suggested minimum of 32 GB"%(avram)+ENDC
+    print WARNING+"\t*Enabling low MEM mode, might slow down several steps in pipeline"+ENDC
+    lowmem= True
+else:
+    print OKGREEN+"\t*ok"+ENDC
+numcpus = psutil.NUM_CPUS
+skipsteps = []
+print "[Available CPU cores: %d]"%(numcpus)
+if numcpus < 8:
+    print WARNING+"\t*Only %d CPU cores available, suggested minimum of 8"%(numcpus)+ENDC
+    print WARNING+"\t*Disabling all BLAST (where possible)"+ENDC
+    nofcpblast = True
+    skipsteps.append("FunctionalAnnotation")
+else:
+    print OKGREEN+"\t*ok"+ENDC
+#print "Available RAM: %d GB"%(freemem/1000000000)
+#print "Available RAM: %d GB"%(freemem/1000000000)
 
 ## Get start time
 t1 = time.time()
@@ -153,7 +182,7 @@ def printConfiguration(fileName=None):
         conf.close()
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hrjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iul:x:yz:",\
+    opts, args = getopt.getopt(sys.argv[1:], "hrjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iu1l:x:yz:",\
                                    ["help", \
                                         "retainBank", \
                                         "libspeccov",\
@@ -175,11 +204,12 @@ try:
                                         "genecaller",\
                                         "bowtieindex",\
                                         "unassembledreads",\
+                                        "lowmem",\
                                         "minlen",\
                                         "mincov", \
                                         "justprogs", \
                                         "what", \
-                                        "nofcpblast",\
+                                        "lowcpu",\
                                         "taxalevel"])
 except getopt.GetoptError, err:
     # print help information and exit:
@@ -237,11 +267,11 @@ startat = None
 stopat = None
 filter = False
 forcesteps = []
-skipsteps = []
+
 run_fastqc = False
 runfast = False
 retainBank = False
-nofcpblast = False
+
 fff = ""
 readlen = 75
 fqlibs = {}
@@ -250,6 +280,7 @@ rlibs = []
 ctgbpcov = False
 min_ctg_len = 300
 min_ctg_cvg = 3
+#lowmem= False
 annotate_unassembled = False
 output_programs = 0
 settings = utils.Settings(DEFAULT_KMER, multiprocessing.cpu_count() - 1, "", DEFAULT_TAXA_LEVEL)
@@ -262,7 +293,7 @@ for o, a in opts:
         sys.exit()
     elif o in ("-i","--indexbowtie"):
         bowtie_mapping = 1
-    elif o in ("-y","--nofcpblast"):
+    elif o in ("-y","--lowcpu"):
         nofcpblast = True
     elif o in ("-w","--what"):
         utils.Settings.OUTPUT_ONLY = True
@@ -362,6 +393,8 @@ for o, a in opts:
         if utils.Settings.taxa_level not in supported_taxonomic:
            print "!!Sorry, %s is not a valid taxonomic level. Using class instead"%(utils.Settings.taxa_level)
 
+    elif o in ("-1","--lowmem"):
+        lowmem = True
     elif o in ("-a","--assembler"):
         selected_programs["assemble"] = a.lower()
         if selected_programs["assemble"] == "metaidba":
@@ -635,7 +668,7 @@ if __name__ == "__main__":
     # initialize submodules
     preprocess.init(readlibs, skipsteps, selected_programs["assemble"], run_fastqc,filter)
     assemble.init(readlibs, skipsteps, selected_programs["assemble"], usecontigs)
-    mapreads.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["mapreads"], savebtidx,ctgbpcov)
+    mapreads.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["mapreads"], savebtidx,ctgbpcov,lowmem)
     findorfs.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["findorfs"], min_ctg_len, min_ctg_cvg)
     findreps.init(readlibs, skipsteps)
     annotate.init(readlibs, skipsteps, selected_programs["classify"], nofcpblast)

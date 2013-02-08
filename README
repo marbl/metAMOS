@@ -1,4 +1,4 @@
-metAMOS v1.1 README
+MetAMOS v1.1 README
 Last updated: December 14th 2012
 
 NEWS:
@@ -13,7 +13,7 @@ NEWS:
 > SUMMARY
         * A/ HARDWARE REQUIREMENTS
         * B/ SOFTWARE REQUIREMENTS
-        * C/ INSTALLING metAMOS
+        * C/ INSTALLING MetAMOS
         * D/ QUICK START
         * E/ TEST SUITE
         * F/ EXAMPLE OUTPUT
@@ -23,8 +23,8 @@ NEWS:
 ----------------------------------------------------------------------------------
 A/ HARDWARE REQUIREMENTS
 
-metAMOS was designed to work on any standard 64bit Linx
-environment. To use metAMOS for tutorial/teaching purposes, a minimum
+MetAMOS was designed to work on any standard 64bit Linx
+environment. To use MetAMOS for tutorial/teaching purposes, a minimum
 of 8 GB RAM is required. To get started on real data sets a minimum of
 32 GB of RAM is recommened, and anywhere from 64-512 GB may be
 necessary for larger datasets. In our experience, for most 50-60
@@ -37,18 +37,18 @@ B/ SOFTWARE REQUIREMENTS
 The main prequisite software is python2.6+ and AMOS (available from
 http://amos.sf.net). Once python2.6+ and AMOS are installed, there
 should not be any other major prerequisites as most everything that is
-needed is distributed with metAMOS inside of the /Utilities
-directory. However, there is some software that metAMOS can
+needed is distributed with MetAMOS inside of the /Utilities
+directory. However, there is some software that MetAMOS can
 incorporate into its pipeline that we are not allowed to distribute,
 such as MetaGeneMark. To get a license to use MetaGeneMark, plesae
 visit: http://exon.gatech.edu/license_download.cgi.
 
 ----------------------------------------------------------------------------------
-C/ INSTALLING metAMOS
+C/ INSTALLING MetAMOS
 
-To download the software, go to https://github.com/treangen/metAMOS
+To download the software, go to https://github.com/treangen/MetAMOS
 and click on Downloads. Once downloaded, simply unpack the files and
-open the metAMOS directory. Once inside the metAMOS directory, run:
+open the MetAMOS directory. Once inside the MetAMOS directory, run:
 
 python INSTALL.py
 
@@ -59,8 +59,8 @@ download depending on your connection speed.
 ----------------------------------------------------------------------------------
 D/ QUICK START
 
-Before you get started using metAMOS a brief review of its design will
-help clarify its intended use. metAMOS gas two main components:
+Before you get started using MetAMOS a brief review of its design will
+help clarify its intended use. MetAMOS gas two main components:
 
 1) initPipeline
 2) runPipeline
@@ -182,17 +182,17 @@ following parameter to runPipeline:
 
 -n,--skipsteps=Step1,..
 
-metAMOS reruns steps based on timestamp information, so if the input
+MetAMOS reruns steps based on timestamp information, so if the input
 files for a step in the pipeline hasn't changed since the last run, it
 will be skipped automatically. However, you can forefully run any step
 in the pipeline by passing the following parameter to runPipeline:
 
 -f,--force=Step1,..
 
-metAMOS stores a summary of the input libraries in pipeline.ini 
+MetAMOS stores a summary of the input libraries in pipeline.ini 
 in the working directory. The pipeline.conf file stores the list 
-of programs available to metAMOS. Finally, pipeline.run stores the 
-selected parameters and programs for the current run. metAMOS also stores 
+of programs available to MetAMOS. Finally, pipeline.run stores the 
+selected parameters and programs for the current run. MetAMOS also stores 
 detailed logs of all commands executed by the pipeline in Logs/COMMANDS.log 
 and a log for each step of the pipeline in Logs/<STEP NAME>.log
 
@@ -208,7 +208,7 @@ comparative plots.
 E/ Test suite
 
 We have developed a set of scripts for testing the various features of
-metAMOS. All of these regression test scripts are available inside the
+MetAMOS. All of these regression test scripts are available inside the
 /Test directory and include all necessary datasets to run them. Here
 is a brief listing of the test scripts we currently include:
 
@@ -256,7 +256,7 @@ is a brief listing of the test scripts we currently include:
 ----------------------------------------------------------------------------------
 F/ Example output
 
-metAMOS generates an interactive webpage once a run successfully completes:
+MetAMOS generates an interactive webpage once a run successfully completes:
 http://www.cbcb.umd.edu/software/metamos/summary.html
 
 This includes summary statistics and taxonomic information based on Krona
@@ -264,16 +264,16 @@ Krona publication: Ondov BD, Bergman NH, Phillippy AM.. Interactive
 metagenomic visualization in a Web browser. BMC Bioinformatics. 2011
 Sep 30;12:385.  PMID: 21961884
 
-Additionally, since metAMOS stores all of its results in an AMOS bank,
+Additionally, since MetAMOS stores all of its results in an AMOS bank,
 the assemblies can be visualized with Hawkeye.
 
 ----------------------------------------------------------------------------------
 G/ BUGS
 
 If you encounter any problems/bugs, please check the wiki page:
-https://github.com/treangen/metAMOS/wiki
+https://github.com/treangen/MetAMOS/wiki
 and the known issues pages:
-https://github.com/treangen/metAMOS/issues?direction=desc&sort=created&state=open
+https://github.com/treangen/MetAMOS/issues?direction=desc&sort=created&state=open
 to see if it has already been documented.
 
 If not, please report the issue either using the contact information below or 

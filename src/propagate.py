@@ -14,17 +14,22 @@ from ruffus import *
 _readlibs = []
 _skipsteps = []
 _cls = None
+_mated = False
 _settings = Settings()
 
 def init(reads, skipsteps, cls):
    global _readlibs
    global _skipsteps
    global _cls
+   global _mated
 
    _readlibs = reads
    _skipsteps = skipsteps
    _cls = cls
-
+   for lib in _readlibs:
+      if lib.mated == True:
+         _mated = True
+         break
 
 @follows(FindScaffoldORFS)
 @posttask(touch_file("%s/Logs/propagate.ok"%(_settings.rundir)))

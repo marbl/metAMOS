@@ -62,6 +62,7 @@ class error_task(Exception):
         """
         # turn tasks names into 'def xxx(...): format
         task_names = "\n".join(t.get_task_name(True) for t in self.tasks)
+        return "\nERROR"
         if len(self.main_msg):
             return "\n\n" + self.main_msg + " for\n\n%s\n" % task_names
         else:
@@ -114,19 +115,21 @@ class RethrownJobError(error_task):
         if nn == -1:
             nn = len(self.args) - 1
         task_name, job_name, exception_name, exception_value, exception_stack = self.args[nn]
+        message = "" 
         message = "\nException #%d\n" % (nn + 1)
         message += "  '%s%s' raised in ...\n" % (exception_name, exception_value)
         message += "   Task = %s\n   %s\n\n%s\n" % (self.task_to_func_name(task_name), job_name, exception_stack)
         return message.replace("\n", "\n    ")
 
     def __str__(self):
-        message = ["\nOriginal exception%s:\n" % ("s" if len(self.args) > 1 else "")]
-        for ii in range(len(self.args)):
-            message += self.get_nth_exception_str (ii)
+        #message = ["\nOriginal exception%s:\n" % ("s" if len(self.args) > 1 else "")]
+        #for ii in range(len(self.args)):
+        #    message += self.get_nth_exception_str (ii)
         #
         #   For each exception:
         #       turn original exception stack message into an indented string
         #
+        message = ""
         return (self.get_main_msg()).replace("\n", "\n    ") + "".join(message)
 
 class task_FilesArgumentsError(error_task):

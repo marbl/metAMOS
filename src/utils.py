@@ -7,6 +7,7 @@ import hashlib
 
 _METAMOSDIR    = sys.path[0]
 INITIAL_UTILS = "%s%sUtilities"%(_METAMOSDIR, os.sep)
+_NUM_LINES    = 10
 
 _PROG_NAME_DICT = {}
 _PUB_DICT = {}
@@ -542,8 +543,22 @@ def run_process(settings,command,step=""):
           rc = p.returncode
           if rc != 0 and "rm " not in command and "ls " not in command and "unlink " not in command and "ln " not in command and "mkdir " not in command and "mv " not in command:
               print "**ERROR**"
-              print "The following command failed with return code %d:"%(rc)
+              print "During %s, the following command failed with return code %d:"%(step.lower(), rc)
               print ">>",command
+              print ""
+              print "**"
+              print "Last %d commands run before the error (%s/Logs/COMMANDS.log)"%(_NUM_LINES, settings.rundir)
+              p = subprocess.Popen("tail -n %d %s/Logs/COMMANDS.log"%(_NUM_LINES, settings.rundir), shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,close_fds=True, executable="/bin/bash")
+              (checkStdout, checkStderr) = p.communicate()
+              val = p.returncode
+              print "%s"%(checkStdout)
+              print ""
+              print "Last %d lines of output (%s/Logs/%s.log)"%(_NUM_LINES, settings.rundir, step)
+              p = subprocess.Popen("tail -n %d %s/Logs/%s.log"%(_NUM_LINES, settings.rundir, step), shell=True, stdin=None, stdout=None, stderr=subprocess.STDOUT,close_fds=True, executable="/bin/bash")
+              (checkStdout, checkStderr) = p.communicate()
+              val = p.returncode
+              print "%s"%(checkStdout)
+              print ""
               print "Please veryify input data and restart MetAMOS. If the problem persists please contact the MetAMOS development team."
               print "**ERROR**"
               print ""

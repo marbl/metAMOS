@@ -5,8 +5,16 @@ from datetime import date
 from datetime import time
 from datetime import datetime
 from operator import itemgetter
+import multiprocessing
 
 import hashlib
+
+CSI="\x1B["
+reset=CSI+"m"
+OK_GREEN = CSI+'32m'
+WARNING_YELLOW = CSI+'\033[93m'
+ERROR_RED = CSI+'\033[91m'
+ENDC = CSI+'0m'
 
 _METAMOSDIR    = sys.path[0]
 INITIAL_UTILS = "%s%sUtilities"%(_METAMOSDIR, os.sep)
@@ -14,6 +22,19 @@ _NUM_LINES    = 10
 
 _PROG_NAME_DICT = {}
 _PUB_DICT = {}
+
+class AtomicCounter(object):
+  def __init__(self, initval=0):
+     self.val = multiprocessing.RawValue('i', initval)
+     self.lock = multiprocessing.Lock()
+
+  def increment(self):
+     with self.lock:
+         origVal = self.val.value
+         self.val.value += 1
+         return origVal
+
+_atomicCounter = AtomicCounter(0)
 
 class Settings:
    asmfiles = []
@@ -42,7 +63,7 @@ class Settings:
    AMOS = ""
    BAMBUS2 = ""
 
-   SOAP = ""
+   SOAPDENOVO = ""
    METAIDBA = ""
    CA = ""
    NEWBLER = ""
@@ -99,7 +120,7 @@ class Settings:
       Settings.AMOS          = "%s%sAMOS%sbin"%(Settings.METAMOSDIR, os.sep, os.sep)
       Settings.BAMBUS2       = Settings.AMOS
 
-      Settings.SOAP          = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.SOAPDENOVO    = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.METAIDBA      = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.CA            = "%s%sCA%s%s-%s%sbin"%(Settings.METAMOSDIR, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE.replace("x86_64", "amd64"), os.sep)
       Settings.NEWBLER       = "%s%snewbler%s%s-%s"%(Settings.METAMOSDIR, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
@@ -308,6 +329,10 @@ def getFromPath(theCommand, theName):
     else:
        return checkStdout.replace(theCommand, "").strip()
 
+def cmdExists(cmd):
+    return subprocess.call(["type", cmd],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0
+
 def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
     Settings(kmer, threads, theRundir, taxaLevel, verbose, outputOnly, True)
 
@@ -344,10 +369,10 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
     bambusMD5 = getMD5Sum(Settings.BAMBUS2 + os.sep + "OrientContigs")
 
     # 2. Soap
-    Settings.SOAP = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE) 
-    if not os.path.exists(Settings.SOAP + os.sep + "soap63"):
-       Settings.SOAP = getFromPath("soap63", "SOAP")
-    soapMD5 = getMD5Sum(Settings.SOAP + os.sep + "soap63")
+    Settings.SOAPDENOVO = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE) 
+    if not os.path.exists(Settings.SOAPDENOVO + os.sep + "soap63"):
+       Settings.SOAPDENOVO = getFromPath("soap63", "SOAPDENOVO")
+    soapMD5 = getMD5Sum(Settings.SOAPDENOVO + os.sep + "soap63")
 
     # 3. CA
     Settings.CA = "%s%sCA%s%s-%s%sbin"%(Settings.METAMOSDIR, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE.replace("x86_64","amd64"), os.sep)
@@ -384,7 +409,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
     Settings.METAVELVET = "%s%scpp%s%s-%s%sMetaVelvet"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep);
     if not os.path.exists(Settings.METAVELVET + os.sep + "meta-velvetg"):
        Settings.METAVELVET = getFromPath("meta-velvetg", "METAVELVET")
-    metaVelvetMD5 = getMD5Sum(Settings.SOAP + os.sep + "meta-velvetg")
+    metaVelvetMD5 = getMD5Sum(Settings.SOAPDENOVO + os.sep + "meta-velvetg")
 
     # 8. SparseAssembler
     Settings.SPARSEASSEMBLER = "%s%scpp%s%s-%s%sSparseAssembler"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
@@ -475,7 +500,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
     conf.write("metAMOS main dir:\t%s\nmetAMOS Utilities:\t%s\nmetAMOS Java:\t\t%s\n"%(Settings.METAMOSDIR, Settings.METAMOS_UTILS, Settings.METAMOS_JAVA))
     conf.write("AMOS:\t\t\t%s\t%s\n"%(Settings.AMOS, amosMD5))
     conf.write("BAMBUS2:\t\t%s\t%s\n"%(Settings.BAMBUS2, bambusMD5))
-    conf.write("SOAP:\t\t\t%s\t%s\n"%(Settings.SOAP, soapMD5))
+    conf.write("SOAPDENOVO:\t\t\t%s\t%s\n"%(Settings.SOAPDENOVO, soapMD5))
     conf.write("METAIDBA:\t\t%s\t%s\n"%(Settings.METAIDBA, metaidbaMD5))
     conf.write("Celera Assembler:\t%s\t%s\n"%(Settings.CA, CAMD5))
     conf.write("NEWBLER:\t\t%s\t%s\n"%(Settings.NEWBLER, newblerMD5))
@@ -546,28 +571,6 @@ def run_process(settings,command,step=""):
           fstdout,fstderr = p.communicate()
           rc = p.returncode
           if rc != 0 and "rm " not in command and "ls " not in command and "unlink " not in command and "ln " not in command and "mkdir " not in command and "mv " not in command:
-              print "**ERROR**"
-              print "During %s, the following command failed with return code %d:"%(step.lower(), rc)
-              print ">>",command
-              print ""
-              print "**"
-              print "Last %d commands run before the error (%s/Logs/COMMANDS.log)"%(_NUM_LINES, settings.rundir)
-              p = subprocess.Popen("tail -n %d %s/Logs/COMMANDS.log"%(_NUM_LINES, settings.rundir), shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,close_fds=True, executable="/bin/bash")
-              (checkStdout, checkStderr) = p.communicate()
-              val = p.returncode
-              print "%s"%(checkStdout)
-              print ""
-              print "Last %d lines of output (%s/Logs/%s.log)"%(_NUM_LINES, settings.rundir, step)
-              p = subprocess.Popen("tail -n %d %s/Logs/%s.log"%(_NUM_LINES, settings.rundir, step), shell=True, stdin=None, stdout=None, stderr=subprocess.STDOUT,close_fds=True, executable="/bin/bash")
-              (checkStdout, checkStderr) = p.communicate()
-              val = p.returncode
-              print "%s"%(checkStdout)
-              print ""
-              print "Please veryify input data and restart MetAMOS. If the problem persists please contact the MetAMOS development team."
-              print "**ERROR**"
-              print ""
-              print ""
-
               # flush all error/output streams
               outf.flush()
               outf.write(fstdout+fstderr)
@@ -576,7 +579,29 @@ def run_process(settings,command,step=""):
               dt = datetime.now().isoformat(' ')[:-7]
               commandf.write("|%s| "%(dt)+command+"\n")
               commandf.close()
-              
+
+              global _atomicCounter
+              if _atomicCounter.increment() == 0: 
+                 print ERROR_RED+"*****************************************************************"
+                 print "*************************ERROR***********************************"
+                 print "During %s, the following command failed with return code %d:"%(step.lower(), rc)
+                 print ">>",command
+                 print ""
+                 print "*************************DETAILS***********************************"
+                 print "Last %d commands run before the error (%s/Logs/COMMANDS.log)"%(_NUM_LINES, settings.rundir)
+                 p = subprocess.Popen("tail -n %d %s/Logs/COMMANDS.log"%(_NUM_LINES, settings.rundir), shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,close_fds=True, executable="/bin/bash")
+                 (checkStdout, checkStderr) = p.communicate()
+                 val = p.returncode
+                 print "%s"%(checkStdout)
+                 print "Last %d lines of output (%s/Logs/%s.log)"%(_NUM_LINES, settings.rundir, step)
+                 p = subprocess.Popen("tail -n %d %s/Logs/%s.log"%(_NUM_LINES, settings.rundir, step), shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,close_fds=True, executable="/bin/bash")
+                 (checkStdout, checkStderr) = p.communicate()
+                 val = p.returncode
+                 print "%s"%(checkStdout)
+                 print "Please veryify input data and restart MetAMOS. If the problem persists please contact the MetAMOS development team."
+                 print "*************************ERROR***********************************"
+                 print "*****************************************************************"+ENDC
+
               # also make sure this step will be re-run on restart
               os.system("rm %s%sLogs%s%s.ok"%(settings.rundir, os.sep, os.sep, step.lower())) 
               #sys.exit(rc)

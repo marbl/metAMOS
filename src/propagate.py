@@ -39,7 +39,13 @@ def Propagate(input,output):
    # the line looks like ctg1","ctg2 class so we don't know which is right and we skip it in the classification below
    run_process(_settings, "cat %s/Propagate/in/%s.annots | grep -v \"\\\"\" | grep -v contigID |sed s/utg//g |sed s/ctg//g > %s/Propagate/in/%s.clusters"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Propagate")
 
-   if "Propagate" in _skipsteps or _cls == None:
+   numMates = 0
+   if os.path.exists("%s/Assemble/out/%s.graph.cte"%(_settings.rundir, _settings.PREFIX)): 
+      p = subprocess.Popen("cat %s/Assemble/out/%s.graph.cte |grep \"{CTL\" |wc -l"%(_settings.rundir, _settings.PREFIX), stdin=None, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      (checkStdout, checkStderr) = p.communicate()
+      numMates = int(checkStdout.strip())
+
+   if "Propagate" in _skipsteps or _cls == None or (_mated == False and numMates == 0):
        run_process(_settings, "touch %s/Logs/propagate.skip"%(_settings.rundir), "Propagate")
        run_process(_settings, "cp %s/Propagate/in/%s.clusters %s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Propagate")
    else:

@@ -7,7 +7,7 @@
 #########################
 ##first imports
 import os,sys,site
-
+sys.tracebacklimit = 0
 shellv = os.environ["SHELL"]
 ## Setting up paths
 INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
@@ -15,11 +15,6 @@ INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
 DEFAULT_KMER  = 31
 ## Hardcode a default taxonomic classification level
 DEFAULT_TAXA_LEVEL = "class"
-CSI="\x1B["
-reset=CSI+"m"
-OKGREEN = CSI+'32m'
-WARNING = CSI+'31m'
-ENDC = CSI+'0m'
 sys.path.append(INITIAL_SRC)
 import check_install
 validate_install = 0
@@ -68,12 +63,14 @@ nfo.close()
 #sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam")
 #sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"psutil")
 #sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"psutil"+os.sep+"psutil")
-if 'bash' in shellv:
+if 'bash' in shellv or utils.cmdExists('export'):
    os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
    os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
-else:
+elif utils.cmdExists('setenv'):
    os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
    os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
+else:
+   print "Warning: could not set PYTHONPATH. Unknown shell %s, some functionality may not work\n"%(shellv)
 ## The usual library dependencies
 import string
 import time
@@ -87,7 +84,11 @@ import multiprocessing
 import psutil
 from operator import itemgetter
 from ruffus import *
-cacheusage = psutil.cached_phymem()
+skipsteps = []
+
+cacheusage=0
+if 'linux' in utils.Settings.OSTYPE.lower():
+   cacheusage = psutil.cached_phymem()
 memusage =  `psutil.phymem_usage()`.split(",")
 freemem = long(memusage[2].split("free=")[-1])+long(cacheusage)
 percentfree = float(memusage[3].split("percent=")[-1].split(")")[0])
@@ -96,21 +97,20 @@ print "[Available RAM: %d GB]"%(avram)
 lowmem= False
 nofcpblast = False
 if avram <= 64:
-    print WARNING+"\tThere is *%d GB of RAM available on this machine, suggested minimum of 64 GB"%(avram)+ENDC
-    print WARNING+"\t*Enabling low MEM mode, might slow down some steps in pipeline"+ENDC
+    print utils.WARNING_YELLOW+"\tThere is *%d GB of RAM available on this machine, suggested minimum of 64 GB"%(avram)+utils.ENDC
+    print utils.WARNING_YELLOW+"\t*Enabling low MEM mode, might slow down some steps in pipeline"+utils.ENDC
     lowmem= True
 else:
-    print OKGREEN+"\t*ok"+ENDC
+    print utils.OK_GREEN+"\t*ok"+utils.ENDC
 numcpus = psutil.NUM_CPUS
-skipsteps = []
-print "[Available CPUs: %d]"%(numcpus*2)
+print "[Available CPUs: %d]"%(numcpus)
 if numcpus < 8:
-    print WARNING+"\t*Only %d CPU available, likely running on a laptop"%(numcpus)+ENDC
-    print WARNING+"\t*Disabling all BLAST (where possible)"+ENDC
+    print utils.WARNING_YELLOW+"\t*Only %d CPU available, likely running on a laptop"%(numcpus)+utils.ENDC
+    print utils.WARNING_YELLOW+"\t*Disabling all BLAST (where possible)"+utils.ENDC
     nofcpblast = True
     skipsteps.append("FunctionalAnnotation")
 else:
-    print OKGREEN+"\t*ok"+ENDC
+    print utils.OK_GREEN+"\t*ok"+utils.ENDC
 #print "Available RAM: %d GB"%(freemem/1000000000)
 #print "Available RAM: %d GB"%(freemem/1000000000)
 
@@ -202,7 +202,7 @@ def printConfiguration(fileName=None):
            try:
               configurationText.append("\t" + eval("utils.Settings.%s"%(prog.replace("-", "_").upper()))+"\n")
            except AttributeError:
-              configurationText.append("\t" + utils.Settings.METAMOS_UTILS + "\n")           
+              configurationText.append("\tUNKNOWN\n")
            configurationText.append("\t" + citation + "\n\n")
 
     # add step-indepent citations that are always run
@@ -216,7 +216,7 @@ def printConfiguration(fileName=None):
           try:
              configurationText.append("\t" + eval("utils.Settings.%s"%(prog.upper()))+"\n")
           except AttributeError:
-             configurationText.append("\t" + utils.Settings.METAMOS_UTILS + "\n")
+             configurationText.append("\tUNKNOWN\n")
           configurationText.append("\t" + citation + "\n\n")
 
     if fileName == "" or fileName == None:

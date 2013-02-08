@@ -5,12 +5,14 @@ print "<<Welcome to metAMOS install>>"
 
 
 #add access to utils.py, for utils dir
-INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
+METAMOS_ROOT  = os.getcwd().strip()
+INITIAL_SRC   = "%s%ssrc"%(METAMOS_ROOT, os.sep)
 sys.path.append(INITIAL_SRC)
 import utils
 sys.path.append(utils.INITIAL_UTILS)
 
 shellv = os.environ["SHELL"]
+#print "The shell is %s\n"%(shellv)
 #add libs to pythonpath
 
 #add site dir
@@ -24,12 +26,14 @@ os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python")
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python" + os.sep+"lib"+ os.sep+"python")
 
-if 'bash' in shellv:
+if 'bash' in shellv or utils.cmdExists('export'):
    os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
    os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
-else:
+elif utils.cmdExists('setenv'):
    os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
    os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
+else:
+   print "Cannot set PYTHONPATH variable, unknown shell %s\n"%(shellv)
 
 if not os.path.exists("%s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"):
     os.system("mkdir %s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib")
@@ -221,7 +225,7 @@ if 1:
        os.system("mv ./Utilities/python/psutil-0.6.1 ./Utilities/python/psutil")
        os.chdir("./Utilities/python/psutil")
        os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
-       os.chdir("%s"%(sys.path[0]))
+       os.chdir("%s"%(METAMOS_ROOT))
        os.system("rm -rf psutil.tar.gz")
 if 1:
    #not os.path.exists("./Utilities/python/cython"):
@@ -241,7 +245,7 @@ if 1:
        os.system("mv ./cython-master ./Utilities/python/cython")
        os.chdir("./Utilities/python/cython")
        os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
-       os.chdir(sys.path[0])
+       os.chdir(METAMOS_ROOT)
        os.system("rm -rf cython.zip")
        #os.system("tar -C ./Utilities/python -xvf cython.tar.gz")
        #os.system("mv ./Utilities/python/pysam-0.6 ./Utilities/python/pysam")
@@ -267,7 +271,7 @@ if 1:
        #os.system("sudo python ./Utilities/python/pysam/setup.py install")
        os.chdir("./Utilities/python/pysam")
        os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
-       os.chdir(sys.path[0])
+       os.chdir(METAMOS_ROOT)
        os.system("rm -rf pysam.tar.gz")
        #os.system("ln -s %s/Utilities/python/taxonomy.txt %s/Utilities/models/taxonomy.txt"%(sys.path[0], sys.path[0]))
 if 0 or not os.path.exists("./phylosift"):
@@ -334,7 +338,7 @@ if not os.path.exists("KronaTools/taxonomy/taxonomy.tab") or 0:
         os.system("cd KronaTools && ./updateTaxonomy.sh")
 
 # make sure we have setuptools available
-sys.path.append(sys.path[0] + os.sep + "Utilities" + os.sep + "python")
+sys.path.append(METAMOS_ROOT + os.sep + "Utilities" + os.sep + "python")
 from get_setuptools import use_setuptools
 use_setuptools()
 
@@ -347,10 +351,9 @@ os.system("python setup.py install_scripts --install-dir=`pwd` build_ext")
 os.system("mv runPipeline.py runPipeline")
 os.system("mv initPipeline.py initPipeline")
 
-#print sys.path[0]
 validate_install = 1
 if validate_install:
-    rt = check_install.validate_dir(sys.path[0].strip(),'required_file_list.txt')
+    rt = check_install.validate_dir(METAMOS_ROOT,'required_file_list.txt')
     if rt == -1:
         print "MetAMOS not properly installed, please reinstall or contact development team for assistance"
         sys.exit(1)

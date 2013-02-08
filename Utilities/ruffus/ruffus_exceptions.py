@@ -116,13 +116,14 @@ class RethrownJobError(error_task):
             nn = len(self.args) - 1
         task_name, job_name, exception_name, exception_value, exception_stack = self.args[nn]
         message = "" 
-        #message = "\nException #%d\n" % (nn + 1)
+        message = "\nException #%d\n" % (nn + 1)
         message += "  '%s%s' raised in ...\n" % (exception_name, exception_value)
         message += "   Task = %s\n   %s\n\n%s\n" % (self.task_to_func_name(task_name), job_name, exception_stack)
         return message.replace("\n", "\n    ")
 
     def __str__(self):
-        #message = ["\nOriginal exception%s:\n" % ("s" if len(self.args) > 1 else "")]
+        message = ["\nOriginal exception%s:\n" % ("s" if len(self.args) > 1 else "")]
+        message = ""
         for ii in range(len(self.args)):
             message += self.get_nth_exception_str (ii)
         #

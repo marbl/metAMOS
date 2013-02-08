@@ -68,12 +68,14 @@ nfo.close()
 #sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam")
 #sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"psutil")
 #sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"psutil"+os.sep+"psutil")
-if 'bash' in shellv:
+if 'bash' in shellv or utils.cmdExists('export'):
    os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
    os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
-else:
+elif utils.cmdExists('setenv'):
    os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
    os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
+else:
+   print "Warning: could not set PYTHONPATH. Unknown shell %s, some functionality may not work\n"%(shellv)
 ## The usual library dependencies
 import string
 import time
@@ -87,7 +89,11 @@ import multiprocessing
 import psutil
 from operator import itemgetter
 from ruffus import *
-cacheusage = psutil.cached_phymem()
+skipsteps = []
+
+cacheusage=0
+if 'linux' in utils.Settings.OSTYPE.lower():
+   cacheusage = psutil.cached_phymem()
 memusage =  `psutil.phymem_usage()`.split(",")
 freemem = long(memusage[2].split("free=")[-1])+long(cacheusage)
 percentfree = float(memusage[3].split("percent=")[-1].split(")")[0])
@@ -102,8 +108,7 @@ if avram <= 64:
 else:
     print OKGREEN+"\t*ok"+ENDC
 numcpus = psutil.NUM_CPUS
-skipsteps = []
-print "[Available CPUs: %d]"%(numcpus*2)
+print "[Available CPUs: %d]"%(numcpus)
 if numcpus < 8:
     print WARNING+"\t*Only %d CPU available, likely running on a laptop"%(numcpus)+ENDC
     print WARNING+"\t*Disabling all BLAST (where possible)"+ENDC

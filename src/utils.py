@@ -308,6 +308,10 @@ def getFromPath(theCommand, theName):
     else:
        return checkStdout.replace(theCommand, "").strip()
 
+def cmdExists(cmd):
+    return subprocess.call(["type", cmd],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0
+
 def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
     Settings(kmer, threads, theRundir, taxaLevel, verbose, outputOnly, True)
 
@@ -546,19 +550,27 @@ def run_process(settings,command,step=""):
           fstdout,fstderr = p.communicate()
           rc = p.returncode
           if rc != 0 and "rm " not in command and "ls " not in command and "unlink " not in command and "ln " not in command and "mkdir " not in command and "mv " not in command:
+              # flush all error/output streams
+              outf.flush()
+              outf.write(fstdout+fstderr)
+              outf.close()
+              commandf.flush()
+              dt = datetime.now().isoformat(' ')[:-7]
+              commandf.write("|%s| "%(dt)+command+"\n")
+              commandf.close()
+
               print "**ERROR**"
               print "During %s, the following command failed with return code %d:"%(step.lower(), rc)
               print ">>",command
               print ""
-              print "**"
+              print "**DETAILS**"
               print "Last %d commands run before the error (%s/Logs/COMMANDS.log)"%(_NUM_LINES, settings.rundir)
               p = subprocess.Popen("tail -n %d %s/Logs/COMMANDS.log"%(_NUM_LINES, settings.rundir), shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,close_fds=True, executable="/bin/bash")
               (checkStdout, checkStderr) = p.communicate()
               val = p.returncode
               print "%s"%(checkStdout)
-              print ""
               print "Last %d lines of output (%s/Logs/%s.log)"%(_NUM_LINES, settings.rundir, step)
-              p = subprocess.Popen("tail -n %d %s/Logs/%s.log"%(_NUM_LINES, settings.rundir, step), shell=True, stdin=None, stdout=None, stderr=subprocess.STDOUT,close_fds=True, executable="/bin/bash")
+              p = subprocess.Popen("tail -n %d %s/Logs/%s.log"%(_NUM_LINES, settings.rundir, step), shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,close_fds=True, executable="/bin/bash")
               (checkStdout, checkStderr) = p.communicate()
               val = p.returncode
               print "%s"%(checkStdout)
@@ -568,15 +580,6 @@ def run_process(settings,command,step=""):
               print ""
               print ""
 
-              # flush all error/output streams
-              outf.flush()
-              outf.write(fstdout+fstderr)
-              outf.close()
-              commandf.flush()
-              dt = datetime.now().isoformat(' ')[:-7]
-              commandf.write("|%s| "%(dt)+command+"\n")
-              commandf.close()
-              
               # also make sure this step will be re-run on restart
               os.system("rm %s%sLogs%s%s.ok"%(settings.rundir, os.sep, os.sep, step.lower())) 
               #sys.exit(rc)

@@ -6,9 +6,9 @@
 ## runPipeline.py - main pipeline driver for metAMOS
 #########################
 ##first imports
-import os,sys
+import os,sys,site
 
-
+shellv = os.environ["SHELL"]
 ## Setting up paths
 INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
 ## Hardcode a k-mer size
@@ -22,19 +22,58 @@ WARNING = CSI+'31m'
 ENDC = CSI+'0m'
 sys.path.append(INITIAL_SRC)
 import check_install
-rt = check_install.validate_dir(sys.path[0].strip(),sys.path[0]+os.sep+'required_file_list.txt')
-if rt == -1:
-    print "MetAMOS not properly installed, please reinstall or contact development team for assistance"
-    sys.exit(1)
+validate_install = 0
+if validate_install:
+    rt = check_install.validate_dir(sys.path[0].strip(),sys.path[0]+os.sep+'required_file_list.txt')
+    if rt == -1:
+        print "MetAMOS not properly installed, please reinstall or contact development team for assistance"
+        sys.exit(1)
 import utils
+ppath = ""
+if "PYTHONPATH" not in os.environ:
+   os.environ["PYTHONPATH"] = ""
+else:
+   ppath = os.environ["PYTHONPATH"] 
+   os.environ["PYTHONPATH"] = ""
+os.environ["PYTHONPATH"]+=utils.INITIAL_UTILS+os.sep+"python"+os.pathsep
+os.environ["PYTHONPATH"]+=utils.INITIAL_UTILS+os.sep+"ruffus"+os.pathsep
+os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam"+os.pathsep
+os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.pathsep
+os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.pathsep
+os.environ["PYTHONPATH"] += ppath + os.pathsep
+site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
 sys.path.append(utils.INITIAL_UTILS)
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python")
-sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
+sys.path.append(utils.INITIAL_UTILS+os.sep+"ruffus")
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam")
-sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"psutil")
-sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"psutil"+os.sep+"psutil")
+sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
 
-
+#remove imports from pth file
+nf = open(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.sep+"easy-install.pth",'r')
+ndata = []
+for line in nf.xreadlines():
+    if "import" in line:
+        continue
+    ndata.append(line)
+nf.close()
+nfo = open(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.sep+"easy-install.pth",'w')
+for line in ndata:
+    nfo.write(line)
+nfo.close()
+#./Utilities/python/lib/python/easy-install.pth
+#print sys.path
+#sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
+#sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.sep+"psutil-0.6.1-py2.7-linux-x)
+#Utilities/python/lib/python/psutil-0.6.1-py2.7-linux-x86_64.egg/psutil/
+#sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam")
+#sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"psutil")
+#sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"psutil"+os.sep+"psutil")
+if 'bash' in shellv:
+   os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
+   os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
+else:
+   os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
+   os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
 ## The usual library dependencies
 import string
 import time
@@ -48,8 +87,9 @@ import multiprocessing
 import psutil
 from operator import itemgetter
 from ruffus import *
+cacheusage = psutil.cached_phymem()
 memusage =  `psutil.phymem_usage()`.split(",")
-freemem = long(memusage[2].split("free=")[-1])
+freemem = long(memusage[2].split("free=")[-1])+long(cacheusage)
 percentfree = float(memusage[3].split("percent=")[-1].split(")")[0])
 avram = (freemem/1000000000)
 print "[Available RAM: %d GB]"%(avram)
@@ -63,9 +103,9 @@ else:
     print OKGREEN+"\t*ok"+ENDC
 numcpus = psutil.NUM_CPUS
 skipsteps = []
-print "[Available CPU cores: %d]"%(numcpus)
+print "[Available CPUs: %d]"%(numcpus*2)
 if numcpus < 8:
-    print WARNING+"\t*Only %d CPU cores available, suggested minimum of 8"%(numcpus)+ENDC
+    print WARNING+"\t*Only %d CPU available, likely running on a laptop"%(numcpus)+ENDC
     print WARNING+"\t*Disabling all BLAST (where possible)"+ENDC
     nofcpblast = True
     skipsteps.append("FunctionalAnnotation")

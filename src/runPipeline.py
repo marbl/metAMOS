@@ -7,7 +7,7 @@
 #########################
 ##first imports
 import os,sys,site
-
+sys.tracebacklimit = 0
 shellv = os.environ["SHELL"]
 ## Setting up paths
 INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)

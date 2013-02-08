@@ -63,7 +63,7 @@ class Settings:
    AMOS = ""
    BAMBUS2 = ""
 
-   SOAP = ""
+   SOAPDENOVO = ""
    METAIDBA = ""
    CA = ""
    NEWBLER = ""
@@ -120,7 +120,7 @@ class Settings:
       Settings.AMOS          = "%s%sAMOS%sbin"%(Settings.METAMOSDIR, os.sep, os.sep)
       Settings.BAMBUS2       = Settings.AMOS
 
-      Settings.SOAP          = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.SOAPDENOVO    = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.METAIDBA      = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.CA            = "%s%sCA%s%s-%s%sbin"%(Settings.METAMOSDIR, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE.replace("x86_64", "amd64"), os.sep)
       Settings.NEWBLER       = "%s%snewbler%s%s-%s"%(Settings.METAMOSDIR, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
@@ -369,10 +369,10 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
     bambusMD5 = getMD5Sum(Settings.BAMBUS2 + os.sep + "OrientContigs")
 
     # 2. Soap
-    Settings.SOAP = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE) 
-    if not os.path.exists(Settings.SOAP + os.sep + "soap63"):
-       Settings.SOAP = getFromPath("soap63", "SOAP")
-    soapMD5 = getMD5Sum(Settings.SOAP + os.sep + "soap63")
+    Settings.SOAPDENOVO = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE) 
+    if not os.path.exists(Settings.SOAPDENOVO + os.sep + "soap63"):
+       Settings.SOAPDENOVO = getFromPath("soap63", "SOAPDENOVO")
+    soapMD5 = getMD5Sum(Settings.SOAPDENOVO + os.sep + "soap63")
 
     # 3. CA
     Settings.CA = "%s%sCA%s%s-%s%sbin"%(Settings.METAMOSDIR, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE.replace("x86_64","amd64"), os.sep)
@@ -409,7 +409,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
     Settings.METAVELVET = "%s%scpp%s%s-%s%sMetaVelvet"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep);
     if not os.path.exists(Settings.METAVELVET + os.sep + "meta-velvetg"):
        Settings.METAVELVET = getFromPath("meta-velvetg", "METAVELVET")
-    metaVelvetMD5 = getMD5Sum(Settings.SOAP + os.sep + "meta-velvetg")
+    metaVelvetMD5 = getMD5Sum(Settings.SOAPDENOVO + os.sep + "meta-velvetg")
 
     # 8. SparseAssembler
     Settings.SPARSEASSEMBLER = "%s%scpp%s%s-%s%sSparseAssembler"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
@@ -500,7 +500,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
     conf.write("metAMOS main dir:\t%s\nmetAMOS Utilities:\t%s\nmetAMOS Java:\t\t%s\n"%(Settings.METAMOSDIR, Settings.METAMOS_UTILS, Settings.METAMOS_JAVA))
     conf.write("AMOS:\t\t\t%s\t%s\n"%(Settings.AMOS, amosMD5))
     conf.write("BAMBUS2:\t\t%s\t%s\n"%(Settings.BAMBUS2, bambusMD5))
-    conf.write("SOAP:\t\t\t%s\t%s\n"%(Settings.SOAP, soapMD5))
+    conf.write("SOAPDENOVO:\t\t\t%s\t%s\n"%(Settings.SOAPDENOVO, soapMD5))
     conf.write("METAIDBA:\t\t%s\t%s\n"%(Settings.METAIDBA, metaidbaMD5))
     conf.write("Celera Assembler:\t%s\t%s\n"%(Settings.CA, CAMD5))
     conf.write("NEWBLER:\t\t%s\t%s\n"%(Settings.NEWBLER, newblerMD5))

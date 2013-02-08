@@ -15,11 +15,6 @@ INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
 DEFAULT_KMER  = 31
 ## Hardcode a default taxonomic classification level
 DEFAULT_TAXA_LEVEL = "class"
-CSI="\x1B["
-reset=CSI+"m"
-OKGREEN = CSI+'32m'
-WARNING = CSI+'31m'
-ENDC = CSI+'0m'
 sys.path.append(INITIAL_SRC)
 import check_install
 validate_install = 0
@@ -102,20 +97,20 @@ print "[Available RAM: %d GB]"%(avram)
 lowmem= False
 nofcpblast = False
 if avram <= 64:
-    print WARNING+"\tThere is *%d GB of RAM available on this machine, suggested minimum of 64 GB"%(avram)+ENDC
-    print WARNING+"\t*Enabling low MEM mode, might slow down some steps in pipeline"+ENDC
+    print utils.WARNING_YELLOW+"\tThere is *%d GB of RAM available on this machine, suggested minimum of 64 GB"%(avram)+utils.ENDC
+    print utils.WARNING_YELLOW+"\t*Enabling low MEM mode, might slow down some steps in pipeline"+utils.ENDC
     lowmem= True
 else:
-    print OKGREEN+"\t*ok"+ENDC
+    print utils.OK_GREEN+"\t*ok"+utils.ENDC
 numcpus = psutil.NUM_CPUS
 print "[Available CPUs: %d]"%(numcpus)
 if numcpus < 8:
-    print WARNING+"\t*Only %d CPU available, likely running on a laptop"%(numcpus)+ENDC
-    print WARNING+"\t*Disabling all BLAST (where possible)"+ENDC
+    print utils.WARNING_YELLOW+"\t*Only %d CPU available, likely running on a laptop"%(numcpus)+utils.ENDC
+    print utils.WARNING_YELLOW+"\t*Disabling all BLAST (where possible)"+utils.ENDC
     nofcpblast = True
     skipsteps.append("FunctionalAnnotation")
 else:
-    print OKGREEN+"\t*ok"+ENDC
+    print utils.OK_GREEN+"\t*ok"+utils.ENDC
 #print "Available RAM: %d GB"%(freemem/1000000000)
 #print "Available RAM: %d GB"%(freemem/1000000000)
 

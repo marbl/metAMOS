@@ -5,8 +5,16 @@ from datetime import date
 from datetime import time
 from datetime import datetime
 from operator import itemgetter
+import multiprocessing
 
 import hashlib
+
+CSI="\x1B["
+reset=CSI+"m"
+OK_GREEN = CSI+'32m'
+WARNING_YELLOW = CSI+'\033[93m'
+ERROR_RED = CSI+'\033[91m'
+ENDC = CSI+'0m'
 
 _METAMOSDIR    = sys.path[0]
 INITIAL_UTILS = "%s%sUtilities"%(_METAMOSDIR, os.sep)
@@ -14,6 +22,19 @@ _NUM_LINES    = 10
 
 _PROG_NAME_DICT = {}
 _PUB_DICT = {}
+
+class AtomicCounter(object):
+  def __init__(self, initval=0):
+     self.val = multiprocessing.RawValue('i', initval)
+     self.lock = multiprocessing.Lock()
+
+  def increment(self):
+     with self.lock:
+         origVal = self.val.value
+         self.val.value += 1
+         return origVal
+
+_atomicCounter = AtomicCounter(0)
 
 class Settings:
    asmfiles = []
@@ -559,26 +580,27 @@ def run_process(settings,command,step=""):
               commandf.write("|%s| "%(dt)+command+"\n")
               commandf.close()
 
-              print "**ERROR**"
-              print "During %s, the following command failed with return code %d:"%(step.lower(), rc)
-              print ">>",command
-              print ""
-              print "**DETAILS**"
-              print "Last %d commands run before the error (%s/Logs/COMMANDS.log)"%(_NUM_LINES, settings.rundir)
-              p = subprocess.Popen("tail -n %d %s/Logs/COMMANDS.log"%(_NUM_LINES, settings.rundir), shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,close_fds=True, executable="/bin/bash")
-              (checkStdout, checkStderr) = p.communicate()
-              val = p.returncode
-              print "%s"%(checkStdout)
-              print "Last %d lines of output (%s/Logs/%s.log)"%(_NUM_LINES, settings.rundir, step)
-              p = subprocess.Popen("tail -n %d %s/Logs/%s.log"%(_NUM_LINES, settings.rundir, step), shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,close_fds=True, executable="/bin/bash")
-              (checkStdout, checkStderr) = p.communicate()
-              val = p.returncode
-              print "%s"%(checkStdout)
-              print ""
-              print "Please veryify input data and restart MetAMOS. If the problem persists please contact the MetAMOS development team."
-              print "**ERROR**"
-              print ""
-              print ""
+              global _atomicCounter
+              if _atomicCounter.increment() == 0: 
+                 print ERROR_RED+"*****************************************************************"
+                 print "*************************ERROR***********************************"
+                 print "During %s, the following command failed with return code %d:"%(step.lower(), rc)
+                 print ">>",command
+                 print ""
+                 print "*************************DETAILS***********************************"
+                 print "Last %d commands run before the error (%s/Logs/COMMANDS.log)"%(_NUM_LINES, settings.rundir)
+                 p = subprocess.Popen("tail -n %d %s/Logs/COMMANDS.log"%(_NUM_LINES, settings.rundir), shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,close_fds=True, executable="/bin/bash")
+                 (checkStdout, checkStderr) = p.communicate()
+                 val = p.returncode
+                 print "%s"%(checkStdout)
+                 print "Last %d lines of output (%s/Logs/%s.log)"%(_NUM_LINES, settings.rundir, step)
+                 p = subprocess.Popen("tail -n %d %s/Logs/%s.log"%(_NUM_LINES, settings.rundir, step), shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,close_fds=True, executable="/bin/bash")
+                 (checkStdout, checkStderr) = p.communicate()
+                 val = p.returncode
+                 print "%s"%(checkStdout)
+                 print "Please veryify input data and restart MetAMOS. If the problem persists please contact the MetAMOS development team."
+                 print "*************************ERROR***********************************"
+                 print "*****************************************************************"+ENDC
 
               # also make sure this step will be re-run on restart
               os.system("rm %s%sLogs%s%s.ok"%(settings.rundir, os.sep, os.sep, step.lower())) 

@@ -202,7 +202,7 @@ def printConfiguration(fileName=None):
            try:
               configurationText.append("\t" + eval("utils.Settings.%s"%(prog.replace("-", "_").upper()))+"\n")
            except AttributeError:
-              configurationText.append("\t" + utils.Settings.METAMOS_UTILS + "\n")           
+              configurationText.append("\tUNKNOWN\n")
            configurationText.append("\t" + citation + "\n\n")
 
     # add step-indepent citations that are always run

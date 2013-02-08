@@ -86,34 +86,6 @@ from operator import itemgetter
 from ruffus import *
 skipsteps = []
 
-cacheusage=0
-if 'linux' in utils.Settings.OSTYPE.lower():
-   cacheusage = psutil.cached_phymem()
-memusage =  `psutil.phymem_usage()`.split(",")
-freemem = long(memusage[2].split("free=")[-1])+long(cacheusage)
-percentfree = float(memusage[3].split("percent=")[-1].split(")")[0])
-avram = (freemem/1000000000)
-print "[Available RAM: %d GB]"%(avram)
-lowmem= False
-nofcpblast = False
-if avram <= 64:
-    print utils.WARNING_YELLOW+"\tThere is *%d GB of RAM available on this machine, suggested minimum of 64 GB"%(avram)+utils.ENDC
-    print utils.WARNING_YELLOW+"\t*Enabling low MEM mode, might slow down some steps in pipeline"+utils.ENDC
-    lowmem= True
-else:
-    print utils.OK_GREEN+"\t*ok"+utils.ENDC
-numcpus = psutil.NUM_CPUS
-print "[Available CPUs: %d]"%(numcpus)
-if numcpus < 8:
-    print utils.WARNING_YELLOW+"\t*Only %d CPU available, likely running on a laptop"%(numcpus)+utils.ENDC
-    print utils.WARNING_YELLOW+"\t*Disabling all BLAST (where possible)"+utils.ENDC
-    nofcpblast = True
-    skipsteps.append("FunctionalAnnotation")
-else:
-    print utils.OK_GREEN+"\t*ok"+utils.ENDC
-#print "Available RAM: %d GB"%(freemem/1000000000)
-#print "Available RAM: %d GB"%(freemem/1000000000)
-
 ## Get start time
 t1 = time.time()
 
@@ -325,7 +297,7 @@ rlibs = []
 ctgbpcov = False
 min_ctg_len = 300
 min_ctg_cvg = 3
-#lowmem= False
+lowmem= False
 annotate_unassembled = False
 output_programs = 0
 settings = utils.Settings(DEFAULT_KMER, multiprocessing.cpu_count() - 1, "", DEFAULT_TAXA_LEVEL)
@@ -695,6 +667,34 @@ if __name__ == "__main__":
     currPath = os.environ["PATH"]
     if utils.Settings.KRONA not in currPath:
        os.environ["PATH"]="%s:%s"%(utils.Settings.KRONA, currPath)
+
+    # check for memory/cpu
+    if lowmem == False:
+        cacheusage=0
+        if 'linux' in utils.Settings.OSTYPE.lower():
+            cacheusage = psutil.cached_phymem()
+        memusage =  `psutil.phymem_usage()`.split(",")
+        freemem = long(memusage[2].split("free=")[-1])+long(cacheusage)
+        percentfree = float(memusage[3].split("percent=")[-1].split(")")[0])
+        avram = (freemem/1000000000)
+        print "[Available RAM: %d GB]"%(avram)
+        lowmem= False
+        nofcpblast = False
+        if avram <= 64:
+            print utils.WARNING_YELLOW+"\tThere is *%d GB of RAM available on this machine, suggested minimum of 64 GB"%(avram)+utils.ENDC
+            print utils.WARNING_YELLOW+"\t*Enabling low MEM mode, might slow down some steps in pipeline"+utils.ENDC
+            lowmem= True
+        else:
+            print utils.OK_GREEN+"\t*ok"+utils.ENDC
+        numcpus = psutil.NUM_CPUS
+        print "[Available CPUs: %d]"%(numcpus)
+        if numcpus < 8:
+            print utils.WARNING_YELLOW+"\t*Only %d CPU available, likely running on a laptop"%(numcpus)+utils.ENDC
+            print utils.WARNING_YELLOW+"\t*Disabling all BLAST (where possible)"+utils.ENDC
+            nofcpblast = True
+            skipsteps.append("FunctionalAnnotation")
+        else:
+            print utils.OK_GREEN+"\t*ok"+utils.ENDC
 
     import preprocess
     import assemble

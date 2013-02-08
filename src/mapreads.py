@@ -1,6 +1,6 @@
 #!python
 
-import os, sys, math, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser
+import os, sys, math, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser, shelve
 from operator import itemgetter
 
 from utils import *
@@ -15,19 +15,22 @@ _settings = Settings()
 _asm = None
 _mapper = "bowtie"
 _ctgbpcov = False
-def init(reads, skipsteps, asm,mapper,savebtidx,ctgbpcov):
+_lowmem= False
+def init(reads, skipsteps, asm,mapper,savebtidx,ctgbpcov,lowmem):
    global _readlibs
    global _asm
    global _skipsteps
    global _savebtidx
    global _ctgbpcov
    global _mapper
+   global _lowmem
    _mapper = mapper
    _readlibs = reads
    _skipsteps = skipsteps
    _asm = asm
    _savebtidx = savebtidx
    _ctgbpcov = ctgbpcov
+   _lowmem = lowmem
 def meanstdv(x):
     n, mean, std = len(x), 0, 0
     for a in x:
@@ -51,7 +54,11 @@ def map2contig():
     seqdict = {}
     hdr = ""
     cnt = 0
+
     contigdict = {}
+    if _lowmem:
+        contigdict = shelve.open("%s/Assemble/out/%s.contigdict"%(_settings.rundir,_settings.PREFIX),'c')
+        #contigdict_disk = shelve.open("%s/Assemble/out/%s.contigdict"%(_settings.rundir,_settings.PREFIX),'c')
     contigdict2 = {}
     readdict = {}
     matedict = {}
@@ -150,9 +157,12 @@ def map2contig():
                     else:
                         fiveprimeend_dict[read] = int(epos)
                     try:
+                        #if lowmem:
                         contigdict[contig].append([int(spos), int(epos), strand, read,len(read_seq),lib.id])
+                        #contigdict_disk[contig].append([int(spos), int(epos), strand, read,len(read_seq),lib.id])
                     except KeyError:
                         contigdict[contig] = [[int(spos),int(epos),strand,read,len(read_seq),lib.id]]
+                        #contigdict_disk[contig] = [[int(spos),int(epos),strand,read,len(read_seq),lib.id]]
                     #print contig
                     seqdict[read] = read_seq
                     seqfile.write(">%s\n%s\n"%(read,read_seq))
@@ -225,8 +235,10 @@ def map2contig():
                            fiveprimeend_dict[readname] = int(epos)
                        try:
                            contigdict[contig].append([int(spos), int(epos), strand, readname,len(read_seq),lib.id])
+                           #contigdict_disk[contig].append([int(spos), int(epos), strand, readname,len(read_seq),lib.id])
                        except KeyError:
                            contigdict[contig] = [[int(spos),int(epos),strand,readname,len(read_seq),lib.id]]
+                           #contigdict_disk[contig] = [[int(spos),int(epos),strand,readname,len(read_seq),lib.id]]
 
                        seqdict[readname] = read_seq
                        seqfile.write(">%s\n%s\n"%(readname,read_seq))
@@ -269,8 +281,10 @@ def map2contig():
 
                 try:
                     contigdict[contig].append([int(spos), int(spos)+epos, strand, read_lookup[read]])
+                    #contigdict_disk[contig].append([int(spos), int(spos)+epos, strand, read_lookup[read]])
                 except KeyError:
                     contigdict[contig] = [[int(spos),int(spos)+epos,strand,read_lookup[read]]]
+                    #contigdict_disk[contig] = [[int(spos),int(spos)+epos,strand,read_lookup[read]]]
                 read_seq = "TEST"
             
                 seqdict[read_lookup[read]] = read_seq
@@ -334,6 +348,8 @@ def map2contig():
         ctgcnt +=1
         tigr_file.write(cseq_fmt)#item[1])
         contigdict[ref].sort()
+        #if lowmem
+        #contigdict_disk[ref].sort()
         #print contigdict[ref]
         try:
             ctg_cvg_file.write("%s\t%.2f\n"%(ref,(float(len(contigdict[ref])*len(seqdict[contigdict[ref][0][3]]))/float(ctgslen))))
@@ -455,6 +471,10 @@ def map2contig():
     ctg_cvg_file.close()
     ctg_cnt_file.close()
     tigr_file.close()
+    if _lowmem:
+        contigdict.close()
+    else:
+        contigdict = {}
 
 @files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/Assemble/out/mapreads.success"%(_settings.rundir))
 #@posttask(create_symlink,touch_file("completed.flag"))

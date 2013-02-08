@@ -1,7 +1,8 @@
-import os, sys, string, subprocess, distutils.util
+import os, sys, string, subprocess, distutils.util, check_install, site
 
 user_home = os.environ["HOME"]
 print "<<Welcome to metAMOS install>>"
+
 
 #add access to utils.py, for utils dir
 INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
@@ -9,14 +10,27 @@ sys.path.append(INITIAL_SRC)
 import utils
 sys.path.append(utils.INITIAL_UTILS)
 
+shellv = os.environ["SHELL"]
 #add libs to pythonpath
+
+#add site dir
+site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
+
 if "PYTHONPATH" not in os.environ:
    os.environ["PYTHONPATH"] = ""
-os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python:"
-os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam:"
-os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib:"
-os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python:"
-#lib dir for pysam and others
+os.environ["PYTHONPATH"]+=utils.INITIAL_UTILS+os.sep+"python"+os.pathsep
+os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.pathsep
+os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.pathsep
+sys.path.append(utils.INITIAL_UTILS+os.sep+"python")
+sys.path.append(utils.INITIAL_UTILS+os.sep+"python" + os.sep+"lib"+ os.sep+"python")
+
+if 'bash' in shellv:
+   os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
+   os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
+else:
+   os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
+   os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
+
 if not os.path.exists("%s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"):
     os.system("mkdir %s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib")
 if not os.path.exists("%s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"):
@@ -79,7 +93,7 @@ if not os.path.exists("./Utilities/config/usage.ok"):
         os.system("echo ok > ./Utilities/config/usage.ok")
 
 #check for DBs, etc
-if not os.path.exists("./Utilities/cpp/%s-%s/metaphylerClassify"%(OSTYPE, MACHINETYPE)):
+if not os.path.exists("./Utilities/cpp/%s-%s/metaphylerClassify"%(OSTYPE, MACHINETYPE)) or not os.path.exists("./Utilities/perl/metaphyler/markers/markers.protein") or not os.path.exists("./Utilities/perl/metaphyler/markers/markers.dna"):
     print "Metaphyler (latest version) not found, optional for Annotate, download now?"
     if silentInstall:
        dl = 'y'
@@ -188,38 +202,72 @@ if not os.path.exists("./AMOS") or 0:
         os.system("tar -xvf amos-binaries.tar.gz")
         os.system("rm -rf amos-binaries.tar.gz")
 
-if not os.path.exists("./Utilities/python/cython"):
-   print "cython modules not found, necessary for c-compiling python code, download now?"
-   if silentInstall:
+if 1:
+   # or not os.path.exists("./Utilities/python/psutil"):
+   fail = 0
+   try:
+       import psutil
+   except ImportError:
+       print "psutil not found, required for memory usage estimation, download now?"
+       fail = 1
+   if not fail or silentInstall:
        dl = 'y'
    else:
        dl = raw_input("Enter Y/N: ")
-   if dl == 'y' or dl == "Y":
+   if fail and (dl == 'y' or dl == "Y"):
+
+       os.system("wget http://psutil.googlecode.com/files/psutil-0.6.1.tar.gz -O ./psutil.tar.gz")
+       os.system("tar -C ./Utilities/python -xvf psutil.tar.gz")
+       os.system("mv ./Utilities/python/psutil-0.6.1 ./Utilities/python/psutil")
+       os.chdir("./Utilities/python/psutil")
+       os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
+       os.chdir("%s"%(sys.path[0]))
+       os.system("rm -rf psutil.tar.gz")
+if 1:
+   #not os.path.exists("./Utilities/python/cython"):
+   fail = 0
+   try:
+       import cython
+   except ImportError:
+       print "cython modules not found, necessary for c-compiling python code, download now?"
+       fail = 1
+   if not fail or silentInstall:
+       dl = 'y'
+   else:
+       dl = raw_input("Enter Y/N: ")
+   if fail and (dl == 'y' or dl == "Y"):
        os.system("wget https://github.com/cython/cython/archive/master.zip -O ./cython.zip")
        os.system("unzip ./cython.zip")
        os.system("mv ./cython-master ./Utilities/python/cython")
-       os.system("cd ./Utilities/python/cython")
+       os.chdir("./Utilities/python/cython")
        os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
-       os.system("cd %s"%(sys.path[0]))
+       os.chdir(sys.path[0])
        os.system("rm -rf cython.zip")
        #os.system("tar -C ./Utilities/python -xvf cython.tar.gz")
        #os.system("mv ./Utilities/python/pysam-0.6 ./Utilities/python/pysam")
 
-if not os.path.exists("./Utilities/python/pysam"):
-   print "pysam python modules not found, necessary for bowtie2 alignments, download now?"
-   if silentInstall:
+if 1:
+   # or not os.path.exists("./Utilities/python/pysam"):
+   fail = 0
+   try:
+       import pysam
+   except ImportError:
+       print "pysam python modules not found, necessary for bowtie2 alignments, download now?"
+       fail = 1
+
+   if not fail or silentInstall:
        dl = 'y'
    else:
        dl = raw_input("Enter Y/N: ")
-   if dl == 'y' or dl == "Y":
+   if fail and (dl == 'y' or dl == "Y"):
        os.system("wget http://pysam.googlecode.com/files/pysam-0.6.tar.gz -O ./pysam.tar.gz")
        os.system("tar -C ./Utilities/python -xvf pysam.tar.gz")
        os.system("mv ./Utilities/python/pysam-0.6 ./Utilities/python/pysam")
        #for root install
        #os.system("sudo python ./Utilities/python/pysam/setup.py install")
-       os.system("cd ./Utilities/python/pysam")
+       os.chdir("./Utilities/python/pysam")
        os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
-       os.system("cd %s"%(sys.path[0]))
+       os.chdir(sys.path[0])
        os.system("rm -rf pysam.tar.gz")
        #os.system("ln -s %s/Utilities/python/taxonomy.txt %s/Utilities/models/taxonomy.txt"%(sys.path[0], sys.path[0]))
 if 0 or not os.path.exists("./phylosift"):
@@ -298,3 +346,12 @@ os.system("python setup.py install_scripts --install-dir=`pwd` build_ext")
 #os.system("chmod a+wrx runPipeline.pyo")
 os.system("mv runPipeline.py runPipeline")
 os.system("mv initPipeline.py initPipeline")
+
+#print sys.path[0]
+validate_install = 1
+if validate_install:
+    rt = check_install.validate_dir(sys.path[0].strip(),'required_file_list.txt')
+    if rt == -1:
+        print "MetAMOS not properly installed, please reinstall or contact development team for assistance"
+        sys.exit(1)
+    

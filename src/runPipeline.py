@@ -6,26 +6,74 @@
 ## runPipeline.py - main pipeline driver for metAMOS
 #########################
 ##first imports
-import os,sys
+import os,sys,site
 
-
+shellv = os.environ["SHELL"]
 ## Setting up paths
 INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
 ## Hardcode a k-mer size
 DEFAULT_KMER  = 31
 ## Hardcode a default taxonomic classification level
 DEFAULT_TAXA_LEVEL = "class"
-
-
+CSI="\x1B["
+reset=CSI+"m"
+OKGREEN = CSI+'32m'
+WARNING = CSI+'31m'
+ENDC = CSI+'0m'
 sys.path.append(INITIAL_SRC)
+import check_install
+validate_install = 0
+if validate_install:
+    rt = check_install.validate_dir(sys.path[0].strip(),sys.path[0]+os.sep+'required_file_list.txt')
+    if rt == -1:
+        print "MetAMOS not properly installed, please reinstall or contact development team for assistance"
+        sys.exit(1)
 import utils
+ppath = ""
+if "PYTHONPATH" not in os.environ:
+   os.environ["PYTHONPATH"] = ""
+else:
+   ppath = os.environ["PYTHONPATH"] 
+   os.environ["PYTHONPATH"] = ""
+os.environ["PYTHONPATH"]+=utils.INITIAL_UTILS+os.sep+"python"+os.pathsep
+os.environ["PYTHONPATH"]+=utils.INITIAL_UTILS+os.sep+"ruffus"+os.pathsep
+os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam"+os.pathsep
+os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.pathsep
+os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.pathsep
+os.environ["PYTHONPATH"] += ppath + os.pathsep
+site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
 sys.path.append(utils.INITIAL_UTILS)
+sys.path.append(utils.INITIAL_UTILS+os.sep+"python")
+sys.path.append(utils.INITIAL_UTILS+os.sep+"ruffus")
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam")
+sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
 
-
-
-   
-
+#remove imports from pth file
+nf = open(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.sep+"easy-install.pth",'r')
+ndata = []
+for line in nf.xreadlines():
+    if "import" in line:
+        continue
+    ndata.append(line)
+nf.close()
+nfo = open(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.sep+"easy-install.pth",'w')
+for line in ndata:
+    nfo.write(line)
+nfo.close()
+#./Utilities/python/lib/python/easy-install.pth
+#print sys.path
+#sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
+#sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.sep+"psutil-0.6.1-py2.7-linux-x)
+#Utilities/python/lib/python/psutil-0.6.1-py2.7-linux-x86_64.egg/psutil/
+#sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam")
+#sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"psutil")
+#sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"psutil"+os.sep+"psutil")
+if 'bash' in shellv:
+   os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
+   os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
+else:
+   os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
+   os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
 ## The usual library dependencies
 import string
 import time
@@ -36,9 +84,35 @@ import re
 import subprocess
 import webbrowser
 import multiprocessing
+import psutil
 from operator import itemgetter
 from ruffus import *
-
+cacheusage = psutil.cached_phymem()
+memusage =  `psutil.phymem_usage()`.split(",")
+freemem = long(memusage[2].split("free=")[-1])+long(cacheusage)
+percentfree = float(memusage[3].split("percent=")[-1].split(")")[0])
+avram = (freemem/1000000000)
+print "[Available RAM: %d GB]"%(avram)
+lowmem= False
+nofcpblast = False
+if avram <= 64:
+    print WARNING+"\tThere is *%d GB of RAM available on this machine, suggested minimum of 64 GB"%(avram)+ENDC
+    print WARNING+"\t*Enabling low MEM mode, might slow down some steps in pipeline"+ENDC
+    lowmem= True
+else:
+    print OKGREEN+"\t*ok"+ENDC
+numcpus = psutil.NUM_CPUS
+skipsteps = []
+print "[Available CPUs: %d]"%(numcpus*2)
+if numcpus < 8:
+    print WARNING+"\t*Only %d CPU available, likely running on a laptop"%(numcpus)+ENDC
+    print WARNING+"\t*Disabling all BLAST (where possible)"+ENDC
+    nofcpblast = True
+    skipsteps.append("FunctionalAnnotation")
+else:
+    print OKGREEN+"\t*ok"+ENDC
+#print "Available RAM: %d GB"%(freemem/1000000000)
+#print "Available RAM: %d GB"%(freemem/1000000000)
 
 ## Get start time
 t1 = time.time()
@@ -153,7 +227,7 @@ def printConfiguration(fileName=None):
         conf.close()
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hrjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iul:x:z:",\
+    opts, args = getopt.getopt(sys.argv[1:], "hrjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iu1l:x:yz:",\
                                    ["help", \
                                         "retainBank", \
                                         "libspeccov",\
@@ -175,10 +249,12 @@ try:
                                         "genecaller",\
                                         "bowtieindex",\
                                         "unassembledreads",\
+                                        "lowmem",\
                                         "minlen",\
                                         "mincov", \
                                         "justprogs", \
                                         "what", \
+                                        "lowcpu",\
                                         "taxalevel"])
 except getopt.GetoptError, err:
     # print help information and exit:
@@ -236,10 +312,11 @@ startat = None
 stopat = None
 filter = False
 forcesteps = []
-skipsteps = []
+
 run_fastqc = False
 runfast = False
 retainBank = False
+
 fff = ""
 readlen = 75
 fqlibs = {}
@@ -248,6 +325,7 @@ rlibs = []
 ctgbpcov = False
 min_ctg_len = 300
 min_ctg_cvg = 3
+#lowmem= False
 annotate_unassembled = False
 output_programs = 0
 settings = utils.Settings(DEFAULT_KMER, multiprocessing.cpu_count() - 1, "", DEFAULT_TAXA_LEVEL)
@@ -260,6 +338,8 @@ for o, a in opts:
         sys.exit()
     elif o in ("-i","--indexbowtie"):
         bowtie_mapping = 1
+    elif o in ("-y","--lowcpu"):
+        nofcpblast = True
     elif o in ("-w","--what"):
         utils.Settings.OUTPUT_ONLY = True
     elif o in ("-j","--justprogs"):
@@ -358,6 +438,8 @@ for o, a in opts:
         if utils.Settings.taxa_level not in supported_taxonomic:
            print "!!Sorry, %s is not a valid taxonomic level. Using class instead"%(utils.Settings.taxa_level)
 
+    elif o in ("-1","--lowmem"):
+        lowmem = True
     elif o in ("-a","--assembler"):
         selected_programs["assemble"] = a.lower()
         if selected_programs["assemble"] == "metaidba":
@@ -631,10 +713,10 @@ if __name__ == "__main__":
     # initialize submodules
     preprocess.init(readlibs, skipsteps, selected_programs["assemble"], run_fastqc,filter)
     assemble.init(readlibs, skipsteps, selected_programs["assemble"], usecontigs)
-    mapreads.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["mapreads"], savebtidx,ctgbpcov)
+    mapreads.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["mapreads"], savebtidx,ctgbpcov,lowmem)
     findorfs.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["findorfs"], min_ctg_len, min_ctg_cvg)
     findreps.init(readlibs, skipsteps)
-    annotate.init(readlibs, skipsteps, selected_programs["classify"])
+    annotate.init(readlibs, skipsteps, selected_programs["classify"], nofcpblast)
     fannotate.init(skipsteps)
     abundance.init(readlibs, skipsteps, forcesteps, selected_programs["classify"])
     scaffold.init(readlibs, skipsteps, retainBank, selected_programs["assemble"])

@@ -1,6 +1,9 @@
 #!python
 
 import os, sys, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser
+from datetime import date
+from datetime import time
+from datetime import datetime
 from operator import itemgetter
 
 import hashlib
@@ -519,7 +522,8 @@ def run_process(settings,command,step=""):
 
            if not step in settings.task_dict:
               print "Starting Task = %s.%s"%(step.lower(), step)
-              commandf.write("# [%s]\n"%(step))
+              dt = datetime.now().isoformat(' ')[:-7]
+              commandf.write("|%s|# [%s]\n"%(dt,step))
               outf = open(settings.rundir+os.sep+"Logs"+os.sep+step+".log",'w')
               settings.task_dict.append(step)
 
@@ -569,7 +573,8 @@ def run_process(settings,command,step=""):
               outf.write(fstdout+fstderr)
               outf.close()
               commandf.flush()
-              commandf.write(command+"\n")
+              dt = datetime.now().isoformat(' ')[:-7]
+              commandf.write("|%s| "%(dt)+command+"\n")
               commandf.close()
               
               # also make sure this step will be re-run on restart
@@ -581,7 +586,8 @@ def run_process(settings,command,step=""):
           else:
               outf.write(fstdout+fstderr)
               outf.close()
-              commandf.write(command+"\n")
+              dt = datetime.now().isoformat(' ')[:-7]
+              commandf.write("|%s| "%(dt)+command+"\n")
               commandf.close()
 
 def getProgramCitations(settings, programName, comment="#"):

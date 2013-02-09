@@ -43,26 +43,28 @@ sys.path.append(utils.INITIAL_UTILS+os.sep+"ruffus")
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam")
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
 
-#remove imports from pth file
-nf = open(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.sep+"easy-install.pth",'r')
-ndata = []
-for line in nf.xreadlines():
-    if "import" in line:
-        continue
-    ndata.append(line)
-nf.close()
-nfo = open(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.sep+"easy-install.pth",'w')
-for line in ndata:
-    nfo.write(line)
-nfo.close()
-#./Utilities/python/lib/python/easy-install.pth
-#print sys.path
-#sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
-#sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.sep+"psutil-0.6.1-py2.7-linux-x)
-#Utilities/python/lib/python/psutil-0.6.1-py2.7-linux-x86_64.egg/psutil/
-#sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam")
-#sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"psutil")
-#sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"psutil"+os.sep+"psutil")
+#remove imports from pth file, if exists
+nf = []
+nopsutil = False
+nopysam = False
+try:
+    nf = open(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.sep+"easy-install.pth",'r')
+    ndata = []
+    for line in nf.xreadlines():
+        if "import" in line:
+            continue
+        ndata.append(line)
+    nf.close()
+    nfo = open(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.sep+"easy-install.pth",'w')
+    for line in ndata:
+        nfo.write(line)
+    nfo.close()
+except IOError:
+    print "ERROR: easy-install.pth file missing, likely means something went wrong with psutil/pysam install. Disabling psutil and pysam.."
+    nopsutil = True
+    nopysam = True
+    #sys.exit(1)
+
 if 'bash' in shellv or utils.cmdExists('export'):
    os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
    os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
@@ -81,7 +83,8 @@ import re
 import subprocess
 import webbrowser
 import multiprocessing
-import psutil
+if not nopsutil:
+    import psutil
 from operator import itemgetter
 from ruffus import *
 skipsteps = []
@@ -241,6 +244,9 @@ supported_genecallers = ["fraggenescan","metagenemark","glimmermg"]
 supported_assemblers = ["soapdenovo","newbler","ca","velvet","velvet-sc","metavelvet",\
                             "metaidba","sparseassembler","minimus"]
 supported_mappers = ["bowtie","bowtie2"]
+if nopysam:
+    #need pysam for bowtie2 support
+    supported_mappers = ["bowtie"]
 supported_abundance = ["metaphyler"]
 supported_classifiers = ["fcp","phylosift","phmmer","blast",\
                              "metaphyler", "phymm"]
@@ -669,7 +675,7 @@ if __name__ == "__main__":
        os.environ["PATH"]="%s:%s"%(utils.Settings.KRONA, currPath)
 
     # check for memory/cpu
-    if lowmem == False:
+    if not nopsutil and lowmem == False:
         cacheusage=0
         if 'linux' in utils.Settings.OSTYPE.lower():
             cacheusage = psutil.cached_phymem()
@@ -680,16 +686,17 @@ if __name__ == "__main__":
         print "[Available RAM: %d GB]"%(avram)
         lowmem= False
         nofcpblast = False
-        if avram <= 64:
-            print utils.WARNING_YELLOW+"\tThere is *%d GB of RAM available on this machine, suggested minimum of 64 GB"%(avram)+utils.ENDC
+        if avram <= 32:
+            print utils.WARNING_YELLOW+"\tThere is *%d GB of RAM currently available on this machine, suggested minimum of 32 GB"%(avram)+utils.ENDC
             print utils.WARNING_YELLOW+"\t*Enabling low MEM mode, might slow down some steps in pipeline"+utils.ENDC
+            print utils.WARNING_YELLOW+"\t*If more RAM is available than what is listed above, please close down other programs and restart runPipeline"+utils.ENDC
             lowmem= True
         else:
             print utils.OK_GREEN+"\t*ok"+utils.ENDC
         numcpus = psutil.NUM_CPUS
         print "[Available CPUs: %d]"%(numcpus)
         if numcpus < 8:
-            print utils.WARNING_YELLOW+"\t*Only %d CPU available, likely running on a laptop"%(numcpus)+utils.ENDC
+            print utils.WARNING_YELLOW+"\t*Only %d CPU cores available, some modules might take awhile to complete"%(numcpus)+utils.ENDC
             print utils.WARNING_YELLOW+"\t*Disabling all BLAST (where possible)"+utils.ENDC
             nofcpblast = True
             skipsteps.append("FunctionalAnnotation")

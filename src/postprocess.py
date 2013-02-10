@@ -178,7 +178,7 @@ def Postprocess(input,output):
    # add links to assembled contigs and scaffolds
    run_process(_settings, "cp %s/Scaffold/out/%s.linearize.scaffolds.final %s/Postprocess/out/%s.scf.fa"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Postprocess")
    run_process(_settings, "cp %s/Scaffold/out/%s.contigs %s/Postprocess/out/%s.ctg.fa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
-   run_process(_settings, "ln -t %s/Postprocess/out/ -s %s/Scaffold/in/%s.bnk "%(_settings.rundir,_settings.rundir,_settings.PREFIX),"Postprocess")
+   run_process(_settings, "ln -s %s/Scaffold/in/%s.bnk %s/Postprocess/out/"%(_settings.rundir,_settings.PREFIX,_settings.rundir),"Postprocess")
 
    # add links to sequence info
    for lib in _readlibs:
@@ -221,6 +221,6 @@ def Postprocess(input,output):
    #webbrowser.open_new_tab(createreport.html)
    if openbrowser:
        if os.path.exists("%s/Postprocess/out/html/summary.html"%(_settings.rundir)):
-           webbrowser.open_new_tab("%s/Postprocess/out/html/summary.html"%(_settings.rundir))
+           webbrowser.open_new_tab("file://%s/Postprocess/out/html/summary.html"%(_settings.rundir))
        else:
            print "ERROR: No Summary html file available! skipping"

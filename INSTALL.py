@@ -274,6 +274,28 @@ if 1:
        os.chdir(METAMOS_ROOT)
        os.system("rm -rf pysam.tar.gz")
        #os.system("ln -s %s/Utilities/python/taxonomy.txt %s/Utilities/models/taxonomy.txt"%(sys.path[0], sys.path[0]))
+
+if 1:
+   fail = 0
+   try:
+       import matplotlib
+   except ImportError:
+       print "matplotlib python modules not found, necessary for html report, download now?"
+       fail = 1
+
+   if not fail or silentInstall:
+       dl = 'y'
+   else:
+       dl = raw_input("Enter Y/N: ")
+   if fail and (dl == 'y' or dl == "Y"):
+       os.system("wget http://downloads.sourceforge.net/project/matplotlib/matplotlib/matplotlib-1.2.0/matplotlib-1.2.0.tar.gz -O ./matplotlib.tar.gz")
+       os.system("tar -C ./Utilities/python -xvf matplotlib.tar.gz")
+       os.system("mv ./Utilities/python/matplotlib-1.2.0 ./Utilities/python/matplotlib")
+       os.chdir("./Utilities/python/pysam")
+       os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
+       os.chdir(METAMOS_ROOT)
+       os.system("rm -rf matplotlib.tar.gz")
+
 if 0 or not os.path.exists("./phylosift"):
    print "PhyloSift binaries not found, optional for Annotate step, download now?"
    if silentInstall:

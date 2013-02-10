@@ -291,7 +291,7 @@ if 1:
        os.system("wget http://downloads.sourceforge.net/project/matplotlib/matplotlib/matplotlib-1.2.0/matplotlib-1.2.0.tar.gz -O ./matplotlib.tar.gz")
        os.system("tar -C ./Utilities/python -xvf matplotlib.tar.gz")
        os.system("mv ./Utilities/python/matplotlib-1.2.0 ./Utilities/python/matplotlib")
-       os.chdir("./Utilities/python/pysam")
+       os.chdir("./Utilities/python/matplotlib")
        os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
        os.chdir(METAMOS_ROOT)
        os.system("rm -rf matplotlib.tar.gz")

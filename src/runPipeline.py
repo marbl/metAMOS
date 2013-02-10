@@ -35,27 +35,35 @@ os.environ["PYTHONPATH"]+=utils.INITIAL_UTILS+os.sep+"ruffus"+os.pathsep
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam"+os.pathsep
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.pathsep
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.pathsep
+os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.pathsep
+os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python"+os.pathsep
 os.environ["PYTHONPATH"] += ppath + os.pathsep
 site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
+site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
 sys.path.append(utils.INITIAL_UTILS)
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python")
 sys.path.append(utils.INITIAL_UTILS+os.sep+"ruffus")
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam")
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
+sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
 
 #remove imports from pth file, if exists
 nf = []
 nopsutil = False
 nopysam = False
 try:
-    nf = open(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.sep+"easy-install.pth",'r')
+    dir1 = utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"
+    if not os.path.exists(dir1+os.sep+"easy-install.pth"):
+        dir1 = utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python"
+
+    nf = open(dir1+os.sep+"easy-install.pth",'r')
     ndata = []
     for line in nf.xreadlines():
         if "import" in line:
             continue
         ndata.append(line)
     nf.close()
-    nfo = open(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.sep+"easy-install.pth",'w')
+    nfo = open(dir1+os.sep+"easy-install.pth",'w')
     for line in ndata:
         nfo.write(line)
     nfo.close()

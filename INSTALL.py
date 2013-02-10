@@ -17,28 +17,38 @@ shellv = os.environ["SHELL"]
 
 #add site dir
 site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
+site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
 
 if "PYTHONPATH" not in os.environ:
    os.environ["PYTHONPATH"] = ""
 os.environ["PYTHONPATH"]+=utils.INITIAL_UTILS+os.sep+"python"+os.pathsep
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.pathsep
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.pathsep
+os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.pathsep
+os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python"+os.pathsep
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python")
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python" + os.sep+"lib"+ os.sep+"python")
+sys.path.append(utils.INITIAL_UTILS+os.sep+"python" + os.sep+"lib64"+ os.sep+"python")
 
 if 'bash' in shellv or utils.cmdExists('export'):
    os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
    os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
+   os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python"))
 elif utils.cmdExists('setenv'):
    os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
    os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
+   os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python"))
 else:
    print "Cannot set PYTHONPATH variable, unknown shell %s\n"%(shellv)
 
 if not os.path.exists("%s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"):
     os.system("mkdir %s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib")
+if not os.path.exists("%s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"):
+    os.system("mkdir %s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64")
 if not os.path.exists("%s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"):
     os.system("mkdir %s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
+if not os.path.exists("%s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python"):
+    os.system("mkdir %s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
 
 silentInstall=False
 if (len(sys.argv) > 1):
@@ -274,6 +284,28 @@ if 1:
        os.chdir(METAMOS_ROOT)
        os.system("rm -rf pysam.tar.gz")
        #os.system("ln -s %s/Utilities/python/taxonomy.txt %s/Utilities/models/taxonomy.txt"%(sys.path[0], sys.path[0]))
+
+if 1:
+   fail = 0
+   try:
+       import matplotlib
+   except ImportError:
+       print "matplotlib python modules not found, necessary for html report, download now?"
+       fail = 1
+
+   if not fail or silentInstall:
+       dl = 'y'
+   else:
+       dl = raw_input("Enter Y/N: ")
+   if fail and (dl == 'y' or dl == "Y"):
+       os.system("wget http://downloads.sourceforge.net/project/matplotlib/matplotlib/matplotlib-1.2.0/matplotlib-1.2.0.tar.gz -O ./matplotlib.tar.gz")
+       os.system("tar -C ./Utilities/python -xvf matplotlib.tar.gz")
+       os.system("mv ./Utilities/python/matplotlib-1.2.0 ./Utilities/python/matplotlib")
+       os.chdir("./Utilities/python/matplotlib")
+       os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
+       os.chdir(METAMOS_ROOT)
+       os.system("rm -rf matplotlib.tar.gz")
+
 if 0 or not os.path.exists("./phylosift"):
    print "PhyloSift binaries not found, optional for Annotate step, download now?"
    if silentInstall:

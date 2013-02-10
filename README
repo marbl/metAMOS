@@ -27,8 +27,8 @@ MetAMOS was designed to work on any standard 64bit Linx
 environment. To use MetAMOS for tutorial/teaching purposes, a minimum
 of 8 GB RAM is required. To get started on real data sets a minimum of
 32 GB of RAM is recommened, and anywhere from 64-512 GB may be
-necessary for larger datasets. In our experience, for most 50-60
-million read datasets, 64 GB is a good place to start (68 GB of memory
+necessary for larger datasets. In our experience, for most 50-100
+million read datasets, 64 GB is a good place to start (128 GB of memory
 available on High Memory Instance at Amazon Elastic Compute Cloud ).
 
 ----------------------------------------------------------------------------------
@@ -38,7 +38,20 @@ The main prequisite software is python2.6+ and AMOS (available from
 http://amos.sf.net). Once python2.6+ and AMOS are installed, there
 should not be any other major prerequisites as most everything that is
 needed is distributed with MetAMOS inside of the /Utilities
-directory. However, there is some software that MetAMOS can
+directory. Depending on your platform/Linux distribution, you might need to download and install the following BEFORE running INSTALL.py:
+
+1) git
+2) wget
+3) gcc
+4) automake
+5) python-tools
+6) python-devel
+7) zlib-devel
+8) numpy
+9) freetype, freetype-devel
+10) libpng-devel
+
+Additionally, there is some software that MetAMOS can
 incorporate into its pipeline that we are not allowed to distribute,
 such as MetaGeneMark. To get a license to use MetaGeneMark, plesae
 visit: http://exon.gatech.edu/license_download.cgi.
@@ -54,7 +67,9 @@ python INSTALL.py
 
 This will download and install any external dependencies (or they can
 be refused by answering NO), which may take minutes or hours to
-download depending on your connection speed.
+download depending on your connection speed. If all dependencies are
+downloaded (including optional ones), this will take quite awhile to
+complete (plan on a few hours to 2 days).
 
 ----------------------------------------------------------------------------------
 D/ QUICK START

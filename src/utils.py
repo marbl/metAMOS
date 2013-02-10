@@ -339,7 +339,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
     getMachineType()
 
     if not os.path.exists(Settings.METAMOS_UTILS):
-       Settings.METAMOSDIR = sys.path[0]
+       Settings.METAMOSDIR = os.getcwd()
        print "Script is running from: %s"%(Settings.METAMOSDIR)
    
        Settings.METAMOS_UTILS = "%s%sUtilities"%(Settings.METAMOSDIR, os.sep) 

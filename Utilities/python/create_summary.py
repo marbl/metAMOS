@@ -511,7 +511,7 @@ if __name__ == "__main__":
     page.add("<a target=\"_blank\" href=\"https://github.com/treangen/metAMOS/wiki\"><img style=\"padding-top:5px;\" src=\"name.png\"/>")
     page.add("<img src=\"blocks_dark_tiny.png\"/></a>")
 #    page.add("<img src=\"blocks_tiny2.jpg\"/>")
-    page.add("<div style=\"padding:2px;font-size:12px;\"><a target=\"_blank\" href=\"https://github.com/treangen/metAMOS/wiki\">Treangen and Koren et al. Under peer review</a></div>")
+    page.add("<div style=\"padding:2px;font-size:12px;\"><a target=\"_blank\" href=\"https://github.com/treangen/metAMOS/wiki\">Treangen TJ, Koren S, Sommer DD, Liu B, Astrovskaya I, Ondov B, Darling AE, Phillippy AM, Pop M.  MetAMOS: a modular and open source metagenomic assembly and analysis pipeline. Genome Biol. 2013 Jan 15;14(1):R2. PMID: 23320958.</a></div>")
     page.add("<br/>")
 #    page.div.close()
 #    page.td.close()

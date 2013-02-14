@@ -202,6 +202,8 @@ if not os.path.exists("./Utilities/DB/refseq_protein.pal"):
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.01.tar.gz")
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.02.tar.gz")
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.03.tar.gz")
+        os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.04.tar.gz")
+        os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.05.tar.gz")
         print "    running fastacmd (might take a few min)..."
         os.system("fastacmd -d ./Utilities/DB/refseq_protein -p T -a T -D 1 -o ./Utilities/DB/allprots.faa")
 

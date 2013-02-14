@@ -175,14 +175,12 @@ if not os.path.exists("./Utilities/glimmer-mg"):
     else:
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
-        archive = "glimmer-mg-0.2.2.tar.gz"
+        archive = "glimmer-mg-0.3.1.tar.gz"
         os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -O %s" %(archive, archive))
-        #os.system("mv %s ./Utilities/models/." % archive)
         os.system("tar -C ./Utilities/ -xvf %s" % archive)
         os.system("rm %s"%archive)
         os.system("python ./Utilities/glimmer-mg/install_glimmer.py")
-        #os.system("ln -s %s/Utilities/python/taxonomy.txt %s/Utilities/models/taxonomy.txt"%(sys.path[0], sys.path[0]))
-        #os.system("chmod u+x Utlities/models")
+
 
 if not os.path.exists("./Utilities/DB/refseq_protein.pal"):
     print "refseq protein DB not found, needed for Annotate step, download now?"

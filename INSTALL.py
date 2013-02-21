@@ -195,6 +195,8 @@ if not os.path.exists("./Utilities/DB/refseq_protein.pal"):
         os.system("mv refseq_protein.01.tar.gz ./Utilities/DB/.")
         os.system("mv refseq_protein.02.tar.gz ./Utilities/DB/.")
         os.system("mv refseq_protein.03.tar.gz ./Utilities/DB/.")
+        os.system("mv refseq_protein.04.tar.gz ./Utilities/DB/.")
+        os.system("mv refseq_protein.05.tar.gz ./Utilities/DB/.")
         
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.00.tar.gz")
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.01.tar.gz")

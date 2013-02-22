@@ -282,7 +282,7 @@ selected_programs["scaffold"] = "bambus2"
 always_run_programs = ["krona"]
 
 
-allsteps = ["Preprocess","Assemble","MapReads","FindORFS","Abundance","Annotate",\
+allsteps = ["Preprocess","Assemble","MapReads","FindORFS","FindRepeats","Abundance","Annotate",\
                 "FunctionalAnnotation","Scaffold","FindScaffoldORFS","Propagate","Classify","Postprocess"]
 
 ## Need comments here and further down

@@ -283,7 +283,7 @@ always_run_programs = ["krona"]
 
 
 allsteps = ["Preprocess","Assemble","MapReads","FindORFS","Abundance","Annotate",\
-                "FunctionalAnnotation","Scaffold","Propagate","Classify","Postprocess"]
+                "FunctionalAnnotation","Scaffold","FindScaffoldORFS","Propagate","Classify","Postprocess"]
 
 ## Need comments here and further down
 
@@ -295,7 +295,7 @@ savebtidx = False
 verbose = False
 bowtie_mapping = 1
 startat = None
-stopat = None
+endat = None
 filter = False
 forcesteps = []
 
@@ -358,9 +358,14 @@ for o, a in opts:
         startat = a
         if startat not in allsteps:
             print "cannot start at %s, step does not exist in pipeline"%(startat)
-            print allsteps 
+            print allsteps
+        skipsteps.extend(allsteps[:allsteps.index(startat)]) 
     elif o in ("-e","--endat"):
-        pass
+        endat = a
+        if endat not in allsteps:
+            print "cannot end at %s, step does not exist in pipeline"%(endtat)
+            print allsteps 
+        skipsteps.extend(allsteps[allsteps.index(endat)+1:])
     elif o in ("-o", "--minoverlap"):
         pass
     elif o in ("-k", "--kmersize"):
@@ -477,6 +482,7 @@ if not os.path.exists(settings.rundir) or settings.rundir == "":
     usage()
     sys.exit(1)
 
+print "[Steps to be skipped]: ", skipsteps
 #remove started & ok flags in Logs
 os.system("rm %s%sLogs%s*.started"%(settings.rundir,os.sep,os.sep))
 #parse frag/libs out of pipeline.ini out of rundir

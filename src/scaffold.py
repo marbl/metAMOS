@@ -38,6 +38,9 @@ def init(reads, skipsteps, retainBank, asm):
 @posttask(touch_file("%s/Logs/scaffold.ok"%(_settings.rundir)))
 @files(["%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX)],"%s/Scaffold/out/%s.scaffolds.final"%(_settings.rundir,_settings.PREFIX))
 def Scaffold(input,output):
+   if "Scaffold" in _skipsteps or "scaffold" in _skipsteps:
+      run_process(_settings, "touch %s/Logs/scaffold.skip"%(_settings.rundir), "Scaffold")
+      return 0
    global _retainBank
 
    # check if we need to do scaffolding

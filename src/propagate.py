@@ -30,11 +30,18 @@ def init(reads, skipsteps, cls):
       if lib.mated == True:
          _mated = True
          break
+   if "Propagate" in _skipsteps or "propagate" in _skipsteps:
+       run_process(_settings, "touch %s/Annotate/out/%s.annots"%(_settings.rundir,_settings.PREFIX), "Propagate")
+
 
 @follows(FindScaffoldORFS)
 @posttask(touch_file("%s/Logs/propagate.ok"%(_settings.rundir)))
 @files("%s/Annotate/out/%s.annots"%(_settings.rundir, _settings.PREFIX),"%s/Logs/propagate.ok"%(_settings.rundir))
 def Propagate(input,output):
+   if "Propagate" in _skipsteps or "propagate" in _skipsteps:
+       run_process(_settings, "touch %s/Logs/propagate.skip"%(_settings.rundir), "Propagate")
+       run_process(_settings, "touch %s/Propagate/out/%s.clusters"%( _settings.rundir, _settings.PREFIX), "Propagate")
+       return 0
    if _cls == "metaphyler":
        run_process(_settings, "python %s/python/create_mapping.py %s/DB/class_key.tab %s/Abundance/out/%s.classify.txt %s/Propagate/in/%s.annots"%(_settings.METAMOS_UTILS,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Propagate")
    else:
@@ -50,7 +57,7 @@ def Propagate(input,output):
       (checkStdout, checkStderr) = p.communicate()
       numMates = int(checkStdout.strip())
 
-   if "Propagate" in _skipsteps or _cls == None or (_mated == False and numMates == 0):
+   if  _cls == None or (_mated == False and numMates == 0):
        run_process(_settings, "touch %s/Logs/propagate.skip"%(_settings.rundir), "Propagate")
        run_process(_settings, "cp %s/Propagate/in/%s.clusters %s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Propagate")
    else:

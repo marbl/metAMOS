@@ -58,7 +58,10 @@ def validate_run(dir):
 @posttask(touch_file("%s/Logs/postprocess.ok"%(_settings.rundir)))
 @files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/Postprocess/%s.scf.fa"%(_settings.rundir,_settings.PREFIX))
 def Postprocess(input,output):
-#create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm>
+   if "Postprocess" in _skipsteps or "postprocess" in _skipsteps:
+      run_process(_settings, "touch %s/Logs/postprocess.skip"%(_settings.rundir), "Postprocess")
+      return 0
+   #create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm>
    #copy files into output for createReport   
    #generate reports
    #linearize

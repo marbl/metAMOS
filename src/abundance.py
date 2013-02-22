@@ -54,7 +54,7 @@ def parse_metaphyler(giMapping, toTranslate, output):
 @posttask(touch_file("%s/Logs/abundance.ok"%(_settings.rundir)))
 @files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/Abundance/out/%s.taxprof.pct.txt"%(_settings.rundir,_settings.PREFIX))
 def Abundance(input,output):
-   if "Abundance" not in _forcesteps and ("FindORFS" in _skipsteps or "FindScaffoldORFS" in _skipsteps or "Abundance" in _skipsteps):
+   if "Abundance" not in _forcesteps or ("FindORFS" in _skipsteps or "FindScaffoldORFS" in _skipsteps or "Abundance" in _skipsteps):
       # can this be done automatically by ruffus pipeline?
       run_process(_settings, "touch %s/Logs/abundance.skip"%(_settings.rundir), "Abundance")
       run_process(_settings, "touch %s/Abundance/out/%s.taxprof.pct.txt"%(_settings.rundir, _settings.PREFIX), "Abundance")

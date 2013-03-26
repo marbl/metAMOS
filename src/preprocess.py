@@ -202,11 +202,7 @@ def Preprocess(input,output):
                    #parse out paired record (8 lines), rename header to be filename + "/1" or "/2", and remove reads with N
                    rf = open(read.path,'r')
                    npath = read.path.replace("/in/","/out/")
-                   #readpath,base = os.path.split(npath)
-                   #newpath = readpath+"lib%d"%(lib.id)
                    wf = open(npath,'w')
-                   #wf = open(read.path.replace("/in/","/out/"),'w')
-                   #wf = open(readpath+"lib%d"%(lib.id),'w')
                    start = 1
                    rcnt = 0
                    recordcnt = 0
@@ -364,9 +360,7 @@ def Preprocess(input,output):
                    rf = open(read.path,'r')
                    rq = open(read.path+".qual", 'r')
                    npath = read.path.replace("/in/","/out/")
-                   #print npath
-                   #readpath,base = os.path.split(npath)
-                   #newpath = readpath+"lib%d"%(lib.id)
+
                    wf = open(npath,'w')
                    wq = open(npath+".qual", 'w')
                    #wf = open(read.path.replace("/in/","/out/"),'w')
@@ -613,8 +607,8 @@ def Preprocess(input,output):
                #FIXME, make me faster!filter
                run_process(_settings, "perl %s/perl/shuffleSequences_fasta.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname, _settings.rundir,lib.f2.fname,_settings.rundir,lib.id),"Preprocess")
                run_process(_settings, "perl %s/perl/shuffleSequences_fasta.pl  %s/Preprocess/out/%s.qual %s/Preprocess/out/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname, _settings.rundir,lib.f2.fname,_settings.rundir,lib.id),"Preprocess")
-               run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.1.fasta"%(_settings.rundir, lib.f1.name, _settings.rundir, lib.id), "Preprocess")
-               run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.2.fasta"%(_settings.rundir, lib.f2.name, _settings.rundir, lib.id), "Preprocess")
+               run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.1.fasta"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")
+               run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.2.fasta"%(_settings.rundir, lib.f2.fname, _settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "python %s/python/extract_mates_from_fasta.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
                run_process(_settings, "unlink %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir, lib.id),"Preprocess")
                run_process(_settings, "ln -s %s/Preprocess/in/lib%d.seq.mates %s/Preprocess/out/"%(_settings.rundir,lib.id,_settings.rundir),"Preprocess")

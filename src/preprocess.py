@@ -618,7 +618,7 @@ def Preprocess(input,output):
                run_process(_settings, "python %s/python/extract_mates_from_fasta.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
                run_process(_settings, "unlink %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir, lib.id),"Preprocess")
                run_process(_settings, "ln -s %s/Preprocess/in/lib%d.seq.mates %s/Preprocess/out/"%(_settings.rundir,lib.id,_settings.rundir),"Preprocess")
-               convertInputFastaToQual(lib.id, lib.mated)
+               convertInputFastaToFastq(lib.id, lib.mated)
 
            elif lib.format == "fastq" and lib.mated and not lib.interleaved:
                #extract mates from fastq

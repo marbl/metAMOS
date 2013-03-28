@@ -182,8 +182,8 @@ if not os.path.exists("./Utilities/glimmer-mg"):
         os.system("python ./Utilities/glimmer-mg/install_glimmer.py")
 
 
-if not os.path.exists("./Utilities/DB/refseq_protein.pal"):
-    print "refseq protein DB not found, needed for Annotate step, download now?"
+if not os.path.exists("./Utilities/DB/refseq_protein.pal") or not os.path.exists("./Utilities/DB/refseq_protein.06.psq"):
+    print "refseq protein DB not found or incomplete, needed for Annotate step, download now?"
     if silentInstall:
        dl = 'y'
     else:
@@ -197,6 +197,7 @@ if not os.path.exists("./Utilities/DB/refseq_protein.pal"):
         os.system("mv refseq_protein.03.tar.gz ./Utilities/DB/.")
         os.system("mv refseq_protein.04.tar.gz ./Utilities/DB/.")
         os.system("mv refseq_protein.05.tar.gz ./Utilities/DB/.")
+        os.system("mv refseq_protein.06.tar.gz ./Utilities/DB/.")
         
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.00.tar.gz")
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.01.tar.gz")
@@ -204,6 +205,7 @@ if not os.path.exists("./Utilities/DB/refseq_protein.pal"):
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.03.tar.gz")
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.04.tar.gz")
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.05.tar.gz")
+        os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.06.tar.gz")
         print "    running fastacmd (might take a few min)..."
         os.system("fastacmd -d ./Utilities/DB/refseq_protein -p T -a T -D 1 -o ./Utilities/DB/allprots.faa")
 

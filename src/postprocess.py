@@ -128,9 +128,16 @@ def Postprocess(input,output):
    run_process(_settings, "ln %s/Annotate/out/%s.reads.annots %s/Postprocess/out/%s.original.reads.annots"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.taxa_level), "Postprocess")
 
    annotatedCtgs = {}
-   annotsfile = open("%s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
+   nopropagate = False
+   annotsfiledata = []
+   try:
+       annotsfile = open("%s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
+       annotsfiledata = annotsfile.readlines()
+   except IOError:
+       nopropagate = True
+   
    maxClassID = 0
-   for line in annotsfile.xreadlines():
+   for line in annotsfiledata:
       line = line.replace("\n", "")
       ctg, annot = line.split()
 
@@ -140,13 +147,22 @@ def Postprocess(input,output):
          annotatedCtgs[ctg] = annot
       except ValueError:
          maxClassID = maxClassID
-   annotsfile.close()
+   if not nopropagate:
+       annotsfile.close()
 
    run_process(_settings, "unlink %s/Postprocess/out/%s.propagated.annots"%(_settings.rundir, _settings.taxa_level), "Postprocess") 
-   annotsfile = open("%s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
-   annotsout = open("%s/Postprocess/out/%s.propagated.annots"%(_settings.rundir, _settings.taxa_level), 'w')
+   annotsfiledata = []
+   annotsout = ""
+   try:
+       annotsfile = open("%s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
+       annotsfile = open("%s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
+       annotsout = open("%s/Postprocess/out/%s.propagated.annots"%(_settings.rundir, _settings.taxa_level), 'w')
+       annotsfiledata = annotsfile.readlines()
+   except IOError:
+       nopropagate = True
 
-   for line in annotsfile.xreadlines():
+
+   for line in annotsfiledata:#.xreadlines():
       line = line.replace("\n", "")
       ctg,annot = line.split()
 
@@ -156,14 +172,22 @@ def Postprocess(input,output):
       except ValueError:
           continue
       annotsout.write("%s\t%s\n"%(ctg, annot))   
-   annotsfile.close()
-   annotsout.close()
+   if not nopropagate:
+       annotsfile.close()
+       annotsout.close()
 
+   
    run_process(_settings, "unlink %s/Postprocess/out/%s.propagated.reads.annots"%(_settings.rundir, _settings.taxa_level), "Postprocess") 
-   annotsfile = open("%s/Propagate/out/%s.reads.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
-   annotsout = open("%s/Postprocess/out/%s.propagated.reads.annots"%(_settings.rundir, _settings.taxa_level), 'w')
+   annotsfiledata = []
+   annotsout = ""
+   try:
+       annotsfile = open("%s/Propagate/out/%s.reads.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
+       annotsout = open("%s/Postprocess/out/%s.propagated.reads.annots"%(_settings.rundir, _settings.taxa_level), 'w')
+       annotsfiledata = annotsfile.readlines()
+   except IOError:
+       nopropagate = True
 
-   for line in annotsfile.xreadlines():
+   for line in annotsfiledata:#.xreadlines():
       line = line.replace("\n", "")
       ctg,annot = line.split()
 
@@ -173,8 +197,9 @@ def Postprocess(input,output):
       except ValueError:
           continue
       annotsout.write("%s\t%s\n"%(ctg, annot))
-   annotsfile.close()
-   annotsout.close()
+   if not nopropagate:
+       annotsfile.close()
+       annotsout.close()
 
    run_process(_settings, "cp %s/Abundance/out/%s.classify.txt %s/Postprocess/out/. "%(_settings.rundir,_settings.PREFIX,_settings.rundir),"Postprocess")
 

@@ -326,7 +326,7 @@ if 1:
    if not fail or silentInstall:
        dl = 'y'
    elif lightInstall:
-       dl = 'n'
+       dl = 'y'
    else:
        dl = raw_input("Enter Y/N: ")
    if fail and (dl == 'y' or dl == "Y"):

@@ -250,7 +250,7 @@ if 1:
        fail = 1
    if not fail or silentInstall:
        dl = 'y'
-    elif lightInstall:
+   elif lightInstall:
        dl = 'n'
    else:
        dl = raw_input("Enter Y/N: ")
@@ -273,7 +273,7 @@ if 1:
        fail = 1
    if not fail or silentInstall:
        dl = 'y'
-    elif lightInstall:
+   elif lightInstall:
        dl = 'n'
    else:
        dl = raw_input("Enter Y/N: ")
@@ -299,7 +299,7 @@ if 1:
 
    if not fail or silentInstall:
        dl = 'y'
-    elif lightInstall:
+   elif lightInstall:
        dl = 'n'
    else:
        dl = raw_input("Enter Y/N: ")
@@ -325,7 +325,7 @@ if 1:
 
    if not fail or silentInstall:
        dl = 'y'
-    elif lightInstall:
+   elif lightInstall:
        dl = 'n'
    else:
        dl = raw_input("Enter Y/N: ")
@@ -342,7 +342,7 @@ if 0 or not os.path.exists("./phylosift"):
    print "PhyloSift binaries not found, optional for Annotate step, download now?"
    if silentInstall:
       dl = 'y'
-    elif lightInstall:
+   elif lightInstall:
        dl = 'n'
    else:
       dl = raw_input("Enter Y/N: ")
@@ -357,7 +357,7 @@ if not os.path.exists("./CA") or 0:
    print "Celera Assembler binaries not found, optional for Assemble step, download now?"
    if silentInstall:
       dl = 'y'
-    elif lightInstall:
+   elif lightInstall:
        dl = 'n'
    else:
       dl = raw_input("Enter Y/N: ")

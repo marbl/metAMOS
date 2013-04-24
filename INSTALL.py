@@ -118,7 +118,7 @@ if not os.path.exists("./Utilities/cpp/%s-%s/metaphylerClassify"%(OSTYPE, MACHIN
     if silentInstall:
        dl = 'y'
     elif lightInstall:
-       dl = 'y'
+       dl = 'n'
     else:
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
@@ -274,7 +274,7 @@ if 1:
    if not fail or silentInstall:
        dl = 'y'
     elif lightInstall:
-       dl = 'y'
+       dl = 'n'
    else:
        dl = raw_input("Enter Y/N: ")
    if fail and (dl == 'y' or dl == "Y"):
@@ -326,7 +326,7 @@ if 1:
    if not fail or silentInstall:
        dl = 'y'
     elif lightInstall:
-       dl = 'y'
+       dl = 'n'
    else:
        dl = raw_input("Enter Y/N: ")
    if fail and (dl == 'y' or dl == "Y"):
@@ -358,7 +358,7 @@ if not os.path.exists("./CA") or 0:
    if silentInstall:
       dl = 'y'
     elif lightInstall:
-       dl = 'y'
+       dl = 'n'
    else:
       dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':

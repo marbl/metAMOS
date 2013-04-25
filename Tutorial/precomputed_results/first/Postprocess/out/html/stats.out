@@ -1,0 +1,57 @@
+<html>
+<head></head>
+<body><table>
+<tr><td><b>[Scaffolds]</b></td><td> </td></tr>
+<tr><td>TotalScaffolds</td><td>15</td></tr>
+<tr><td>TotalContigsInScaffolds</td><td>15</td></tr>
+<tr><td>MeanContigsPerScaffold</td><td>1.00</td></tr>
+<tr><td>MinContigsPerScaffold</td><td>1</td></tr>
+<tr><td>MaxContigsPerScaffold</td><td>1</td></tr>
+<tr><td> </td><td> </td></tr>
+<tr><td>TotalBasesInScaffolds</td><td>179760</td></tr>
+<tr><td>MeanBasesInScaffolds</td><td>11984.00</td></tr>
+<tr><td>MaxBasesInScaffolds</td><td>46796</td></tr>
+<tr><td>N50ScaffoldBases</td><td>18912</td></tr>
+<tr><td> </td><td> </td></tr>
+<tr><td>TotalSpanOfScaffolds</td><td>179760</td></tr>
+<tr><td>MeanSpanOfScaffolds</td><td>11984.00</td></tr>
+<tr><td>MinScaffoldSpan</td><td>354</td></tr>
+<tr><td>MaxScaffoldSpan</td><td>46796</td></tr>
+<tr><td>IntraScaffoldGaps</td><td>0</td></tr>
+<tr><td>2KbScaffolds</td><td>11</td></tr>
+<tr><td>2KbScaffoldSpan</td><td>177827</td></tr>
+<tr><td>2KbScaffoldPercent</td><td>98.92</td></tr>
+<tr><td>MeanSequenceGapSize</td><td>0.00</td></tr>
+<tr><td> </td><td> </td></tr>
+<tr><td><b>[Contigs]</b></td><td> </td></tr>
+<tr><td>TotalContigs</td><td>15</td></tr>
+<tr><td>TotalBasesInContigs</td><td>179760</td></tr>
+<tr><td>MeanContigSize</td><td>11984.00</td></tr>
+<tr><td>MinContigSize</td><td>354</td></tr>
+<tr><td>MaxContigSize</td><td>46796</td></tr>
+<tr><td>N50ContigBases</td><td>18912</td></tr>
+<tr><td> </td><td> </td></tr>
+<tr><td><b>[BigContigs_greater_10000]</b></td><td> </td></tr>
+<tr><td>TotalBigContigs</td><td>7</td></tr>
+<tr><td>BigContigLength</td><td>165600</td></tr>
+<tr><td>MeanBigContigSize</td><td>23657.14</td></tr>
+<tr><td>MinBigContig</td><td>12419</td></tr>
+<tr><td>MaxBigContig</td><td>46796</td></tr>
+<tr><td>BigContigsPercentBases</td><td>92.12</td></tr>
+<tr><td> </td><td> </td></tr>
+<tr><td><b>[SmallContigs]</b></td><td> </td></tr>
+<tr><td>TotalSmallContigs</td><td>8</td></tr>
+<tr><td>SmallContigLength</td><td>14160</td></tr>
+<tr><td>MeanSmallContigSize</td><td>1770.00</td></tr>
+<tr><td>MinSmallContig</td><td>354</td></tr>
+<tr><td>MaxSmallContig</td><td>3732</td></tr>
+<tr><td>SmallContigsPercentBases</td><td>7.88</td></tr>
+<tr><td> </td><td> </td></tr>
+<tr><td><b>[Reads]</b></td><td> </td></tr>
+<tr><td>TotalReads</td><td>269350</td></tr>
+<tr><td>ReadsInContigs</td><td>15</td></tr>
+<tr><td>BigContigReads</td><td>7</td></tr>
+<tr><td>SmallContigReads</td><td>8</td></tr>
+<tr><td>SingletonReads</td><td>269335</td></tr>
+</table>
+

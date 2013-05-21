@@ -17,19 +17,23 @@ _settings = Settings()
 _orf = None 
 _min_ctg_len = 300
 _min_ctg_cvg = 3
-def init(reads, skipsteps, asm, orf, min_ctg_len, min_ctg_cvg):
+_read_orfs = False
+
+def init(reads, skipsteps, asm, orf, min_ctg_len, min_ctg_cvg,read_orfs):
    global _readlibs
    global _skipsteps
    global _asm
    global _orf
    global _min_ctg_cvg
    global _min_ctg_len
+   global _read_orfs
    _readlibs = reads
    _skipsteps = skipsteps
    _asm = asm
    _orf = orf
    _min_ctg_cvg = min_ctg_cvg
    _min_ctg_len = min_ctg_len
+   _read_orfs = read_orfs
 
 def parse_genemarkout(orf_file,is_scaff=False, error_stream="FindORFS",min_len=_min_ctg_len,min_cvg=_min_ctg_cvg):
     coverageFile = open("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, _settings.PREFIX), 'r')
@@ -306,10 +310,12 @@ def FindORFS(input,output):
    run_process(_settings, "ln -s %s/Assemble/out/%s.asm.contig %s/FindORFS/in/"%(_settings.rundir,_settings.PREFIX,_settings.rundir),"FindORFS")
 
    findFastaORFs(_orf, "%s/FindORFS/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "%s.ctg.fna"%(_settings.PREFIX), "%s.ctg.faa"%(_settings.PREFIX), "%s.ctg.gene.cvg"%(_settings.PREFIX), "%s.ctg.gene.map"%(_settings.PREFIX), _min_ctg_len, _min_ctg_cvg)
-
-   for lib in _readlibs:
-      run_process(_settings, "ln -s %s/Assemble/out/lib%d.unaligned.fasta %s/FindORFS/in/"%(_settings.rundir,lib.id,_settings.rundir),"FindORFS")
-      findFastaORFs(_orf, "%s/FindORFS/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id), "%s.lib%d.fna"%(_settings.PREFIX, lib.id), "%s.lib%d.faa"%(_settings.PREFIX, lib.id), "%s.lib%d.gene.cvg"%(_settings.PREFIX, lib.id), "%s.lib%d.gene.map"%(_settings.PREFIX, lib.id), 0, 1)
+   
+   #don't call ORFs on unassembled reads? flag?
+   if _read_orfs:
+       for lib in _readlibs:
+           run_process(_settings, "ln -s %s/Assemble/out/lib%d.unaligned.fasta %s/FindORFS/in/"%(_settings.rundir,lib.id,_settings.rundir),"FindORFS")
+           findFastaORFs(_orf, "%s/FindORFS/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id), "%s.lib%d.fna"%(_settings.PREFIX, lib.id), "%s.lib%d.faa"%(_settings.PREFIX, lib.id), "%s.lib%d.gene.cvg"%(_settings.PREFIX, lib.id), "%s.lib%d.gene.map"%(_settings.PREFIX, lib.id), 0, 1)
 
    # merge results
    run_process(_settings, "rm -r %s/FindORFS/out/%s.fna"%(_settings.rundir, _settings.PREFIX), "FindORFS")

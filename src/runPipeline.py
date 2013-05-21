@@ -738,7 +738,7 @@ if __name__ == "__main__":
     mapreads.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["mapreads"], savebtidx,ctgbpcov,lowmem)
     findorfs.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["findorfs"], min_ctg_len, min_ctg_cvg,read_orfs)
     findreps.init(readlibs, skipsteps)
-    annotate.init(readlibs, skipsteps, selected_programs["classify"], nofcpblast)
+    annotate.init(readlibs, skipsteps, selected_programs["classify"], nofcpblast, annotate_unassembled)
     fannotate.init(skipsteps)
     abundance.init(readlibs, skipsteps, forcesteps, selected_programs["classify"])
     scaffold.init(readlibs, skipsteps, retainBank, selected_programs["assemble"])

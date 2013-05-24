@@ -1,0 +1,10 @@
+____LIB BANK INFORMATION____
+bank version = 3.0
+bank type = 4344140
+versions = 1
+objects = 1	
+indices = 1	
+bytes/index = 14
+partitions = 1
+indices/partition = 1000000
+locks = 

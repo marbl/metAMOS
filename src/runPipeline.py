@@ -95,7 +95,7 @@ if not nopsutil:
     import psutil
 from operator import itemgetter
 from ruffus import *
-skipsteps = []
+skipsteps = ["FindRepeats"]
 
 ## Get start time
 t1 = time.time()
@@ -310,12 +310,13 @@ fqfrags = []
 rlibs = []
 ctgbpcov = False
 min_ctg_len = 300
+read_orfs = False
 min_ctg_cvg = 3
 lowmem= False
 annotate_unassembled = False
 output_programs = 0
 settings = utils.Settings(DEFAULT_KMER, multiprocessing.cpu_count() - 1, "", DEFAULT_TAXA_LEVEL)
-
+nofcpblast = False
 for o, a in opts:
     if o in ("-v","--verbose"):
         utils.Settings.VERBOSE = True
@@ -735,9 +736,9 @@ if __name__ == "__main__":
     preprocess.init(readlibs, skipsteps, selected_programs["assemble"], run_fastqc,filter)
     assemble.init(readlibs, skipsteps, selected_programs["assemble"], usecontigs)
     mapreads.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["mapreads"], savebtidx,ctgbpcov,lowmem)
-    findorfs.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["findorfs"], min_ctg_len, min_ctg_cvg)
+    findorfs.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["findorfs"], min_ctg_len, min_ctg_cvg,read_orfs)
     findreps.init(readlibs, skipsteps)
-    annotate.init(readlibs, skipsteps, selected_programs["classify"], nofcpblast)
+    annotate.init(readlibs, skipsteps, selected_programs["classify"], nofcpblast, annotate_unassembled)
     fannotate.init(skipsteps)
     abundance.init(readlibs, skipsteps, forcesteps, selected_programs["classify"])
     scaffold.init(readlibs, skipsteps, retainBank, selected_programs["assemble"])

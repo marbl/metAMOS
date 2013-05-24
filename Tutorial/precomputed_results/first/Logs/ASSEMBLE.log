@@ -1,0 +1,97 @@
+
+Version 1.05: released on July 29th, 2010
+
+In /Users/treangen/dev/metAMOS/Tutorial/first/soapconfig.txt, 1 libs, max seq len 80, max name len 256
+
+15 thread created
+read from file:
+ /Users/treangen/dev/metAMOS/Tutorial/first/Preprocess/out/mystery_genome_reads.fna
+time spent on hash reads: 1s, 269350 reads processed
+[LIB] 0, avg_ins 600, reverse 0 
+2423019 nodes allocated, 4242268 kmer in reads, 4242268 kmer processed
+2243525 kmer removed
+time spent on delowcvgNode 0s
+170085 linear nodes
+time spent on marking linear nodes 0s
+time spent on pre-graph construction: 3s
+
+deLowKmer 1, deLowEdge 1
+Start to remove tips which don't contribute the most links
+kmer set 0 done
+kmer set 1 done
+kmer set 2 done
+kmer set 3 done
+kmer set 4 done
+kmer set 5 done
+kmer set 6 done
+kmer set 7 done
+kmer set 8 done
+kmer set 9 done
+kmer set 10 done
+kmer set 11 done
+kmer set 12 done
+kmer set 13 done
+kmer set 14 done
+4698 tips off
+15 thread created
+0 linear nodes
+time spent on cutTipe: 0s
+
+46 (23) edges 3 extra nodes
+time spent on making edges: 0s
+
+In file: /Users/treangen/dev/metAMOS/Tutorial/first/soapconfig.txt, max seq len 80, max name len 256
+
+15 thread created
+read from file:
+ /Users/treangen/dev/metAMOS/Tutorial/first/Preprocess/out/mystery_genome_reads.fna
+269350 reads processed
+time 0,0,0,0,0,0,0
+0 markers outputed
+done mapping reads, 125172 reads deleted, 14 arcs created
+[LIB] 0, avg_ins 600, reverse 0 
+time spent on mapping reads: 2s
+
+36 vertex outputed
+overall time for lightgraph: 0m
+
+
+Version 1.05: released on July 29th, 2010
+
+there're 36 kmers in vertex file
+there're 46 edge in edge file
+done sort
+input 46 edges
+20 pre-arcs loaded
+repeat solving can't be done...
+time spent on solving repeat: 0s
+start to pinch bubbles, cutoff 0.100000, MAX NODE NUM 30, MAX DIFF 10
+18 startingPoints, 5 dheap nodes
+0 pairs found, 0 pairs of paths compared, 0 pairs merged
+sequenc compare failure: 0 0 0 0
+DFibHeap: 1 Nodes allocated
+a linear concatenation lap, 0 concatenated
+46 edges in graph
+time spent on bubblePinch: 0s
+0 weak inner edges destroyed
+0 dead arcs removed
+Remove low coverage(1): 0 inner edges destroyed
+0 dead arcs removed
+a linear concatenation lap, 0 concatenated
+46 edges in graph
+there're 46 edges
+after compacting 46 edges left
+strict 0, cutLen 110
+a cutTipsInGraph lap, 6 tips cut
+a cutTipsInGraph lap, 0 tips cut
+4 dead arcs removed
+a linear concatenation lap, 4 concatenated
+a linear concatenation lap, 0 concatenated
+26 edges in graph
+there're 46 edges
+after compacting 26 edges left
+15 ctgs longer than 100, sum up 179760bp, with average length 11984
+the longest is 46796bp, contig N50 is 18912 bp,contig N90 is 12419 bp
+15 contigs longer than 56 output
+time elapsed: 0m
+

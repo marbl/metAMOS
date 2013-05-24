@@ -1,0 +1,214 @@
+Read Bank doesn't exist; creating
+frag Bank doesn't exist; creating
+lib Bank doesn't exist; creating
+parsing fasta file
+Closing frag stream/bank
+Closing read stream/bank
+Contig Bank doesn't exist; creating
+Read bank exists; opening
+frag bank exists; opening
+lib bank exists; opening
+Closing frag stream/bank
+Closing read stream/bank
+Handling contigs
+Contig stream closed.
+Invocation: /Users/treangen/dev/metAMOS/AMOS/Darwin-x86_64/bin/asmQC -b /Users/treangen/dev/metAMOS/Tutorial/first/Scaffold/in/proba.bnk -scaff -recompute -update -numsd 2 
+
+Will update libraries in bank
+Will not write features in bank
+Mates within 2 standard deviations from mean considered good
+Reporting regions with less than 0 good mate coverage
+Will recompute library sizes
+Libraries whose mean changes by less than 50
+and whose std. dev. changes by less than 10 are considered to not have changed
+Minimum number of observations required to change library size: 100
+Reporting regions with more than 2 short mate coverage
+Reporting regions with more than 2 long mate coverage
+Reporting regions with more than 3 coverage by mates oriented the same way
+Reporting regions with more than 3 coverage by outie mates
+Reporting regions with more than 3 coverage by outie mates
+Reporting regions with more than 3 coverage by linking mates
+Reporting regions with more than 3 coverage by singleton mates
+
+
+Reporting results by scaffold.  In this mode linking clones connect different scaffolds.
+
+
+>Contig_1 1 354 bases
+Regions of 0X clone coverage
+0	354
+
+>Contig_2 3 500 bases
+Regions of 0X clone coverage
+0	500
+
+>Contig_3 4 500 bases
+Regions of 0X clone coverage
+0	500
+
+>Contig_4 6 579 bases
+Regions of 0X clone coverage
+0	579
+
+>Contig_5 8 2515 bases
+Regions of 0X clone coverage
+0	2515
+
+>Contig_6 10 2567 bases
+Regions of 0X clone coverage
+0	2567
+
+>Contig_7 11 3413 bases
+Regions of 0X clone coverage
+0	3413
+
+>Contig_8 13 3732 bases
+Regions of 0X clone coverage
+0	3732
+
+>Contig_9 15 12419 bases
+Regions of 0X clone coverage
+0	12419
+
+>Contig_10 17 13106 bases
+Regions of 0X clone coverage
+0	13106
+
+>Contig_11 19 14259 bases
+Regions of 0X clone coverage
+0	14259
+
+>Contig_12 21 18912 bases
+Regions of 0X clone coverage
+0	18912
+
+>Contig_13 22 18912 bases
+Regions of 0X clone coverage
+0	18912
+
+>Contig_14 24 41196 bases
+Regions of 0X clone coverage
+0	41196
+
+>Contig_15 26 46796 bases
+Regions of 0X clone coverage
+0	46796
+
+No scaffold account found in bank /Users/treangen/dev/metAMOS/Tutorial/first/Scaffold/in/proba.bnk
+ignoring -scaff option
+>Contig_1 1 354 bases
+>Contig_2 3 500 bases
+>Contig_3 4 500 bases
+>Contig_4 6 579 bases
+>Contig_5 8 2515 bases
+>Contig_6 10 2567 bases
+>Contig_7 11 3413 bases
+>Contig_8 13 3732 bases
+>Contig_9 15 12419 bases
+>Contig_10 17 13106 bases
+>Contig_11 19 14259 bases
+>Contig_12 21 18912 bases
+>Contig_13 22 18912 bases
+>Contig_14 24 41196 bases
+>Contig_15 26 46796 bases
+
+IFOs found: 4
+File locks: 0
+Bank locks: 0
+
+
+Entering '/Users/treangen/dev/metAMOS/Tutorial/first/Scaffold/in/proba.bnk'
+Found CTG bank
+Found FRG bank
+Found LIB bank
+Found RED bank
+Elapsed time threaded is 3.2e-05
+The number of components is 15
+Options summary:
+Bank = 	/Users/treangen/dev/metAMOS/Tutorial/first/Scaffold/in/proba.bnk
+Redundancy = 	10
+InitAll = 	1
+Compress = 	1
+AgressiveScf = 	0
+Max Overlap = 	-1
+BEGIN COMPRESSION
+BEGINNING PATH ITERATION #1
+PROCESSING SCAFFOLD 1
+PROCESSING CONTIG 1
+TESTING LINEAR PATH : 1 
+PROCESSING SCAFFOLD 2
+PROCESSING CONTIG 2
+TESTING LINEAR PATH : 2 
+PROCESSING SCAFFOLD 3
+PROCESSING CONTIG 3
+TESTING LINEAR PATH : 3 
+PROCESSING SCAFFOLD 4
+PROCESSING CONTIG 4
+TESTING LINEAR PATH : 4 
+PROCESSING SCAFFOLD 5
+PROCESSING CONTIG 5
+TESTING LINEAR PATH : 5 
+PROCESSING SCAFFOLD 6
+PROCESSING CONTIG 6
+TESTING LINEAR PATH : 6 
+PROCESSING SCAFFOLD 7
+PROCESSING CONTIG 7
+TESTING LINEAR PATH : 7 
+PROCESSING SCAFFOLD 8
+PROCESSING CONTIG 8
+TESTING LINEAR PATH : 8 
+PROCESSING SCAFFOLD 9
+PROCESSING CONTIG 9
+TESTING LINEAR PATH : 9 
+PROCESSING SCAFFOLD 10
+PROCESSING CONTIG 10
+TESTING LINEAR PATH : 10 
+PROCESSING SCAFFOLD 11
+PROCESSING CONTIG 11
+TESTING LINEAR PATH : 11 
+PROCESSING SCAFFOLD 12
+PROCESSING CONTIG 12
+TESTING LINEAR PATH : 12 
+PROCESSING SCAFFOLD 13
+PROCESSING CONTIG 13
+TESTING LINEAR PATH : 13 
+PROCESSING SCAFFOLD 14
+PROCESSING CONTIG 14
+TESTING LINEAR PATH : 14 
+PROCESSING SCAFFOLD 15
+PROCESSING CONTIG 15
+TESTING LINEAR PATH : 15 
+BEGINNING COMPRESSION ITERATION #2
+PROCESSING SCAFFOLD 1
+PROCESSING CONTIG 1
+PROCESSING SCAFFOLD 2
+PROCESSING CONTIG 2
+PROCESSING SCAFFOLD 3
+PROCESSING CONTIG 3
+PROCESSING SCAFFOLD 4
+PROCESSING CONTIG 4
+PROCESSING SCAFFOLD 5
+PROCESSING CONTIG 5
+PROCESSING SCAFFOLD 6
+PROCESSING CONTIG 6
+PROCESSING SCAFFOLD 7
+PROCESSING CONTIG 7
+PROCESSING SCAFFOLD 8
+PROCESSING CONTIG 8
+PROCESSING SCAFFOLD 9
+PROCESSING CONTIG 9
+PROCESSING SCAFFOLD 10
+PROCESSING CONTIG 10
+PROCESSING SCAFFOLD 11
+PROCESSING CONTIG 11
+PROCESSING SCAFFOLD 12
+PROCESSING CONTIG 12
+PROCESSING SCAFFOLD 13
+PROCESSING CONTIG 13
+PROCESSING SCAFFOLD 14
+PROCESSING CONTIG 14
+PROCESSING SCAFFOLD 15
+PROCESSING CONTIG 15
+END COMPRESSION ITERATION #2 UPDATED: 0
+DONE COMPRESSION
+Finished! Had 0 Good links and 0 bad ones.

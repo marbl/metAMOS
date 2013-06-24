@@ -266,11 +266,12 @@ def Assemble(input,output):
       #start stopwatch
       if _settings.kmer > 63:
           
-          run_process(_settings, "%s/soap127 all -p %d -R -d -K %d %s -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(_settings.SOAPDENOVO, _settings.threads, _settings.kmer, soapOptions, _settings.rundir,_settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
+          run_process(_settings, "%s/soap127 pregraph -p %d -d -K %d %s -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(_settings.SOAPDENOVO, _settings.threads, _settings.kmer, soapOptions, _settings.rundir,_settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
+          run_process(_settings, "%s/soap127 contig -g %s/Assemble/out/%s.asm -R -M 3"%(_settings.SOAPDENOVO,_settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
       else:
           
-          run_process(_settings, "%s/SOAPdenovo-63mer all -p %d -R -d -K %d %s -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(_settings.SOAPDENOVO, _settings.threads, _settings.kmer, soapOptions, _settings.rundir,_settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
-
+          run_process(_settings, "%s/SOAPdenovo-63mer pregraph -p %d -d -K %d %s -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(_settings.SOAPDENOVO, _settings.threads, _settings.kmer, soapOptions, _settings.rundir,_settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
+          run_process(_settings, "%s/SOAPdenovo-63mer contig -g %s/Assemble/out/%s.asm -R -M 3"%(_settings.SOAPDENOVO, _settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
       #if OK, convert output to AMOS
    elif _asm == "metaidba":
       bowtie_mapping = 1

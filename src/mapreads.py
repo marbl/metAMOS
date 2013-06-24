@@ -88,6 +88,12 @@ def map2contig():
             readcnt += 2
 
     if bowtie_mapping == 1:
+        if _mapper == "bowtie":
+           if "bowtie" not in _skipsteps and not _savebtidx:# and not os.path.exists("%s/Assemble/out/IDX.1.ebwt"%(_settings.rundir)):
+               run_process(_settings, "%s/bowtie-build -o 2 %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir),"MapReads")
+        elif _mapper == "bowtie2":
+           if not os.path.exists("%s/Assemble/out/IDX.1.bt2"%(_settings.rundir)):
+               run_process(_settings, "%s/bowtie2-build -o 2 %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir),"MapReads")
         for lib in _readlibs:
             seqfile = open("%s/Preprocess/out/lib%d.seq.btfilt"%(_settings.rundir,lib.id),'w')
 
@@ -107,9 +113,6 @@ def map2contig():
                 f1.close()
                 f2.close()
             if _mapper == "bowtie":
-                if "bowtie" not in _skipsteps and not _savebtidx:# and not os.path.exists("%s/Assemble/out/IDX.1.ebwt"%(_settings.rundir)):
-                    run_process(_settings, "%s/bowtie-build -o 2 %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir),"MapReads")
-                #run_process(_settings, "%s/bowtie-build %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir))
                 if "bowtie" not in _skipsteps and (lib.format == "fasta" or lib.format == "sff"):
                     if trim:
                         run_process(_settings, "%s/bowtie -p %d -f -v 1 -M 2 --un %s/Assemble/out/lib%d.unaligned.fasta %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,lib.id_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
@@ -169,8 +172,6 @@ def map2contig():
                     seqfile.flush()
                 readctgfile.close()
             elif _mapper == "bowtie2":
-                if not os.path.exists("%s/Assemble/out/IDX.1.bt2"%(_settings.rundir)):
-                    run_process(_settings, "%s/bowtie2-build -o 2 %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir),"MapReads")
                 if "bowtie" not in _skipsteps and lib.format == "fasta":
                     run_process(_settings, "%s/bowtie2 -p %d -f -D 15 -R 2 -N 0 -L 20 -i S,1,1.10 --un %s/Assemble/out/lib%d.unaligned.fasta %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq -S %s/Assemble/out/lib%d.sam"%(_settings.BOWTIE2,_settings.threads,_settings.rundir,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                 elif "bowtie" not in _skipsteps and lib.format != "fasta":
@@ -180,24 +181,7 @@ def map2contig():
                 if not os.path.exists("%s/Assemble/out/lib%d.sam"%(_settings.rundir,lib.id)):
                     pass
                 else:
-                   #create reference seq map                                                                                                                                                                                                   
-                   #refx= open(reffile,'r')
-                   #express_transcript_file = open("%s/barnaEXP/in/%s.genes.fa"%(_settings.rundir,_settings.PREFIX),'w')
-                   #refx.readline()
-                   #xdata = refx.read()
-                   #xdata = xdata.replace("\n","")
-                   #ref = xdata
-                   #create pileups corresponding to GFF CDS coords (+/- read length, 50bp for now)                                                                                                                                              #create gff file index                                                                                                                                                                                                       #gff_file = open("%s/Preprocess/in/%s"%(_settings.rundir,_settings.gffile),'r')                                                                                                                                             
-                   #if 1 or not os.path.exists("%s/Assemble/out/lib%d.bam"%(_settings.rundir,lib.id)):
-                   #    run_process(_settings,"%s/samtools view -b -S %s/Assemble/out/lib%d.sam > %s/Assemble/out/lib%d.bam"%(_settings.SAMTOOLS,_settings.rundir,lib.id,_settings.rundir,lib.id), "MapReads")
-                   #    print "%s/samtools view -b -S %s/Assemble/out/lib%d.sam > %s/Assemble/out/lib%d.bam"%(_settings.SAMTOOLS,_settings.rundir,lib.id,_settings.rundir,lib.id)
-                   #if 1 or not os.path.exists("%s/Assemble/out/lib%d.srt.bam"%(_settings.rundir,lib.id)):
-                   #    run_process(_settings,"%s/samtools sort  %s/Assemble/out/lib%d.bam %s/Assemble/out/lib%d.srt.bam"%(_settings.SAMTOOLS,_settings.rundir,lib.id,_settings.rundir,lib.id), "MapReads")
-                   #if 1 or not os.path.exists("%s/Assemble/out/lib%d.srt.bam.bai"%(_settings.rundir,lib.id)):
-                   #    run_process(_settings,"%s/samtools index %s/Assemble/out/lib%d.srt.bam %s/Assemble/out/lib%d.srt.bam.bai"%(_settings.SAMTOOLS,_settings.rundir,lib.id,_settings.rundir,lib.id), "MapReads")
-                   
-                   #samfile = pysam.Samfile("%s/barnaASM/out/%s.srt.bam"%(_settings.rundir,_settings.PREFIX),'rb')
-                   #samfile = pysam.Samfile("%s/Assemble/out/lib%d.srt.bam"%(_settings.rundir,lib.id),'rb')
+
                    samfile = pysam.Samfile("%s/Assemble/out/lib%d.sam"%(_settings.rundir,lib.id),'r')
                    readctgfile =  open("%s/Assemble/out/%s.lib%dcontig.reads"%(_settings.rundir,_settings.PREFIX, lib.id),'w') 
 

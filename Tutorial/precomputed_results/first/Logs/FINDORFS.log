@@ -1,0 +1,24 @@
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/FindORFS/in/proba.asm.contig: No such file or directory
+no. of seqs: 15
+no. of seqs: 145278
+rm: /Users/treangen/dev/metAMOS/Tutorial/first/FindORFS/out/proba.fna: No such file or directory
+rm: /Users/treangen/dev/metAMOS/Tutorial/first/FindORFS/out/proba.fna.bnk: No such file or directory
+Read Bank doesn't exist; creating
+frag Bank doesn't exist; creating
+lib Bank doesn't exist; creating
+parsing fasta file
+Closing frag stream/bank
+Closing read stream/bank
+rm: /Users/treangen/dev/metAMOS/Tutorial/first/FindORFS/out/proba.faa: No such file or directory
+rm: /Users/treangen/dev/metAMOS/Tutorial/first/FindORFS/out/proba.faa.bnk: No such file or directory
+Read Bank doesn't exist; creating
+frag Bank doesn't exist; creating
+lib Bank doesn't exist; creating
+parsing fasta file
+Closing frag stream/bank
+Closing read stream/bank
+rm: /Users/treangen/dev/metAMOS/Tutorial/first/FindORFS/out/proba.gene.cvg: No such file or directory
+rm: /Users/treangen/dev/metAMOS/Tutorial/first/FindORFS/out/proba.gene.map: No such file or directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Annotate/in/proba.faa: No such file or directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Annotate/in/proba.fna: No such file or directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/FindRepeats/in/proba.fna: No such file or directory

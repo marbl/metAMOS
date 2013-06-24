@@ -1,0 +1,70 @@
+digraph ROOT {
+  rankdir = LR
+  rotate = 90
+  ranksep = 0.01
+  nodesep = 0.01
+  fontsize = 8
+  margin = ".01,.01"
+  ratio = fill
+  size = "11,8.5"
+subgraph cluster_1{
+	label = "1"
+	1 [label="1 position=(0,353) length=354" height=0.2, fontsize=8, shape="house", orientation=-90 ]
+}
+subgraph cluster_2{
+	label = "2"
+	2 [label="3 position=(0,499) length=500" height=0.2, fontsize=8, shape="house", orientation=-90 ]
+}
+subgraph cluster_3{
+	label = "3"
+	3 [label="4 position=(0,499) length=500" height=0.2, fontsize=8, shape="house", orientation=-90 ]
+}
+subgraph cluster_4{
+	label = "4"
+	4 [label="6 position=(0,578) length=579" height=0.2, fontsize=8, shape="house", orientation=-90 ]
+}
+subgraph cluster_5{
+	label = "5"
+	5 [label="8 position=(0,2514) length=2515" height=0.2, fontsize=8, shape="house", orientation=-90 ]
+}
+subgraph cluster_6{
+	label = "6"
+	6 [label="10 position=(0,2566) length=2567" height=0.2, fontsize=8, shape="house", orientation=-90 ]
+}
+subgraph cluster_7{
+	label = "7"
+	7 [label="11 position=(0,3412) length=3413" height=0.2, fontsize=8, shape="house", orientation=-90 ]
+}
+subgraph cluster_8{
+	label = "8"
+	8 [label="13 position=(0,3731) length=3732" height=0.2, fontsize=8, shape="house", orientation=-90 ]
+}
+subgraph cluster_9{
+	label = "9"
+	9 [label="15 position=(0,12418) length=12419" height=0.2, fontsize=8, shape="house", orientation=-90 ]
+}
+subgraph cluster_10{
+	label = "10"
+	10 [label="17 position=(0,13105) length=13106" height=0.2, fontsize=8, shape="house", orientation=-90 ]
+}
+subgraph cluster_11{
+	label = "11"
+	11 [label="19 position=(0,14258) length=14259" height=0.2, fontsize=8, shape="house", orientation=-90 ]
+}
+subgraph cluster_12{
+	label = "12"
+	12 [label="21 position=(0,18911) length=18912" height=0.2, fontsize=8, shape="house", orientation=-90 ]
+}
+subgraph cluster_13{
+	label = "13"
+	13 [label="22 position=(0,18911) length=18912" height=0.2, fontsize=8, shape="house", orientation=-90 ]
+}
+subgraph cluster_14{
+	label = "14"
+	14 [label="24 position=(0,41195) length=41196" height=0.2, fontsize=8, shape="house", orientation=-90 ]
+}
+subgraph cluster_15{
+	label = "15"
+	15 [label="26 position=(0,46795) length=46796" height=0.2, fontsize=8, shape="house", orientation=-90 ]
+}
+}

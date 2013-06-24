@@ -1,0 +1,7 @@
+max_rd_len=80
+[LIB]
+avg_ins=600.0
+reverse_seq=0
+asm_flags=3
+rank=1
+p=LIB1Q1REPLACE

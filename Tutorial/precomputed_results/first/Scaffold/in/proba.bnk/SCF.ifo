@@ -1,0 +1,10 @@
+____SCF BANK INFORMATION____
+bank version = 3.0
+bank type = 4604755
+versions = 2
+objects = 15	15	
+indices = 15	15	
+bytes/index = 22
+partitions = 1
+indices/partition = 1000000
+locks = 

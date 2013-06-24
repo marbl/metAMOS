@@ -1,0 +1,58 @@
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/annotate.krona.html: No such file or directory
+ln: /Users/treangen/dev/metAMOS/Tutorial/first/Annotate/out/report.krona.html: No such file or directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/abundance.krona.html: No such file or directory
+ln: /Users/treangen/dev/metAMOS/Tutorial/first/Abundance/out/report.krona.html: No such file or directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/class.classified: No such file or directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/class.original.annots: No such file or directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/class.original.reads.annots: No such file or directory
+ln: /Users/treangen/dev/metAMOS/Tutorial/first/Annotate/out/proba.reads.annots: No such file or directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/class.propagated.annots: No such file or directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/class.propagated.reads.annots: No such file or directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/proba.lib1.contig.reads: No such file or directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/proba.lib1.unaligned.fasta: No such file or directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/proba.ctg.cnt: No such file or directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/proba.ctg.cvg: No such file or directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/html: No such file or directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/html/class.classified: No such file or directory
+ln: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/class.classified: Is a directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/html/Annotate.html: No such file or directory
+ln: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/annotate.krona.html: No such file or directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/html/Abundance.html: No such file or directory
+ln: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/abundance.krona.html: No such file or directory
+mv: rename /Users/treangen/dev/metAMOS/Tutorial/first/Preprocess/out/*.fastqc to /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/html/*.fastqc: No such file or directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/html/propagate.in.clusters: No such file or directory
+ln: /Users/treangen/dev/metAMOS/Tutorial/first/Propagate/in/proba.clusters: No such file or directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/html/propagate.out.clusters: No such file or directory
+unlink: /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/html/FunctionalAnnotation.html: No such file or directory
+ln: /Users/treangen/dev/metAMOS/Tutorial/ec.krona.html: No such file or directory
+perl -I /Users/treangen/dev/metAMOS/AMOS/Darwin-x86_64/lib /Users/treangen/dev/metAMOS/Utilities/perl/statistics.pl /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/proba.scf.fa > /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/html/asmstats.out
+Traceback (most recent call last):
+  File "/Users/treangen/dev/metAMOS/Utilities/python/create_plots.py", line 12, in <module>
+    import matplotlib.pyplot as plt
+  File "/Users/treangen/dev/metAMOS/Utilities/python/lib/python/matplotlib/pyplot.py", line 26, in <module>
+    from matplotlib.figure import Figure, figaspect
+  File "/Users/treangen/dev/metAMOS/Utilities/python/lib/python/matplotlib/figure.py", line 32, in <module>
+    from matplotlib.image import FigureImage
+  File "/Users/treangen/dev/metAMOS/Utilities/python/lib/python/matplotlib/image.py", line 22, in <module>
+    import matplotlib._png as _png
+ImportError: dlopen(/Users/treangen/dev/metAMOS/Utilities/python/lib/python/matplotlib/_png.so, 2): Library not loaded: /opt/local/lib/libpng14.14.dylib
+  Referenced from: /Users/treangen/dev/metAMOS/Utilities/python/lib/python/matplotlib/_png.so
+  Reason: image not found
+Traceback (most recent call last):
+  File "/Users/treangen/dev/metAMOS/Utilities/python/get_classify_stats.py", line 16, in <module>
+    orig_class_file = open(sys.argv[1])
+IOError: [Errno 2] No such file or directory: '/Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/html//propagate.in.clusters'
+Processing /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/proba.bnk at Thu Apr 25 00:15:50 2013
+Processed contigs >= 0bp.
+Processed reads: 15 contigs: 15
+Global average contig depth: 0.00311526 [560/179760]
+Global ungapped average contig depth: 0.00311526 [560/179760]
+Flagging regions above: 0.00623053
+End: Thu Apr 25 00:15:50 2013
+Opening /Users/treangen/dev/metAMOS/Tutorial/first/Postprocess/out/proba.bnk... [0.19s]
+Indexing Contigs   .......... [0.01s] 15 reads in 15 contigs
+Indexing Scaffolds .......... [0.00s] 15 contigs in 15 scaffolds
+Indexing Libraries .......... [0.00s] 1 libraries
+Indexing Mates     .......... [0.01s] 542 mated reads in 271 fragments
+Indexing Reads     .......... [0.11s] 269351 reads
+Features not available

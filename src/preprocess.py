@@ -621,12 +621,12 @@ def Preprocess(input,output):
                #FIXME, make me faster!filter
                run_process(_settings, "perl %s/perl/shuffleSequences_fasta.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname, _settings.rundir,lib.f2.fname,_settings.rundir,lib.id),"Preprocess")
                run_process(_settings, "perl %s/perl/shuffleSequences_fasta.pl  %s/Preprocess/out/%s.qual %s/Preprocess/out/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname, _settings.rundir,lib.f2.fname,_settings.rundir,lib.id),"Preprocess")
-               run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.1.fasta"%(_settings.rundir, lib.f1.name, _settings.rundir, lib.id), "Preprocess")
-               run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.2.fasta"%(_settings.rundir, lib.f2.name, _settings.rundir, lib.id), "Preprocess")
+               run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.1.fasta"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")
+               run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.2.fasta"%(_settings.rundir, lib.f2.fname, _settings.rundir, lib.id), "Preprocess")
+               run_process(_settings, "ln %s/Preprocess/out/%s.qual %s/Preprocess/out/lib%d.1.fasta.qual"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")
+               run_process(_settings, "ln %s/Preprocess/out/%s.qual %s/Preprocess/out/lib%d.2.fasta.qual"%(_settings.rundir, lib.f2.fname, _settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "python %s/python/extract_mates_from_fasta.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
-               run_process(_settings, "unlink %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir, lib.id),"Preprocess")
-               run_process(_settings, "ln -s %s/Preprocess/in/lib%d.seq.mates %s/Preprocess/out/"%(_settings.rundir,lib.id,_settings.rundir),"Preprocess")
-               convertInputFastaToQual(lib.id, lib.mated)
+               convertInputFastaToFastq(lib.id, lib.mated)
 
            elif lib.format == "fastq" and lib.mated and not lib.interleaved:
                #extract mates from fastq

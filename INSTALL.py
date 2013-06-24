@@ -51,10 +51,14 @@ if not os.path.exists("%s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os
     os.system("mkdir %s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
 
 silentInstall=False
+lightInstall=False
 if (len(sys.argv) > 1):
   if sys.argv[1] == 'silent':
      silentInstall=True
      print "Running in silent mode"
+  elif sys.argv[1] == "light":
+     lightInstall=True
+     print "Installing in minimal mode"
 
 ALLOW_FAST=True
 OSTYPE="Linux"
@@ -101,6 +105,8 @@ if not os.path.exists("./Utilities/config/usage.ok"):
     dl = 'n'
     if silentInstall:
        dl = 'y'
+    elif lightInstall:
+       dl = 'n'
     else:
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
@@ -111,6 +117,8 @@ if not os.path.exists("./Utilities/cpp/%s-%s/metaphylerClassify"%(OSTYPE, MACHIN
     print "Metaphyler (latest version) not found, optional for Annotate, download now?"
     if silentInstall:
        dl = 'y'
+    elif lightInstall:
+       dl = 'n'
     else:
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
@@ -124,6 +132,8 @@ if not os.path.exists("./FastQC"):
     print "FastQC not found, optional for Preprocess, download now?"
     if silentInstall:
        dl = 'y'
+    elif lightInstall:
+       dl = 'n'
     else:
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
@@ -145,6 +155,8 @@ if not os.path.exists("./Utilities/DB/uniprot_sprot.fasta"):
     print "Uniprot/Swissprot DB not found, optional for Functional Annotation, download now?"
     if silentInstall:
        dl = 'y'
+    elif lightInstall:
+       dl = 'n'
     else:
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
@@ -158,6 +170,8 @@ if not os.path.exists("./Utilities/models") or not os.path.exists("./Utilities/D
     print "Genome models not found, optional for FCP/NB, download now?"
     if silentInstall:
        dl = 'y'
+    elif lightInstall:
+       dl = 'n'
     else:
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
@@ -172,6 +186,8 @@ if not os.path.exists("./Utilities/glimmer-mg"):
     print "Glimmer-MG not found, optional for FindORFS step. Caution, this will take approx. 24 hours to complete, including Phymm download & install. download & install now?"
     if silentInstall:
        dl = 'n'
+    elif lightInstall:
+       dl = 'n'
     else:
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
@@ -182,10 +198,12 @@ if not os.path.exists("./Utilities/glimmer-mg"):
         os.system("python ./Utilities/glimmer-mg/install_glimmer.py")
 
 
-if not os.path.exists("./Utilities/DB/refseq_protein.pal"):
-    print "refseq protein DB not found, needed for Annotate step, download now?"
+if not os.path.exists("./Utilities/DB/refseq_protein.pal") or not os.path.exists("./Utilities/DB/refseq_protein.06.psq"):
+    print "refseq protein DB not found or incomplete, needed for Annotate step, download now?"
     if silentInstall:
        dl = 'y'
+    elif lightInstall:
+       dl = 'n'
     else:
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
@@ -197,6 +215,7 @@ if not os.path.exists("./Utilities/DB/refseq_protein.pal"):
         os.system("mv refseq_protein.03.tar.gz ./Utilities/DB/.")
         os.system("mv refseq_protein.04.tar.gz ./Utilities/DB/.")
         os.system("mv refseq_protein.05.tar.gz ./Utilities/DB/.")
+        os.system("mv refseq_protein.06.tar.gz ./Utilities/DB/.")
         
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.00.tar.gz")
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.01.tar.gz")
@@ -204,12 +223,15 @@ if not os.path.exists("./Utilities/DB/refseq_protein.pal"):
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.03.tar.gz")
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.04.tar.gz")
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.05.tar.gz")
+        os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.06.tar.gz")
         print "    running fastacmd (might take a few min)..."
         os.system("fastacmd -d ./Utilities/DB/refseq_protein -p T -a T -D 1 -o ./Utilities/DB/allprots.faa")
 
 if not os.path.exists("./AMOS") or 0:
     print "AMOS binaries not found, needed for all steps, download now?"
     if silentInstall:
+       dl = 'y'
+    elif lightInstall:
        dl = 'y'
     else:
        dl = raw_input("Enter Y/N: ")
@@ -228,6 +250,8 @@ if 1:
        fail = 1
    if not fail or silentInstall:
        dl = 'y'
+   elif lightInstall:
+       dl = 'n'
    else:
        dl = raw_input("Enter Y/N: ")
    if fail and (dl == 'y' or dl == "Y"):
@@ -249,6 +273,8 @@ if 1:
        fail = 1
    if not fail or silentInstall:
        dl = 'y'
+   elif lightInstall:
+       dl = 'n'
    else:
        dl = raw_input("Enter Y/N: ")
    if fail and (dl == 'y' or dl == "Y"):
@@ -273,6 +299,8 @@ if 1:
 
    if not fail or silentInstall:
        dl = 'y'
+   elif lightInstall:
+       dl = 'n'
    else:
        dl = raw_input("Enter Y/N: ")
    if fail and (dl == 'y' or dl == "Y"):
@@ -297,6 +325,8 @@ if 1:
 
    if not fail or silentInstall:
        dl = 'y'
+   elif lightInstall:
+       dl = 'y'
    else:
        dl = raw_input("Enter Y/N: ")
    if fail and (dl == 'y' or dl == "Y"):
@@ -312,6 +342,8 @@ if 0 or not os.path.exists("./phylosift"):
    print "PhyloSift binaries not found, optional for Annotate step, download now?"
    if silentInstall:
       dl = 'y'
+   elif lightInstall:
+       dl = 'n'
    else:
       dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':
@@ -325,6 +357,8 @@ if not os.path.exists("./CA") or 0:
    print "Celera Assembler binaries not found, optional for Assemble step, download now?"
    if silentInstall:
       dl = 'y'
+   elif lightInstall:
+       dl = 'n'
    else:
       dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':
@@ -352,6 +386,8 @@ if not os.path.exists("KronaTools") or 0:
     print "KronaTools not found, needed for Postprocess, download now?"
     if silentInstall:
        dl = 'y'
+    elif lightInstall:
+       dl = 'n'
     else:
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
@@ -366,6 +402,8 @@ if not os.path.exists("KronaTools/taxonomy/taxonomy.tab") or 0:
     print "KronaTools taxonomy data not found, needed for Postprocess, download now (will take around 20 minutes)?"
     if silentInstall:
        dl = 'y'
+    elif lightInstall:
+       dl = 'n'
     else:
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':

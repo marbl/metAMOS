@@ -54,7 +54,7 @@ def parse_metaphyler(giMapping, toTranslate, output):
 @posttask(touch_file("%s/Logs/abundance.ok"%(_settings.rundir)))
 @files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/Abundance/out/%s.taxprof.pct.txt"%(_settings.rundir,_settings.PREFIX))
 def Abundance(input,output):
-   if "Abundance" not in _forcesteps or ("FindORFS" in _skipsteps or "FindScaffoldORFS" in _skipsteps or "Abundance" in _skipsteps):
+   if "Abundance" not in _forcesteps and ("FindORFS" in _skipsteps or "FindScaffoldORFS" in _skipsteps or "Abundance" in _skipsteps):
       # can this be done automatically by ruffus pipeline?
       run_process(_settings, "touch %s/Logs/abundance.skip"%(_settings.rundir), "Abundance")
       run_process(_settings, "touch %s/Abundance/out/%s.taxprof.pct.txt"%(_settings.rundir, _settings.PREFIX), "Abundance")
@@ -66,7 +66,7 @@ def Abundance(input,output):
    formatc = _settings.BLAST + os.sep + "formatdb"
    #run_process(_settings, "%s  -p T -i %s/perl/metaphyler/markers/markers.pfasta"%(formatc,_settings.METAMOS_UTILS),"Abundance")
    #update to MetaPhyler 1.25
-   run_process(_settings, "%s -p blastp -i %s/FindORFS/out/%s.faa -d %s/perl/metaphyler/markers/markers.protein -m 8 -b 10 -v 10 -a %s -o %s/Abundance/out/%s.blastp"%(blastc, _settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.threads,_settings.rundir,_settings.PREFIX),"Abundance")
+   run_process(_settings, "%s -p blastp -i %s/FindORFS/out/%s.faa -d %s/DB/markers.pfasta -m 8 -b 10 -v 10 -a %s -o %s/Abundance/out/%s.blastp"%(blastc, _settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.threads,_settings.rundir,_settings.PREFIX),"Abundance")
 
    run_process(_settings, "perl %s/perl/metaphyler_contigs.pl %s/Abundance/out/%s.blastp %s %s/FindORFS/out/%s.gene.cvg %s/Abundance/out %s"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.METAMOS_UTILS),"Abundance")
    #run_process(_settings, "./installMetaphyler.pl")

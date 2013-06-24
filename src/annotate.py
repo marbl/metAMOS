@@ -107,7 +107,7 @@ def annotateSeq(cls, contigs, orfAA, orfFA, output):
 
        run_process(_settings, "%s/phmmer --cpu %d -E 0.0000000000000001 -o %s/Annotate/out/%s.phm.out --tblout %s/Annotate/out/%s.phm.tbl --notextw %s %s/DB/allprots.faa"%(_settings.PHMMER, _settings.threads,_settings.rundir,output,_settings.rundir,output,orfAA,_settings.METAMOS_UTILS),"Annotate")
        parse_phmmerout("%s/Annotate/out/%s.phm.tbl"%(_settings.rundir,output))
-       run_process(_settings, "mv %s/Annotate/out/%s.phm.tbl  %s/Annotate/out/%s.hits"%(_settings.rundir,output,_settings.rundir,output),"Annotate")
+       run_process(_settings, "mv %s/Annotate/out/%s.phm.tbl  %s/Annotate/out/%s.intermediate.hits"%(_settings.rundir,output,_settings.rundir,output),"Annotate")
 
    elif cls == "metaphyler":
        if not os.path.exists(_settings.BLAST + os.sep + "blastall"):
@@ -122,7 +122,7 @@ def annotateSeq(cls, contigs, orfAA, orfFA, output):
        run_process(_settings,"%s/blastall -p blastx -a %d -m 8 -b 1 -e 1e-2 -i %s -d %s/perl/metaphyler/test/test.ref.protein > %s/Annotate/out/%s.query.blastx"%(_settings.BLAST,_settings.threads,orfFA,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX))
        run_process(_settings, "%s/metaphylerClassify %s/perl/metaphyler/markers/markers.blastx.classifier %s/perl/metaphyler/markers/markers.taxonomy %s/Annotate/out/%s.query.blastx > %s/Annotate/out/%s.classification"%(_settings.METAPHYLER,_settings.METAMOS_UTILS,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,output) )
        #Krona import Metaphyler script!
-       run_process(_settings, "mv %s/Annotate/out/%s.classification  %s/Annotate/out/%s.hits"%(_settings.rundir,output,_settings.rundir,output),"Annotate")
+       run_process(_settings, "mv %s/Annotate/out/%s.classification  %s/Annotate/out/%s.intermediate.hits"%(_settings.rundir,output,_settings.rundir,output),"Annotate")
 
    elif cls == "blast":
        if not os.path.exists(_settings.BLAST + os.sep + "blastall"):
@@ -133,7 +133,7 @@ def annotateSeq(cls, contigs, orfAA, orfFA, output):
           print "Error: You indicated you would like to run BLAST but DB allprots.faa not found in %s/DB. Please check your path and try again.\n"%(_settings.METAMOS_UTILS)
           raise(JobSignalledBreak)
        run_process(_settings, "%s/blastall -v 1 -b 1 -a %d -p blastp -m 8 -e 0.00001 -i %s -d %s/DB/refseq_protein -o %s/Annotate/out/%s.blastout"%(_settings.BLAST, _settings.threads,orfAA,_settings.METAMOS_UTILS,_settings.rundir,output),"Annotate")
-       run_process(_settings, "mv %s/Annotate/out/%s.blastout  %s/Annotate/out/%s.hits"%(_settings.rundir,output,_settings.rundir,output),"Annotate")
+       run_process(_settings, "mv %s/Annotate/out/%s.blastout  %s/Annotate/out/%s.intermediate.hits"%(_settings.rundir,output,_settings.rundir,output),"Annotate")
    elif cls == "phylosift":
        if _settings.PHYLOSIFT == "" or not os.path.exists(_settings.PHYLOSIFT + os.sep + "bin" + os.sep + "phylosift"):
           print "Error: PhyloSift not found in %s. Please check your path and try again.\n"%(_settings.PHYLOSIFT)
@@ -155,8 +155,8 @@ def annotateSeq(cls, contigs, orfAA, orfFA, output):
        run_process(_settings, "%s %s --coverage=%s/Assemble/out/%s.contig.cnt "%(phylosiftCmd, contigs, _settings.rundir,_settings.PREFIX), "Annotate")
 
        # save the results
-       run_process(_settings, "unlink %s/Annotate/out/%s.hits"%(_settings.rundir, output), "Annotate")
-       run_process(_settings, "ln %s/Annotate/out/PS_temp/%s/sequence_taxa_summary.txt %s/Annotate/out/%s.hits"%(_settings.rundir, os.path.basename(contigs), _settings.rundir, output), "Annotate") 
+       run_process(_settings, "unlink %s/Annotate/out/%s.intermediate.hits"%(_settings.rundir, output), "Annotate")
+       run_process(_settings, "ln %s/Annotate/out/PS_temp/%s/sequence_taxa_summary.txt %s/Annotate/out/%s.intermediate.hits"%(_settings.rundir, os.path.basename(contigs), _settings.rundir, output), "Annotate") 
        
    elif cls == "fcp":
        run_process(_settings, "ln -s %s/models"%(_settings.METAMOS_UTILS), "Annotate")
@@ -171,17 +171,17 @@ def annotateSeq(cls, contigs, orfAA, orfFA, output):
           run_process(_settings, "python %s/python/BLASTN.py %s/blastn %s %s/Annotate/out/%s.bl_results.txt %d"%(_settings.METAMOS_UTILS, _settings.BLAST, contigs, _settings.rundir, output, _settings.threads), "Annotate") 
 
           #combine the results
-          run_process(_settings, "python %s/python/NB-BL.py %s/Annotate/out/%s.nb_results.txt %s/Annotate/out/%s.bl_results.txt %s/Annotate/out/%s.epsilon-nb_results.txt"%(_settings.METAMOS_UTILS, _settings.rundir, output, _settings.rundir, output, _settings.rundir, output), "Annotate")
+          run_process(_settings, "python %s/python/NB-BL.py %s/Annotate/out/%s.nb_results.txt %s/Annotate/out/%s.bl_results.txt %s/Annotate/out/%s.intermediate.epsilon-nb_results.txt"%(_settings.METAMOS_UTILS, _settings.rundir, output, _settings.rundir, output, _settings.rundir, output), "Annotate")
        else:
-          run_process(_settings, "python %s/python/Epsilon-NB.py %s/Annotate/out/%s.nb_results.txt 1E5 %s/Annotate/out/%s.epsilon-nb_results.txt"%(_settings.METAMOS_UTILS,_settings.rundir,output,_settings.rundir,output),"Annotate")
+          run_process(_settings, "python %s/python/Epsilon-NB.py %s/Annotate/out/%s.nb_results.txt 1E5 %s/Annotate/out/%s.intermediate.epsilon-nb_results.txt"%(_settings.METAMOS_UTILS,_settings.rundir,output,_settings.rundir,output),"Annotate")
 
        #need python TaxonomicSummary.py test.fasta nb_topModels.txt nb_taxonomicSummary.txt
        #run_process(_settings, "python %s/python/TaxonomicSummary.py %s/Annotate/in/%s.fna %s/Annotate/out/%s.nb_results.txt %s/Annotate/out/%s.epsilon-nb_results.txt"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Annotate")
 
-       run_process(_settings, "unlink %s/Annotate/out/%s.hits"%(_settings.rundir, output), "Annotate")
+       run_process(_settings, "unlink %s/Annotate/out/%s.intermediate.hits"%(_settings.rundir, output), "Annotate")
        run_process(_settings, "unlink %s/Annotate/out/%s.nb_results.txt"%(_settings.rundir, output), "Annotate")
        run_process(_settings, "unlink %s/Annotate/out/%s.bl_results.txt"%(_settings.rundir, output), "Annotate")
-       run_process(_settings, "ln %s/Annotate/out/%s.epsilon-nb_results.txt %s/Annotate/out/%s.hits"%(_settings.rundir, output, _settings.rundir, output), "Annotate")
+       run_process(_settings, "ln %s/Annotate/out/%s.intermediate.epsilon-nb_results.txt %s/Annotate/out/%s.intermediate.hits"%(_settings.rundir, output, _settings.rundir, output), "Annotate")
 
    elif cls == "phymm":
        if not os.path.exists("%s"%(_settings.PHYMM)):
@@ -195,8 +195,8 @@ def annotateSeq(cls, contigs, orfAA, orfFA, output):
        run_process(_settings, "mkdir -f %sAnnotate/out/.logs"%(_settings.rundir), "Annotate")
 
        run_process(_settings, "perl %s/scoreReads.pl %s > %s/Annotate/out/%s.phymm.err"%(_settings.PHYMM, contigs,_settings.rundir,output),"Annotate")
-       run_process(_settings, "cat results.03.phymmBL_%s.txt | grep -v \"QUERY_ID\" > %s/Annotate/out/%s.phymm.out"%(contigs.replace(os.sep, "_").replace(".", "_"), _settings.rundir, output), "Annotate")
-       run_process(_settings, "ln %s/Annotate/out/%s.phymm.out %s/Annotate/out/%s.hits"%(_settings.rundir, output, _settings.rundir, output), "Annotate")
+       run_process(_settings, "cat results.03.phymmBL_%s.txt | grep -v \"QUERY_ID\" > %s/Annotate/out/%s.intermediate.phymm.out"%(contigs.replace(os.sep, "_").replace(".", "_"), _settings.rundir, output), "Annotate")
+       run_process(_settings, "ln %s/Annotate/out/%s.intermediate.phymm.out %s/Annotate/out/%s.intermediate.hits"%(_settings.rundir, output, _settings.rundir, output), "Annotate")
        run_process(_settings, "rm %s/Annotate/out/*_%s.txt "%(_settings.rundir, contigs.replace(os.sep, "_").replace(".","_")),"Annotate")
        
    elif cls == None:
@@ -401,7 +401,7 @@ def Annotate(input,output):
    pool.join()
 
    # merge results
-   run_process(_settings, "cat %s/Annotate/out/*.hits > %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
+   run_process(_settings, "cat %s/Annotate/out/*.intermediate.hits > %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
  
    if _cls == "phylosift":
        importPS = "%s%sperl%sImportPhyloSift.pl"%(_settings.METAMOS_UTILS, os.sep, os.sep)
@@ -416,7 +416,7 @@ def Annotate(input,output):
        if not os.path.exists(importFCP):
           print "Error: Krona importer for FCP not found in %s. Please check your path and try again.\n"%(importFCP)
           raise(JobSignalledBreak)
-       run_process(_settings, "cat %s/Annotate/out/*.epsilon-nb_results.txt | grep -v 'Fragment Id' > %s/Annotate/out/%s.epsilon-nb_results.txt"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
+       run_process(_settings, "cat %s/Annotate/out/*.intermediate.epsilon-nb_results.txt | grep -v 'Fragment Id' > %s/Annotate/out/%s.epsilon-nb_results.txt"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
 
        run_process(_settings, "perl %s -c -i -f %s %s/Annotate/out/%s.epsilon-nb_results.txt:%s/Assemble/out/%s.contig.cnt:%s"%(importFCP, listOfFiles, _settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate") # TODO: local url (after next KronaTools release)
 
@@ -426,7 +426,7 @@ def Annotate(input,output):
        if not os.path.exists(importPhymm):
           print "Error: Krona importer for Phymm not found in %s. Please check your path and try again.\n"%(importPhymm)
           raise(JobSignalledBreak)
-       run_process(_settings, "cat %s/Annotate/out/*.phymm.out > %s/Annotate/out/%s.phymm.out"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
+       run_process(_settings, "cat %s/Annotate/out/*.intermediate.phymm.out > %s/Annotate/out/%s.phymm.out"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
        run_process(_settings, "perl %s -f %s %s/Annotate/out/%s.phymm.out:%s/Assemble/out/%s.contig.cnt:%s"%(importPhymm, listOfFiles,_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate") # TODO: local url (after next KronaTools release)
 
    run_process(_settings, "unlink %s/Postprocess/in/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")

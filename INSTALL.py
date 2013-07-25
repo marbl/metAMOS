@@ -3,6 +3,10 @@ import os, sys, string, subprocess, distutils.util, check_install, site
 user_home = os.environ["HOME"]
 print "<<Welcome to metAMOS install>>"
 
+#check for python version
+if (sys.version_info[0] < 2) or (sys.version_info[0] == 2 and sys.version_info[1] < 6):
+  print "Python version is %s. metAMOS requires at least 2.6"%(sys.version)
+  sys.exit(1)
 
 #add access to utils.py, for utils dir
 METAMOS_ROOT  = os.getcwd().strip()
@@ -93,12 +97,6 @@ if OSTYPE == "Darwin":
    (checkStdout, checkStderr) = p.communicate()
    if "Apple" not in checkStdout:
       ALLOW_FAST=False
-
-#check for python version
-if (sys.version_info[0] < 2) or (sys.version_info[0] == 2 and sys.version_info[1] < 6):
-  print "Python version is %s. metAMOS requires at least 2.6"%(sys.version)
-  sys.exit(1)
-
 
 if not os.path.exists("./Utilities/config/usage.ok"):
     print "MetAMOS would like to record anonymous usage statistics, is this ok ? "

@@ -308,8 +308,8 @@ if 1:
        os.system("rm -rf pysam.tar.gz")
        #os.system("ln -s %s/Utilities/python/taxonomy.txt %s/Utilities/models/taxonomy.txt"%(sys.path[0], sys.path[0]))
 
-#DISABLED: matplotlib causes install issues for multiple users
-if 0:
+#WARNING: matplotlib causes install issues for multiple users
+if 1:
    fail = 0
    try:
        import matplotlib

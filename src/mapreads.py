@@ -202,7 +202,7 @@ def map2contig():
                        epos = read.pos+read.rlen
                        spos = read.pos
                        contig = ""
-                       if read.tid > 0:
+                       if read.tid >= 0:
                            contig = samfile.getrname(read.tid)
                            readctgfile.write("%s\t%s\n"%(readname, contig))
                        else:

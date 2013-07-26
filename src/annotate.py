@@ -28,6 +28,7 @@ def init(reads, skipsteps, cls, noblast, annotate_unmapped):
    global _skipsteps
    global _cls
    global _noblast
+   global _annotate_unmapped
    _readlibs = reads
    _skipsteps = skipsteps
    _cls = cls

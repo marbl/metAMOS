@@ -298,10 +298,20 @@ if 1:
        os.system("curl -L http://pysam.googlecode.com/files/pysam-0.6.tar.gz -o ./pysam.tar.gz")
        os.system("tar -C ./Utilities/python -xvf pysam.tar.gz")
        os.system("mv ./Utilities/python/pysam-0.6 ./Utilities/python/pysam")
+       doInstall = True
        #for root install
        #os.system("sudo python ./Utilities/python/pysam/setup.py install")
        os.chdir("./Utilities/python/pysam")
-       os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
+       if OSTYPE == "Darwin":
+          if utils.getFromPath("llvm-gcc-4.2", "LLVM GCC"):
+             os.system("export CC=llvm-gcc-4.2")
+             os.system("export CXX=llvm-g++-4.2")
+          else:
+             print "Warning: Cannot install pysam on your system. Please install LLVM compiler first."
+             doInstall=False
+       if doInstall:
+          os.system("python setup.py build")
+          os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
        os.chdir(METAMOS_ROOT)
        os.system("rm -rf pysam.tar.gz")
        #os.system("ln -s %s/Utilities/python/taxonomy.txt %s/Utilities/models/taxonomy.txt"%(sys.path[0], sys.path[0]))

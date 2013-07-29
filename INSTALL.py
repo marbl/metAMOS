@@ -3,6 +3,10 @@ import os, sys, string, subprocess, distutils.util, check_install, site
 user_home = os.environ["HOME"]
 print "<<Welcome to metAMOS install>>"
 
+#check for python version
+if (sys.version_info[0] < 2) or (sys.version_info[0] == 2 and sys.version_info[1] < 6):
+  print "Python version is %s. metAMOS requires at least 2.6"%(sys.version)
+  sys.exit(1)
 
 #add access to utils.py, for utils dir
 METAMOS_ROOT  = os.getcwd().strip()
@@ -94,12 +98,6 @@ if OSTYPE == "Darwin":
    if "Apple" not in checkStdout:
       ALLOW_FAST=False
 
-#check for python version
-if (sys.version_info[0] < 2) or (sys.version_info[0] == 2 and sys.version_info[1] < 6):
-  print "Python version is %s. metAMOS requires at least 2.6"%(sys.version)
-  sys.exit(1)
-
-
 if not os.path.exists("./Utilities/config/usage.ok"):
     print "MetAMOS would like to record anonymous usage statistics, is this ok ? "
     dl = 'n'
@@ -122,7 +120,7 @@ if not os.path.exists("./Utilities/cpp/%s-%s/metaphylerClassify"%(OSTYPE, MACHIN
     else:
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
-        os.system("wget http://metaphyler.cbcb.umd.edu/MetaPhylerV1.25.tar.gz -O metaphyler.tar.gz")
+        os.system("curl -L http://metaphyler.cbcb.umd.edu/MetaPhylerV1.25.tar.gz -o metaphyler.tar.gz")
         os.system("tar -C ./Utilities/perl/ -xvf metaphyler.tar.gz")
         os.system("mv ./Utilities/perl/MetaPhylerV1.25 ./Utilities/perl/metaphyler")
         os.system("perl ./Utilities/perl/metaphyler/installMetaphyler.pl")
@@ -138,18 +136,10 @@ if not os.path.exists("./FastQC"):
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         archive = "fastqc_v0.10.0.zip"
-        os.system("wget http://www.bioinformatics.bbsrc.ac.uk/projects/fastqc/%s" % archive)
+        os.system("curl -L http://www.bioinformatics.babraham.ac.uk/projects/fastqc/%s -o %s" % (archive,archive))
         os.system("unzip %s" % archive)
         os.system("rm %s" % archive)
         os.system("chmod u+x FastQC/fastqc")
-
-#not needed (for now)
-#if not os.path.exists("./Utilities/cpp/%s-%s/samtools"%(OSTYPE, MACHINETYPE)):
-#       os.system("wget http://sourceforge.net/projects/samtools/files/samtools/0.1.17/samtools-0.1.17.tar.bz2 -O samtools.tar.bz2")
-#       os.system("tar -C ./Utilities/cpp/%s-%s/ -xvf samtools.tar.bz2"%(OSTYPE, MACHINETYPE))
-#       os.system("cd ./Utilities/cpp/%s-%s"%(OSTYPE,MACHINETYPE))
-#       os.system("make")
-#       os.system("rm samtools.tar.bz2")
  
 if not os.path.exists("./Utilities/DB/uniprot_sprot.fasta"):
     print "Uniprot/Swissprot DB not found, optional for Functional Annotation, download now?"
@@ -161,7 +151,7 @@ if not os.path.exists("./Utilities/DB/uniprot_sprot.fasta"):
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         archive = "uniprot.tar.gz"
-        os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -O %s" %(archive, archive))
+        os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -o %s" %(archive, archive))
         os.system("tar -C ./Utilities/DB/ -xvf %s" % archive)
         os.system("rm %s"%archive)
 
@@ -176,7 +166,7 @@ if not os.path.exists("./Utilities/models") or not os.path.exists("./Utilities/D
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         archive = "fcp_models.tar.gz"
-        os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -O %s" %(archive, archive))
+        os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -o %s" %(archive, archive))
         os.system("rm -rf ./Utilities/DB/blast_data")
         os.system("rm -rf ./Utilities/models")
         os.system("tar -C ./Utilities/ -xvf %s" % archive)
@@ -192,7 +182,7 @@ if not os.path.exists("./Utilities/glimmer-mg"):
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         archive = "glimmer-mg-0.3.1.tar.gz"
-        os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -O %s" %(archive, archive))
+        os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -o %s" %(archive, archive))
         os.system("tar -C ./Utilities/ -xvf %s" % archive)
         os.system("rm %s"%archive)
         os.system("python ./Utilities/glimmer-mg/install_glimmer.py")
@@ -236,7 +226,7 @@ if not os.path.exists("./AMOS") or 0:
     else:
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
-        os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/amos-3.2-BETA-%s-%s.binaries.tar.gz -O ./amos-binaries.tar.gz"%(OSTYPE, MACHINETYPE))
+        os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/amos-3.2-BETA-%s-%s.binaries.tar.gz -o ./amos-binaries.tar.gz"%(OSTYPE, MACHINETYPE))
         os.system("tar -xvf amos-binaries.tar.gz")
         os.system("rm -rf amos-binaries.tar.gz")
 
@@ -256,7 +246,7 @@ if 1:
        dl = raw_input("Enter Y/N: ")
    if fail and (dl == 'y' or dl == "Y"):
 
-       os.system("wget http://psutil.googlecode.com/files/psutil-0.6.1.tar.gz -O ./psutil.tar.gz")
+       os.system("curl -L http://psutil.googlecode.com/files/psutil-0.6.1.tar.gz -o ./psutil.tar.gz")
        os.system("tar -C ./Utilities/python -xvf psutil.tar.gz")
        os.system("mv ./Utilities/python/psutil-0.6.1 ./Utilities/python/psutil")
        os.chdir("./Utilities/python/psutil")
@@ -278,7 +268,8 @@ if 1:
    else:
        dl = raw_input("Enter Y/N: ")
    if fail and (dl == 'y' or dl == "Y"):
-       os.system("wget https://github.com/cython/cython/archive/master.zip -O ./cython.zip")
+       #os.system("easy_install cython")
+       os.system("curl -L https://github.com/cython/cython/archive/master.zip -o ./cython.zip")
        os.system("unzip ./cython.zip")
        os.system("mv ./cython-master ./Utilities/python/cython")
        os.chdir("./Utilities/python/cython")
@@ -304,7 +295,7 @@ if 1:
    else:
        dl = raw_input("Enter Y/N: ")
    if fail and (dl == 'y' or dl == "Y"):
-       os.system("wget http://pysam.googlecode.com/files/pysam-0.6.tar.gz -O ./pysam.tar.gz")
+       os.system("curl -L http://pysam.googlecode.com/files/pysam-0.6.tar.gz -o ./pysam.tar.gz")
        os.system("tar -C ./Utilities/python -xvf pysam.tar.gz")
        os.system("mv ./Utilities/python/pysam-0.6 ./Utilities/python/pysam")
        #for root install
@@ -315,6 +306,7 @@ if 1:
        os.system("rm -rf pysam.tar.gz")
        #os.system("ln -s %s/Utilities/python/taxonomy.txt %s/Utilities/models/taxonomy.txt"%(sys.path[0], sys.path[0]))
 
+#WARNING: matplotlib causes install issues for multiple users
 if 1:
    fail = 0
    try:
@@ -330,7 +322,7 @@ if 1:
    else:
        dl = raw_input("Enter Y/N: ")
    if fail and (dl == 'y' or dl == "Y"):
-       os.system("wget http://downloads.sourceforge.net/project/matplotlib/matplotlib/matplotlib-1.2.0/matplotlib-1.2.0.tar.gz -O ./matplotlib.tar.gz")
+       os.system("curl -L http://downloads.sourceforge.net/project/matplotlib/matplotlib/matplotlib-1.2.0/matplotlib-1.2.0.tar.gz -o ./matplotlib.tar.gz")
        os.system("tar -C ./Utilities/python -xvf matplotlib.tar.gz")
        os.system("mv ./Utilities/python/matplotlib-1.2.0 ./Utilities/python/matplotlib")
        os.chdir("./Utilities/python/matplotlib")
@@ -338,7 +330,7 @@ if 1:
        os.chdir(METAMOS_ROOT)
        os.system("rm -rf matplotlib.tar.gz")
 
-if 0 or not os.path.exists("./phylosift"):
+if not os.path.exists("./phylosift"):
    print "PhyloSift binaries not found, optional for Annotate step, download now?"
    if silentInstall:
       dl = 'y'
@@ -347,9 +339,8 @@ if 0 or not os.path.exists("./phylosift"):
    else:
       dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':
-      #os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/phylosift-Linux-x86_6-20120523.tar.bz2 -O ./phylosift.tar.bz2"%(OSTYPE, MACHINETYPE))
       #phylosift OSX binaries included inside Linux X86_64 tarball..
-      os.system("wget ftp://ftp.cbcb.umd.edu/pub/data/metamos/phylosift-Linux-x86_64-20120523.tar.bz2 -O ./phylosift.tar.bz2")
+      os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/phylosift-Linux-x86_64-20120523.tar.bz2 -o ./phylosift.tar.bz2")
       os.system("tar -xvjf phylosift.tar.bz2")
       os.system("rm -rf phylosift.tar.bz2")
 
@@ -363,12 +354,13 @@ if not os.path.exists("./CA") or 0:
       dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':
       if OSTYPE == 'Linux' and MACHINETYPE == "x86_64":
-         os.system("wget http://sourceforge.net/projects/wgs-assembler/files/wgs-assembler/wgs-7.0/wgs-7.0-PacBio-Linux-amd64.tar.bz2")
+         #hard coded, will fail if moved
+         os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/wgs-7.0-PacBio-Linux-amd64.tar.bz2 -o wgs-7.0-PacBio-Linux-amd64.tar.bz2")
          os.system("bunzip2 wgs-7.0-PacBio-Linux-amd64.tar.bz2")
          os.system("tar xvf wgs-7.0-PacBio-Linux-amd64.tar")
          os.system("rm -rf wgs-7.0-PacBio-Linux-amd64.tar")
       else:
-         os.system("wget http://sourceforge.net/projects/wgs-assembler/files/wgs-assembler/wgs-7.0/wgs-7.0.tar.bz2 -O wgs-7.0.tar.bz2")
+         os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/wgs-7.0.tar.bz2 -o wgs-7.0.tar.bz2")
          os.system("bunzip2 wgs-7.0.tar.bz2")
          os.system("tar xvf wgs-7.0.tar")
          os.system("rm -rf wgs-7.0.tar")
@@ -392,7 +384,7 @@ if not os.path.exists("KronaTools") or 0:
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         # TODO: KronaTools should be on the FTP site for robustness to URL changes
-        os.system("wget 'ftp://ftp.cbcb.umd.edu/pub/data/metamos/" + kronaTools + ".tar' -O %s.tar"%(kronaTools))
+        os.system("curl -L 'ftp://ftp.cbcb.umd.edu/pub/data/metamos/" + kronaTools + ".tar' -o %s.tar"%(kronaTools))
         os.system("tar -xvf %s.tar"%(kronaTools))
         os.system("rm -rf %s.tar"%(kronaTools))
         os.system("mv %s KronaTools"%(kronaTools))
@@ -410,6 +402,24 @@ if not os.path.exists("KronaTools/taxonomy/taxonomy.tab") or 0:
         os.system("cd KronaTools && ./updateTaxonomy.sh")
 
 # make sure we have setuptools available
+if 1:
+   fail = 0
+   try:
+       import setuptools
+   except ImportError:
+       print "setuptools not found, required for install, download now?"
+       fail = 1
+   if not fail or silentInstall:
+       dl = 'y'
+   elif lightInstall:
+       dl = 'y'
+   else:
+       dl = raw_input("Enter Y/N: ")
+   if fail and (dl == 'y' or dl == "Y"):
+
+       os.system("curl -L https://bitbucket.org/pypa/setuptools/raw/0.7.4/ez_setup.py -o ez_setup.py")
+       os.system("python ez_setup.py --user")
+
 sys.path.append(METAMOS_ROOT + os.sep + "Utilities" + os.sep + "python")
 from get_setuptools import use_setuptools
 use_setuptools()

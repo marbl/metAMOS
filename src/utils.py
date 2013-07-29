@@ -330,8 +330,14 @@ def getFromPath(theCommand, theName):
        return checkStdout.replace(theCommand, "").strip()
 
 def cmdExists(cmd):
-    return subprocess.call(["type", cmd],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0
+    result = False
+    try:
+       result = subprocess.call(cmd,
+           shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0
+    except OSError:
+       result = False
+
+    return result
 
 def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
     Settings(kmer, threads, theRundir, taxaLevel, verbose, outputOnly, True)

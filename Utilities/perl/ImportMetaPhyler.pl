@@ -168,14 +168,14 @@ foreach my $input (@ARGV)
                     # pick the lowest classified level to use
                     my $bestTaxa = $ids{lc($taxName)};
                     $totalMagnitude += $magnitude;
-                    addByTaxID(\%tree, $set, $bestTaxa, $magnitude, 0);
+                    addByTaxID(\%tree, $set, $bestTaxa, 0, $magnitude, 1);
                     last;
                 }
 	}
         close metaPhyl;
  
         if ($totalMagnitude == 0) {
-           addByTaxID(\%tree, $set, 1, undef, 1, 0);
+           addByTaxID(\%tree, $set, 1, undef, 0, 1, 0);
         }
 	
 	if ( $include && $totalMagnitude )

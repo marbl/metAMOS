@@ -15,7 +15,8 @@ from datetime import datetime, date, time
 import settings
 import helper
 
-locale.setlocale(locale.LC_ALL, 'en_US')
+#let system set locale from available ones
+locale.setlocale(locale.LC_ALL, '')
 
 def intOrZero(string):
     if string:

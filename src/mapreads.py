@@ -2,6 +2,7 @@
 
 import os, sys, math, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser, shelve
 from operator import itemgetter
+from datetime import datetime
 
 from utils import *
 from preprocess import Preprocess
@@ -9,6 +10,9 @@ from assemble import Assemble
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
 import pysam
+
+MAX_ENTRIES = 10000
+
 _readlibs = []
 _skipsteps = []
 _settings = Settings()
@@ -56,9 +60,9 @@ def map2contig():
     cnt = 0
 
     contigdict = {}
+    dictcnt = 0
     if _lowmem:
-        contigdict = shelve.open("%s/Assemble/out/%s.contigdict"%(_settings.rundir,_settings.PREFIX),'c')
-        #contigdict_disk = shelve.open("%s/Assemble/out/%s.contigdict"%(_settings.rundir,_settings.PREFIX),'c')
+        contigdict = shelve.open("%s/Assemble/out/%s.contigdict"%(_settings.rundir,_settings.PREFIX),'c', writeback=True)
     contigdict2 = {}
     readdict = {}
     matedict = {}
@@ -166,6 +170,10 @@ def map2contig():
                     except KeyError:
                         contigdict[contig] = [[int(spos),int(epos),strand,read,len(read_seq),lib.id]]
                         #contigdict_disk[contig] = [[int(spos),int(epos),strand,read,len(read_seq),lib.id]]
+                    if _lowmem and dictcnt % MAX_ENTRIES == 0:
+                       #print "Processed %d entries %s"%(dictcnt, str(datetime.now()))
+                       contigdict.sync()
+                    dictcnt+=1
                     #print contig
                     seqdict[read] = read_seq
                     seqfile.write(">%s\n%s\n"%(read,read_seq))
@@ -223,7 +231,10 @@ def map2contig():
                        except KeyError:
                            contigdict[contig] = [[int(spos),int(epos),strand,readname,len(read_seq),lib.id]]
                            #contigdict_disk[contig] = [[int(spos),int(epos),strand,readname,len(read_seq),lib.id]]
-
+                       if _lowmem and dictcnt % MAX_ENTRIES == 0:
+                          #print "Processed %d entries"%(dictcnt, str(datetime.now()))
+                          contigdict.sync()
+                       dictcnt+=1
                        seqdict[readname] = read_seq
                        seqfile.write(">%s\n%s\n"%(readname,read_seq))
                        seqfile.flush()

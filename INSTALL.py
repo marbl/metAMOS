@@ -215,7 +215,7 @@ if not os.path.exists("./Utilities/DB/refseq_protein.pal") or not os.path.exists
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.05.tar.gz")
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.06.tar.gz")
         print "    running fastacmd (might take a few min)..."
-        os.system(".%sUtilities%s%s-%s%sfastacmd -d ./Utilities/DB/refseq_protein -p T -a T -D 1 -o ./Utilities/DB/allprots.faa"%(os.sep, os.sep, OSTYPE, MACHINETYPE, os.sep))
+        os.system(".%sUtilities%scpp%s%s-%s%sfastacmd -d ./Utilities/DB/refseq_protein -p T -a T -D 1 -o ./Utilities/DB/allprots.faa"%(os.sep, os.sep, os.sep, OSTYPE, MACHINETYPE, os.sep))
 
 if not os.path.exists("./AMOS") or 0:
     print "AMOS binaries not found, needed for all steps, download now?"

@@ -188,7 +188,12 @@ if not os.path.exists("./Utilities/glimmer-mg"):
         os.system("python ./Utilities/glimmer-mg/install_glimmer.py")
 
 
-if not os.path.exists("./Utilities/DB/refseq_protein.pal") or not os.path.exists("./Utilities/DB/refseq_protein.06.psq") or not os.path.exists("./Utilities/DB/allprots.faa"):
+# check the number of files the DB currently is and see if we have the expected number
+dbResult = utils.getCommandOutput("perl ./Utilities/perl/update_blastdb.pl refseq_protein --numpartitions", False)
+(dbName, numPartitions) = dbResult.split("\t", 1) 
+print "Checking whether %s is complete. Expecting %d partitions.\n"%(dbName, int(numPartitions))
+numPartitions = int(numPartitions) - 1
+if not os.path.exists("./Utilities/DB/refseq_protein.pal") or not os.path.exists("./Utilities/DB/refseq_protein.%02d.psq"%(int(numPartitions))) or not os.path.exists("./Utilities/DB/allprots.faa"):
     print "refseq protein DB not found or incomplete, needed for Annotate step, download now?"
     if silentInstall:
        dl = 'y'

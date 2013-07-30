@@ -320,14 +320,21 @@ def getMachineType():
    else:
       Settings.MACHINETYPE = checkStdout.strip()
 
-def getFromPath(theCommand, theName):
-    p = subprocess.Popen("which %s"%(theCommand), shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+def getCommandOutput(theCommand, checkForStderr):
+    p = subprocess.Popen(theCommand, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (checkStdout, checkStderr) = p.communicate()
-    if checkStderr != "":
+    if checkForStderr and checkStderr != "":
+       return ""
+    else:
+       return checkStdout.strip()
+
+def getFromPath(theCommand, theName):
+    result = getCommandOutput("which %s"%(theCommand), True)
+    if result == "":
        print "Warning: %s is not found, some functionality will not be available"%(theName)
        return ""
     else:
-       return checkStdout.replace(theCommand, "").strip()
+       return result.replace(theCommand, "").strip()
 
 def cmdExists(cmd):
     result = False

@@ -188,7 +188,7 @@ if not os.path.exists("./Utilities/glimmer-mg"):
         os.system("python ./Utilities/glimmer-mg/install_glimmer.py")
 
 
-if not os.path.exists("./Utilities/DB/refseq_protein.pal") or not os.path.exists("./Utilities/DB/refseq_protein.06.psq"):
+if not os.path.exists("./Utilities/DB/refseq_protein.pal") or not os.path.exists("./Utilities/DB/refseq_protein.06.psq") or not os.path.exists("./Utilities/DB/allprots.faa"):
     print "refseq protein DB not found or incomplete, needed for Annotate step, download now?"
     if silentInstall:
        dl = 'y'
@@ -215,7 +215,7 @@ if not os.path.exists("./Utilities/DB/refseq_protein.pal") or not os.path.exists
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.05.tar.gz")
         os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.06.tar.gz")
         print "    running fastacmd (might take a few min)..."
-        os.system("fastacmd -d ./Utilities/DB/refseq_protein -p T -a T -D 1 -o ./Utilities/DB/allprots.faa")
+        os.system(".%sUtilities%s%s-%s%sfastacmd -d ./Utilities/DB/refseq_protein -p T -a T -D 1 -o ./Utilities/DB/allprots.faa"%(os.sep, os.sep, OSTYPE, MACHINETYPE, os.sep))
 
 if not os.path.exists("./AMOS") or 0:
     print "AMOS binaries not found, needed for all steps, download now?"

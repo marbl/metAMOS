@@ -7,6 +7,7 @@ from utils import *
 from annotate import Annotate
 from scaffold import Scaffold
 from findscforfs import FindScaffoldORFS
+from abundance import Abundance
 
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
@@ -31,7 +32,7 @@ def init(reads, skipsteps, cls):
          _mated = True
          break
 
-@follows(FindScaffoldORFS)
+@follows(Abundance)
 @posttask(touch_file("%s/Logs/propagate.ok"%(_settings.rundir)))
 @files("%s/Annotate/out/%s.annots"%(_settings.rundir, _settings.PREFIX),"%s/Logs/propagate.ok"%(_settings.rundir))
 def Propagate(input,output):

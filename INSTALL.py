@@ -1,4 +1,4 @@
-import os, sys, string, subprocess, distutils.util, check_install, site
+import os, sys, string, subprocess, distutils.util, check_install, site, glob
 
 user_home = os.environ["HOME"]
 print "<<Welcome to metAMOS install>>"
@@ -199,21 +199,11 @@ if not os.path.exists("./Utilities/DB/refseq_protein.pal") or not os.path.exists
     if dl == 'y' or dl == 'Y':
         print "Download and install refseq protein DB.."
         os.system("perl ./Utilities/perl/update_blastdb.pl refseq_protein")
-        os.system("mv refseq_protein.00.tar.gz ./Utilities/DB/.")
-        os.system("mv refseq_protein.01.tar.gz ./Utilities/DB/.")
-        os.system("mv refseq_protein.02.tar.gz ./Utilities/DB/.")
-        os.system("mv refseq_protein.03.tar.gz ./Utilities/DB/.")
-        os.system("mv refseq_protein.04.tar.gz ./Utilities/DB/.")
-        os.system("mv refseq_protein.05.tar.gz ./Utilities/DB/.")
-        os.system("mv refseq_protein.06.tar.gz ./Utilities/DB/.")
-        
-        os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.00.tar.gz")
-        os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.01.tar.gz")
-        os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.02.tar.gz")
-        os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.03.tar.gz")
-        os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.04.tar.gz")
-        os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.05.tar.gz")
-        os.system("tar -C ./Utilities/DB/ -xvf ./Utilities/DB/refseq_protein.06.tar.gz")
+        os.system("mv refseq_protein.*.tar.gz ./Utilities/DB/")
+       
+        fileList = glob.glob("./Utilities/DB/refseq_protein.*.tar.gz") 
+        for file in fileList:
+           os.system("tar -C ./Utilities/DB/ -xvf %s"%(file))
         print "    running fastacmd (might take a few min)..."
         os.system(".%sUtilities%scpp%s%s-%s%sfastacmd -d ./Utilities/DB/refseq_protein -p T -a T -D 1 -o ./Utilities/DB/allprots.faa"%(os.sep, os.sep, os.sep, OSTYPE, MACHINETYPE, os.sep))
 

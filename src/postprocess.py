@@ -75,7 +75,7 @@ def Postprocess(input,output):
        if not os.path.exists(_settings.KRONA + os.sep + "ktImportBLAST"):
           print "Error: Krona importer for BLAST not found in %s. Please check your path and try again.\n"%(_settings.KRONA)
           raise(JobSignalledBreak)
-       run_process(_settings, "%s/ktImportBLAST %s -c -i %s/Postprocess/in/%s.hits"%(_settings.KRONA,"-l" if _settings.local_krona else "",_settings.rundir,_settings.PREFIX),"Postprocess")
+       run_process(_settings, "%s/ktImportBLAST %s -c -i %s/Postprocess/in/%s.hits:%s/FindORFS/out/%s.ctg.gene.cvg"%(_settings.KRONA,"-l" if _settings.local_krona else "",_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Postprocess")
        run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")
        run_process(_settings, "ln %s/Postprocess/out/blast.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
        #run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")

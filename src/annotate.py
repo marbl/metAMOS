@@ -118,10 +118,6 @@ def annotateSeq(cls, contigs, orfAA, orfFA, output):
            print "Error: BLAST not found in %s. Please check your path and try again.\n"%(_settings.BLAST)
            raise(JobSignalledBreak)
 
-       if not os.path.exists("%s/DB/allprots.faa"%(_settings.METAMOS_UTILS)):
-          print "Error: You indicated you would like to run MetaPhyler but it depends on BLAST and DB allprots.faa not found in %s/DB. Please check your path and try again.\n"%(_settings.METAMOS_UTILS)
-          raise(JobSignalledBreak)
-
        #run_process(_settings, "perl %s/perl/installMetaphyler.pl"%(_settings.METAMOS_UTILS)
        run_process(_settings,"%s/blastall -p blastx -a %d -m 8 -b 1 -e 1e-2 -i %s -d %s/perl/metaphyler/test/test.ref.protein > %s/Annotate/out/%s.query.blastx"%(_settings.BLAST,_settings.threads,orfFA,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX))
        run_process(_settings, "%s/metaphylerClassify %s/perl/metaphyler/markers/markers.blastx.classifier %s/perl/metaphyler/markers/markers.taxonomy %s/Annotate/out/%s.query.blastx > %s/Annotate/out/%s.classification"%(_settings.METAPHYLER,_settings.METAMOS_UTILS,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,output) )
@@ -133,9 +129,6 @@ def annotateSeq(cls, contigs, orfAA, orfFA, output):
           print "Error: BLAST not found in %s. Please check your path and try again.\n"%(_settings.BLAST)
           raise(JobSignalledBreak)
 
-       if not os.path.exists("%s/DB/allprots.faa"%(_settings.METAMOS_UTILS)):
-          print "Error: You indicated you would like to run BLAST but DB allprots.faa not found in %s/DB. Please check your path and try again.\n"%(_settings.METAMOS_UTILS)
-          raise(JobSignalledBreak)
        run_process(_settings, "%s/blastall -v 1 -b 1 -a %d -p blastp -m 8 -e 0.00001 -i %s -d %s/DB/refseq_protein -o %s/Annotate/out/%s.blastout"%(_settings.BLAST, _settings.threads,orfAA,_settings.METAMOS_UTILS,_settings.rundir,output),"Annotate")
        run_process(_settings, "mv %s/Annotate/out/%s.blastout  %s/Annotate/out/%s.intermediate.hits"%(_settings.rundir,output,_settings.rundir,output),"Annotate")
    elif cls == "phylosift":
@@ -315,7 +308,7 @@ def Annotate(input,output):
          if not os.path.exists(importPhymm):
             print "Error: Krona importer for Phymm not found in %s. Please check your path and try again.\n"%(importPhymm)
             raise(JobSignalledBreak)
-         run_process(_settings, "perl %s -f %s %s/Annotate/out/%s.phymm.out:%s/Assemble/out/%s.contig.cnt:%s"%(importPhymm, listOfFiles,_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate") # TODO: local url (after next KronaTools release)
+         run_process(_settings, "perl %s %s -f %s %s/Annotate/out/%s.phymm.out:%s/Assemble/out/%s.contig.cnt:%s"%(importPhymm, "-l" if _settings.local_krona else "", listOfFiles,_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate") # TODO: local url (after next KronaTools release)
 
          # generate taxonomic-level annots
          readctg_dict = {}
@@ -413,7 +406,7 @@ def Annotate(input,output):
        if not os.path.exists(importPS):
            print "Error: Krona importer for PhyloSift not found in %s. Please check your path and try again.\n"%(_settings.KRONA)
            raise(JobSignalledBreak)
-       run_process(_settings, "perl %s -c -i -f %s %s/Annotate/out/%s.hits:%s/Assemble/out/%s.contig.cnt:%s"%(importPS,listOfFiles,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX, _settings.taxa_level), "Annotate")
+       run_process(_settings, "perl %s %s -c -i -f %s %s/Annotate/out/%s.hits:%s/Assemble/out/%s.contig.cnt:%s"%(importPS,"-l" if _settings.local_krona else "",listOfFiles,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX, _settings.taxa_level), "Annotate")
 
    elif _cls == "fcp":
        # generate Krona output
@@ -423,7 +416,7 @@ def Annotate(input,output):
           raise(JobSignalledBreak)
        run_process(_settings, "cat %s/Annotate/out/*.intermediate.epsilon-nb_results.txt | grep -v 'Fragment Id' > %s/Annotate/out/%s.epsilon-nb_results.txt"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
 
-       run_process(_settings, "perl %s -c -i -f %s %s/Annotate/out/%s.epsilon-nb_results.txt:%s/Assemble/out/%s.contig.cnt:%s"%(importFCP, listOfFiles, _settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate") # TODO: local url (after next KronaTools release)
+       run_process(_settings, "perl %s %s -c -i -f %s %s/Annotate/out/%s.epsilon-nb_results.txt:%s/Assemble/out/%s.contig.cnt:%s"%(importFCP, "-l" if _settings.local_krona else "", listOfFiles, _settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate") # TODO: local url (after next KronaTools release)
 
    elif _cls == "phymm":
        # generate Krona output ImportPhymmBL.pl
@@ -432,7 +425,7 @@ def Annotate(input,output):
           print "Error: Krona importer for Phymm not found in %s. Please check your path and try again.\n"%(importPhymm)
           raise(JobSignalledBreak)
        run_process(_settings, "cat %s/Annotate/out/*.intermediate.phymm.out > %s/Annotate/out/%s.phymm.out"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
-       run_process(_settings, "perl %s -f %s %s/Annotate/out/%s.phymm.out:%s/Assemble/out/%s.contig.cnt:%s"%(importPhymm, listOfFiles,_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate") # TODO: local url (after next KronaTools release)
+       run_process(_settings, "perl %s %s -f %s %s/Annotate/out/%s.phymm.out:%s/Assemble/out/%s.contig.cnt:%s"%(importPhymm, "-l" if _settings.local_krona else "", listOfFiles,_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate") # TODO: local url (after next KronaTools release)
 
    run_process(_settings, "unlink %s/Postprocess/in/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")
    run_process(_settings, "unlink %s/Postprocess/out/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")

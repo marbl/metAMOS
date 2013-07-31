@@ -76,6 +76,6 @@ def FunctionalAnnotation(input,output):
    foutput.close() 
    #for top hit for each seq, report id, e-vlue and EC value
    #create krona plot
-   run_process(_settings,"%s/KronaTools/bin/ktImportEC %s/FunctionalAnnotation/out/krona.ec.input"%(_settings.METAMOSDIR,_settings.rundir))
+   run_process(_settings,"%s/KronaTools/bin/ktImportEC %s %s/FunctionalAnnotation/out/krona.ec.input"%(_settings.METAMOSDIR,"-l" if _settings.local_krona else "",_settings.rundir), "FunctionalAnnotation")
    
  

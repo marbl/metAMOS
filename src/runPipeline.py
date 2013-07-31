@@ -147,6 +147,7 @@ def usage():
     print "   -r = <bool>:   retain the AMOS bank?  (default = NO)"
     print "   -p = <int>:    number of threads to use (be greedy!) (default=1)"
     print "   -4 = <bool>:   454 data? (default = NO)"    
+    print "   -L = <bool>:   generate local Krona plots. Local Krona plots can only be viewed on the machine they are generated on but will work on a system with no internet connection (default = NO)"
 
 def updateCounter():
     ##if user says its ok, create MetAMOS counter git repo and update counter each time its run!
@@ -210,7 +211,7 @@ def printConfiguration(fileName=None):
         conf.close()
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hrjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iu1l:x:yz:",\
+    opts, args = getopt.getopt(sys.argv[1:], "hrjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iu1l:x:yz:L",\
                                    ["help", \
                                         "retainBank", \
                                         "libspeccov",\
@@ -238,7 +239,8 @@ try:
                                         "justprogs", \
                                         "what", \
                                         "lowcpu",\
-                                        "taxalevel"])
+                                        "taxalevel",\
+                                        "localKrona"])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -475,6 +477,8 @@ for o, a in opts:
         runfast = True
     elif o in ("-b","--savebowtieidx"):
         savebtidx = True
+    elif o in ("-L", "--localKrona"):
+        utils.Settings.local_krona = True
     else:
         assert False, "unhandled option"
 
@@ -683,7 +687,7 @@ if __name__ == "__main__":
     print "Starting metAMOS pipeline"
     if settings.threads < 1:
         settings.threads = 1
-    settings = utils.initConfig(settings.kmer, settings.threads, settings.rundir, settings.taxa_level, settings.VERBOSE, settings.OUTPUT_ONLY)
+    settings = utils.initConfig(settings.kmer, settings.threads, settings.rundir, settings.taxa_level, settings.local_krona, settings.VERBOSE, settings.OUTPUT_ONLY)
     # add krona to system path
     currPath = os.environ["PATH"]
     if utils.Settings.KRONA not in currPath:

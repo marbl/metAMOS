@@ -44,6 +44,7 @@ class Settings:
    threads = 16
    rundir = ""
    taxa_level = "class"
+   local_krona = False
    task_dict = []
 
    VERBOSE = False
@@ -88,7 +89,7 @@ class Settings:
    KRONA = ""
    REPEATOIRE = ""
 
-   def __init__(self, kmer = None, threads = None, rundir = None, taxa_level = "", verbose = False, outputOnly = False, update = False):
+   def __init__(self, kmer = None, threads = None, rundir = None, taxa_level = "", localKrona = False, verbose = False, outputOnly = False, update = False):
 
       if (Settings.rundir != "" and update == False):
          return
@@ -102,6 +103,7 @@ class Settings:
       Settings.threads = threads 
       Settings.rundir = rundir
       Settings.taxa_level = taxa_level
+      Settings.local_krona = localKrona
       Settings.task_dict = []
 
       Settings.PREFIX = "proba"
@@ -346,8 +348,8 @@ def cmdExists(cmd):
 
     return result
 
-def initConfig(kmer, threads, theRundir, taxaLevel, verbose, outputOnly):
-    Settings(kmer, threads, theRundir, taxaLevel, verbose, outputOnly, True)
+def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, verbose, outputOnly):
+    Settings(kmer, threads, theRundir, taxaLevel, localKrona, verbose, outputOnly, True)
 
     getMachineType()
 

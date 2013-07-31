@@ -67,15 +67,15 @@ def Postprocess(input,output):
    #linearize
    #call KronaReports
    if _cls == 'phmmer':
-       if not os.path.exists(_settings.KRONA + os.sep + "ImportPHMMER.pl"):
+       if not os.path.exists(_settings.KRONA + os.sep + "ktImportPHMMER"):
           print "Error: Krona importer for PHMMER not found in %s. Please check your path and try again.\n"%()
           raise(JobSignalledBreak)
-       run_process(_settings, "perl %s/ImportPHMMER.pl -c -v -i %s/Postprocess/in/%s.hits"%(_settings.KRONA,_settings.rundir,_settings.PREFIX),"Postprocess")
+       run_process(_settings, "perl %s/ktImportPHMMER %s -c -v -i %s/Postprocess/in/%s.hits"%(_settings.KRONA,"-l" if _settings.local_krona else "",_settings.rundir,_settings.PREFIX),"Postprocess")
    elif _cls == 'blast' or _cls == 'metaphyler' or _cls == None:
        if not os.path.exists(_settings.KRONA + os.sep + "ktImportBLAST"):
           print "Error: Krona importer for BLAST not found in %s. Please check your path and try again.\n"%(_settings.KRONA)
           raise(JobSignalledBreak)
-       run_process(_settings, "%s/ktImportBLAST -c -i %s/Postprocess/in/%s.hits"%(_settings.KRONA,_settings.rundir,_settings.PREFIX),"Postprocess")
+       run_process(_settings, "%s/ktImportBLAST %s -c -i %s/Postprocess/in/%s.hits"%(_settings.KRONA,"-l" if _settings.local_krona else "",_settings.rundir,_settings.PREFIX),"Postprocess")
        run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")
        run_process(_settings, "ln %s/Postprocess/out/blast.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
        #run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")
@@ -247,7 +247,7 @@ def Postprocess(input,output):
    run_process(_settings, "ln %s/Propagate/out/%s.clusters %s/Postprocess/out/html/propagate.out.clusters"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
 
    run_process(_settings, "unlink %s/Postprocess/out/html/FunctionalAnnotation.html"%(_settings.rundir), "Postprocess")
-   run_process(_settings, "ln %s/ec.krona.html %s/Postprocess/out/html/FunctionalAnnotation.html"%(os.getcwd(), _settings.rundir), "Postprocess")
+   run_process(_settings, "ln %s/FunctionalAnnotation/out/ec.krona.html %s/Postprocess/out/html/FunctionalAnnotation.html"%(_settings.rundir, _settings.rundir), "Postprocess")
  
    run_process(_settings, "python %s/python/create_summary.py %s/Abundance/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/html/ %s/Postprocess/out/%s.scf.fa %s %s/img %s %d %s"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.METAMOSDIR,_settings.AMOS, len(_readlibs), _settings.taxa_level),"Postprocess")
    #webbrowser.open_new_tab(createreport.html)

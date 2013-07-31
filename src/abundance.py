@@ -79,7 +79,7 @@ def Abundance(input,output):
    if not os.path.exists(importMetaPhyler):
       print "Error: Krona importer for MetaPhyler not found in %s. Please check your path and try again.\n"%(importMetaPhyler)
       raise(JobSignalledBreak)
-   run_process(_settings, "perl %s -c -v -i -p %s/Abundance/out/%s.taxprof.pct.txt:%s"%(importMetaPhyler,_settings.rundir,_settings.PREFIX, _settings.taxa_level),"Abundance")
+   run_process(_settings, "perl %s %s -c -v -i -p %s/Abundance/out/%s.taxprof.pct.txt:%s"%(importMetaPhyler,"-l" if _settings.local_krona else "",_settings.rundir,_settings.PREFIX, _settings.taxa_level),"Abundance")
 
    if _cls == 'metaphyler' or _cls == None:
       print "!!No classification selected, using MetaPhyler for taxonomic composition classification\n"

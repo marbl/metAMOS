@@ -23,15 +23,12 @@ def init(reads, skipsteps, cls):
    _skipsteps = skipsteps
    _cls = cls
 
-if "Propagate" in _skipsteps or _cls == None:
-   run_process(_settings, "touch %s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), "Classify")
-
-
 @follows(Propagate)
 @posttask(touch_file("%s/Logs/classify.ok"%(_settings.rundir)))
 @files("%s/Propagate/out/%s.clusters"%(_settings.rundir,_settings.PREFIX),"%s/Classify/out/sorted.txt"%(_settings.rundir))
 def Classify(input,output):
    if "Classify" in _skipsteps or _cls == None:
+       run_process(_settings, "touch %s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), "Classify")
        run_process(_settings, "touch %s/Logs/classify.skip"%(_settings.rundir), "Classify")       
        return 0
 

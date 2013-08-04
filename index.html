@@ -1,79 +1,394 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset='utf-8'>
 
-  <title>treangen/metAMOS @ GitHub</title>
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="MetAMOS : A metagenomic assembly analysis pipeline" />
 
-  <style type="text/css">
-    body {
-      margin-top: 1.0em;
-      background-color: #3c0553;
-      font-family: Helvetica, Arial, FreeSans, san-serif;
-      color: #ffffff;
-    }
-    #container {
-      margin: 0 auto;
-      width: 700px;
-    }
-    h1 { font-size: 3.8em; color: #c3faac; margin-bottom: 3px; }
-    h1 .small { font-size: 0.4em; }
-    h1 a { text-decoration: none }
-    h2 { font-size: 1.5em; color: #c3faac; }
-    h3 { text-align: center; color: #c3faac; }
-    a { color: #c3faac; }
-    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
-    .download { float: right; }
-    pre { background: #000; color: #fff; padding: 15px;}
-    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
-    .footer { text-align:center; padding-top:30px; font-style: italic; }
-  </style>
-</head>
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
 
-<body>
-  <a href="http://github.com/treangen/metAMOS"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+    <title>MetAMOS</title>
+  </head>
 
-  <div id="container">
+  <body>
 
-    <div class="download">
-      <a href="http://github.com/treangen/metAMOS/zipball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
-      <a href="http://github.com/treangen/metAMOS/tarball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/treangen/metAMOS">View on GitHub</a>
+
+          <h1 id="project_title">MetAMOS</h1>
+          <h2 id="project_tagline">A metagenomic assembly analysis pipeline</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/treangen/metAMOS/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/treangen/metAMOS/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
     </div>
 
-    <h1><a href="http://github.com/treangen/metAMOS">metAMOS</a>
-      <span class="small">by <a href="http://github.com/treangen">treangen</a></span></h1>
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="metamos-v12-readme" class="anchor" href="#metamos-v12-readme"><span class="octicon octicon-link"></span></a>MetAMOS v1.2 README</h1>
 
-    <div class="description">
-      A metagenomic assembly pipeline for AMOS
+<p>Last updated: August 3rd, 2013</p>
+
+<h2>
+<a name="metamos-single-file-binary" class="anchor" href="#metamos-single-file-binary"><span class="octicon octicon-link"></span></a><strong>MetAMOS single file binary</strong>
+</h2>
+
+<p>One of the original goals of the MetAMOS project was to greatly simplify the process of installing multiple software packages, dependencies, etc. In attempt to further simplify the MetAMOS installation process, we are happy to announce the availability of a 'frozen' MetAMOS binary for Linux-x68_64 platforms. Along with this binary comes a significantly reduced list of prerequisites:</p>
+
+<ul>
+<li>Java 1.5 (or newer)</li>
+<li>Perl 5.8.8 (or newer)</li>
+<li>64-bit *nix OS</li>
+</ul><p>You can download a frozen binary with all BLAST DBs <a>here</a></p>
+
+<p>*Note: this is a big file to download and will take awhile to finish (~13GB compressed, 27GB unzipped)</p>
+
+<p>Alternatively, you can download a frozen binary with NO BLAST DBs <a>here</a></p>
+
+<p>*Note: this is fairly big file, ~1.9GB compressed, 4GB unzipped</p>
+
+<p>The revised installation procedure is simply:</p>
+
+<ol>
+<li>Download tarball</li>
+<li>Extract</li>
+<li>Run a test script or two</li>
+<li>have fun!</li>
+</ol><p>Mac OSX equivalent will be appearing <a href="ftp.cbcb.umd.edu/pub/data/treangen/metAMOS_binary_noblastdbs_osx.tar.gz">here</a>  soon, stay tuned!</p>
+
+<h2>
+<a name="news" class="anchor" href="#news"><span class="octicon octicon-link"></span></a>NEWS:</h2>
+
+<ol>
+<li>64-bit frozen Linux binary now available</li>
+<li>Started migration to new HTML5 plots in HTML report</li>
+<li>Numerous bux fixes</li>
+</ol><h2>
+<a name="summary" class="anchor" href="#summary"><span class="octicon octicon-link"></span></a>SUMMARY</h2>
+
+<pre><code>    * A) HARDWARE REQUIREMENTS
+    * B) SOFTWARE REQUIREMENTS
+    * C) INSTALLING MetAMOS
+    * D) QUICK START
+    * E) TEST SUITE
+    * F) EXAMPLE OUTPUT
+    * G) CONTACT
+    * H) CITING
+</code></pre>
+
+<hr><h3>
+<a name="a-hardware-requirements" class="anchor" href="#a-hardware-requirements"><span class="octicon octicon-link"></span></a>A) HARDWARE REQUIREMENTS</h3>
+
+<p>MetAMOS was designed to work on any standard 64bit Linx
+environment. To use MetAMOS for tutorial/teaching purposes, a minimum
+of 8 GB RAM is required. To get started on real data sets a minimum of
+32 GB of RAM is recommened, and anywhere from 64-512 GB may be
+necessary for larger datasets. In our experience, for most 50-100
+million read datasets, 64 GB is a good place to start (128 GB of memory
+available on High Memory Instance at Amazon Elastic Compute Cloud ).</p>
+
+<hr><h3>
+<a name="b-software-requirements" class="anchor" href="#b-software-requirements"><span class="octicon octicon-link"></span></a>B) SOFTWARE REQUIREMENTS</h3>
+
+<p>The main prequisite software is python2.6+ and AMOS (available from
+<a href="http://amos.sf.net">http://amos.sf.net</a>). Once python2.6+ and AMOS are installed, there
+should not be any other major prerequisites as most everything that is
+needed is distributed with MetAMOS inside of the /Utilities
+directory. Depending on your platform/Linux distribution, you might need to download and install the following BEFORE running INSTALL.py:</p>
+
+<p>1) git
+2) wget
+3) gcc
+4) automake
+5) python-tools
+6) python-devel
+7) zlib-devel
+8) numpy
+9) freetype, freetype-devel
+10) libpng-devel</p>
+
+<p>Additionally, there is some software that MetAMOS can
+incorporate into its pipeline that we are not allowed to distribute,
+such as MetaGeneMark. To get a license to use MetaGeneMark, plesae
+visit: <a href="http://exon.gatech.edu/license_download.cgi">http://exon.gatech.edu/license_download.cgi</a>.</p>
+
+<hr><h3>
+<a name="c-installing-metamos" class="anchor" href="#c-installing-metamos"><span class="octicon octicon-link"></span></a>C) INSTALLING MetAMOS</h3>
+
+<p>To download the software, go to <a href="https://github.com/treangen/MetAMOS">https://github.com/treangen/MetAMOS</a>
+and click on Downloads. Once downloaded, simply unpack the files and
+open the MetAMOS directory. Once inside the MetAMOS directory, run:</p>
+
+<p>python INSTALL.py</p>
+
+<p>This will download and install any external dependencies (or they can
+be refused by answering NO), which may take minutes or hours to
+download depending on your connection speed. If all dependencies are
+downloaded (including optional ones), this will take quite awhile to
+complete (plan on a few hours to 2 days).</p>
+
+<hr><h3>
+<a name="d-quick-start" class="anchor" href="#d-quick-start"><span class="octicon octicon-link"></span></a>D) QUICK START</h3>
+
+<p>Before you get started using MetAMOS a brief review of its design will
+help clarify its intended use. MetAMOS gas two main components:</p>
+
+<p>1) initPipeline
+2) runPipeline</p>
+
+<p>The first component, initPipeline, is for creating new projects and
+also initiliazing sequence libraries. Currently interleaved &amp;
+non-interleaved fasta, fastq, and SFF files are supported. The file-type flags (-f, -q, and -s)
+must be specified before the file. Once specified, they remain in effect
+until a different file type is specified.</p>
+
+<p>usage: initPipeline -f/-q -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500 
+options: -s -c -q, -f, -1, -2, -d, -m, -i
+-1: either non-paired file of reads or first file in pair, can be list of multiple separated by a comma
+-2: second paired read file, can be list of multiple separated by a comma
+-c:  fasta file containing contigs
+-d: output project directory (required)
+-f: boolean, reads are in fasta format (default is fastq)
+-h: display help message
+-i: insert size of library, can be list separated by commas for multiple libraries
+-l: SFF linker type
+-m: interleaved file of paired reads
+-o: reads are in outtie orientation (default innie)
+-q: boolean, reads are in fastq format (default is fastq)
+-s/--sff: boolean, reads are in SFF format (default is fastq)</p>
+
+<p>For example, to input a:
+(non-interleaved fastq, single library)
+initPipeline -q -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500</p>
+
+<p>(non-interleaved fasta, single library)
+initPipeline -f -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500</p>
+
+<p>(interleaved fastq, single library)
+initPipeline -q -m file.fastq.12  -d projectDir -i 300:500</p>
+
+<p>(interleaved fastq, multiple libraries)
+initPipeline -q -m file.fastq.12,file2.fastq.12  -d projectDir -i 300:500,1000:2000</p>
+
+<p>(interleaved fastq, multiple libraries, existing assembly)
+initPipeline -q -m file.fastq.12,file2.fastq.12 -c file.contig.fa -d projectDir -i 300:500,1000:2000</p>
+
+<p>The second component, runPipeline, takes a project directory as
+input and runs the following steps by default:</p>
+
+<ol>
+<li>Preprocess</li>
+<li>Assemble</li>
+<li>FindORFs</li>
+<li>FindRepeats</li>
+<li>Abundance</li>
+<li>Annotate</li>
+<li>FunctionalAnnotation</li>
+<li>Scaffold</li>
+<li>Propagate </li>
+<li>FindScaffoldORFs</li>
+<li>Classify </li>
+<li>Postprocess</li>
+</ol><p>usage info:</p>
+
+<p>usage: runPipeline [options] -d projectdir
+   -h = :   print help [this message]
+   -j = :   just output all of the programs and citations then exit (default = NO)
+   -v = :   verbose output? (default = NO)
+   -d = : directory created by initPipeline (REQUIRED)</p>
+
+<p>[options]: [pipeline_opts] [misc_opts]</p>
+
+<p>[pipeline_opts]: options that affect the pipeline execution
+Pipeline consists of the following steps:
+  Preprocess, Assemble, FindORFS, MapReads, Abundance, Annotate,
+  Scaffold, Propagate, Classify, Postprocess
+Each of these steps can be referred to by the following options:
+   -f = : force this step to be run (default = NONE)
+   -s = : start at this step in the pipeline (default = Preprocess)
+   -e = : end at this step in the pipeline (default = Postprocess)
+   -n = : step to skip in pipeline (default=NONE)</p>
+
+<p>For each step you can fine-tune the execution as follows
+[Preprocess]
+   -t = :   filter input reads? (default = NO)
+   -q = :   produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)
+[Assemble]
+   -a = : genome assembler to use (default = SOAPdenovo)
+   -k = : k-mer size to be used for assembly (default = 31)
+   -o = :    min overlap length
+[MapReads]
+   -m = : read mapper to use? (default = bowtie)
+   -i = :   save bowtie (i)ndex? (default = NO)
+   -b = :   create library specific per bp coverage of assembled contigs (default = NO)
+[FindORFS]
+   -g = : gene caller to use (default=FragGeneScan)
+   -l = :    min contig length to use for ORF call (default = 300)
+   -x = :    min contig coverage to use for ORF call (default = 3X)
+[Annotate]
+   -c = : classifier to use for annotation (default = FCP)
+   -u = :   annotate unassembled reads? (default = NO)
+[Classify]
+   -z = : taxonomic level to categorize at (default = class)</p>
+
+<p>[misc_opts]: Miscellaneous options
+   -r = :   retain the AMOS bank?  (default = NO)
+   -p = :    number of threads to use (be greedy!) (default=1)
+   -4 = :   454 data? (default = NO)</p>
+
+<p>For example, to enable read filtering:</p>
+
+<p>-t</p>
+
+<p>and to enable meta-IDBA as the assembler:</p>
+
+<p>-a metaidba</p>
+
+<p>And to use PhyloSift to annotate:</p>
+
+<p>-c phylosift</p>
+
+<p>Any single step in the pipeline can be skipped by passing the
+following parameter to runPipeline:</p>
+
+<p>-n,--skipsteps=Step1,..</p>
+
+<p>MetAMOS reruns steps based on timestamp information, so if the input
+files for a step in the pipeline hasn't changed since the last run, it
+will be skipped automatically. However, you can forefully run any step
+in the pipeline by passing the following parameter to runPipeline:</p>
+
+<p>-f,--force=Step1,..</p>
+
+<p>MetAMOS stores a summary of the input libraries in pipeline.ini 
+in the working directory. The pipeline.conf file stores the list 
+of programs available to MetAMOS. Finally, pipeline.run stores the 
+selected parameters and programs for the current run. MetAMOS also stores 
+detailed logs of all commands executed by the pipeline in Logs/COMMANDS.log 
+and a log for each step of the pipeline in Logs/.log</p>
+
+<p>Upon completion, all of the final results will be stored in the
+Postprocess/out directory. A component, create_summary.py, takes
+this directory as input and as output, generates an HTML page with
+with summary statistics and a few plots. An optional component, create_plots.py,
+takes one or multiple Posprocess/out directories as input and generates
+comparative plots.</p>
+
+<hr><h3>
+<a name="e-test-suite" class="anchor" href="#e-test-suite"><span class="octicon octicon-link"></span></a>E) Test suite</h3>
+
+<p>We have developed a set of scripts for testing the various features of
+MetAMOS. All of these regression test scripts are available inside the
+/Test directory and include all necessary datasets to run them. Here
+is a brief listing of the test scripts we currently include:</p>
+
+<p>*Test initPipeline
+./Test/test_create.sh</p>
+
+<p>*Vanilla test
+./Test/run_test.sh</p>
+
+<p>*Test PhlyoSift
+./Test/test_amphora.sh</p>
+
+<p>*Test Minimus
+./Test/test_minimus.sh</p>
+
+<p>*Test Preprocess filtration of non-interleaved fastq files
+./Test/test_filter_noninterleaved_fastq.s</p>
+
+<p>*Test Newbler (if available)
+./Test/test_newbler.sh</p>
+
+<p>*Test CA (fasta)
+./Test/test_ca_fasta.sh</p>
+
+<p>*Test CA (fastq)
+./Test/test_ca.sh</p>
+
+<p>*Test SOAPdenovo
+./Test/test_soap.sh</p>
+
+<p>*Test MetaVelvet
+./Test/test_metavelvet.sh</p>
+
+<p>*Test SparseAssembler
+./Test/test_sparse.sh</p>
+
+<p>*Test Velvet
+./Test/test_velvet.sh</p>
+
+<p>*Test FCP
+./Test/test_fcp.sh</p>
+
+<p>..more on the way!</p>
+
+<hr><h3>
+<a name="f-example-output" class="anchor" href="#f-example-output"><span class="octicon octicon-link"></span></a>F) Example output</h3>
+
+<p>MetAMOS generates an interactive webpage once a run successfully completes:
+<a href="http://www.cbcb.umd.edu/software/metamos/summary.html">http://www.cbcb.umd.edu/software/metamos/summary.html</a></p>
+
+<p>This includes summary statistics and taxonomic information based on Krona
+Krona publication: Ondov BD, Bergman NH, Phillippy AM.. Interactive
+metagenomic visualization in a Web browser. BMC Bioinformatics. 2011
+Sep 30;12:385.  PMID: 21961884</p>
+
+<p>Additionally, since MetAMOS stores all of its results in an AMOS bank,
+the assemblies can be visualized with Hawkeye.</p>
+
+<hr><h3>
+<a name="g-bugs" class="anchor" href="#g-bugs"><span class="octicon octicon-link"></span></a>G) BUGS</h3>
+
+<p>If you encounter any problems/bugs, please check the wiki page:
+<a href="https://github.com/treangen/MetAMOS/wiki">https://github.com/treangen/MetAMOS/wiki</a>
+and the known issues pages:
+<a href="https://github.com/treangen/MetAMOS/issues?direction=desc&amp;sort=created&amp;state=open">https://github.com/treangen/MetAMOS/issues?direction=desc&amp;sort=created&amp;state=open</a>
+to see if it has already been documented.</p>
+
+<p>If not, please report the issue either using the contact information below or 
+by submitting a new issue online. Please include information on your run,
+any output produced by runPipeline, as well as the pipeline.* files and the 
+Log/ file (if not too large).</p>
+
+<h3>
+<a name="h-contact" class="anchor" href="#h-contact"><span class="octicon octicon-link"></span></a>H) CONTACT</h3>
+
+<p>Who to contact to report bugs, forward complaints, feature requests:</p>
+
+<p>Todd Treangen: <a href="mailto:treangen@gmail.com">treangen@gmail.com</a>
+Sergey Koren: <a href="mailto:sergek@umd.edu">sergek@umd.edu</a></p>
+
+<hr><h3>
+<a name="i-cite" class="anchor" href="#i-cite"><span class="octicon octicon-link"></span></a>I) CITE</h3>
+
+<p>Treangen TJ*, Koren S*, Sommer DD, Liu B, Astrovskaya I, Ondov B,
+Darling AE, Phillippy AM, Pop M.  MetAMOS: a modular and open source
+metagenomic assembly and analysis pipeline. Genome Biol. 2013 Jan
+15;14(1):R2. PMID: 23320958.</p>
+
+<p>url: <a href="http://genomebiology.com/content/pdf/gb-2013-14-1-r2.pdf">http://genomebiology.com/content/pdf/gb-2013-14-1-r2.pdf</a></p>
+
+<p>*Indicates both authors contributed equally to this work</p>
+      </section>
     </div>
 
-    <h2>License</h2>
-<p>GPL</p>
-<h2>Authors</h2>
-<p>Sergey Koren (sergek@umd.edu)<br/>Todd Treangen (treangen@gmail.com)<br/><br/>      </p>
-<h2>Contact</h2>
-<p> (treangen@gmail.com)<br/>      </p>
-
-
-    <h2>Download</h2>
-    <p>
-      You can download this project in either
-      <a href="http://github.com/treangen/metAMOS/zipball/master">zip</a> or
-      <a href="http://github.com/treangen/metAMOS/tarball/master">tar</a> formats.
-    </p>
-    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
-      by running:
-      <pre>$ git clone git://github.com/treangen/metAMOS</pre>
-    </p>
-
-    <div class="footer">
-      get the source code on GitHub : <a href="http://github.com/treangen/metAMOS">treangen/metAMOS</a>
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">MetAMOS maintained by <a href="https://github.com/treangen">treangen</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
     </div>
 
-  </div>
+    
 
-  
-</body>
+  </body>
 </html>

@@ -69,6 +69,10 @@ try:
         print "ERROR: easy-install.pth file missing, likely means something went wrong with psutil/pysam install. Disabling psutil and pysam.."
         nopsutil = True
         nopysam = True
+except IOerror:
+    print "ERROR: easy-install.pth file missing, likely means something went wrong with psutil/pysam install. Disabling psutil and pysam.."
+    nopsutil = True
+    nopysam = True
 
 if 'bash' in shellv or utils.cmdExists('export'):
    os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))

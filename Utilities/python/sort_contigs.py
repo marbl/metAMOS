@@ -2,7 +2,8 @@
 
 import sys
 import os
-
+from utils import *
+_settings = Settings()
 def sort_contigs(ocf,cf,rcf,ck,orf_fasta,orf_protein,orf_mapf,out_dir,amos_bnk,amos_dir):
     contigs_by_class = { }
     reads_by_class = { }
@@ -121,7 +122,7 @@ def sort_contigs(ocf,cf,rcf,ck,orf_fasta,orf_protein,orf_mapf,out_dir,amos_bnk,a
         f = open(path + class_name + ".eid", 'w')
         f.write("\n".join(contigs_by_class[key]) + "\n")
         f.close()
-        ret = os.system("%s/bank2fasta -b %s -eid -E '%s%s%s.eid' > '%s%s%s.ctg.fasta'"%(amos_dir,amos_bnk,path,os.sep,class_name,path,os.sep,class_name))
+        run_process(_settings,"%s/bank2fasta -b %s -eid -E '%s%s%s.eid' > '%s%s%s.ctg.fasta'"%(amos_dir,amos_bnk,path,os.sep,class_name,path,os.sep,class_name),"Classify")
     
     # output reads
     for key in reads_by_class:
@@ -135,9 +136,9 @@ def sort_contigs(ocf,cf,rcf,ck,orf_fasta,orf_protein,orf_mapf,out_dir,amos_bnk,a
         f = open(path + class_name + ".read.eid", 'w')
         f.write("\n".join(reads_by_class[key]) + "\n")
         f.close()
-        ret = os.system("%s/dumpreads %s -e -E '%s%s%s.read.eid' > '%s%s%s.read.fasta'"%(amos_dir,amos_bnk,path,os.sep,class_name,path,os.sep,class_name))
-        ret = os.system("%s/dumpreads %s -q -e -E '%s%s%s.read.eid' > '%s%s%s.read.qual'"%(amos_dir,amos_bnk,path,os.sep,class_name,path,os.sep,class_name))
-        ret = os.system("%s/dumpreads %s -f -e -E '%s%s%s.read.eid' > '%s%s%s.read.fastq'"%(amos_dir,amos_bnk,path,os.sep,class_name,path,os.sep,class_name))
+        run_process(_settings,"%s/dumpreads %s -e -E '%s%s%s.read.eid' > '%s%s%s.read.fasta'"%(amos_dir,amos_bnk,path,os.sep,class_name,path,os.sep,class_name),"Classify")
+        run_process(_settings,"%s/dumpreads %s -q -e -E '%s%s%s.read.eid' > '%s%s%s.read.qual'"%(amos_dir,amos_bnk,path,os.sep,class_name,path,os.sep,class_name),"Classify")
+        run_process(_settings,"%s/dumpreads %s -f -e -E '%s%s%s.read.eid' > '%s%s%s.read.fastq'"%(amos_dir,amos_bnk,path,os.sep,class_name,path,os.sep,class_name),"Classify")
     
     # finally output the orfs
     for key in orf_by_class:
@@ -152,5 +153,5 @@ def sort_contigs(ocf,cf,rcf,ck,orf_fasta,orf_protein,orf_mapf,out_dir,amos_bnk,a
        f.write("\n".join(orf_by_class[key]) + "\n")
        f.close()
     
-       ret = os.system("%s/dumpreads %s -e -E '%s%s%s.orf.eid' > '%s%s%s.orf.fna'"%(amos_dir,orf_fasta,path,os.sep,class_name,path,os.sep,class_name))
-       ret = os.system("%s/dumpreads %s -e -E '%s%s%s.orf.eid' > '%s%s%s.orf.faa'"%(amos_dir,orf_protein,path,os.sep,class_name,path,os.sep,class_name))
+       run_process(_settings,"%s/dumpreads %s -e -E '%s%s%s.orf.eid' > '%s%s%s.orf.fna'"%(amos_dir,orf_fasta,path,os.sep,class_name,path,os.sep,class_name),"Classify")
+       run_process(_settings,"%s/dumpreads %s -e -E '%s%s%s.orf.eid' > '%s%s%s.orf.faa'"%(amos_dir,orf_protein,path,os.sep,class_name,path,os.sep,class_name),"Classify")

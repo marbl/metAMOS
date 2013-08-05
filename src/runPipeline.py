@@ -383,7 +383,7 @@ for o, a in opts:
     elif o in ("-e","--endat"):
         endat = a
         if endat not in allsteps:
-            print "cannot end at %s, step does not exist in pipeline"%(endtat)
+            print "cannot end at %s, step does not exist in pipeline"%(endat)
             print allsteps 
         skipsteps.extend(allsteps[allsteps.index(endat)+1:])
     elif o in ("-o", "--minoverlap"):

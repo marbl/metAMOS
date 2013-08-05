@@ -183,7 +183,7 @@ class Settings:
                       os.system("rm -rf %s"%(pdir))
 
           except IOError:
-              bdf = open("%s/prevruns.tmp"%(Settings.rund),'w')
+              bdf = open("%s/prevruns.tmp"%(Settings.rundir),'w')
               bdf.write("%s\n"%(sys._MEIPASS))
               bdf.close()
             

@@ -1,27 +1,54 @@
-MetAMOS v1.1 README
-Last updated: December 14th 2012
+# MetAMOS v1.2 README
+Last updated: August 3rd, 2013
 
-NEWS:
+***
 
-*HTML report vastly improved
-*FunctionalAnnotation step added
-*Added Bowtie2 support
-*Updated to ruffus version 2.3b
-*Fixed Issues #69,71
-*Various other minor bug fixes
+## **MetAMOS single file binary**
 
-> SUMMARY
-        * A/ HARDWARE REQUIREMENTS
-        * B/ SOFTWARE REQUIREMENTS
-        * C/ INSTALLING MetAMOS
-        * D/ QUICK START
-        * E/ TEST SUITE
-        * F/ EXAMPLE OUTPUT
-        * G/ CONTACT
-        * H/ CITING
+In attempt to further simplify the MetAMOS installation process, we are happy to announce the availability of a 'frozen' MetAMOS binary for Linux-x68_64 platforms. Along with this binary comes a significantly reduced list of prerequisites:
+
+* Java 1.5 (or newer)
+* Perl 5.8.8 (or newer)
+* 64-bit *nix OS
+
+You can download a frozen binary with all BLAST DBs [here](http://www.cbcb.umd.edu/confcour/temp/metAMOS_binary.tar.gz) 
+
+*Note: this is a big file to download and will take awhile to finish (~13GB compressed, 27GB unzipped)
+
+Alternatively, you can download a frozen binary with NO BLAST DBs [here](http://www.cbcb.umd.edu/confcour/temp/metAMOS_binary_noblastdbs.tar.gz) 
+
+*Note: ~2GB compressed, 4GB unzipped
+
+The revised installation procedure is simply:
+
+1. Download tarball
+2. Extract
+3. Run a test script or two
+4. have fun!
+
+Mac OSX equivalent will be soon appearing [here](http://www.cbcb.umd.edu/confcour/temp/metAMOS_binary_noblastdbs_osx.tar.gz) 
+
+
+## NEWS
+       1. 64-bit frozen Linux binary now available
+       2. Started migration to new HTML5 plots in HTML report
+       3. Numerous bux fixes
+
 
 ----------------------------------------------------------------------------------
-A/ HARDWARE REQUIREMENTS
+
+## SUMMARY
+        A) HARDWARE REQUIREMENTS
+        B) SOFTWARE REQUIREMENTS
+        C) INSTALLING MetAMOS
+        D) QUICK START
+        E) TEST SUITE
+        F) EXAMPLE OUTPUT
+        G) CONTACT
+        H) CITING
+
+----------------------------------------------------------------------------------
+### A) HARDWARE REQUIREMENTS
 
 MetAMOS was designed to work on any standard 64bit Linx
 environment. To use MetAMOS for tutorial/teaching purposes, a minimum
@@ -32,7 +59,7 @@ million read datasets, 64 GB is a good place to start (128 GB of memory
 available on High Memory Instance at Amazon Elastic Compute Cloud ).
 
 ----------------------------------------------------------------------------------
-B/ SOFTWARE REQUIREMENTS
+### B) SOFTWARE REQUIREMENTS
 
 The main prequisite software is python2.6+ and AMOS (available from
 http://amos.sf.net). Once python2.6+ and AMOS are installed, there
@@ -57,7 +84,7 @@ such as MetaGeneMark. To get a license to use MetaGeneMark, plesae
 visit: http://exon.gatech.edu/license_download.cgi.
 
 ----------------------------------------------------------------------------------
-C/ INSTALLING MetAMOS
+### C) INSTALLING MetAMOS
 
 To download the software, go to https://github.com/treangen/MetAMOS
 and click on Downloads. Once downloaded, simply unpack the files and
@@ -72,7 +99,7 @@ downloaded (including optional ones), this will take quite awhile to
 complete (plan on a few hours to 2 days).
 
 ----------------------------------------------------------------------------------
-D/ QUICK START
+### D) QUICK START
 
 Before you get started using MetAMOS a brief review of its design will
 help clarify its intended use. MetAMOS gas two main components:
@@ -220,7 +247,7 @@ comparative plots.
 
 
 ----------------------------------------------------------------------------------
-E/ Test suite
+### E) Test suite
 
 We have developed a set of scripts for testing the various features of
 MetAMOS. All of these regression test scripts are available inside the
@@ -269,7 +296,7 @@ is a brief listing of the test scripts we currently include:
 ..more on the way!
 
 ----------------------------------------------------------------------------------
-F/ Example output
+### F) Example output
 
 MetAMOS generates an interactive webpage once a run successfully completes:
 http://www.cbcb.umd.edu/software/metamos/summary.html
@@ -283,7 +310,7 @@ Additionally, since MetAMOS stores all of its results in an AMOS bank,
 the assemblies can be visualized with Hawkeye.
 
 ----------------------------------------------------------------------------------
-G/ BUGS
+### G) BUGS
 
 If you encounter any problems/bugs, please check the wiki page:
 https://github.com/treangen/MetAMOS/wiki
@@ -296,7 +323,7 @@ by submitting a new issue online. Please include information on your run,
 any output produced by runPipeline, as well as the pipeline.* files and the 
 Log/<LAST_STEP> file (if not too large).
 
-H/ CONTACT
+### H) CONTACT
 
 Who to contact to report bugs, forward complaints, feature requests:
 
@@ -304,7 +331,7 @@ Todd Treangen: treangen@gmail.com
 Sergey Koren: sergek@umd.edu
 
 ----------------------------------------------------------------------------------
-I/ CITE
+### I) CITE
 
 Treangen TJ*, Koren S*, Sommer DD, Liu B, Astrovskaya I, Ondov B,
 Darling AE, Phillippy AM, Pop M.  MetAMOS: a modular and open source

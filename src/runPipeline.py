@@ -41,8 +41,11 @@ os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.pathsep
 #os.environ["PYTHONPATH"] += "/usr/lib64/python2.7"+os.pathsep
 #os.environ["PYTHONPATH"] += "/usr/lib/python2.7"+os.pathsep
 #os.environ["PYTHONPATH"] += ppath + os.pathsep
-os.environ["PYTHONPATH"] += sys._MEIPASS + os.pathsep
-os.environ["PYTHONHOME"] = sys._MEIPASS + os.pathsep
+try:
+    os.environ["PYTHONPATH"] += sys._MEIPASS + os.pathsep
+    os.environ["PYTHONHOME"] = sys._MEIPASS + os.pathsep
+except Exception:
+    pass
 #os.environ["PYTHONHOME"] += "/usr/lib64/python2.7"+os.pathsep
 #os.environ["PYTHONHOME"] += "/usr/lib/python2.7"+os.pathsep
 #site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
@@ -53,7 +56,10 @@ sys.path.append(utils.INITIAL_UTILS+os.sep+"ruffus")
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam")
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
-sys.path.append(sys._MEIPASS)
+try:
+    sys.path.append(sys._MEIPASS)
+except Exception:
+    pass
 sys.path.append("/usr/lib/python")
 
 #remove imports from pth file, if exists

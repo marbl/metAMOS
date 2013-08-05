@@ -173,7 +173,21 @@ class Settings:
       
       if _BINARY_DIST:
           #need to change KronaTools.pm to external Taxonomy directory
-          
+          prevtmpdirs = []
+          try:
+              bdf = open("%s/prevruns.tmp"%(Settings.rundir),'r')
+              for line in bdf.xreadlines():
+                  prevtmpdirs.append(line.replace("\n",""))
+              for pdir in prevtmpdirs:
+                  if os.path.exists("%s"%(pdir)):
+                      os.system("rm -rf %s"%(pdir))
+
+          except IOError:
+              bdf = open("%s/prevruns.tmp"%(Settings.rund),'w')
+              bdf.write("%s\n"%(sys._MEIPASS))
+              bdf.close()
+            
+
           try:
               _DB_PATH = "%s/DB/"%(application_path)
               _BLASTDB_PATH = _DB_PATH + os.sep + "blastdbs"+os.sep
@@ -227,12 +241,15 @@ class Settings:
           #need to change KronaTools.pm to external Taxonomy directory
            kronalibf = open("%s%sKronaTools%slib%sKronaTools.pm"%(Settings.METAMOSDIR,os.sep,os.sep,os.sep))
            data = kronalibf.read()
-           data.replace("my $taxonomyDir = \"$libPath/../taxonomy\";","my $taxonomyDir = \"%s/taxonomy\";"%(Settings.DB_DIR))
-           kronalibf.close()
-           kronalibf = open("%s%sKronaTools%slib%sKronaTools.pm"%(Settings.METAMOSDIR,os.sep,os.sep,os.sep),'w')
-           kronalibf.write(data)
-           kronalibf.close()
-           os.system("ln -s -F -f %s/taxonomy %s%sKronaTools%staxonomy"%(Settings.DB_DIR,Settings.METAMOSDIR,os.sep,os.sep))
+           if "my $taxonomyDir = \"$libPath/../taxonomy\";" not in data:
+               kronalibf.close()
+           else:
+               dd = data.replace("my $taxonomyDir = \"$libPath/../taxonomy\";","my $taxonomyDir = \"%s/taxonomy\";"%(Settings.DB_DIR))
+               kronalibf.close()
+               kronalibf = open("%s%sKronaTools%slib%sKronaTools.pm"%(Settings.METAMOSDIR,os.sep,os.sep,os.sep),'w')
+               kronalibf.write(dd)
+               kronalibf.close()
+               os.system("ln -s -F -f %s/taxonomy %s%sKronaTools%staxonomy"%(Settings.DB_DIR,Settings.METAMOSDIR,os.sep,os.sep))
       Settings.REPEATOIRE    = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
 
 

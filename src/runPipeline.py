@@ -47,8 +47,14 @@ except Exception:
     pass
 #os.environ["PYTHONHOME"] += "/usr/lib64/python2.7"+os.pathsep
 #os.environ["PYTHONHOME"] += "/usr/lib/python2.7"+os.pathsep
-#site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
-#site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
+try:
+    sys._MEIPASS
+    #if we are here, frozen binary
+except Exception:
+    #else normal mode, add site dir
+    site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
+    site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
+
 sys.path.append(utils.INITIAL_UTILS)
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python")
 sys.path.append(utils.INITIAL_UTILS+os.sep+"ruffus")

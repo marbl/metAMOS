@@ -1,12 +1,13 @@
 import os, sys, string
 
-if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print "usage: create_mapping.py <translation file> <metaphyler output> <output file>"
+#if __name__ == "__main__":
+def create_mapping (first,second,third):
+    #if len(sys.argv) < 3:
+    #    print "usage: create_mapping.py <translation file> <metaphyler output> <output file>"
 
-    r = open(sys.argv[1],'r')
-    p = open(sys.argv[2],'r')
-    out = open(sys.argv[3],'w')
+    r = open(first,'r')
+    p = open(second,'r')
+    out = open(third,'w')
     class_dict = {}
     
     for line in r:

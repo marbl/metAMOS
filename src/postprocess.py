@@ -8,7 +8,7 @@ from classify import Classify
 
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
-
+from create_summary import *
 _readlibs = []
 _skipsteps = []
 _cls = None
@@ -249,7 +249,8 @@ def Postprocess(input,output):
    run_process(_settings, "unlink %s/Postprocess/out/html/FunctionalAnnotation.html"%(_settings.rundir), "Postprocess")
    run_process(_settings, "ln %s/FunctionalAnnotation/out/ec.krona.html %s/Postprocess/out/html/FunctionalAnnotation.html"%(_settings.rundir, _settings.rundir), "Postprocess")
  
-   run_process(_settings, "python %s/python/create_summary.py %s/Abundance/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/html/ %s/Postprocess/out/%s.scf.fa %s %s/img %s %d %s"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.METAMOSDIR,_settings.AMOS, len(_readlibs), _settings.taxa_level),"Postprocess")
+   #run_process(_settings, "python %s/python/create_summary.py %s/Abundance/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/html/ %s/Postprocess/out/%s.scf.fa %s %s/img %s %d %s"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.METAMOSDIR,_settings.AMOS, len(_readlibs), _settings.taxa_level),"Postprocess")
+   create_summary("%s/Abundance/out/%s.taxprof.pct.txt"%(_settings.rundir,_settings.PREFIX),"%s/Postprocess/out/%s.bnk"%(_settings.rundir,_settings.PREFIX),"%s/Postprocess/out/html/"%(_settings.rundir),"%s/Postprocess/out/%s.scf.fa"%(_settings.rundir,_settings.PREFIX),"%s"%(_settings.METAMOS_UTILS),"%s/img"%(_settings.METAMOSDIR),"%s"%(_settings.AMOS),len(_readlibs),"%s"%(_settings.taxa_level),"%s"%(_settings.DB_DIR))
    #webbrowser.open_new_tab(createreport.html)
    if openbrowser:
        if os.path.exists("%s/Postprocess/out/html/summary.html"%(_settings.rundir)):

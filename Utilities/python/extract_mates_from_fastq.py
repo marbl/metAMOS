@@ -1,8 +1,7 @@
 import string, sys
 
-if __name__ == "__main__":
-
-    infile = sys.argv[1]
+#if __name__ == "__main__":
+def extract_mates_from_fastq(infile):
     f1 = open(infile,'r')
     f2 = open("%s.mates"%(infile),'w')
     while 1:

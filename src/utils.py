@@ -761,7 +761,7 @@ def getProgramCitations(settings, programName, comment="#"):
 
    return (_PROG_NAME_DICT[programName], _PUB_DICT[programName]) 
 
-def getProgramParams(configDir, fileName, module="", prefix="", comment="#"):
+def getProgramParams(configDir, fileName, module="", prefix="", comment="#", separator=""):
     # we process parameters in the following priority:
     # first: current directory
     # second: user home directory
@@ -795,14 +795,14 @@ def getProgramParams(configDir, fileName, module="", prefix="", comment="#"):
 
           if read:
              if (line != ""):
-                if (line.endswith("/")):
+                if (line.endswith("\\")):
                    for next in spec:
-                      line = line + next;
-                      if not next.endsWith("/"):
-                         spec.seek(spec.tell() - len(next))
+                      line = line.replace("\\", "") + next.replace("\\", "")
+                      if not next.endswith("\\"):
+                         print "Line is done %s and last read was %s\n"%(line, next)
                          break
                 splitLine = line.split();
-                optDict[splitLine[0]] = "".join(splitLine[1:]).strip() 
+                optDict[splitLine[0]] = separator.join(splitLine[1:]).strip() 
        spec.close()
 
     for option in optDict:

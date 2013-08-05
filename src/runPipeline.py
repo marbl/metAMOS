@@ -52,6 +52,7 @@ try:
     #if we are here, frozen binary
 except Exception:
     #else normal mode, add site dir
+    import site
     site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
     site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
 

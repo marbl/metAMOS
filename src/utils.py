@@ -173,19 +173,7 @@ class Settings:
       
       if _BINARY_DIST:
           #need to change KronaTools.pm to external Taxonomy directory
-          prevtmpdirs = []
-          try:
-              bdf = open("%s/prevruns.tmp"%(Settings.rundir),'r')
-              for line in bdf.xreadlines():
-                  prevtmpdirs.append(line.replace("\n",""))
-              for pdir in prevtmpdirs:
-                  if os.path.exists("%s"%(pdir)):
-                      os.system("rm -rf %s"%(pdir))
 
-          except IOError:
-              bdf = open("%s/prevruns.tmp"%(Settings.rundir),'w')
-              bdf.write("%s\n"%(sys._MEIPASS))
-              bdf.close()
             
 
           try:
@@ -612,6 +600,20 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, verbose, outputO
 
     # finally store the configuration 
     conf = open("%s/pipeline.conf"%(Settings.rundir),'w')
+    if Settings.BINARY_DIST:
+          prevtmpdirs = []
+          try:
+              bdf = open("%s/prevruns.tmp"%(Settings.rundir),'r')
+              for line in bdf.xreadlines():
+                  prevtmpdirs.append(line.replace("\n",""))
+              for pdir in prevtmpdirs:
+                  if os.path.exists("%s"%(pdir)):
+                      os.system("rm -rf %s"%(pdir))
+
+          except IOError:
+              bdf = open("%s/prevruns.tmp"%(Settings.rundir),'w')
+              bdf.write("%s\n"%(sys._MEIPASS))
+              bdf.close()
 
     conf.write("#Configuration summary\n")
     conf.write("OS:\t\t\t%s\nOS Version:\t\t%s\nMachine:\t\t%s\n"%(Settings.OSTYPE, Settings.OSVERSION, Settings.MACHINETYPE))

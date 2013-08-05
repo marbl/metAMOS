@@ -10,9 +10,11 @@ from findreps import FindRepeats
 
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
-
+from splitfasta import *
 
 from multiprocessing import *
+
+
 
 _MIN_SEQ_LENGTH = 10000000
 _USE_GRID = 0
@@ -23,6 +25,10 @@ _settings = Settings()
 _cls = None
 _noblast = False
 _annotate_unmapped = False
+
+_FCP_MODELS = "%s"%(_settings.METAMOS_UTILS)
+if _settings.BINARY_DIST:
+   _FCP_MODELS = "%s"%(_settings.DB_DIR)
 def init(reads, skipsteps, cls, noblast, annotate_unmapped):
    global _readlibs
    global _skipsteps
@@ -105,11 +111,11 @@ def annotateSeq(cls, contigs, orfAA, orfFA, output):
           print "Error: PHMMER not found in %s. Please check your path and try again.\n"%(_settings.PHMMER)
           raise(JobSignalledBreak)
 
-       if not os.path.exists("%s/DB/allprots.faa"%(_settings.METAMOS_UTILS)):
-          print "Error: You indicated you would like to run phmmer but DB allprots.faa not found in %s/DB. Please check your path and try again.\n"%(_settings.METAMOS_UTILS)
+       if not os.path.exists("%s/allprots.faa"%(_settings.BLASTDB_DIR)):
+          print "Error: You indicated you would like to run phmmer but DB allprots.faa not found in %s. Please check your path and try again.\n"%(_settings.BLASTDB_DIR)
           raise(JobSignalledBreak)
 
-       run_process(_settings, "%s/phmmer --cpu %d -E 0.0000000000000001 -o %s/Annotate/out/%s.phm.out --tblout %s/Annotate/out/%s.phm.tbl --notextw %s %s/DB/allprots.faa"%(_settings.PHMMER, _settings.threads,_settings.rundir,output,_settings.rundir,output,orfAA,_settings.METAMOS_UTILS),"Annotate")
+       run_process(_settings, "%s/phmmer --cpu %d -E 0.0000000000000001 -o %s/Annotate/out/%s.phm.out --tblout %s/Annotate/out/%s.phm.tbl --notextw %s %s/allprots.faa"%(_settings.PHMMER, _settings.threads,_settings.rundir,output,_settings.rundir,output,orfAA,_settings.BLASTDB_DIR),"Annotate")
        parse_phmmerout("%s/Annotate/out/%s.phm.tbl"%(_settings.rundir,output))
        run_process(_settings, "mv %s/Annotate/out/%s.phm.tbl  %s/Annotate/out/%s.intermediate.hits"%(_settings.rundir,output,_settings.rundir,output),"Annotate")
 
@@ -129,7 +135,7 @@ def annotateSeq(cls, contigs, orfAA, orfFA, output):
           print "Error: BLAST not found in %s. Please check your path and try again.\n"%(_settings.BLAST)
           raise(JobSignalledBreak)
 
-       run_process(_settings, "%s/blastall -v 1 -b 1 -a %d -p blastp -m 8 -e 0.00001 -i %s -d %s/DB/refseq_protein -o %s/Annotate/out/%s.blastout"%(_settings.BLAST, _settings.threads,orfAA,_settings.METAMOS_UTILS,_settings.rundir,output),"Annotate")
+       run_process(_settings, "%s/blastall -v 1 -b 1 -a %d -p blastp -m 8 -e 0.00001 -i %s -d %s/refseq_protein -o %s/Annotate/out/%s.blastout"%(_settings.BLAST, _settings.threads,orfAA,_settings.DB_DIR,_settings.rundir,output),"Annotate")
        run_process(_settings, "mv %s/Annotate/out/%s.blastout  %s/Annotate/out/%s.intermediate.hits"%(_settings.rundir,output,_settings.rundir,output),"Annotate")
    elif cls == "phylosift":
        if _settings.PHYLOSIFT == "" or not os.path.exists(_settings.PHYLOSIFT + os.sep + "bin" + os.sep + "phylosift"):
@@ -156,21 +162,29 @@ def annotateSeq(cls, contigs, orfAA, orfFA, output):
        run_process(_settings, "ln %s/Annotate/out/PS_temp/%s/sequence_taxa_summary.txt %s/Annotate/out/%s.intermediate.hits"%(_settings.rundir, os.path.basename(contigs), _settings.rundir, output), "Annotate") 
        
    elif cls == "fcp":
-       run_process(_settings, "ln -s %s/models"%(_settings.METAMOS_UTILS), "Annotate")
-       run_process(_settings, "ln -s %s/models/taxonomy.txt"%(_settings.METAMOS_UTILS), "Annotate")
+       run_process(_settings, "ln -s %s/models"%(_FCP_MODELS), "Annotate")
+       run_process(_settings, "ln -s %s/models/taxonomy.txt"%(_FCP_MODELS), "Annotate")
 
        # normal nb classify
-       run_process(_settings, "%s/nb-classify -q %s -m %s/models/models.txt -r %s/Annotate/out/%s.nb_results.txt -e %s"%(_settings.FCP,contigs,_settings.METAMOS_UTILS,_settings.rundir,output,output), "Annotate")
+       run_process(_settings, "%s/nb-classify -q %s -m %s/models/models.txt -r %s/Annotate/out/%s.nb_results.txt -e %s"%(_settings.FCP,contigs,_FCP_MODELS,_settings.rundir,output,output), "Annotate")
 
        # for blast options
-       if not _noblast and os.path.exists("%s/DB/blast_data/BacteriaAndArchaeaGenomesDB.nin"%(_settings.METAMOS_UTILS)):
-          run_process(_settings, "ln -s %s/DB/blast_data blast_data"%(_settings.METAMOS_UTILS), "Annotate")
-          run_process(_settings, "python %s/python/BLASTN.py %s/blastn %s %s/Annotate/out/%s.bl_results.txt %d"%(_settings.METAMOS_UTILS, _settings.BLAST, contigs, _settings.rundir, output, _settings.threads), "Annotate") 
-
+       if not _noblast and os.path.exists("%s/blast_data/BacteriaAndArchaeaGenomesDB.nin"%(_settings.BLASTDB_DIR)):
+          run_process(_settings, "ln -s %s/blast_data blast_data"%(_settings.BLASTDB_DIR), "Annotate")
+          #run_process(_settings, "python %s/python/BLASTN.py %s/blastn %s %s/Annotate/out/%s.bl_results.txt %d"%(_settings.METAMOS_UTILS, _settings.BLAST, contigs, _settings.rundir, output, _settings.threads), "Annotate") 
+          run_process(_settings, "%s/blastn -query %s -out  %s/Annotate/out/%s.bl_results.txt -db %s/blast_data/BacteriaAndArchaeaGenomesDB -evalue 10 -outfmt 7 -task blastn -num_threads %d"%(_settings.BLAST,contigs,_settings.rundir,output,_settings.BLASTDB_DIR,_settings.threads),"Annotate")
+          #os.system(blastnEXE + ' -query ' + queryFile + ' -db ./blast_data/BacteriaAndArchaeaGenomesDB -evalue 10 -outfmt 7 -task blastn -num_threads %s -out '%(threads) + resultsFile)
           #combine the results
-          run_process(_settings, "python %s/python/NB-BL.py %s/Annotate/out/%s.nb_results.txt %s/Annotate/out/%s.bl_results.txt %s/Annotate/out/%s.intermediate.epsilon-nb_results.txt"%(_settings.METAMOS_UTILS, _settings.rundir, output, _settings.rundir, output, _settings.rundir, output), "Annotate")
+          if _settings.BINARY_DIST:
+              run_process(_settings, "%s/NB-BL %s/Annotate/out/%s.nb_results.txt %s/Annotate/out/%s.bl_results.txt %s/Annotate/out/%s.intermediate.epsilon-nb_results.txt"%(_settings.FCP, _settings.rundir, output, _settings.rundir, output, _settings.rundir, output), "Annotate")
+          else:
+              run_process(_settings, "python %s/python/NB-BL.py %s/Annotate/out/%s.nb_results.txt %s/Annotate/out/%s.bl_results.txt %s/Annotate/out/%s.intermediate.epsilon-nb_results.txt"%(_settings.METAMOS_UTILS, _settings.rundir, output, _settings.rundir, output, _settings.rundir, output), "Annotate")
+
        else:
-          run_process(_settings, "python %s/python/Epsilon-NB.py %s/Annotate/out/%s.nb_results.txt 1E5 %s/Annotate/out/%s.intermediate.epsilon-nb_results.txt"%(_settings.METAMOS_UTILS,_settings.rundir,output,_settings.rundir,output),"Annotate")
+          if _settings.BINARY_DIST:
+              run_process(_settings, "%s/Epsilon-NB %s/Annotate/out/%s.nb_results.txt 1E5 %s/Annotate/out/%s.intermediate.epsilon-nb_results.txt"%(_settings.FCP,_settings.rundir,output,_settings.rundir,output),"Annotate")
+          else:
+              run_process(_settings, "python %s/python/Epsilon-NB.py %s/Annotate/out/%s.nb_results.txt 1E5 %s/Annotate/out/%s.intermediate.epsilon-nb_results.txt"%(_settings.METAMOS_UTILS,_settings.rundir,output,_settings.rundir,output),"Annotate")
 
        #need python TaxonomicSummary.py test.fasta nb_topModels.txt nb_taxonomicSummary.txt
        #run_process(_settings, "python %s/python/TaxonomicSummary.py %s/Annotate/in/%s.fna %s/Annotate/out/%s.nb_results.txt %s/Annotate/out/%s.epsilon-nb_results.txt"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Annotate")
@@ -248,7 +262,8 @@ def Annotate(input,output):
          size = sizeFastaFile("%s/Annotate/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX))
          perThread = ceil(float(size) / 200)
          print "The size of the contigs is %d per thread %d\n"%(size, perThread)
-         run_process(_settings, "python %s/python/splitfasta.py %s/Annotate/in/%s.asm.contig %d %s/Annotate/in/%s %d"%(_settings.METAMOS_UTILS, _settings.rundir, _settings.PREFIX, perThread, _settings.rundir, _settings.PREFIX, 1), "Annotate")
+         #run_process(_settings, "python %s/python/splitfasta.py %s/Annotate/in/%s.asm.contig %d %s/Annotate/in/%s %d"%(_settings.METAMOS_UTILS, _settings.rundir, _settings.PREFIX, perThread, _settings.rundir, _settings.PREFIX, 1), "Annotate")
+         splitfasta("%s/Annotate/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%d"%(perThread),"%s/Annotate/in/%s"%(_settings.rundir,_settings.PREFIX),"%d"%(1))
          totalJobs = 0
          for partFile in os.listdir("%s/Annotate/in/"%(_settings.rundir)):
             if "_part" in partFile and "%s_part"%(_settings.PREFIX) in partFile:
@@ -261,7 +276,9 @@ def Annotate(input,output):
             size = sizeFastaFile("%s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id))
             perThread = ceil(float(size) / 200)
             print "The size of the lib %d is %d per one %d\n"%(lib.id, size, perThread)
-            run_process(_settings, "python %s/python/splitfasta.py %s/Annotate/in/lib%d.unaligned.fasta %d %s/Annotate/in/%s %d"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, perThread, _settings.rundir, _settings.PREFIX, totalJobs+1), "Annotate")
+            #run_process(_settings, "python %s/python/splitfasta.py %s/Annotate/in/lib%d.unaligned.fasta %d %s/Annotate/in/%s %d"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, perThread, _settings.rundir, _settings.PREFIX, totalJobs+1), "Annotate")
+            #splitfasta("%s/Annotate/in/%s.asm.contig,%d,%s/Annotate/in/%s,%d"%(_settings.rundir,_settings.PREFIX,perThread,_settings.rundir,_settings.PREFIX,totalJobs+1))
+            splitfasta("%s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir,lib.id),"%d"%(perThread),"%s/Annotate/in/%s"%(_settings.rundir,_settings.PREFIX),"%d"%(totalJobs+1))
 
          totalJobs = 0
          for partFile in os.listdir("%s/Annotate/in/"%(_settings.rundir)):
@@ -342,7 +359,9 @@ def Annotate(input,output):
       size = sizeFastaFile("%s/Annotate/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX))
       perThread = max(ceil(float(size) / _settings.threads), _MIN_SEQ_LENGTH)
       print "The size of the contigs is %d per thread %d\n"%(size, perThread)
-      run_process(_settings, "python %s/python/splitfasta.py %s/Annotate/in/%s.asm.contig %d"%(_settings.METAMOS_UTILS, _settings.rundir, _settings.PREFIX, perThread), "Annotate")
+      #run_process(_settings, "python %s/python/splitfasta.py %s/Annotate/in/%s.asm.contig %d"%(_settings.METAMOS_UTILS, _settings.rundir, _settings.PREFIX, perThread), "Annotate")
+      #splitfasta("%s/Annotate/in/%s.asm.contig,%d,%s/Annotate/in/%s,%d"%(_settings.rundir,_settings.PREFIX,perThread,_settings.rundir,_settings.PREFIX,1))
+      splitfasta("%s/Annotate/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%d"%(perThread))
       for partFile in os.listdir("%s/Annotate/in/"%(_settings.rundir)):
          if "_part" in partFile and "%s.asm.contig"%(_settings.PREFIX) in partFile:
             partStart = partFile.find("_part")+5
@@ -371,7 +390,8 @@ def Annotate(input,output):
          if "fcp" in _cls or "phymm" in _cls:
             size = sizeFastaFile("%s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id))
             perThread = max(ceil(float(size) / _settings.threads), _MIN_SEQ_LENGTH)
-            run_process(_settings, "python %s/python/splitfasta.py %s/Annotate/in/lib%d.unaligned.fasta %d"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, perThread), "Annotate")
+            #run_process(_settings, "python %s/python/splitfasta.py %s/Annotate/in/lib%d.unaligned.fasta %d"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, perThread), "Annotate")
+            splitfasta("%s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir,lib.id),"%d"%(perThread))
             for partFile in os.listdir("%s/Annotate/in/"%(_settings.rundir)):
                if "_part" in partFile and "lib%d.unaligned.fasta"%(lib.id) in partFile:
                   partStart = partFile.find("_part")+5

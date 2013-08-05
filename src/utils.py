@@ -9,6 +9,31 @@ import multiprocessing
 
 import hashlib
 
+_BINARY_DIST = False
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS                                                                                                                           
+        base_path = sys._MEIPASS
+        _BINARY_DIST = True
+        #print sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+application_path = ""
+if getattr(sys, 'frozen', False):
+    application_path = os.path.dirname(sys.executable)
+elif __file__:
+    application_path = os.path.dirname(__file__)
+
+#print application_path
+
+#NEED INSTALL DIR
+#CWD print os.path.abspath(".")
+#internal DIR print sys.path[0]
+
 CSI="\x1B["
 reset=CSI+"m"
 OK_GREEN = CSI+'32m'
@@ -16,7 +41,7 @@ WARNING_YELLOW = CSI+'\033[93m'
 ERROR_RED = CSI+'\033[91m'
 ENDC = CSI+'0m'
 
-_METAMOSDIR    = sys.path[0]
+_METAMOSDIR    = resource_path(sys.path[0])
 INITIAL_UTILS = "%s%sUtilities"%(_METAMOSDIR, os.sep)
 _NUM_LINES    = 10
 
@@ -55,7 +80,7 @@ class Settings:
    taxa_level = "class"
    local_krona = False
    task_dict = []
-
+   noblastdb = False
    VERBOSE = False
    OUTPUT_ONLY = False
 
@@ -94,9 +119,12 @@ class Settings:
    PHYMM = ""
    BLAST = ""
    PHYLOSIFT = ""
-
+   DB_DIR = ""
+   BLASTDB_DIR = ""
    KRONA = ""
    REPEATOIRE = ""
+
+   BINARY_DIST = 0
 
    def __init__(self, kmer = None, threads = None, rundir = None, taxa_level = "", localKrona = False, verbose = False, outputOnly = False, update = False):
 
@@ -106,6 +134,16 @@ class Settings:
       if (kmer == None or threads == None or rundir == None):
          print "Error settings is uninitialized and no intialization provided\n"
          raise(Exception)
+
+      _BINARY_DIST = False
+      try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS                                                                                                                           
+        base_path = sys._MEIPASS
+        _BINARY_DIST = True
+        #print sys._MEIPASS
+      except Exception:
+        pass
+
 
       Settings.rundir = rundir
       Settings.kmer = kmer
@@ -123,11 +161,40 @@ class Settings:
       Settings.OSVERSION     = "0.0"
       Settings.MACHINETYPE   = "x86_64"
 
+
       Settings.METAMOSDIR    = sys.path[0]
       Settings.METAMOS_DOC   = "%s%sdoc"%(Settings.METAMOSDIR, os.sep)
       Settings.METAMOS_UTILS = "%s%sUtilities"%(Settings.METAMOSDIR, os.sep) 
       Settings.METAMOS_JAVA  = "%s%sjava:%s"%(Settings.METAMOS_UTILS,os.sep,os.curdir)
 
+      Settings.noblastdb = False
+      _DB_PATH = "%s/DB/"%(Settings.METAMOS_UTILS)
+      _BLASTDB_PATH = _DB_PATH
+      
+      if _BINARY_DIST:
+          #need to change KronaTools.pm to external Taxonomy directory
+          
+          try:
+              _DB_PATH = "%s/DB/"%(application_path)
+              _BLASTDB_PATH = _DB_PATH + os.sep + "blastdbs"+os.sep
+              if len(os.environ["BLASTDB"]) != 0:
+                  _BLASTDB_PATH == os.environ["BLASTDB"]
+                  if not os.path.exists(_BLASTDB_PATH):
+                      print "Error: cannot find BLAST DB directory, yet path set via $BLASTDB: %s. Disabling blastdb dependent programs"%(os.environ["BLASTDB"])
+                      Settings.noblastdb = True
+                      #sys.exit(1)
+              #print "BINARY DIST", _DB_PATH
+          except KeyError:
+              #_DB_PATH = "./DB/"
+              pass
+
+          if not os.path.exists(_DB_PATH):
+              print "Error: cannot find DB directory in %s, was it deleted? oops, it is required to run MetAMOS!"%(_DB_PATH)
+              sys.exit(1)
+             
+      Settings.DB_DIR        = _DB_PATH 
+      Settings.BLASTDB_DIR   = _BLASTDB_PATH 
+      Settings.BINARY_DIST   = _BINARY_DIST
       Settings.AMOS          = "%s%sAMOS%sbin"%(Settings.METAMOSDIR, os.sep, os.sep)
       Settings.BAMBUS2       = Settings.AMOS
 
@@ -156,6 +223,16 @@ class Settings:
       Settings.PHYLOSIFT     = "%s%sPhyloSift"%(Settings.METAMOSDIR, os.sep)
 
       Settings.KRONA         = "%s%sKronaTools%sbin"%(Settings.METAMOSDIR,os.sep,os.sep)
+      if _BINARY_DIST:
+          #need to change KronaTools.pm to external Taxonomy directory
+           kronalibf = open("%s%sKronaTools%slib%sKronaTools.pm"%(Settings.METAMOSDIR,os.sep,os.sep,os.sep))
+           data = kronalibf.read()
+           data.replace("my $taxonomyDir = \"$libPath/../taxonomy\";","my $taxonomyDir = \"%s/taxonomy\";"%(Settings.DB_DIR))
+           kronalibf.close()
+           kronalibf = open("%s%sKronaTools%slib%sKronaTools.pm"%(Settings.METAMOSDIR,os.sep,os.sep,os.sep),'w')
+           kronalibf.write(data)
+           kronalibf.close()
+           os.system("ln -s -F -f %s/taxonomy %s%sKronaTools%staxonomy"%(Settings.DB_DIR,Settings.METAMOSDIR,os.sep,os.sep))
       Settings.REPEATOIRE    = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
 
 
@@ -369,7 +446,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, verbose, outputO
        Settings.METAMOS_UTILS = "%s%sUtilities"%(Settings.METAMOSDIR, os.sep) 
        if not os.path.exists(Settings.METAMOS_UTILS):
           print "Error: cannot find metAMOS utilities. Will not run pipeline"
-          sys.exit(1);   
+          sys.exit(1)   
 
        Settings.METAMOS_JAVA  = "%s%sjava:%s"%(Settings.METAMOS_UTILS, os.sep, os.curdir)
        Settings.METAMOS_DOC   = "%s%sdoc"%(Settings.METAMOS_UTILS, os.sep)
@@ -405,7 +482,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, verbose, outputO
     CAMD5 = getMD5Sum(Settings.CA + os.sep + "gatekeeper")
 
     # 4. Newbler
-    Settings.NEWBLER = "%s%snewbler"%(Settings.METAMOSDIR, os.sep);
+    Settings.NEWBLER = "%s%snewbler"%(Settings.METAMOSDIR, os.sep)
     if not os.path.exists(Settings.NEWBLER + os.sep + "runProject"):
        Settings.NEWBLER = getFromPath("runProject", "Newbler")
     newblerMD5 = getMD5Sum(Settings.NEWBLER + os.sep + "runProject")
@@ -418,19 +495,19 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, verbose, outputO
 
     # when searching for velvet, we ignore paths because there are so many variations of velvet (velvet, velvet-sc, meta-velvet that all have a velveth/g and we have no way to tell if we got the right one
     #6. velvet
-    Settings.VELVET = "%s%scpp%s%s-%s%svelvet"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep);
+    Settings.VELVET = "%s%scpp%s%s-%s%svelvet"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
     if not os.path.exists(Settings.VELVET + os.sep + "velvetg"):
        Settings.VELVET = ""
     velvetMD5 = getMD5Sum(Settings.VELVET + os.sep + "velvetg")
 
     #7. velvet-sc
-    Settings.VELVET_SC = "%s%scpp%s%s-%s%svelvet-sc"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep);
+    Settings.VELVET_SC = "%s%scpp%s%s-%s%svelvet-sc"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
     if not os.path.exists(Settings.VELVET_SC + os.sep + "velvetg"):
        Settings.VELVET_SC = ""
     velvetSCMD5 = getMD5Sum(Settings.VELVET_SC + os.sep + "velvetg")
 
     #8. metavelvet
-    Settings.METAVELVET = "%s%scpp%s%s-%s%sMetaVelvet"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep);
+    Settings.METAVELVET = "%s%scpp%s%s-%s%sMetaVelvet"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
     if not os.path.exists(Settings.METAVELVET + os.sep + "meta-velvetg"):
        Settings.METAVELVET = getFromPath("meta-velvetg", "METAVELVET")
     metaVelvetMD5 = getMD5Sum(Settings.SOAPDENOVO + os.sep + "meta-velvetg")
@@ -509,7 +586,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, verbose, outputO
     # currently only supported on Linux 64-bit and only from one location
     Settings.PHYLOSIFT = "%s%sphylosift"%(Settings.METAMOSDIR, os.sep)
     if not os.path.exists(Settings.PHYLOSIFT + os.sep + "bin" + os.sep + "phylosift"):
-       print "Warning: PhyloSift was not found, will not be available\n";
+       print "Warning: PhyloSift was not found, will not be available\n"
        Settings.PHYLOSIFT = ""
     if Settings.PHYLOSIFT != "" and (Settings.OSTYPE != "Linux" or Settings.MACHINETYPE != "x86_64"):
        print "Warning: PhyloSift not compatible with %s-%s. It requires Linux-x86_64\n"%(Settings.OSTYPE, Settings.MACHINETYPE)
@@ -569,7 +646,7 @@ def run_process(settings,command,step=""):
            # open command log file for appending (it should have been created above)
            commandf = open(settings.rundir + os.sep + "Logs" + os.sep + "COMMANDS.log", 'a')
 
-           if not step in settings.task_dict:
+           if step not in settings.task_dict:
               print "Starting Task = %s.%s"%(step.lower(), step)
               dt = datetime.now().isoformat(' ')[:-7]
               commandf.write("|%s|# [%s]\n"%(dt,step))
@@ -679,7 +756,7 @@ def getProgramParams(configDir, fileName, module="", prefix="", comment="#"):
     cmdOptions = ""
 
     for curDir in dirs:
-       curFile = curDir + os.sep + fileName;
+       curFile = curDir + os.sep + fileName
        try:
           spec = open(curFile, 'r')
        except IOError as e:
@@ -695,9 +772,9 @@ def getProgramParams(configDir, fileName, module="", prefix="", comment="#"):
 
           if line == "[" + module + "]":
              read = True
-             continue;
+             continue
           elif read == True and line.startswith("["):
-             break;
+             break
 
           if read:
              if (line != ""):
@@ -712,6 +789,6 @@ def getProgramParams(configDir, fileName, module="", prefix="", comment="#"):
        spec.close()
 
     for option in optDict:
-       cmdOptions += prefix + option + " " + optDict[option] + " ";
+       cmdOptions += prefix + option + " " + optDict[option] + " "
 
     return cmdOptions

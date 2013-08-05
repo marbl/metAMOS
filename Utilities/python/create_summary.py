@@ -2,20 +2,25 @@ import sys, os, string, locale
 ROOT = os.path.dirname(os.path.abspath(__file__))
 #sys.path.insert(0, os.path.join(ROOT, '..'))
 #sys.path.append(ROOT+"/lib")
-import  markup, datetime
+import  markup
 from pygooglechart import StackedVerticalBarChart
 from pygooglechart import PieChart2D
 from pygooglechart import PieChart3D
 from pygooglechart import Axis
 from pygooglechart import StackedHorizontalBarChart, StackedVerticalBarChart, \
          GroupedHorizontalBarChart, GroupedVerticalBarChart
-from datetime import datetime, date, time
+
 
 
 import settings
+from utils import *
 import helper
-
+from create_plots import *
+from get_classify_stats import *
 #let system set locale from available ones
+_settings = Settings()
+
+from datetime import datetime, date, time
 locale.setlocale(locale.LC_ALL, '')
 
 def intOrZero(string):
@@ -58,23 +63,17 @@ def outputLibraryInfo(html_prefix, markupFile, outputHeader, libcnt, format, mat
          markupFile.td("NA")
    markupFile.tr.close()
 
-if __name__ == "__main__":
-    if len(sys.argv) < 5:
-        print "usage: create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm> <Utils dir> <run dir> <# of libs> <taxa level of classifications>"
-        sys.exit(0)
-    rund = sys.argv[7]
-    utils = sys.argv[5]
-    img = sys.argv[6]
-
-    prefix = sys.argv[3]
+def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,dbdir):
+#if __name__ == "__main__":
+#    if len(sys.argv) < 5:
+#        print "usage: create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm> <Utils dir> <run dir> <# of libs> <taxa level of classifications>"
+#        sys.exit(0)
+    
     html_prefix = prefix
     prefix = prefix.replace("/html/", "")
     MA_dir = prefix
     MA_dir = MA_dir.replace("/Postprocess/out","")
-    ref_asm = sys.argv[4]
-    mp = open(sys.argv[1],'r')
-    nLibs = int(sys.argv[8])
-    taxa_level = sys.argv[9]
+    mp = open(first,'r')
     #mp2 = open(sys.argv[1].replace("s12","s3"),'r')    
 
     # set working dir
@@ -82,8 +81,8 @@ if __name__ == "__main__":
 
     if not os.path.exists(html_prefix+"asmstats.out"):
         libPath = rund.replace("bin", "lib")
-        print "perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,sys.argv[4],html_prefix)
-        os.system("perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,sys.argv[4],html_prefix))
+        #print "perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,ref_asm,html_prefix)
+        run_process(_settings,"perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,ref_asm,html_prefix),"Classify")
     report = open(html_prefix+"asmstats.out",'r')
 
     initialStep = "Browse Results"
@@ -147,7 +146,8 @@ if __name__ == "__main__":
     cpfile = open("%s/plot.tab"%(html_prefix),'w')
     cpfile.write("+sample1\t%s\tproba\tb-\tmetaphyler=1\n"%(MA_dir))
     cpfile.close()
-    os.system("python %s/python/create_plots.py %s/plot.tab proba1"%(utils,html_prefix))
+    #os.system("python %s/python/create_plots.py %s/plot.tab proba1"%(utils,html_prefix))
+    create_plots("%s/plot.tab"%(html_prefix),"%s"%("proba1"))
 
     ##update counts
     #count reads
@@ -182,7 +182,7 @@ if __name__ == "__main__":
             os.system("cp %s/javascript/%s.html %s/"%(utils,step,html_prefix))
     os.system("cp %s/Logs/COMMANDS.log %s/pipeline.commands"%(MA_dir,html_prefix))
     os.system("cp %s/pipeline.run %s/pipeline.summary"%(MA_dir,html_prefix))
-    os.system("ln -sf %s/javascript/style.css %s/"%(utils,html_prefix)) # TEMP: change back to cp
+    os.system("cp %s/javascript/style.css %s/"%(utils,html_prefix)) # TEMP: change back to cp
     os.system("cp -r %s/../KronaTools/src %s/../KronaTools/img %s/"%(utils, utils, html_prefix)) # TODO: unhack KronaTools path
 #    os.system("cp %s/blocks.jpg %s/"%(img,html_prefix))
 #    os.system("cp %s/blocks_small.jpg %s/"%(img,html_prefix))
@@ -191,7 +191,8 @@ if __name__ == "__main__":
 
     # generate dynamic java scripts
     # first classify and propagate
-    os.system("python %s/python/get_classify_stats.py %s/propagate.in.clusters %s/propagate.out.clusters %s/DB/tax_key.tab %s Classify.html Propagate.html %s"%(utils, html_prefix, html_prefix, utils, html_prefix, taxa_level)) 
+    #os.system("python %s/python/get_classify_stats.py %s/propagate.in.clusters %s/propagate.out.clusters %s/DB/tax_key.tab %s Classify.html Propagate.html %s"%(utils, html_prefix, html_prefix, utils, html_prefix, taxa_level)) 
+    get_classify_stats("%s/propagate.in.clusters"%(html_prefix),"%s/propagate.out.clusters"%(html_prefix),"%s/tax_key.tab"%(dbdir),"%s"%(html_prefix),"Classify.html","Propagate.html","%s"%(taxa_level))
 
     # generate preprocess
     preprocess = markup.page()
@@ -266,11 +267,11 @@ if __name__ == "__main__":
     preprocess_out.close()
     
     # todo, need to add report for MapReads including # reads mapped (%), contig coverage histogram, and % reads between contigs and number of links histogram. Also re-estimated insert sizes for each lib
-    mapreads = markup.page()
-    mapreads.init(bodyattrs={'style':"margin:0px"})
-    mapreads.img(src_="hist_ctgcvg.png",height_="100%",width_="100%")
-    mapreads_out = open("%s/MapReads.html"%(html_prefix), 'w')
-    mapreads_out.write(mapreads.__str__())
+    #mapreads = markup.page()
+    #mapreads.init(bodyattrs={'style':"margin:0px"})
+    #mapreads.img(src_="hist_ctgcvg.png",height_="100%",width_="100%")
+    #mapreads_out = open("%s/MapReads.html"%(html_prefix), 'w')
+    #mapreads_out.write(mapreads.__str__())
 
     ##This will create ScaffoldSizes.png,ContigSizes.png
     
@@ -283,7 +284,7 @@ if __name__ == "__main__":
         rdata.append(line)
        
     if not os.path.exists(html_prefix+"covstats.out"):
-        os.system("%s/analyze-read-depth -x 2 %s > %scovstats.out"%(rund,sys.argv[2],html_prefix))
+        run_process(_settings,"%s/analyze-read-depth -x 2 %s > %scovstats.out"%(rund,amosbnk,html_prefix),"Classify")
     ff = open(html_prefix+"covstats.out",'r')
     covdata = []
     #covdata = ff.readlines()
@@ -292,7 +293,8 @@ if __name__ == "__main__":
         covdata.append(line)
     
     if not os.path.exists(html_prefix+"stats.out"):
-        os.system("%s/astats %s > %sstats.out"%(rund,sys.argv[2],html_prefix))
+        #os.system("%s/astats %s > %sstats.out"%(rund,amosbnk,html_prefix))
+        run_process(_settings,"%s/astats %s > %sstats.out"%(rund,amosbnk,html_prefix),"Classify")
     dd = open(html_prefix+"stats.out",'r')
     ddata = dd.readlines()
 

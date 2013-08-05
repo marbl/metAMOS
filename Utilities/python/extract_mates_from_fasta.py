@@ -1,16 +1,9 @@
 import string, sys
 
-if __name__ == "__main__":
-
-    infile = sys.argv[1]
-    #outprefix = sys.argv[2]
-    #library_min = sys.argv[3]
-    #library_max = sys.argv[4]
+#if __name__ == "__main__":
+def extract_mates_from_fasta(infile):
     f1 = open(infile,'r')
-    #outprefix = outprefix+infile
     f2 = open("%s.mates"%(infile),'w')
-    #f2.write("library\t110110\t%s\t%s\n"%(library_min,library_max))
-    #lines = f1.readlines()
     first = 1
     second = 0
     firstmate = ""

@@ -8,6 +8,9 @@ from utils import *
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
 
+from extract_mates_from_fasta import *
+from extract_mates_from_fastq import *
+
 _filter = True
 _readlibs = []
 _skipsteps = []
@@ -396,7 +399,10 @@ def Preprocess(input,output):
                            else: 
                                prevok = True
                                prevseq = seq
-                               prevqual = quals[currIndex].split("\n",1)[1]
+                               try:
+                                   prevqual = quals[currIndex].split("\n",1)[1]
+                               except IndexError:
+                                   prevqual = ["40\n"]
 
                            second = True
                            first = False
@@ -414,7 +420,10 @@ def Preprocess(input,output):
                                wq.writelines(">"+hdr+"1\n")
                                wq.writelines(prevqual)
                                wq.writelines(">"+hdr+"2\n")
-                               wq.writelines(quals[currIndex].split("\n",1)[1])
+                               try:
+                                   wq.writelines(quals[currIndex].split("\n",1)[1])
+                               except IndexError:
+                                   wq.writelines(["40\n"])
 
                                readcnt +=1
                            second = False
@@ -625,7 +634,10 @@ def Preprocess(input,output):
                run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.2.fasta"%(_settings.rundir, lib.f2.fname, _settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "ln %s/Preprocess/out/%s.qual %s/Preprocess/out/lib%d.1.fasta.qual"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "ln %s/Preprocess/out/%s.qual %s/Preprocess/out/lib%d.2.fasta.qual"%(_settings.rundir, lib.f2.fname, _settings.rundir, lib.id), "Preprocess")
-               run_process(_settings, "python %s/python/extract_mates_from_fasta.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
+               run_process(_settings, "which python","Preprocess")
+               run_process(_settings, "echo $PYTHONPATH","Preprocess")
+               #run_process(_settings, "python %s/python/extract_mates_from_fasta.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
+               extract_mates_from_fasta("%s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.id))
                convertInputFastaToFastq(lib.id, lib.mated)
 
            elif lib.format == "fastq" and lib.mated and not lib.interleaved:
@@ -633,19 +645,29 @@ def Preprocess(input,output):
                run_process(_settings, "perl %s/perl/shuffleSequences_fastq.pl  %s/Preprocess/out/%s %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname, _settings.rundir,lib.f2.fname,_settings.rundir,lib.id),"Preprocess")
                run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.1.fastq"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "ln %s/Preprocess/out/%s %s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir, lib.f2.fname, _settings.rundir, lib.id), "Preprocess")
-               run_process(_settings, "python %s/python/extract_mates_from_fastq.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
+               run_process(_settings, "which python","Preprocess")
+               run_process(_settings, "echo $PYTHONPATH","Preprocess")
+               #run_process(_settings, "python %s/python/extract_mates_from_fastq.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
+               extract_mates_from_fastq("%s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.id))
                convertInputFastqToFasta(lib.id, lib.mated)
 
            elif lib.mated and lib.interleaved:
                run_process(_settings, "cp %s/Preprocess/out/%s %s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.f1.fname,_settings.rundir,lib.id),"Preprocess")
                if lib.format == "fastq":
-                   run_process(_settings, "python %s/python/extract_mates_from_fastq.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
+                   run_process(_settings, "which python","Preprocess")
+                   run_process(_settings, "echo $PYTHONPATH","Preprocess")
+                   #run_process(_settings, "python %s/python/extract_mates_from_fastq.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
+                   extract_mates_from_fastq("%s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.id))
                    # unshuffle the sequences
                    run_process(_settings, "perl %s/perl/split_fastq.pl %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.1.fastq %s/Preprocess/out/lib%d.2.fastq"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id), "Preprocess")
                    convertInputFastqToFasta(lib.id, lib.mated)
                else:
                    run_process(_settings, "cp %s/Preprocess/out/%s.qual %s/Preprocess/out/lib%d.seq.qual"%(_settings.rundir,lib.f1.fname,_settings.rundir,lib.id),"Preprocess")
-                   run_process(_settings, "python %s/python/extract_mates_from_fasta.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
+ 
+                   run_process(_settings, "which python","Preprocess")
+                   run_process(_settings, "echo $PYTHONPATH","Preprocess")
+                   #run_process(_settings, "python %s/python/extract_mates_from_fasta.py %s/Preprocess/out/lib%d.seq"%(_settings.METAMOS_UTILS,_settings.rundir,lib.id),"Preprocess")
+                   extract_mates_from_fasta("%s/Preprocess/out/lib%d.seq"%(_settings.rundir,lib.id))
                    # unshuffle the sequences
                    run_process(_settings, "perl %s/perl/split_fasta.pl %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.1.fasta %s/Preprocess/out/lib%d.2.fasta"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id), "Preprocess")
                    run_process(_settings, "perl %s/perl/split_fasta.pl %s/Preprocess/out/lib%d.seq.qual %s/Preprocess/out/lib%d.1.fasta.qual %s/Preprocess/out/lib%d.2.fasta.qual"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id), "Preprocess")

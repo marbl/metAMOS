@@ -11,7 +11,7 @@ from abundance import Abundance
 
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
-
+from create_mapping import *
 _readlibs = []
 _skipsteps = []
 _cls = None
@@ -37,7 +37,8 @@ def init(reads, skipsteps, cls):
 @files("%s/Annotate/out/%s.annots"%(_settings.rundir, _settings.PREFIX),"%s/Logs/propagate.ok"%(_settings.rundir))
 def Propagate(input,output):
    if _cls == "metaphyler":
-       run_process(_settings, "python %s/python/create_mapping.py %s/DB/class_key.tab %s/Abundance/out/%s.classify.txt %s/Propagate/in/%s.annots"%(_settings.METAMOS_UTILS,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Propagate")
+       #run_process(_settings, "python %s/python/create_mapping.py %s/class_key.tab %s/Abundance/out/%s.classify.txt %s/Propagate/in/%s.annots"%(_settings.METAMOS_UTILS,_settings.DB_DIR,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Propagate")
+       create_mapping("%s/class_key.tab"%(_settings.DB_DIR),"%s/Abundance/out/%s.classify.txt"%(_settings.rundir,_settings.PREFIX),"%s/Propagate/in/%s.annots"%(_settings.rundir,_settings.PREFIX))
    else:
        run_process(_settings, "ln %s/Annotate/out/%s.annots %s/Propagate/in/%s.annots"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Propagate")
 

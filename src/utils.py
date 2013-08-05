@@ -48,6 +48,15 @@ _NUM_LINES    = 10
 _PROG_NAME_DICT = {}
 _PUB_DICT = {}
 
+def enum(*sequential, **named):
+    enums = dict(zip(sequential, range(len(sequential))), **named)
+    reverse = dict((value, key) for key, value in enums.iteritems())
+    enums['reverse_mapping'] = reverse
+    return type('Enum', (), enums)
+
+STEP_NAMES = enum("ASSEMBLE")
+INPUT_TYPE = enum("FASTQ", "FASTA", "CONTIGS", "SCAFFOLDS", "ORFS", "SCAFFOLD_ORFS")
+
 class AtomicCounter(object):
   def __init__(self, initval=0):
      self.val = multiprocessing.RawValue('i', initval)
@@ -769,7 +778,13 @@ def getProgramParams(configDir, fileName, module="", prefix="", comment="#"):
 
           if read:
              if (line != ""):
-                splitLine = line.split()
+                if (line.endswith("/")):
+                   for next in spec:
+                      line = line + next;
+                      if not next.endsWith("/"):
+                         spec.seek(spec.tell() - len(next))
+                         break
+                splitLine = line.split();
                 optDict[splitLine[0]] = "".join(splitLine[1:]).strip() 
        spec.close()
 

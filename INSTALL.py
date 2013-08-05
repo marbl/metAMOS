@@ -305,6 +305,7 @@ if 1:
              print "Warning: Cannot install pysam on your system. Please install LLVM compiler first."
              doInstall=False
        if doInstall:
+          os.system("python setup.py build_ext --inplace")
           os.system("python setup.py build")
           os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
        os.chdir(METAMOS_ROOT)

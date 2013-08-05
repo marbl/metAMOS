@@ -438,7 +438,28 @@ os.system("python setup.py install_scripts --install-dir=`pwd` build_ext")
 os.system("mv runPipeline.py runPipeline")
 os.system("mv initPipeline.py initPipeline")
 
-validate_install = 1
+#remove imports from pth file, if exists                                                                                                                                                          
+nf = []
+try:
+    dir1 = utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"
+    if not os.path.exists(dir1+os.sep+"easy-install.pth"):
+        dir1 = utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python"
+
+    nf = open(dir1+os.sep+"easy-install.pth",'r')
+    ndata = []
+    for line in nf.xreadlines():
+        if "import" in line:
+            continue
+        ndata.append(line)
+    nf.close()
+    nfo = open(dir1+os.sep+"easy-install.pth",'w')
+    for line in ndata:
+        nfo.write(line)
+    nfo.close()
+except IOError:
+    pass
+
+validate_install = 0
 if validate_install:
     rt = check_install.validate_dir(METAMOS_ROOT,'required_file_list.txt')
     if rt == -1:

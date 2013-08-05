@@ -65,22 +65,10 @@ try:
     if not os.path.exists(dir1+os.sep+"easy-install.pth"):
         dir1 = utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python"
 
-    nf = open(dir1+os.sep+"easy-install.pth",'r')
-    ndata = []
-    for line in nf.xreadlines():
-        if "import" in line:
-            continue
-        ndata.append(line)
-    nf.close()
-    nfo = open(dir1+os.sep+"easy-install.pth",'w')
-    for line in ndata:
-        nfo.write(line)
-    nfo.close()
-except IOError:
-    print "ERROR: easy-install.pth file missing, likely means something went wrong with psutil/pysam install. Disabling psutil and pysam.."
-    nopsutil = True
-    nopysam = True
-    #sys.exit(1)
+    if not os.path.exists(dir1+os.sep+"easy-install.pth"):
+        print "ERROR: easy-install.pth file missing, likely means something went wrong with psutil/pysam install. Disabling psutil and pysam.."
+        nopsutil = True
+        nopysam = True
 
 if 'bash' in shellv or utils.cmdExists('export'):
    os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))

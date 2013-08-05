@@ -102,6 +102,7 @@ if not nopsutil:
     import psutil
 from operator import itemgetter
 from ruffus import *
+from task import JobSignalledBreak
 skipsteps = ["FindRepeats"]
 
 ## Get start time

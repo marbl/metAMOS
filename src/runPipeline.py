@@ -6,7 +6,7 @@
 ## runPipeline.py - main pipeline driver for metAMOS
 #########################
 ##first imports
-import os,sys,site
+import os,sys
 sys.tracebacklimit = 0
 shellv = os.environ["SHELL"]
 ## Setting up paths
@@ -37,19 +37,28 @@ os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.pathsep
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.pathsep
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python"+os.pathsep
-os.environ["PYTHONPATH"] += ppath + os.pathsep
-site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
-site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
+os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.pathsep
+#os.environ["PYTHONPATH"] += "/usr/lib64/python2.7"+os.pathsep
+#os.environ["PYTHONPATH"] += "/usr/lib/python2.7"+os.pathsep
+#os.environ["PYTHONPATH"] += ppath + os.pathsep
+os.environ["PYTHONPATH"] += sys._MEIPASS + os.pathsep
+os.environ["PYTHONHOME"] = sys._MEIPASS + os.pathsep
+#os.environ["PYTHONHOME"] += "/usr/lib64/python2.7"+os.pathsep
+#os.environ["PYTHONHOME"] += "/usr/lib/python2.7"+os.pathsep
+#site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
+#site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
 sys.path.append(utils.INITIAL_UTILS)
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python")
 sys.path.append(utils.INITIAL_UTILS+os.sep+"ruffus")
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"pysam")
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
 sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
+sys.path.append(sys._MEIPASS)
+sys.path.append("/usr/lib/python")
 
 #remove imports from pth file, if exists
 nf = []
-nopsutil = False
+nopsutil = True
 nopysam = False
 try:
     dir1 = utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"
@@ -144,6 +153,7 @@ def usage():
     print "   -z = <string>: taxonomic level to categorize at (default = %s)"%(DEFAULT_TAXA_LEVEL)
 
     print "\n[misc_opts]: Miscellaneous options"
+    print "   -B = <bool>:   blast DBs not available (default = NO)"
     print "   -r = <bool>:   retain the AMOS bank?  (default = NO)"
     print "   -p = <int>:    number of threads to use (be greedy!) (default=1)"
     print "   -4 = <bool>:   454 data? (default = NO)"    
@@ -211,7 +221,7 @@ def printConfiguration(fileName=None):
         conf.close()
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hrjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iu1l:x:yz:L",\
+    opts, args = getopt.getopt(sys.argv[1:], "hrjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iu1l:x:yz:LB",\
                                    ["help", \
                                         "retainBank", \
                                         "libspeccov",\
@@ -240,7 +250,8 @@ try:
                                         "what", \
                                         "lowcpu",\
                                         "taxalevel",\
-                                        "localKrona"])
+                                        "localKrona",\
+                                        "noblastdb"])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -319,6 +330,7 @@ annotate_unassembled = False
 output_programs = 0
 settings = utils.Settings(DEFAULT_KMER, multiprocessing.cpu_count() - 1, "", DEFAULT_TAXA_LEVEL)
 nofcpblast = False
+noblastdb = False
 for o, a in opts:
     if o in ("-v","--verbose"):
         utils.Settings.VERBOSE = True
@@ -327,6 +339,13 @@ for o, a in opts:
         sys.exit()
     elif o in ("-i","--indexbowtie"):
         bowtie_mapping = 1
+    elif o in ("-B","--noblastdb"):
+        noblastdb = True
+        #skip Metaphyler
+        #skipsteps.append("Abundance")
+        skipsteps.append("FunctionalAnnotation")
+        #skip
+        nofcpblast = True
     elif o in ("-y","--lowcpu"):
         nofcpblast = True
     elif o in ("-w","--what"):
@@ -486,6 +505,10 @@ if not os.path.exists(settings.rundir) or settings.rundir == "":
     print "project dir %s does not exist!"%(settings.rundir)
     usage()
     sys.exit(1)
+
+if (settings.noblastdb or noblastdb) and (selected_programs["classify"] == "blast" or selected_programs["classify"] == "fcp"):
+    print "**no DB directory available, cannot run blast or FCP for classification (model files in DB dir). replacing with phylosift!"
+    selected_programs["classify"] = phylosift
 
 print "[Steps to be skipped]: ", skipsteps
 #remove started & ok flags in Logs
@@ -752,7 +775,23 @@ if __name__ == "__main__":
     postprocess.init(readlibs, skipsteps, selected_programs["classify"])
 
     try:
+
        dlist = []
+       #pipeline_printout(sys.stdout,[preprocess.Preprocess],verbose=1)                                                                                                                           
+       tasks_to_run = ["preprocess.Preprocess"]
+
+       if "ASSEMBLE" in skipsteps or "Assemble" in skipsteps or "assemble" in skipsteps or "asm" in skipsteps:
+           pass
+       else:
+           tasks_to_run.append("assemble.Assemble")
+
+       if "FINDORFS" in skipsteps or "FindORFS" in skipsteps or "findorfs" in skipsteps:
+           pass
+       else:
+           tasks_to_run.append("findorfs.FindORFS")
+       tasks_to_run.append("postprocess.Postprocess")
+       #pipeline_printout(sys.stdout,tasks_to_run,verbose=2)                                                                                                                                      
+
        pipeline_printout(sys.stdout,[preprocess.Preprocess,assemble.Assemble, \
                          mapreads.MapReads, \
                          findorfs.FindORFS, findreps.FindRepeats, annotate.Annotate, \
@@ -766,9 +805,18 @@ if __name__ == "__main__":
                                [postprocess.Postprocess],
                                no_key_legend = True)
 
-       printConfiguration()
-       printConfiguration("%s/pipeline.run"%(settings.rundir))
+       #printConfiguration()                                                                                                                                                                      
+       #printConfiguration("%s/pipeline.run"%(settings.rundir))                                                                                                                                   
        updateCounter()
+       forcetasks = []
+       for item in forcesteps:
+           if "ASSEMBLE" in string.upper(item):
+               forcetasks.append("assemble.Assemble")
+
+           elif "FINDORFS" in string.upper(item):
+               forcetasks.append("findorfs.FindORFS")
+
+       #pipeline_run(tasks_to_run,forcedtorun_tasks=forcesteps,verbose=2)                                                                                                                         
 
        pipeline_run([preprocess.Preprocess, assemble.Assemble,findorfs.FindORFS, \
                     mapreads.MapReads, \
@@ -776,6 +824,7 @@ if __name__ == "__main__":
                     fannotate.FunctionalAnnotation, scaffold.Scaffold, findscforfs.FindScaffoldORFS, \
                     propagate.Propagate, classify.Classify, postprocess.Postprocess],\
                     verbose = 2)
+
        #multiprocess threads
        t2 = time.time()
        elapsed = float(t2)-float(t1)

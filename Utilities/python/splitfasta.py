@@ -1,7 +1,8 @@
 import os, string, sys
 
-if __name__ == "__main__":
-    r = open(sys.argv[1],'r')
+#if __name__ == "__main__":
+def splitfasta(first,maxlen,prefix="",cnt=0):
+    r = open(first,'r')
     seqs = {}
     prevseq = ""
     header = ""
@@ -17,13 +18,12 @@ if __name__ == "__main__":
     if len(prevseq) > 0:
        seqs[header] = prevseq
 
-    cnt = 1
+    if cnt == 0:
+        cnt = 1
     curlen = 0
-    maxlen = int(sys.argv[2])
-    prefix = sys.argv[1]
-    if (len(sys.argv) > 3):
-       prefix = sys.argv[3]
-       cnt = int(sys.argv[4])
+    #maxlen = int(sys.argv[2])
+    if len(prefix) == 0:
+        prefix = first#sys.argv[1]
 
     r = open(prefix+"_part%d.fa"%(cnt),'w')            
     for id in seqs.keys():

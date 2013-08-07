@@ -161,8 +161,8 @@ class GenericProgram:
 def getSupportedList(step):
    if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ASSEMBLE):
       return []
-   programs = getProgramParams(INITIAL_UTILS, "%s"%(STEP_NAMES.reverse_mapping[step]))
-   return programs.strip().split(" ")
+   programs = getProgramParams(INITIAL_UTILS, "%s.generic"%(STEP_NAMES.reverse_mapping[step]))
+   return programs.strip().split()
    
 def checkIfExists(step, programName):
    if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ASSEMBLE):

@@ -4,7 +4,7 @@
 input FASTQ
 name SPAdes
 output contigs.fasta
-location cpp/MACHINE/spades
+location cpp/MACHINE/spades/bin
 threads -t
 paired_interleaved --peLIB-12 FIRST
 paired --peLIB-1 FIRST --peLIB-2 SECOND

@@ -23,3 +23,4 @@ metaphyler	MetaPhyler	Liu B, Gibbons T, Ghodsi M, Treangen T, Pop M. Accurate an
 newbler	Newbler
 velvet-sc	Velvet-SC	Chitsaz H, Yee-Greenbaum JL, Tesler G, Lombardo MJ, Dupont CL, Badger JH, Novotny M, Rusch DB, Fraser LJ, Gormley NA, Schulz-Trieglaff O, Smith GP, Evers DJ, Pevzner PA, Lasken RL. Efficient de novo assembly of single-cell bacterial genomes from short-read data sets. Nature Biotechnology, vol. 29, no. 11, pp. 915-921 (2011) 
 krona	Krona	Ondov BD, Bergman NH, Phillippy AM. Interactive metagenomic visualization in a Web browser. BMC Bioinformatics. 2011 Sep 30;12:385.
+spades	SPAdes	Anton Bankevich, Sergey Nurk, Dmitry Antipov, Alexey A. Gurevich, Mikhail Dvorkin, Alexander S. Kulikov, Valery M. Lesin, Sergey I. Nikolenko, Son Pham, Andrey D. Prjibelski, Alexey V. Pyshkin, Alexander V. Sirotkin, Nikolay Vyahhi, Glenn Tesler, Max A. Alekseyev, and Pavel A. Pevzner. Journal of Computational Biology. May 2012, 19(5): 455-477. doi:10.1089/cmb.2012.0021.

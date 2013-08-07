@@ -70,7 +70,12 @@ class GenericProgram:
          elif (defn == "output"):
             self.output = value
          elif (defn == "location"):
+           # get the location path
             self.location = value
+            self.location = self.location.replace("MACHINE", "%s-%s"%(_settings.OSTYPE, _settings.MACHINETYPE))
+            if not os.path.isabs(self.location):
+               self.location = os.path.abspath("%s%s%s"%(_settings.METAMOS_UTILS, os.sep, self.location))
+
          elif (defn == "threads"):
             self.threads = value
          elif (defn == "paired"):
@@ -135,13 +140,6 @@ class GenericProgram:
       if not self.threads == "":
          threadParams =  "%s %d"%(self.threads,_settings.threads)
 
-      # get the location path
-      self.location = self.location.replace("MACHINE", "%s-%s"%(_settings.OSTYPE, _settings.MACHINETYPE))
-      if (os.path.isabs(self.location)):
-         print "Absolute path to tool " + self.location
-      else:
-         self.location = os.path.abspath("%s%s%s"%(_settings.METAMOS_UTILS, os.sep, self.location))
-
       for command in self.commandList:
          (commandName, sp, junk) = command.partition(' ')
          theCommand = "%s%s%s"%(self.location, os.sep, commandName)
@@ -172,6 +170,15 @@ def checkIfExists(step, programName):
 
    programs = getSupportedList(step)
    return programName.lower() in programs
+
+def getLocation(step, programName):
+   if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ASSEMBLE):
+      return "UNKNOWN"
+   if not checkIfExists(step, programName):
+      return "UNKNOWN" 
+   dispatch = GenericProgram(programName, step)
+   dispatch.read()
+   return dispatch.location
 
 def execute(step, programName):
    if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ASSEMBLE):

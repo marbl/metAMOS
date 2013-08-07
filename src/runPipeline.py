@@ -183,7 +183,7 @@ def printConfiguration(fileName=None):
            try:
               configurationText.append("\t" + eval("utils.Settings.%s"%(prog.replace("-", "_").upper()))+"\n")
            except AttributeError:
-              configurationText.append("\tUNKNOWN\n")
+              configurationText.append("\t" + generic.getLocation(utils.STEP_NAMES.mapping[type.upper()], prog) + "\n")
            configurationText.append("\t" + citation + "\n\n")
 
     # add step-indepent citations that are always run
@@ -794,8 +794,8 @@ if __name__ == "__main__":
                                [postprocess.Postprocess],
                                no_key_legend = True)
 
-       #printConfiguration()                                                                                                                                                                      
-       #printConfiguration("%s/pipeline.run"%(settings.rundir))                                                                                                                                   
+       printConfiguration()
+       printConfiguration("%s/pipeline.run"%(settings.rundir))                                                                                                                                   
        updateCounter()
        forcetasks = []
        for item in forcesteps:

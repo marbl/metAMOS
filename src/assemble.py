@@ -8,6 +8,8 @@ from preprocess import Preprocess
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
 
+import generic
+
 _readlibs = []
 _skipsteps = []
 _settings = Settings()
@@ -384,10 +386,10 @@ def Assemble(input,output):
       runVelvet(_settings.VELVET_SC, "velvet-sc")
    elif _asm == "metavelvet":
       runMetaVelvet(_settings.VELVET, _settings.METAVELVET, "metavelvet")
-   elif _asm.lower() == "spades":
-      print "Warning: SPades is not yet supported. Stay Tuned!"
    elif _asm.lower() == "sparseassembler":
       runSparseAssembler(_settings.SPARSEASSEMBLER, "SparseAssembler");
+   elif generic.checkIfExists(STEP_NAMES.ASSEMBLE, _asm.lower()):
+      generic.execute(STEP_NAMES.ASSEMBLE, _asm.lower())
    else:  
       print "Error: %s is an unknown assembler. No valid assembler specified."%(_asm)
       raise(JobSignalledBreak)

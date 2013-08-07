@@ -51,10 +51,13 @@ _PUB_DICT = {}
 def enum(*sequential, **named):
     enums = dict(zip(sequential, range(len(sequential))), **named)
     reverse = dict((value, key) for key, value in enums.iteritems())
+    mapping = dict((key, value) for key, value in enums.iteritems())
     enums['reverse_mapping'] = reverse
+    enums['mapping'] = mapping
     return type('Enum', (), enums)
 
 STEP_NAMES = enum("ASSEMBLE")
+STEP_OUTPUTS = enum(".asm.contig")
 INPUT_TYPE = enum("FASTQ", "FASTA", "CONTIGS", "SCAFFOLDS", "ORFS", "SCAFFOLD_ORFS")
 
 class AtomicCounter(object):
@@ -126,6 +129,9 @@ class Settings:
 
    BINARY_DIST = 0
 
+   nopsutil = False
+   nopysam = False
+
    def __init__(self, kmer = None, threads = None, rundir = None, taxa_level = "", localKrona = False, verbose = False, outputOnly = False, update = False):
 
       if (Settings.rundir != "" and update == False):
@@ -144,6 +150,20 @@ class Settings:
       except Exception:
         pass
 
+      try:
+         import pysam
+         if verbose:
+            print "Found pysam in %s"%(pysam.__file__)
+      except ImportError:
+         Settings.nopysam = True
+         print "Could not import pysam, disabling."
+      try:
+         import psutil
+         if verbose:
+            print "Found psutil in %s"%(psutil.__file__)
+      except ImportError:
+         Settings.nopsutil = True
+         print "Could not import psutil, disabling."
 
       Settings.rundir = rundir
       Settings.kmer = kmer
@@ -801,7 +821,6 @@ def getProgramParams(configDir, fileName, module="", prefix="", comment="#", sep
                    for next in spec:
                       line = line.replace("\\", "") + next.replace("\\", "")
                       if not next.endswith("\\"):
-                         print "Line is done %s and last read was %s\n"%(line, next)
                          break
                 splitLine = line.split();
                 optDict[splitLine[0]] = separator.join(splitLine[1:]).strip() 
@@ -811,3 +830,19 @@ def getProgramParams(configDir, fileName, module="", prefix="", comment="#", sep
        cmdOptions += prefix + option + " " + optDict[option] + " "
 
     return cmdOptions
+
+def getAvailableMemory(settings):
+   if settings.nopsutil:
+      return 0
+
+   import psutil
+
+   cacheusage=0
+   if 'linux' in settings.OSTYPE.lower():
+      cacheusage = psutil.cached_phymem()
+   memusage =  `psutil.phymem_usage()`.split(",")
+   freemem = long(memusage[2].split("free=")[-1])+long(cacheusage)
+   percentfree = float(memusage[3].split("percent=")[-1].split(")")[0])
+   avram = (freemem/1000000000)
+
+   return avram

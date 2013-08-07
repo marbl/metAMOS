@@ -24,6 +24,7 @@ if validate_install:
         print "MetAMOS not properly installed, please reinstall or contact development team for assistance"
         sys.exit(1)
 import utils
+
 ppath = ""
 if "PYTHONPATH" not in os.environ:
    os.environ["PYTHONPATH"] = ""
@@ -69,22 +70,6 @@ sys.path.append("/usr/lib/python")
 
 #remove imports from pth file, if exists
 nf = []
-nopsutil = True
-nopysam = False
-try:
-    dir1 = utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"
-    if not os.path.exists(dir1+os.sep+"easy-install.pth"):
-        dir1 = utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python"
-
-    if not os.path.exists(dir1+os.sep+"easy-install.pth"):
-        print "ERROR: easy-install.pth file missing, likely means something went wrong with psutil/pysam install. Disabling psutil and pysam.."
-        nopsutil = True
-        nopysam = True
-except IOerror:
-    print "ERROR: easy-install.pth file missing, likely means something went wrong with psutil/pysam install. Disabling psutil and pysam.."
-    nopsutil = True
-    nopysam = True
-
 if 'bash' in shellv or utils.cmdExists('export'):
    os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
    os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
@@ -103,8 +88,6 @@ import re
 import subprocess
 import webbrowser
 import multiprocessing
-if not nopsutil:
-    import psutil
 from operator import itemgetter
 from ruffus import *
 from task import JobSignalledBreak
@@ -263,15 +246,16 @@ except getopt.GetoptError, err:
     sys.exit(2)
 
 ## always use long names, search will auto-detect abbreviations
+settings = utils.Settings(DEFAULT_KMER, multiprocessing.cpu_count() - 1, "", DEFAULT_TAXA_LEVEL)
+import generic
 
 supported_programs = {}
 supported_genecallers = ["fraggenescan","metagenemark","glimmermg"]
 supported_assemblers = ["soapdenovo","newbler","ca","velvet","velvet-sc","metavelvet",\
                             "metaidba","sparseassembler","minimus"]
+supported_assemblers.extend(generic.getSupportedList(utils.STEP_NAMES.ASSEMBLE))
+
 supported_mappers = ["bowtie","bowtie2"]
-if nopysam:
-    #need pysam for bowtie2 support
-    supported_mappers = ["bowtie"]
 supported_abundance = ["metaphyler"]
 supported_classifiers = ["fcp","phylosift","phmmer","blast",\
                              "metaphyler", "phymm"]
@@ -721,14 +705,10 @@ if __name__ == "__main__":
        os.environ["PATH"]="%s:%s"%(utils.Settings.KRONA, currPath)
 
     # check for memory/cpu
-    if not nopsutil and lowmem == False:
-        cacheusage=0
-        if 'linux' in utils.Settings.OSTYPE.lower():
-            cacheusage = psutil.cached_phymem()
-        memusage =  `psutil.phymem_usage()`.split(",")
-        freemem = long(memusage[2].split("free=")[-1])+long(cacheusage)
-        percentfree = float(memusage[3].split("percent=")[-1].split(")")[0])
-        avram = (freemem/1000000000)
+    if not settings.nopsutil and lowmem == False:
+        import psutil
+
+        avram = utils.getAvailableMemory(settings)
         print "[Available RAM: %d GB]"%(avram)
         lowmem= False
         nofcpblast = False
@@ -748,6 +728,10 @@ if __name__ == "__main__":
             skipsteps.append("FunctionalAnnotation")
         else:
             print utils.OK_GREEN+"\t*ok"+utils.ENDC
+
+    if settings.nopysam:
+       #need pysam for bowtie2 support
+       supported_mappers = ["bowtie"]
 
     import preprocess
     import assemble
@@ -777,6 +761,7 @@ if __name__ == "__main__":
     propagate.init(readlibs, skipsteps, selected_programs["classify"])
     classify.init(readlibs, skipsteps, selected_programs["classify"])
     postprocess.init(readlibs, skipsteps, selected_programs["classify"])
+    generic.init(skipsteps, readlibs)
 
     try:
 

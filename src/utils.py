@@ -758,6 +758,7 @@ def run_process(settings,command,step=""):
 def getProgramCitations(settings, programName, comment="#"):
    global _PUB_DICT
    global _PROG_NAME_DICT
+   cite = ""
 
    if len(_PUB_DICT) == 0:
       try:
@@ -765,7 +766,7 @@ def getProgramCitations(settings, programName, comment="#"):
       except IOError as e:
          return
 
-      for line in cite:
+      for line in cite.xreadlines():
          (line, sep, commentLine) = line.partition(comment)
          splitLine = line.strip().split("\t")
          if len(splitLine) >= 3:
@@ -795,6 +796,7 @@ def getProgramParams(configDir, fileName, module="", prefix="", comment="#", sep
     cmdOptions = ""
 
     for curDir in dirs:
+       spec = ""
        curFile = curDir + os.sep + fileName
        try:
           spec = open(curFile, 'r')
@@ -805,7 +807,7 @@ def getProgramParams(configDir, fileName, module="", prefix="", comment="#", sep
        if module == "":
           read = True
 
-       for line in spec:
+       for line in spec.xreadlines():
           (line, sep, commentLine) = line.partition(comment)
           line = line.strip()
 

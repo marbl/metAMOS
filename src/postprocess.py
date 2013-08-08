@@ -253,7 +253,21 @@ def Postprocess(input,output):
    create_summary("%s/Abundance/out/%s.taxprof.pct.txt"%(_settings.rundir,_settings.PREFIX),"%s/Postprocess/out/%s.bnk"%(_settings.rundir,_settings.PREFIX),"%s/Postprocess/out/html/"%(_settings.rundir),"%s/Postprocess/out/%s.scf.fa"%(_settings.rundir,_settings.PREFIX),"%s"%(_settings.METAMOS_UTILS),"%s/img"%(_settings.METAMOSDIR),"%s"%(_settings.AMOS),len(_readlibs),"%s"%(_settings.taxa_level),"%s"%(_settings.DB_DIR))
    #webbrowser.open_new_tab(createreport.html)
    if openbrowser:
-       if os.path.exists("%s/Postprocess/out/html/summary.html"%(_settings.rundir)):
-           webbrowser.open_new_tab("file://%s/Postprocess/out/html/summary.html"%(_settings.rundir))
+       html_results = "%s/Postprocess/out/html/summary.html"%(_settings.rundir)
+       url = "file://%s"%(html_results)
+       print "url is %s\n"%(url)
+       if os.path.exists(html_results):
+          try:
+             client = webbrowser.get("firefox")
+             client.open_new_tab(url)
+             return
+          except:
+             try:
+                if "Darwin" in Settings.OSTYPE:
+                   webbrowser.get('safari').open_new_tab(url)
+                else:
+                   webbrowser.open_new_tab(url)
+             except:
+                print("Please open %s in your browser\n"%(url))
        else:
            print "ERROR: No Summary html file available! skipping"

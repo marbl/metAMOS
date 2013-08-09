@@ -4,6 +4,46 @@ import os, sys, string, time, BaseHTTPServer, getopt, time, datetime
 #from datetime import date
 #from ruffus import *
 
+#code to discover frozen binary location
+application_path = ""
+if getattr(sys, 'frozen', False):
+    application_path = os.path.dirname(sys.executable)
+elif __file__:
+    application_path = os.path.dirname(__file__)
+
+#code to update frozen binary runPipeline if newer one exists
+try:
+
+   sys._MEIPASS
+   print "Download/install latest version of MetAMOS frozen binary, if available? (note, this might require root/sudo access!)"
+   dl = 'y'
+   dl = raw_input("Enter Y/N: ")
+   if dl == 'y' or dl == 'Y':
+       os.system("wget -P %s -N http://www.cbcb.umd.edu/confcour/temp/runPipeline"%(application_path))
+       os.system("wget -P %s -N http://www.cbcb.umd.edu/confcour/temp/initPipeline"%(application_path))
+       """
+       if os.path.exists("%s/runPipeline.tar.gz"%(application_path)):
+           f1 = time.ctime(os.path.getmtime("%s/runPipeline.tar.gz"%(application_path)))
+           os.system("wget -P %s -N http://www.cbcb.umd.edu/confcour/temp/runPipeline.tar.gz"%(application_path))
+           f2 = time.ctime(os.path.getmtime("%s/runPipeline.tar.gz"%(application_path)))
+       else:
+           os.system("wget -P %s http://www.cbcb.umd.edu/confcour/temp/runPipeline.tar.gz"%(application_path))
+       if f2 != f1:
+           print "Newer version of MetAMOS available, replace?"
+           dl = raw_input("Enter Y/N: ")
+           if dl == 'y' or dl == 'Y':
+               os.system("tar -xf --overwrite %s/runPipeline.tar.gz"%(application_path,application_path))
+           else:
+               print "ok.. skipping update! won't ask to install again until next release."
+               #os.remove("%s/runPipeline.tar.gz"%(application_path))
+       else:
+           print "You have the latest and greatest version installed!"
+       """
+except Exception:
+   pass
+
+#check remote filestamp, if newer ask to download & replace
+
 libcounter = 1
 class readLib:
     format = ""

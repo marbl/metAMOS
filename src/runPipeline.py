@@ -794,8 +794,9 @@ if __name__ == "__main__":
                                [postprocess.Postprocess],
                                no_key_legend = True)
 
-       printConfiguration()
-       printConfiguration("%s/pipeline.run"%(settings.rundir))                                                                                                                                   
+       if not utils.Settings.BINARY_DIST:
+           printConfiguration()
+           printConfiguration("%s/pipeline.run"%(settings.rundir))                                                                                                                                   
        updateCounter()
        forcetasks = []
        for item in forcesteps:

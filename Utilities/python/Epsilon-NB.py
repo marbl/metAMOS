@@ -18,7 +18,7 @@ if len(sys.argv) != 4:
 	print 'Typical usage:'
 	print '  python Epsilon-NB.py nb_results.txt 1E10 epsilon-nb_results.txt'
 	print ''
-	exit()
+	sys.exit()
 	
 nbResults = sys.argv[1]
 if sys.argv[2] == '0' or sys.argv[2] == '0.0' or float(sys.argv[2]) == 0.0:

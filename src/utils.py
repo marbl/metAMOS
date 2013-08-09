@@ -259,7 +259,7 @@ class Settings:
                kronalibf = open("%s%sKronaTools%slib%sKronaTools.pm"%(Settings.METAMOSDIR,os.sep,os.sep,os.sep),'w')
                kronalibf.write(dd)
                kronalibf.close()
-               os.system("ln -s -F -f %s/taxonomy %s%sKronaTools%staxonomy"%(Settings.DB_DIR,Settings.METAMOSDIR,os.sep,os.sep))
+               os.system("ln -s %s/taxonomy %s%sKronaTools%staxonomy"%(Settings.DB_DIR,Settings.METAMOSDIR,os.sep,os.sep))
       Settings.REPEATOIRE    = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
 
 
@@ -622,18 +622,28 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
 
     # finally store the configuration 
     conf = open("%s/pipeline.conf"%(Settings.rundir),'w')
-    if Settings.BINARY_DIST:
+    if Settings.BINARY_DIST and 1: 
           prevtmpdirs = []
           try:
-              bdf = open("%s/prevruns.tmp"%(Settings.rundir),'r')
+              bdf = open("%s/prevruns.tmp"%(application_path),'r')
               for line in bdf.xreadlines():
                   prevtmpdirs.append(line.replace("\n",""))
               for pdir in prevtmpdirs:
                   if os.path.exists("%s"%(pdir)):
                       os.system("rm -rf %s"%(pdir))
+              bdf.close()
+              bdf = open("%s/prevruns.tmp"%(application_path),'w')
+              bdf.close()
 
           except IOError:
-              bdf = open("%s/prevruns.tmp"%(Settings.rundir),'w')
+              #do not have permissions to write to install dir, store in tmp?
+              #tf, tf_path = tempfile.mkstemp("prevruns.tmp",'w')
+              bdf = open("%s/prevruns.tmp"%(application_path),'w')
+              bdf.write("%s\n"%(sys._MEIPASS))
+              bdf.close()
+
+          except TypeError:
+              bdf = open("%s/prevruns.tmp"%(application_path),'w')
               bdf.write("%s\n"%(sys._MEIPASS))
               bdf.close()
 
@@ -761,7 +771,6 @@ def getProgramCitations(settings, programName, comment="#"):
    global _PUB_DICT
    global _PROG_NAME_DICT
    cite = ""
-
    if len(_PUB_DICT) == 0:
       try:
          cite = open("%s/%s"%(settings.METAMOS_DOC, "citations.rst"), 'r')

@@ -467,6 +467,11 @@ def job_wrapper_generic(param, user_defined_work_func, register_cleanup, touch_f
     run func
     """
     assert(user_defined_work_func)
+    #try:
+    #    print sys._MEIPASS
+    #    os.system("rm -rf %s"%(sys._MEIPASS))
+    #except Exception:
+    #    pass
     return user_defined_work_func(*param)
 
 #_________________________________________________________________________________________
@@ -491,7 +496,11 @@ def job_wrapper_io_files(param, user_defined_work_func, register_cleanup, touch_
             else:
                 os.utime(f, None)
 
-
+    #try:
+    #    print sys._MEIPASS
+    #    os.system("rm -rf %s"%(sys._MEIPASS))
+    #except Exception:
+    #    pass
 
     #
     # register strings in output file for cleanup

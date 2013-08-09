@@ -45,13 +45,21 @@ class GenericProgram:
    isValid = False
 
    def __init__(self, name = "", step=STEP_NAMES.ASSEMBLE):
-      self.isValid = True
-
       self.name = name.lower()
       self.stepName = step
+      self.output = ""
+      self.location = ""
+      self.threads = ""
+      self.paired = ""
+      self.paired_interleaved = ""
+      self.unpaired = ""
+      self.commandList = []
+      self.isValid = False 
 
    def read(self):
       # populate from file
+      self.isValid = True
+
       cfg = getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(self.name), "CONFIG", "\n", "#", " ")
       for line in cfg.split("\n"):
          (defn, sp, value) = line.partition(' ')         
@@ -99,6 +107,13 @@ class GenericProgram:
          print "Error: only FASTQ input is currently supported\n"
          self.isValid = False
 
+      for command in self.commandList:
+         (commandName, sp, junk) = command.partition(' ')
+         theCommand = "%s%s%s"%(self.location, os.sep, commandName)
+         if (not os.path.exists(theCommand)):
+            # try to find in path
+            self.location = getFromPath(commandName, self.name)
+
    def execute(self):
       print "Starting execute"
 
@@ -144,11 +159,8 @@ class GenericProgram:
          (commandName, sp, junk) = command.partition(' ')
          theCommand = "%s%s%s"%(self.location, os.sep, commandName)
          if (not os.path.exists(theCommand)): 
-            # try to find in path
-            theCommand = "%s%s%s"%(getFromPath(commandName, self.name), os.sep, commandName)
-            if not os.path.exists(theCommand):
-               print "Error: requested to run %s but not available in specified location %s. Please check your specification and try again"%(commandName, self.location)
-               #raise(JobSignalledBreak)
+            print "Error: requested to run %s but not available in specified location %s. Please check your specification and try again"%(commandName, self.location)
+            raise(JobSignalledBreak)
 
          params = getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(self.name.lower()), commandName, "-").replace("KMER", "%d"%(_settings.kmer)) + " " + params
          command = self.location + os.sep + command.replace("INPUT", params).replace("MEM", "%d"%(avram)).replace("THREADS", threadParams).replace("OFFSET", "33" if offset.lower() == "sanger" else "64")
@@ -158,17 +170,17 @@ class GenericProgram:
       symlinkCmd = "ln %s/%s/out/%s %s/%s/out/%s%s"%(_settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), self.output, _settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), _settings.PREFIX, STEP_OUTPUTS.reverse_mapping[self.stepName])
       run_process(_settings, symlinkCmd, STEP_NAMES.reverse_mapping[self.stepName].title())
 
-def getSupportedList(step):
+def getSupportedList(path, step):
    if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ASSEMBLE):
       return []
-   programs = getProgramParams(INITIAL_UTILS, "%s.generic"%(STEP_NAMES.reverse_mapping[step]))
+   programs = getProgramParams(path, "%s.generic"%(STEP_NAMES.reverse_mapping[step]))
    return programs.strip().split()
    
 def checkIfExists(step, programName):
    if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ASSEMBLE):
       return False
 
-   programs = getSupportedList(step)
+   programs = getSupportedList(_settings.METAMOS_UTILS, step)
    return programName.lower() in programs
 
 def getLocation(step, programName):
@@ -178,6 +190,7 @@ def getLocation(step, programName):
       return "UNKNOWN" 
    dispatch = GenericProgram(programName, step)
    dispatch.read()
+
    return dispatch.location
 
 def execute(step, programName):

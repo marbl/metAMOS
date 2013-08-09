@@ -64,7 +64,7 @@ def Abundance(input,output):
    blastfile = _settings.PREFIX+".blastx"
    blastc = _settings.BLAST + os.sep + "blastall"
    formatc = _settings.BLAST + os.sep + "formatdb"
-   run_process(_settings, "ln %s/DB/markers.pfasta %s/Abundance/out/markers.pfasta"%(_settings.METAMOS_UTILS, _settings.rundir), "Abundance")
+   run_process(_settings, "ln %s/markers.pfasta %s/Abundance/out/markers.pfasta"%(_settings.DB_DIR, _settings.rundir), "Abundance")
    run_process(_settings, "%s  -p T -i %s/Abundance/out/markers.pfasta"%(formatc,_settings.rundir),"Abundance")
    #update to MetaPhyler 1.25
    run_process(_settings, "%s -p blastp -i %s/FindORFS/out/%s.faa -d %s/Abundance/out/markers.pfasta -m 8 -b 10 -v 10 -a %s -o %s/Abundance/out/%s.blastp"%(blastc, _settings.rundir,_settings.PREFIX,_settings.rundir,_settings.threads,_settings.rundir,_settings.PREFIX),"Abundance")
@@ -74,7 +74,7 @@ def Abundance(input,output):
    #run_process(_settings, "$Bin/metaphylerClassify $Bin/markers/markers.$blast.classifier $Bin/markers/markers.taxonomy $prefix.$blast > $prefix.classification")
 
    # finally add the GI numbers to the results where we can
-   parse_metaphyler("%s/DB/markers.toGI.txt"%(_settings.METAMOS_UTILS), "%s/Abundance/out/%s.blastp"%(_settings.rundir, _settings.PREFIX), "%s/Abundance/out/%s.gi.blastp"%(_settings.rundir, _settings.PREFIX))
+   parse_metaphyler("%s/markers.toGI.txt"%(_settings.DB_DIR), "%s/Abundance/out/%s.blastp"%(_settings.rundir, _settings.PREFIX), "%s/Abundance/out/%s.gi.blastp"%(_settings.rundir, _settings.PREFIX))
    # generate Krona output
    importMetaPhyler = "%s%sperl%sImportMetaPhyler.pl"%(_settings.METAMOS_UTILS, os.sep, os.sep)
    if not os.path.exists(importMetaPhyler):

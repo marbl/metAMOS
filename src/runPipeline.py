@@ -253,7 +253,7 @@ supported_programs = {}
 supported_genecallers = ["fraggenescan","metagenemark","glimmermg"]
 supported_assemblers = ["soapdenovo","newbler","ca","velvet","velvet-sc","metavelvet",\
                             "metaidba","sparseassembler","minimus"]
-supported_assemblers.extend(generic.getSupportedList(utils.STEP_NAMES.ASSEMBLE))
+supported_assemblers.extend(generic.getSupportedList(utils.INITIAL_UTILS, utils.STEP_NAMES.ASSEMBLE))
 
 supported_mappers = ["bowtie","bowtie2"]
 supported_abundance = ["metaphyler"]

@@ -56,9 +56,9 @@ def enum(*sequential, **named):
     enums['mapping'] = mapping
     return type('Enum', (), enums)
 
-STEP_NAMES = enum("ASSEMBLE")
-STEP_OUTPUTS = enum(".asm.contig")
-INPUT_TYPE = enum("FASTQ", "FASTA", "CONTIGS", "SCAFFOLDS", "ORFS", "SCAFFOLD_ORFS")
+STEP_NAMES = enum("ASSEMBLE", "ANNOTATE")
+STEP_OUTPUTS = enum(".asm.contig", ".hits")
+INPUT_TYPE = enum("FASTQ", "FASTA", "CONTIGS", "SCAFFOLDS", "ORF_FA", "ORF_AA")
 
 class AtomicCounter(object):
   def __init__(self, initval=0):
@@ -82,6 +82,7 @@ class Settings:
    rundir = ""
    taxa_level = "class"
    local_krona = False
+   annotate_unmapped = False
    task_dict = []
    noblastdb = False
    VERBOSE = False
@@ -132,7 +133,7 @@ class Settings:
    nopsutil = False
    nopysam = False
 
-   def __init__(self, kmer = None, threads = None, rundir = None, taxa_level = "", localKrona = False, verbose = False, outputOnly = False, update = False):
+   def __init__(self, kmer = None, threads = None, rundir = None, taxa_level = "", localKrona = False, annotateUnmapped = False, verbose = False, outputOnly = False, update = False):
 
       if (Settings.rundir != "" and update == False):
          return
@@ -171,6 +172,7 @@ class Settings:
       Settings.rundir = rundir
       Settings.taxa_level = taxa_level
       Settings.local_krona = localKrona
+      Settings.annotate_unmapped = annotateUnmapped
       Settings.task_dict = []
 
       Settings.PREFIX = "proba"
@@ -459,8 +461,8 @@ def cmdExists(cmd):
 
     return result
 
-def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, verbose, outputOnly):
-    Settings(kmer, threads, theRundir, taxaLevel, localKrona, verbose, outputOnly, True)
+def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped, verbose, outputOnly):
+    Settings(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped, verbose, outputOnly, True)
 
     getMachineType()
 

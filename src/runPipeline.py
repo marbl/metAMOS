@@ -259,6 +259,7 @@ supported_mappers = ["bowtie","bowtie2"]
 supported_abundance = ["metaphyler"]
 supported_classifiers = ["fcp","phylosift","phmmer","blast",\
                              "metaphyler", "phymm"]
+supported_classifiers.extend(generic.getSupportedList(utils.INITIAL_UTILS, utils.STEP_NAMES.ANNOTATE))
 supported_fannotate = ["blast"]
 supported_scaffolders = ["bambus2"]
 supported_programs["findorfs"] = supported_genecallers
@@ -314,7 +315,6 @@ min_ctg_len = 300
 read_orfs = False
 min_ctg_cvg = 3
 lowmem= False
-annotate_unassembled = False
 output_programs = 0
 settings = utils.Settings(DEFAULT_KMER, multiprocessing.cpu_count() - 1, "", DEFAULT_TAXA_LEVEL)
 nofcpblast = False
@@ -357,7 +357,7 @@ for o, a in opts:
         sys.exit(0)
                 
     elif o in ("-u","--unassembledreads"):
-        annotate_unassembled = 1
+        utils.Settings.annotate_unmapped = 1
     elif o in ("-x","--xcov"):
         min_ctg_cvg = int(a)
     elif o in ("-l","--lencontigorf"):
@@ -698,7 +698,7 @@ if __name__ == "__main__":
     print "Starting metAMOS pipeline"
     if settings.threads < 1:
         settings.threads = 1
-    settings = utils.initConfig(settings.kmer, settings.threads, settings.rundir, settings.taxa_level, settings.local_krona, settings.VERBOSE, settings.OUTPUT_ONLY)
+    settings = utils.initConfig(settings.kmer, settings.threads, settings.rundir, settings.taxa_level, settings.local_krona, settings.annotate_unmapped, settings.VERBOSE, settings.OUTPUT_ONLY)
     # add krona to system path
     currPath = os.environ["PATH"]
     if utils.Settings.KRONA not in currPath:
@@ -753,7 +753,7 @@ if __name__ == "__main__":
     mapreads.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["mapreads"], savebtidx,ctgbpcov,lowmem)
     findorfs.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["findorfs"], min_ctg_len, min_ctg_cvg,read_orfs)
     findreps.init(readlibs, skipsteps)
-    annotate.init(readlibs, skipsteps, selected_programs["classify"], nofcpblast, annotate_unassembled)
+    annotate.init(readlibs, skipsteps, selected_programs["classify"], nofcpblast)
     fannotate.init(skipsteps)
     abundance.init(readlibs, skipsteps, forcesteps, selected_programs["classify"])
     scaffold.init(readlibs, skipsteps, retainBank, selected_programs["assemble"])

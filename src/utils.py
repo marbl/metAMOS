@@ -769,10 +769,7 @@ def getProgramCitations(settings, programName, comment="#"):
    global _PUB_DICT
    global _PROG_NAME_DICT
    cite = ""
-<<<<<<< HEAD
-=======
 
->>>>>>> 02b7cf5467fab1cb8ab236435c5da162365a3c23
    if len(_PUB_DICT) == 0:
       try:
          cite = open("%s/%s"%(settings.METAMOS_DOC, "citations.rst"), 'r')

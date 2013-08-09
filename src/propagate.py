@@ -72,23 +72,23 @@ def Propagate(input,output):
      ctgfile.close()
 
    read_annots = {}
+   known_annots = {}
+   annotsfile = open("%s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
+   for line in annotsfile.xreadlines():
+      line = line.replace("\n", "")
+      ctg, annot = line.split()
+      known_annots[ctg] = annot
+   annotsfile.close()
+
    annotsfile = open("%s/Propagate/in/%s.annots"%(_settings.rundir, _settings.PREFIX), "r")
    for line in annotsfile.xreadlines():
      line = line.replace("\n", "")
      ctg, annot = line.split()
-     if ctg not in readctg_dict.keys():
+     if ctg not in readctg_dict.keys() and ctg not in known_annots.keys():
         read_annots[ctg] = annot
    annotsfile.close()
 
    if "Propagate" not in _skipsteps:
-      annotsfile = open("%s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
-      for line in annotsfile.xreadlines():
-         line = line.replace("\n", "")
-         ctg, annot = line.split()
-         if ctg in read_annots.keys():
-            del read_annots[ctg]
-      annotsfile.close()
-
       annotsfile = open("%s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), 'a')
       for ctg in read_annots:
           annotsfile.write("%s\t%s\n"%(ctg, read_annots[ctg]))

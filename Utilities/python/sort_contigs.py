@@ -115,6 +115,8 @@ def sort_contigs(ocf,cf,rcf,ck,orf_fasta,orf_protein,orf_mapf,out_dir,amos_bnk,a
         if key not in id_class:
            continue
         class_name = id_class[key]
+        class_name = class_name.replace(os.sep, "_")
+        class_name = "_".join(class_name.split())
         path = out_dir + os.sep + class_name + os.sep
         if not os.path.exists(path):
             os.mkdir(path)
@@ -129,6 +131,8 @@ def sort_contigs(ocf,cf,rcf,ck,orf_fasta,orf_protein,orf_mapf,out_dir,amos_bnk,a
         if key not in id_class:
            continue
         class_name = id_class[key]
+        class_name = class_name.replace(os.sep, "_")
+        class_name = "_".join(class_name.split())
         path = out_dir + os.sep + class_name + os.sep
         if not os.path.exists(path):
             os.mkdir(path)
@@ -145,6 +149,8 @@ def sort_contigs(ocf,cf,rcf,ck,orf_fasta,orf_protein,orf_mapf,out_dir,amos_bnk,a
        if key not in id_class:
           continue
        class_name = id_class[key]
+       class_name = class_name.replace(os.sep, "_")
+       class_name = "_".join(class_name.split())
        path = out_dir + os.sep + class_name + os.sep
        if not os.path.exists(path):
           os.mkdir(path)

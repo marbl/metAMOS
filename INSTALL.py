@@ -313,10 +313,36 @@ if 1:
        #os.system("ln -s %s/Utilities/python/taxonomy.txt %s/Utilities/models/taxonomy.txt"%(sys.path[0], sys.path[0]))
 
 #WARNING: matplotlib causes install issues for multiple users
+   fail = 0
+   try:
+       import numpy
+   except ImportError:
+       print "numpy python modules not found, necessary for html report, download now?"
+       fail = 1
+
+   if not fail or silentInstall:
+       dl = 'y'
+   elif lightInstall:
+       dl = 'y'
+   else:
+       dl = raw_input("Enter Y/N: ")
+   if fail and (dl == 'y' or dl == "Y"):
+       os.system("curl -L http://downloads.sourceforge.net/project/numpy/NumPy/1.7.1/numpy-1.7.1.tar.gz -o ./numpy.tar.gz")
+       os.system("tar -C ./Utilities/python -xvf numpy.tar.gz")
+       os.system("mv ./Utilities/python/numpy-1.7.1 ./Utilities/python/numpy")
+       os.chdir("./Utilities/python/numpy")
+       os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
+       os.chdir(METAMOS_ROOT)
+       os.system("rm -rf numpy.tar.gz")
+
 if 1:
    fail = 0
    try:
        import matplotlib
+       print "Found matplot lib version %s from %s\n"%(matplotlib.__version__, matplotlib.__file__)
+       if (matplotlib.__version__ < "1.1.0"):
+          print "Matplot lib version %s is incompatible with metAMOS. Need version 1.1.0+"%(matplotlib.__version__) 
+          fail = 1
    except ImportError:
        print "matplotlib python modules not found, necessary for html report, download now?"
        fail = 1
@@ -328,9 +354,9 @@ if 1:
    else:
        dl = raw_input("Enter Y/N: ")
    if fail and (dl == 'y' or dl == "Y"):
-       os.system("curl -L http://downloads.sourceforge.net/project/matplotlib/matplotlib/matplotlib-1.2.0/matplotlib-1.2.0.tar.gz -o ./matplotlib.tar.gz")
+       os.system("curl -L http://downloads.sourceforge.net/project/matplotlib/matplotlib/matplotlib-1.1.0/matplotlib-1.1.0.tar.gz -o ./matplotlib.tar.gz")
        os.system("tar -C ./Utilities/python -xvf matplotlib.tar.gz")
-       os.system("mv ./Utilities/python/matplotlib-1.2.0 ./Utilities/python/matplotlib")
+       os.system("mv ./Utilities/python/matplotlib-1.1.0 ./Utilities/python/matplotlib")
        os.chdir("./Utilities/python/matplotlib")
        os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
        os.chdir(METAMOS_ROOT)

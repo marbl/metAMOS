@@ -236,7 +236,7 @@ def create_plots(handlef,TITLE):
                ff2.write("%.2f\t%f\n"%(bins[i],n[i]))
            except TypeError:
                #incorrect matplotlib version? skip..
-               ff2.write("%.2f\t%f\n"%(bins[i],"0.0"))
+               ff2.write("%.2f\t%f\n"%("0.0","0.0"))
                #continue
            i+=1
        ff2.close()

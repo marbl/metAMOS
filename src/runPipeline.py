@@ -381,7 +381,8 @@ for o, a in opts:
     elif o in ("-k", "--kmersize"):
         utils.Settings.kmer = int(a)
     elif o in ("-4", "--454"):
-        fff = "-454"
+       selected_programs["assemble"] = "newbler"
+       selected_programs["mapreads"] = "bowtie2"
     elif o in ("-f", "--forcesteps"):
         forcesteps = a.split(",")
     elif o in ("-n", "--skipsteps"):
@@ -732,6 +733,8 @@ if __name__ == "__main__":
     if settings.nopysam:
        #need pysam for bowtie2 support
        supported_mappers = ["bowtie"]
+       if "bowtie2" == selected_programs["mapreads"]:
+          selected_programs["mapreads"] = "bowtie"
 
     import preprocess
     import assemble

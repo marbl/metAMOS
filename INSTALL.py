@@ -341,7 +341,7 @@ if 1:
        import matplotlib
        print "Found matplot lib version %s from %s\n"%(matplotlib.__version__, matplotlib.__file__)
        if (matplotlib.__version__ < "1.1.0"):
-          print "Matplot lib version %s is incompatible with metAMOS. Need version 1.1.0+"%(matplotlib.__version__) 
+          print "Matplot lib version %s is incompatible with metAMOS. Need version 1.1.0+, download now?"%(matplotlib.__version__) 
           fail = 1
    except ImportError:
        print "matplotlib python modules not found, necessary for html report, download now?"

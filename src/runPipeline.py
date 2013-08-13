@@ -23,8 +23,8 @@ if validate_install:
     if rt == -1:
         print "MetAMOS not properly installed, please reinstall or contact development team for assistance"
         sys.exit(1)
-import utils
 
+import utils
 ppath = ""
 if "PYTHONPATH" not in os.environ:
    os.environ["PYTHONPATH"] = ""
@@ -176,12 +176,16 @@ def printConfiguration(fileName=None):
            configurationText.append("None\n\n")
         else:
            (progName, citation) = utils.getProgramCitations(settings, prog)
-           configurationText.append(progName + "\n")
+           if progName == "":
+               configurationText.append(prog + "\n")
+           else:
+               configurationText.append(progName + "\n")
            try:
               configurationText.append("\t" + eval("utils.Settings.%s"%(prog.replace("-", "_").upper()))+"\n")
            except AttributeError:
               configurationText.append("\t" + generic.getLocation(utils.STEP_NAMES.mapping[type.upper()], prog) + "\n")
-           configurationText.append("\t" + citation + "\n\n")
+           if citation != "":
+               configurationText.append("\t" + citation + "\n\n")
 
     # add step-indepent citations that are always run
     configurationText.append("[other]\n")
@@ -794,7 +798,7 @@ if __name__ == "__main__":
                                [postprocess.Postprocess],
                                no_key_legend = True)
 
-       if not utils.Settings.BINARY_DIST:
+       if 1 or not utils.Settings.BINARY_DIST:
            printConfiguration()
            printConfiguration("%s/pipeline.run"%(settings.rundir))                                                                                                                                   
        updateCounter()

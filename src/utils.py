@@ -8,7 +8,7 @@ from operator import itemgetter
 import multiprocessing
 
 import hashlib
-
+shellv = os.environ["SHELL"]
 _BINARY_DIST = False
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -44,6 +44,17 @@ ENDC = CSI+'0m'
 _METAMOSDIR    = resource_path(sys.path[0])
 INITIAL_UTILS = "%s%sUtilities"%(_METAMOSDIR, os.sep)
 _NUM_LINES    = 10
+
+
+if 'bash' in shellv or cmdExists('export'):
+   os.system("export PYTHONPATH=%s:$PYTHONPATH"%(INITIAL_UTILS+os.sep+"python"))
+   os.system("export PYTHONPATH=%s:$PYTHONPATH"%(INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
+elif utils.cmdExists('setenv'):
+   os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(INITIAL_UTILS+os.sep+"python"))
+   os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
+else:
+   print "Warning: could not set PYTHONPATH. Unknown shell %s, some functionality may not work\n"%(shellv)
+
 
 _PROG_NAME_DICT = {}
 _PUB_DICT = {}
@@ -774,8 +785,9 @@ def getProgramCitations(settings, programName, comment="#"):
    if len(_PUB_DICT) == 0:
       try:
          cite = open("%s/%s"%(settings.METAMOS_DOC, "citations.rst"), 'r')
-      except IOError as e:
-         return
+      except IOError:
+         #print "no citations file! cannot print!"
+         return ("","")
 
       for line in cite.xreadlines():
          (line, sep, commentLine) = line.partition(comment)

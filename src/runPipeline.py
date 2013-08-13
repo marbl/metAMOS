@@ -30,7 +30,7 @@ if "PYTHONPATH" not in os.environ:
    os.environ["PYTHONPATH"] = ""
 else:
    ppath = os.environ["PYTHONPATH"] 
-   os.environ["PYTHONPATH"] = ""
+   #os.environ["PYTHONPATH"] = ""
 os.environ["PYTHONPATH"]+=utils.INITIAL_UTILS+os.sep+"python"+os.pathsep
 os.environ["PYTHONPATH"]+=utils.INITIAL_UTILS+os.sep+"ruffus"+os.pathsep
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.pathsep
@@ -38,16 +38,13 @@ os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.pathsep
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python"+os.pathsep
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.pathsep
-#os.environ["PYTHONPATH"] += "/usr/lib64/python2.7"+os.pathsep
-#os.environ["PYTHONPATH"] += "/usr/lib/python2.7"+os.pathsep
-#os.environ["PYTHONPATH"] += ppath + os.pathsep
+
 try:
     os.environ["PYTHONPATH"] += sys._MEIPASS + os.pathsep
     os.environ["PYTHONHOME"] = sys._MEIPASS + os.pathsep
 except Exception:
     pass
-#os.environ["PYTHONHOME"] += "/usr/lib64/python2.7"+os.pathsep
-#os.environ["PYTHONHOME"] += "/usr/lib/python2.7"+os.pathsep
+
 try:
     sys._MEIPASS
     #if we are here, frozen binary

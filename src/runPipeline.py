@@ -712,7 +712,6 @@ if __name__ == "__main__":
         avram = utils.getAvailableMemory(settings)
         print "[Available RAM: %d GB]"%(avram)
         lowmem= False
-        nofcpblast = False
         if avram <= 32:
             print utils.WARNING_YELLOW+"\tThere is *%d GB of RAM currently available on this machine, suggested minimum of 32 GB"%(avram)+utils.ENDC
             print utils.WARNING_YELLOW+"\t*Enabling low MEM mode, might slow down some steps in pipeline"+utils.ENDC
@@ -720,6 +719,7 @@ if __name__ == "__main__":
             lowmem= True
         else:
             print utils.OK_GREEN+"\t*ok"+utils.ENDC
+    if not settings.nopsutil and nofcpblast == False:
         numcpus = psutil.NUM_CPUS
         print "[Available CPUs: %d]"%(numcpus)
         if numcpus < 8:

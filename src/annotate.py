@@ -24,22 +24,19 @@ _skipsteps = []
 _settings = Settings()
 _cls = None
 _noblast = False
-_annotate_unmapped = False
 
 _FCP_MODELS = "%s"%(_settings.METAMOS_UTILS)
 if _settings.BINARY_DIST:
    _FCP_MODELS = "%s"%(_settings.DB_DIR)
-def init(reads, skipsteps, cls, noblast, annotate_unmapped):
+def init(reads, skipsteps, cls, noblast):
    global _readlibs
    global _skipsteps
    global _cls
    global _noblast
-   global _annotate_unmapped
    _readlibs = reads
    _skipsteps = skipsteps
    _cls = cls
    _noblast = noblast
-   _annotate_unmapped = annotate_unmapped
 
 def parse_phmmerout(phmmerout):
 
@@ -379,7 +376,7 @@ def Annotate(input,output):
       annotateSeq(_cls, "%s/Annotate/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "%s/Annotate/in/%s.faa"%(_settings.rundir, _settings.PREFIX), "%s/Annotate/in/%s.fna"%(_settings.rundir, _settings.PREFIX), "%s.ctg"%(_settings.PREFIX))
 
    # annotate all the unmapped sequences using FCP
-   if _cls == "blast" or _cls == "phmmer" or not _annotate_unmapped:
+   if _cls == "blast" or _cls == "phmmer" or not _settings.annotate_unmapped:
       #print "Warning: blast and PHMMER is not supported for annotating unmapped sequences"
       print "Warning: unmapped/unaligned sequences will not be annotated!"
    else:

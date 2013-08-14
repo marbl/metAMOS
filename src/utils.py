@@ -158,7 +158,6 @@ class Settings:
          Settings.nopysam = True
          print "Could not import pysam, disabling."
       try:
-         print os.environ["PYTHONPATH"]
          import psutil
          if verbose:
             print "Found psutil in %s"%(psutil.__file__)

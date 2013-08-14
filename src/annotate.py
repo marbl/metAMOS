@@ -355,7 +355,7 @@ def Annotate(input,output):
       # we should also split the fna and faa file but for now this is good enough
       size = sizeFastaFile("%s/Annotate/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX))
       perThread = max(ceil(float(size) / _settings.threads), _MIN_SEQ_LENGTH)
-      print "The size of the contigs is %d per thread %d\n"%(size, perThread)
+      #print "The size of the contigs is %d per thread %d\n"%(size, perThread)
       #run_process(_settings, "python %s/python/splitfasta.py %s/Annotate/in/%s.asm.contig %d"%(_settings.METAMOS_UTILS, _settings.rundir, _settings.PREFIX, perThread), "Annotate")
       #splitfasta("%s/Annotate/in/%s.asm.contig,%d,%s/Annotate/in/%s,%d"%(_settings.rundir,_settings.PREFIX,perThread,_settings.rundir,_settings.PREFIX,1))
       splitfasta("%s/Annotate/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%d"%(perThread))

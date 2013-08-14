@@ -502,7 +502,8 @@ if (settings.noblastdb or noblastdb) and (selected_programs["classify"] == "blas
 
 print "[Steps to be skipped]: ", skipsteps
 #remove started & ok flags in Logs
-os.system("rm %s%sLogs%s*.started"%(settings.rundir,os.sep,os.sep))
+if os.path.exists("%s%sLogs%s*.started"%(settings.rundir,os.sep,os.sep)):
+    os.system("rm %s%sLogs%s*.started"%(settings.rundir,os.sep,os.sep))
 #parse frag/libs out of pipeline.ini out of rundir
 inifile = settings.rundir+os.sep+"pipeline.ini"
 inf = open(inifile,'r')

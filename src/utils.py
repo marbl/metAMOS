@@ -44,18 +44,6 @@ ENDC = CSI+'0m'
 _METAMOSDIR    = resource_path(sys.path[0])
 INITIAL_UTILS = "%s%sUtilities"%(_METAMOSDIR, os.sep)
 _NUM_LINES    = 10
-
-
-if 'bash' in shellv or cmdExists('export'):
-   os.system("export PYTHONPATH=%s:$PYTHONPATH"%(INITIAL_UTILS+os.sep+"python"))
-   os.system("export PYTHONPATH=%s:$PYTHONPATH"%(INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
-elif utils.cmdExists('setenv'):
-   os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(INITIAL_UTILS+os.sep+"python"))
-   os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
-else:
-   print "Warning: could not set PYTHONPATH. Unknown shell %s, some functionality may not work\n"%(shellv)
-
-
 _PROG_NAME_DICT = {}
 _PUB_DICT = {}
 
@@ -170,6 +158,7 @@ class Settings:
          Settings.nopysam = True
          print "Could not import pysam, disabling."
       try:
+         print os.environ["PYTHONPATH"]
          import psutil
          if verbose:
             print "Found psutil in %s"%(psutil.__file__)

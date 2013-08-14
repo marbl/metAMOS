@@ -258,7 +258,7 @@ def Annotate(input,output):
       if _USE_GRID:
          size = sizeFastaFile("%s/Annotate/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX))
          perThread = ceil(float(size) / 200)
-         print "The size of the contigs is %d per thread %d\n"%(size, perThread)
+         #print "The size of the contigs is %d per thread %d\n"%(size, perThread)
          #run_process(_settings, "python %s/python/splitfasta.py %s/Annotate/in/%s.asm.contig %d %s/Annotate/in/%s %d"%(_settings.METAMOS_UTILS, _settings.rundir, _settings.PREFIX, perThread, _settings.rundir, _settings.PREFIX, 1), "Annotate")
          splitfasta("%s/Annotate/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%d"%(perThread),"%s/Annotate/in/%s"%(_settings.rundir,_settings.PREFIX),"%d"%(1))
          totalJobs = 0
@@ -272,7 +272,7 @@ def Annotate(input,output):
             run_process(_settings, "ln %s/Assemble/out/lib%d.unaligned.fasta %s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id, _settings.rundir, lib.id), "Annotate")
             size = sizeFastaFile("%s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id))
             perThread = ceil(float(size) / 200)
-            print "The size of the lib %d is %d per one %d\n"%(lib.id, size, perThread)
+            #print "The size of the lib %d is %d per one %d\n"%(lib.id, size, perThread)
             #run_process(_settings, "python %s/python/splitfasta.py %s/Annotate/in/lib%d.unaligned.fasta %d %s/Annotate/in/%s %d"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, perThread, _settings.rundir, _settings.PREFIX, totalJobs+1), "Annotate")
             #splitfasta("%s/Annotate/in/%s.asm.contig,%d,%s/Annotate/in/%s,%d"%(_settings.rundir,_settings.PREFIX,perThread,_settings.rundir,_settings.PREFIX,totalJobs+1))
             splitfasta("%s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir,lib.id),"%d"%(perThread),"%s/Annotate/in/%s"%(_settings.rundir,_settings.PREFIX),"%d"%(totalJobs+1))
@@ -280,7 +280,7 @@ def Annotate(input,output):
          totalJobs = 0
          for partFile in os.listdir("%s/Annotate/in/"%(_settings.rundir)):
             if "_part" in partFile and "%s_part"%(_settings.PREFIX) in partFile:
-               print "A file I have to process is %s\n"%(partFile)
+               #print "A file I have to process is %s\n"%(partFile)
                totalJobs += 1
 
          cmdfile = open("%s/Annotate/out/runAnnot.sh"%(_settings.rundir), "w")
@@ -378,7 +378,8 @@ def Annotate(input,output):
    # annotate all the unmapped sequences using FCP
    if _cls == "blast" or _cls == "phmmer" or not _settings.annotate_unmapped:
       #print "Warning: blast and PHMMER is not supported for annotating unmapped sequences"
-      print "Warning: unmapped/unaligned sequences will not be annotated!"
+      #print "Warning: unmapped/unaligned sequences will not be annotated!"
+      pass
    else:
       for lib in _readlibs:
          listOfFiles += ":%s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id)

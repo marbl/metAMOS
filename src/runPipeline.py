@@ -763,7 +763,7 @@ if __name__ == "__main__":
     scaffold.init(readlibs, skipsteps, retainBank, selected_programs["assemble"])
     findscforfs.init(readlibs, skipsteps, selected_programs["findorfs"])
     propagate.init(readlibs, skipsteps, selected_programs["classify"])
-    classify.init(readlibs, skipsteps, selected_programs["classify"])
+    classify.init(readlibs, skipsteps, selected_programs["classify"], lowmem)
     postprocess.init(readlibs, skipsteps, selected_programs["classify"])
     generic.init(skipsteps, readlibs)
 

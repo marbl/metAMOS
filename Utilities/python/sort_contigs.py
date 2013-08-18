@@ -4,7 +4,7 @@ import sys
 import os
 from utils import *
 _settings = Settings()
-def sort_contigs(ocf,cf,rcf,ck,orf_fasta,orf_protein,orf_mapf,out_dir,amos_bnk,amos_dir):
+def sort_contigs(ocf,cf,rcf,ck,orf_fasta,orf_protein,orf_mapf,out_dir,amos_bnk,amos_dir, lowmem):
     contigs_by_class = { }
     reads_by_class = { }
     orf_to_src = { }
@@ -111,6 +111,7 @@ def sort_contigs(ocf,cf,rcf,ck,orf_fasta,orf_protein,orf_mapf,out_dir,amos_bnk,a
     read_class_file.close()
     
     # output contigs
+    fofn = open(out_dir + os.sep + "contig.fofn", 'w')
     for key in contigs_by_class:
         if key not in id_class:
            continue
@@ -124,9 +125,15 @@ def sort_contigs(ocf,cf,rcf,ck,orf_fasta,orf_protein,orf_mapf,out_dir,amos_bnk,a
         f = open(path + class_name + ".eid", 'w')
         f.write("\n".join(contigs_by_class[key]) + "\n")
         f.close()
-        run_process(_settings,"%s/bank2fasta -b %s -eid -E '%s%s%s.eid' > '%s%s%s.ctg.fasta'"%(amos_dir,amos_bnk,path,os.sep,class_name,path,os.sep,class_name),"Classify")
+
+        if (lowmem or not os.path.exists("%s/shuffleBank"%(amos_dir))):
+           run_process(_settings,"%s/bank2fasta -b %s -eid -E '%s%s%s.eid' > '%s%s%s.ctg.fasta'"%(amos_dir,amos_bnk,path,os.sep,class_name,path,os.sep,class_name),"Classify")
+        else:
+           fofn.write(path + class_name + ".eid" + "\n")
+    fofn.close()
     
     # output reads
+    fofn = open(out_dir + os.sep + "read.fofn", 'w')
     for key in reads_by_class:
         if key not in id_class:
            continue
@@ -140,11 +147,16 @@ def sort_contigs(ocf,cf,rcf,ck,orf_fasta,orf_protein,orf_mapf,out_dir,amos_bnk,a
         f = open(path + class_name + ".read.eid", 'w')
         f.write("\n".join(reads_by_class[key]) + "\n")
         f.close()
-        run_process(_settings,"%s/dumpreads -e -E '%s%s%s.read.eid' %s > '%s%s%s.read.fasta'"%(amos_dir,path,os.sep,class_name,amos_bnk,path,os.sep,class_name),"Classify")
-        run_process(_settings,"%s/dumpreads -q -e -E '%s%s%s.read.eid' %s > '%s%s%s.read.qual'"%(amos_dir,path,os.sep,class_name,amos_bnk,path,os.sep,class_name),"Classify")
-        run_process(_settings,"%s/dumpreads -f -e -E '%s%s%s.read.eid' %s > '%s%s%s.read.fastq'"%(amos_dir,path,os.sep,class_name,amos_bnk,path,os.sep,class_name),"Classify")
+
+        if (lowmem or not os.path.exists("%s/shuffleBank"%(amos_dir))):
+           run_process(_settings,"%s/dumpreads -e -E '%s%s%s.read.eid' %s > '%s%s%s.read.fasta'"%(amos_dir,path,os.sep,class_name,amos_bnk,path,os.sep,class_name),"Classify")
+           run_process(_settings,"%s/dumpreads -q -e -E '%s%s%s.read.eid' %s > '%s%s%s.read.qual'"%(amos_dir,path,os.sep,class_name,amos_bnk,path,os.sep,class_name),"Classify")
+           run_process(_settings,"%s/dumpreads -f -e -E '%s%s%s.read.eid' %s > '%s%s%s.read.fastq'"%(amos_dir,path,os.sep,class_name,amos_bnk,path,os.sep,class_name),"Classify")
+        else:
+           fofn.write(path + class_name + ".read.eid" + "\n")
     
     # finally output the orfs
+    fofn = open(out_dir + os.sep + "orf.fofn", 'w')
     for key in orf_by_class:
        if key not in id_class:
           continue
@@ -158,6 +170,17 @@ def sort_contigs(ocf,cf,rcf,ck,orf_fasta,orf_protein,orf_mapf,out_dir,amos_bnk,a
        f = open(path + class_name + ".orf.eid", "w")
        f.write("\n".join(orf_by_class[key]) + "\n")
        f.close()
-    
-       run_process(_settings,"%s/dumpreads -e -E '%s%s%s.orf.eid' %s > '%s%s%s.orf.fna'"%(amos_dir,path,os.sep,class_name,orf_fasta,path,os.sep,class_name),"Classify")
-       run_process(_settings,"%s/dumpreads -e -E '%s%s%s.orf.eid' %s > '%s%s%s.orf.faa'"%(amos_dir,path,os.sep,class_name,orf_protein,path,os.sep,class_name),"Classify")
+
+       if (lowmem or not os.path.exists("%s/shuffleBank"%(amos_dir))):
+          run_process(_settings,"%s/dumpreads -e -E '%s%s%s.orf.eid' %s > '%s%s%s.orf.fna.fasta'"%(amos_dir,path,os.sep,class_name,orf_fasta,path,os.sep,class_name),"Classify")
+          run_process(_settings,"%s/dumpreads -e -E '%s%s%s.orf.eid' %s > '%s%s%s.orf.faa.fasta'"%(amos_dir,path,os.sep,class_name,orf_protein,path,os.sep,class_name),"Classify")
+       else:
+          fofn.write(path + class_name + ".orf.eid" + "\n")
+    fofn.close()
+
+    if (not lowmem and os.path.exists("%s/shuffleBank"%(amos_dir))):
+       run_process(_settings, "%s/shuffleBank -c -e -b %s -p ctg -eid -E %s%scontig.fofn"%(amos_dir, amos_bnk, out_dir, os.sep), "Classify")
+       run_process(_settings, "%s/shuffleBank -r -e -b %s -eid -E %s%sread.fofn"%(amos_dir, amos_bnk, out_dir, os.sep), "Classify")
+       run_process(_settings, "%s/shuffleBank -r -f -e -b %s -eid -E %s%sread.fofn"%(amos_dir, amos_bnk, out_dir, os.sep), "Classify")
+       run_process(_settings, "%s/shuffleBank -r -e -b %s -p fna -eid -E %s%sorf.fofn"%(amos_dir, orf_fasta, out_dir, os.sep), "Classify")
+       run_process(_settings, "%s/shuffleBank -r -e -b %s -p faa -eid -E %s%sorf.fofn"%(amos_dir, orf_protein, out_dir, os.sep), "Classify")

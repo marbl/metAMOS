@@ -48,7 +48,6 @@ def Scaffold(input,output):
 
    # check if we need to retain the bank
    if not os.path.isdir("%s/Scaffold/in/%s.bnk"%(_settings.rundir, _settings.PREFIX)):
-      print "Warning: cannot retain bank, it does not exist yet\n"
       _retainBank = False
 
    if not _retainBank:

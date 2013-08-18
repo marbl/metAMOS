@@ -40,7 +40,7 @@ def FindScaffoldORFS(input,output):
        if not os.path.exists(_settings.FRAGGENESCAN + os.sep + "FragGeneScan"):
           print "Error: FragGeneScan not found in %s. Please check your path and try again.\n"%(_settings.FRAGGENESCAN)
           raise(JobSignalledBreak)
-       run_process(_settings,"%s/FragGeneScan -s %s/Scaffold/out/%s.linearize.scaffolds.final -o %s/FindScaffoldORFS/out/%s.orfs -w 0 -t complete"%(_settings.FRAGGENESCAN,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX))
+       run_process(_settings,"%s/FragGeneScan -s %s/Scaffold/out/%s.linearize.scaffolds.final -o %s/FindScaffoldORFS/out/%s.orfs -w 0 -t complete"%(_settings.FRAGGENESCAN,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindScaffoldORFS")
        parse_fraggenescanout("%s/FindScaffoldORFS/out/%s.orfs"%(_settings.rundir,_settings.PREFIX), 1, "FindScaffoldORFS")
        run_process(_settings,"cp %s/FindScaffoldORFS/out/%s.orfs.ffn %s/FindScaffoldORFS/out/%s.fna"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindScaffoldORFS")
        run_process(_settings,"cp %s/FindScaffoldORFS/out/%s.orfs.faa %s/FindScaffoldORFS/out/%s.faa"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindScaffoldORFS")

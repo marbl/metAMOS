@@ -1,8 +1,17 @@
-# MetAMOS v1.2 README
-Last updated: August 3rd, 2013
+# MetAMOS v1.2 "Maple Syrup" README
+Last updated: August 13th, 2013
+***********************************************************************************
+We are happy to announce version 1.2, a.k.a. Maple Syrup
 
-***
-
+## NEWS
+       1. 64-bit frozen Linux binary now available
+       2. Started migration to new HTML5 plots in HTML report
+       3. Added initial framework for generic module support
+       4. Added support for Spades
+       5. Updated bowtie2 support for long reads/contigs
+       6. Added several new tests
+       7. Numerous bug fixes
+-----------------------------------------------------------------------------------
 ## **MetAMOS single file binary**
 
 In attempt to further simplify the MetAMOS installation process, we are happy to announce the availability of a 'frozen' MetAMOS binary for Linux-x68_64 platforms. Along with this binary comes a significantly reduced list of prerequisites:
@@ -28,13 +37,6 @@ The revised installation procedure is simply:
 
 Mac OSX equivalent will be soon appearing [here](http://www.cbcb.umd.edu/confcour/temp/metAMOS_binary_noblastdbs_osx.tar.gz) 
 
-
-## NEWS
-       1. 64-bit frozen Linux binary now available
-       2. Started migration to new HTML5 plots in HTML report
-       3. Numerous bux fixes
-
-
 ----------------------------------------------------------------------------------
 
 ## SUMMARY
@@ -53,10 +55,10 @@ Mac OSX equivalent will be soon appearing [here](http://www.cbcb.umd.edu/confcou
 MetAMOS was designed to work on any standard 64bit Linx
 environment. To use MetAMOS for tutorial/teaching purposes, a minimum
 of 8 GB RAM is required. To get started on real data sets a minimum of
-32 GB of RAM is recommened, and anywhere from 64-512 GB may be
+32 GB of RAM is recommened, and anywhere from 64-1000 GB may be
 necessary for larger datasets. In our experience, for most 50-100
-million read datasets, 64 GB is a good place to start (128 GB of memory
-available on High Memory Instance at Amazon Elastic Compute Cloud ).
+million read datasets, 64 GB is a good place to start (128 GB of memory now
+available on High Memory Instance at Amazon Elastic Compute Cloud ). 
 
 ----------------------------------------------------------------------------------
 ### B) SOFTWARE REQUIREMENTS
@@ -68,15 +70,15 @@ needed is distributed with MetAMOS inside of the /Utilities
 directory. Depending on your platform/Linux distribution, you might need to download and install the following BEFORE running INSTALL.py:
 
 1) git
-2) wget
-3) gcc
-4) automake
-5) python-tools
-6) python-devel
-7) zlib-devel
-8) numpy
-9) freetype, freetype-devel
-10) libpng-devel
+2) gcc
+3) automake
+4) python-tools
+5) python-devel
+6) zlib-devel
+7) numpy
+8) freetype, freetype-devel
+9) libpng-devel
+10) matplotlib
 
 Additionally, there is some software that MetAMOS can
 incorporate into its pipeline that we are not allowed to distribute,
@@ -292,6 +294,12 @@ is a brief listing of the test scripts we currently include:
 
 *Test FCP
 ./Test/test_fcp.sh
+
+*Test Spades
+./Test/test_spades.sh
+
+#Test BLAST
+./Test/test_blast.sh
 
 ..more on the way!
 

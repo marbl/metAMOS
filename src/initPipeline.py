@@ -21,24 +21,6 @@ try:
    if dl == 'y' or dl == 'Y':
        os.system("wget -P %s -N http://www.cbcb.umd.edu/confcour/temp/runPipeline"%(application_path))
        os.system("wget -P %s -N http://www.cbcb.umd.edu/confcour/temp/initPipeline"%(application_path))
-       """
-       if os.path.exists("%s/runPipeline.tar.gz"%(application_path)):
-           f1 = time.ctime(os.path.getmtime("%s/runPipeline.tar.gz"%(application_path)))
-           os.system("wget -P %s -N http://www.cbcb.umd.edu/confcour/temp/runPipeline.tar.gz"%(application_path))
-           f2 = time.ctime(os.path.getmtime("%s/runPipeline.tar.gz"%(application_path)))
-       else:
-           os.system("wget -P %s http://www.cbcb.umd.edu/confcour/temp/runPipeline.tar.gz"%(application_path))
-       if f2 != f1:
-           print "Newer version of MetAMOS available, replace?"
-           dl = raw_input("Enter Y/N: ")
-           if dl == 'y' or dl == 'Y':
-               os.system("tar -xf --overwrite %s/runPipeline.tar.gz"%(application_path,application_path))
-           else:
-               print "ok.. skipping update! won't ask to install again until next release."
-               #os.remove("%s/runPipeline.tar.gz"%(application_path))
-       else:
-           print "You have the latest and greatest version installed!"
-       """
 except Exception:
    pass
 
@@ -306,18 +288,22 @@ while i < len(readlibs):
         cf.write("lib%dformat:\tfasta\n"%(i+1))
         if mylib.interleaved or not mylib.mated:
             filen = os.path.basename(f1)
-            os.system("cp %s.qual %s/Preprocess/in/. "%(f1,id))
+            if os.path.exists("%s.qual"%(f1)):
+                os.system("cp %s.qual %s/Preprocess/in/. "%(f1,id))
         else:
             filen1 = os.path.basename(f1)
             filen2 = os.path.basename(f2)
-            os.system("cp %s.qual %s/Preprocess/in/."%(f1,id))
-            os.system("cp %s.qual %s/Preprocess/in/. "%(f2,id))
+            if os.path.exists("%s.qual"%(f1)):
+                os.system("cp %s.qual %s/Preprocess/in/."%(f1,id))
+            if os.path.exists("%s.qual"%(f2)):
+                os.system("cp %s.qual %s/Preprocess/in/. "%(f2,id))
     if not mylib.mated:
         filen = os.path.basename(f1)
         cf.write("lib%dmated:\tFalse\n"%(i+1))
         cf.write("lib%dinterleaved:\tFalse\n"%(i+1))
         cf.write("lib%dfrg:\t%s\n"%(i+1,filen))
-        os.system("cp %s %s/Preprocess/in/. "%(f1,id))
+        if os.path.exists("%s"%(f1)):
+            os.system("cp %s %s/Preprocess/in/. "%(f1,id))
 
     #os.system("ln -t %s -s %s/Preprocess/in/%s"%(frg,id,filen))
     elif mylib.mated:

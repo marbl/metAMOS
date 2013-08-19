@@ -614,9 +614,6 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
     if not os.path.exists(Settings.PHYLOSIFT + os.sep + "bin" + os.sep + "phylosift"):
        print "Warning: PhyloSift was not found, will not be available\n"
        Settings.PHYLOSIFT = ""
-    if Settings.PHYLOSIFT != "" and (Settings.OSTYPE != "Linux" or Settings.MACHINETYPE != "x86_64"):
-       print "Warning: PhyloSift not compatible with %s-%s. It requires Linux-x86_64\n"%(Settings.OSTYPE, Settings.MACHINETYPE)
-       Settings.PHYLOSIFT = "" 
     phylosiftMD5 = getMD5Sum(Settings.PHYLOSIFT + os.sep + "bin" + os.sep + "phylosift")
 
     # finally store the configuration 

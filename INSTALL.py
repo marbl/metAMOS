@@ -372,9 +372,10 @@ if not os.path.exists("./phylosift"):
       dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':
       #phylosift OSX binaries included inside Linux X86_64 tarball..
-      os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/phylosift-Linux-x86_64-20120523.tar.bz2 -o ./phylosift.tar.bz2")
+      os.system("curl -L http://edhar.genomecenter.ucdavis.edu/~koadman/phylosift/releases/phylosift_v1.0.0_01.tar.bz2 -o ./phylosift.tar.bz2")
       os.system("tar -xvjf phylosift.tar.bz2")
       os.system("rm -rf phylosift.tar.bz2")
+      os.system("mv phylosift_v1.0.0_01 phylosift")
 
 if not os.path.exists("./CA") or 0:
    print "Celera Assembler binaries not found, optional for Assemble step, download now?"

@@ -139,7 +139,7 @@ def annotateSeq(cls, contigs, orfAA, orfFA, output):
           print "Error: PhyloSift not found in %s. Please check your path and try again.\n"%(_settings.PHYLOSIFT)
           raise(JobSignalledBreak)
 
-       phylosiftCmd =  "%s/bin/phylosift all --threaded=%d"%(_settings.PHYLOSIFT, _settings.threads)
+       phylosiftCmd =  "%s/bin/phylosift all --threads=%d"%(_settings.PHYLOSIFT, _settings.threads)
        phylosiftCmd += " %s"%(getProgramParams("phylosift.spec", "", "--"))
        # run on contigs for now
        #for lib in readlibs:

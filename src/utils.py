@@ -508,7 +508,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
     CAMD5 = getMD5Sum(Settings.CA + os.sep + "gatekeeper")
 
     # 4. Newbler
-    Settings.NEWBLER = "%s%snewbler"%(Settings.METAMOSDIR, os.sep)
+    Settings.NEWBLER = "%s%snewbler%s%s-%s"%(Settings.METAMOSDIR, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
     if not os.path.exists(Settings.NEWBLER + os.sep + "runProject"):
        Settings.NEWBLER = getFromPath("runProject", "Newbler")
     newblerMD5 = getMD5Sum(Settings.NEWBLER + os.sep + "runProject")

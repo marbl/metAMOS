@@ -123,6 +123,8 @@ if not os.path.exists("./Utilities/cpp/%s-%s/metaphylerClassify"%(OSTYPE, MACHIN
         os.system("curl -L http://metaphyler.cbcb.umd.edu/MetaPhylerV1.25.tar.gz -o metaphyler.tar.gz")
         os.system("tar -C ./Utilities/perl/ -xvf metaphyler.tar.gz")
         os.system("mv ./Utilities/perl/MetaPhylerV1.25 ./Utilities/perl/metaphyler")
+        os.system("mv ./Utilities/perl/metaphyler/installMetaphyler.pl ./Utilities/perl/metaphyler/installMetaphylerFORMATDB.pl");
+        os.system("cat ./Utilities/perl/metaphyler/installMetaphylerFORMATDB.pl  |sed 's/formatdb/\.\/Utilities\/cpp\/%s-%s\/formatdb/g' > ./Utilities/perl/metaphyler/installMetaphyler.pl"%(OSTYPE, MACHINETYPE));
         os.system("perl ./Utilities/perl/metaphyler/installMetaphyler.pl")
         os.system("cp ./Utilities/perl/metaphyler/metaphylerClassify ./Utilities/cpp/%s-%s/metaphylerClassify"%(OSTYPE, MACHINETYPE))
         #os.system("cp ./Utilities/perl/metaphyler/metaphylerClassify ./Utilities/cpp/%s-%s/metaphylerClassify"%(OSTYPE, MACHINETYPE))

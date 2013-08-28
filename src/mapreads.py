@@ -180,7 +180,7 @@ def map2contig():
                     seqfile.flush()
                 readctgfile.close()
             elif _mapper == "bowtie2":
-                if "bowtie" not in _skipsteps and lib.format == "fasta":
+                if "bowtie" not in _skipsteps and (lib.format == "fasta" or lib.format == "sff"):
                     run_process(_settings, "%s/bowtie2 -p %d -f -D 15 -R 2 -N 0 -L 20 -i S,1,1.10 --un %s/Assemble/out/lib%d.unaligned.fasta %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq -S %s/Assemble/out/lib%d.sam"%(_settings.BOWTIE2,_settings.threads,_settings.rundir,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                 elif "bowtie" not in _skipsteps and lib.format != "fasta":
                     run_process(_settings, "%s/bowtie2 -p %d -D 15 -R 2 -N 0 -L 20 -i S,1,1.10 --un %s/Assemble/out/lib%d.unaligned.seq %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq -S %s/Assemble/out/lib%d.sam"%(_settings.BOWTIE2,_settings.threads,_settings.rundir,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads") 

@@ -190,27 +190,31 @@ if not os.path.exists("./Utilities/glimmer-mg"):
 
 # check the number of files the DB currently is and see if we have the expected number
 dbResult = utils.getCommandOutput("perl ./Utilities/perl/update_blastdb.pl refseq_protein --numpartitions", False)
-(dbName, numPartitions) = dbResult.split("\t", 1) 
-print "Checking whether %s is complete. Expecting %d partitions.\n"%(dbName, int(numPartitions))
-numPartitions = int(numPartitions) - 1
-if not os.path.exists("./Utilities/DB/refseq_protein.pal") or not os.path.exists("./Utilities/DB/refseq_protein.%02d.psq"%(int(numPartitions))) or not os.path.exists("./Utilities/DB/allprots.faa"):
-    print "refseq protein DB not found or incomplete, needed for Annotate step, download now?"
-    if silentInstall:
-       dl = 'y'
-    elif lightInstall:
-       dl = 'n'
-    else:
-       dl = raw_input("Enter Y/N: ")
-    if dl == 'y' or dl == 'Y':
-        print "Download and install refseq protein DB.."
-        os.system("perl ./Utilities/perl/update_blastdb.pl refseq_protein")
-        os.system("mv refseq_protein.*.tar.gz ./Utilities/DB/")
+if dbResult == "":
+   print "Error: could not connect to NCBI, will not be installing refseq protein DB"
+else:
+   (dbName, numPartitions) = dbResult.split("\t", 1) 
+   print "Checking whether %s is complete. Expecting %d partitions.\n"%(dbName, int(numPartitions))
+   numPartitions = int(numPartitions) - 1
+
+   if not os.path.exists("./Utilities/DB/refseq_protein.pal") or not os.path.exists("./Utilities/DB/refseq_protein.%02d.psq"%(int(numPartitions))) or not os.path.exists("./Utilities/DB/allprots.faa"):
+       print "refseq protein DB not found or incomplete, needed for Annotate step, download now?"
+       if silentInstall:
+          dl = 'y'
+       elif lightInstall:
+          dl = 'n'
+       else:
+          dl = raw_input("Enter Y/N: ")
+       if dl == 'y' or dl == 'Y':
+           print "Download and install refseq protein DB.."
+           os.system("perl ./Utilities/perl/update_blastdb.pl refseq_protein")
+           os.system("mv refseq_protein.*.tar.gz ./Utilities/DB/")
        
-        fileList = glob.glob("./Utilities/DB/refseq_protein.*.tar.gz") 
-        for file in fileList:
-           os.system("tar -C ./Utilities/DB/ -xvf %s"%(file))
-        print "    running fastacmd (might take a few min)..."
-        os.system(".%sUtilities%scpp%s%s-%s%sfastacmd -d ./Utilities/DB/refseq_protein -p T -a T -D 1 -o ./Utilities/DB/allprots.faa"%(os.sep, os.sep, os.sep, OSTYPE, MACHINETYPE, os.sep))
+           fileList = glob.glob("./Utilities/DB/refseq_protein.*.tar.gz") 
+           for file in fileList:
+              os.system("tar -C ./Utilities/DB/ -xvf %s"%(file))
+           print "    running fastacmd (might take a few min)..."
+           os.system(".%sUtilities%scpp%s%s-%s%sfastacmd -d ./Utilities/DB/refseq_protein -p T -a T -D 1 -o ./Utilities/DB/allprots.faa"%(os.sep, os.sep, os.sep, OSTYPE, MACHINETYPE, os.sep))
 
 if not os.path.exists("./AMOS") or 0:
     print "AMOS binaries not found, needed for all steps, download now?"

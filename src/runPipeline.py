@@ -89,6 +89,7 @@ from operator import itemgetter
 from ruffus import *
 from task import JobSignalledBreak
 skipsteps = ["FindRepeats"]
+isolate_genome = False
 
 ## Get start time
 t1 = time.time()
@@ -209,8 +210,11 @@ def printConfiguration(fileName=None):
         conf.close()
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hrjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iu1l:x:yz:LB",\
+    opts, args = getopt.getopt(sys.argv[1:], "hM:I:R:rjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iu1l:x:yz:LB",\
                                    ["help", \
+                                        "multialigner",\
+                                        "isolate",\
+                                        "refgenomes",\
                                         "retainBank", \
                                         "libspeccov",\
                                         "projectdir",\
@@ -258,6 +262,7 @@ supported_assemblers.extend(generic.getSupportedList(utils.INITIAL_UTILS, utils.
 
 supported_mappers = ["bowtie","bowtie2"]
 supported_abundance = ["metaphyler"]
+supported_aligners = ["mgcat"]
 supported_classifiers = ["fcp","phylosift","phmmer","blast",\
                              "metaphyler", "phymm"]
 supported_classifiers.extend(generic.getSupportedList(utils.INITIAL_UTILS, utils.STEP_NAMES.ANNOTATE))
@@ -270,6 +275,7 @@ supported_programs["abundance"] = supported_abundance
 supported_programs["classify"] = supported_classifiers
 supported_programs["fannotate"] = supported_fannotate
 supported_programs["scaffold"] = supported_scaffolders
+supported_programs["multialign"] = supported_aligners
 
 supported_taxonomic = ["kingdom", "phylum", "class", "order", "family", "genus", "species"]
 
@@ -281,11 +287,12 @@ selected_programs["abundance"] = "metaphyler"
 selected_programs["classify"] = "fcp"
 selected_programs["fannotate"] = "blast"
 selected_programs["scaffold"] = "bambus2"
+selected_programs["multialign"] = "mgcat"
 
 always_run_programs = ["krona"]
 
 
-allsteps = ["Preprocess","Assemble","MapReads","FindORFS","FindRepeats","Abundance","Annotate",\
+allsteps = ["Preprocess","Assemble","MapReads","MultiAlign","FindORFS","FindRepeats","Abundance","Annotate",\
                 "FunctionalAnnotation","Scaffold","FindScaffoldORFS","Propagate","Classify","Postprocess"]
 
 ## Need comments here and further down
@@ -320,6 +327,7 @@ output_programs = 0
 settings = utils.Settings(DEFAULT_KMER, multiprocessing.cpu_count() - 1, "", DEFAULT_TAXA_LEVEL)
 nofcpblast = False
 noblastdb = False
+refgenomes = ""
 for o, a in opts:
     if o in ("-v","--verbose"):
         utils.Settings.VERBOSE = True
@@ -348,10 +356,10 @@ for o, a in opts:
             for prog in supported_programs[type]:
                 (progName, citation) = utils.getProgramCitations(settings, prog)
                 #citation = "NA"
-                #try: 
-                #    citation = pub_dict[prog]
-                #except KeyError:
-                #    citation = "NA"
+                try: 
+                    citation = pub_dict[prog]
+                except KeyError:
+                    citation = "NA"
                 print "  %d)"%(ccnt)+" "+progName
                 print "    "+citation+"\n"
                 ccnt +=1
@@ -401,7 +409,27 @@ for o, a in opts:
         run_fastqc = True
     elif o in ("-t", "--filter"):
         filter = True
-
+    elif o in ("-I", "--isolate"):
+        isolate_genome = True
+    elif o in ("-R", "--refgenomes"):
+        if not os.path.exists(a):
+            print "ref genome dir %s does not exist!"%(a)
+            usage()
+            sys.exit(1)
+        refgenomes = a
+    elif o in ("-M", "--multialigner"):
+        selected_programs["multialign"] = a.lower()
+        foundit = False
+        for sm in supported_aligners:
+            if selected_programs["multialign"] not in sm:
+                continue
+            else:
+                selected_programs["multialign"] = sm
+                foundit = True
+                break
+        if not foundit:
+            print "!!Sorry, %s is not a supported multi alignment method. Using mgcat instead"%(selected_programs["multialign"])
+            selected_programs["multialign"] = "mgcat"
     elif o in ("-m", "--mapper"):
         selected_programs["mapreads"] = a.lower()
         foundit = False
@@ -498,12 +526,23 @@ if not os.path.exists(settings.rundir) or settings.rundir == "":
 
 if (settings.noblastdb or noblastdb) and (selected_programs["classify"] == "blast" or selected_programs["classify"] == "fcp"):
     print "**no DB directory available, cannot run blast or FCP for classification (model files in DB dir). replacing with phylosift!"
-    selected_programs["classify"] = phylosift
+    selected_programs["classify"] = "phylosift"
 
 print "[Steps to be skipped]: ", skipsteps
 #remove started & ok flags in Logs
 if os.path.exists("%s%sLogs%s*.started"%(settings.rundir,os.sep,os.sep)):
     os.system("rm %s%sLogs%s*.started"%(settings.rundir,os.sep,os.sep))
+
+if not isolate_genome:
+  skipsteps.append("MultiAlign")
+else:
+  try:
+      selected_programs["multialign"]
+      selected_programs["assemble"] = "velvet"
+  except KeyError:
+      skipsteps.append("MultiAlign")
+
+  
 #parse frag/libs out of pipeline.ini out of rundir
 inifile = settings.rundir+os.sep+"pipeline.ini"
 inf = open(inifile,'r')
@@ -741,6 +780,7 @@ if __name__ == "__main__":
     import preprocess
     import assemble
     import mapreads
+    import multialign
     import findorfs
     import findreps
     import abundance
@@ -758,6 +798,7 @@ if __name__ == "__main__":
     mapreads.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["mapreads"], savebtidx,ctgbpcov,lowmem)
     findorfs.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["findorfs"], min_ctg_len, min_ctg_cvg,read_orfs)
     findreps.init(readlibs, skipsteps)
+    multialign.init(readlibs, skipsteps, forcesteps, selected_programs["multialign"],refgenomes)
     annotate.init(readlibs, skipsteps, selected_programs["classify"], nofcpblast)
     fannotate.init(skipsteps)
     abundance.init(readlibs, skipsteps, forcesteps, selected_programs["classify"])
@@ -818,7 +859,7 @@ if __name__ == "__main__":
                     findreps.FindRepeats, annotate.Annotate, abundance.Abundance, \
                     fannotate.FunctionalAnnotation, scaffold.Scaffold, findscforfs.FindScaffoldORFS, \
                     propagate.Propagate, classify.Classify, postprocess.Postprocess],\
-                    verbose = 2)
+                    verbose = 1)
 
        #multiprocess threads
        t2 = time.time()

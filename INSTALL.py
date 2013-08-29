@@ -386,14 +386,15 @@ if not os.path.exists("./phylosift") or not os.path.exists("./phylosift/lib/Vers
 
       if not os.path.exists("./phylosift/lib/Version.pm"):
          #phylosift needs version but doesn't include it
-         os.system("curl -L http://search.cpan.org/CPAN/authors/id/A/AN/ANDYA/Perl-Version-1.011.tar.gz -o Perl-Version.tar.gz")
-         os.system("tar xvzf Perl-Version.tar.gz")
-         os.chdir("./Perl-Version-1.011/")
+         os.system("curl -L http://www.cpan.org/authors/id/J/JP/JPEACOCK/version-0.9903.tar.gz -o version.tar.gz")
+         os.system("tar xvzf version.tar.gz")
+         os.chdir("./version-0.9903/")
          os.system("perl Makefile.PL")
          os.system("make")
-         os.system("cp lib/Perl/Version.pm ../phylosift/lib")
+         os.system("cp -r blib/lib/* ../phylosift/lib")
          os.chdir(METAMOS_ROOT)
-         os.system("rm -rf Perl-Version*")
+         os.system("rm -rf version.tar.gz")
+         os.system("rm -rf version-0.9903")
 
 if not os.path.exists("./CA") or 0:
    print "Celera Assembler binaries not found, optional for Assemble step, download now?"

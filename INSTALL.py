@@ -384,7 +384,7 @@ if not os.path.exists("./phylosift") or not os.path.exists("./phylosift/lib/Vers
          os.system("rm -rf phylosift.tar.bz2")
          os.system("mv phylosift_v1.0.0_01 phylosift")
 
-      if not os.path.exists("./phylosift/lib/Version.pm"):
+      if not os.path.exists("./phylosift/lib/version.pm"):
          #phylosift needs version but doesn't include it
          os.system("curl -L http://www.cpan.org/authors/id/J/JP/JPEACOCK/version-0.9903.tar.gz -o version.tar.gz")
          os.system("tar xvzf version.tar.gz")
@@ -395,6 +395,16 @@ if not os.path.exists("./phylosift") or not os.path.exists("./phylosift/lib/Vers
          os.chdir(METAMOS_ROOT)
          os.system("rm -rf version.tar.gz")
          os.system("rm -rf version-0.9903")
+      if not os.path.exists("./phylosift/lib/Params"):
+         os.system("curl -L http://cpan.metacpan.org/authors/id/D/DR/DROLSKY/Params-Validate-0.97.tar.gz -o ./params-validate.tar.gz")
+         os.system("tar xvzf params-validate.tar.gz") 
+         os.chdir("./Params-Validate-0.97/")
+         os.system("perl Build.PL")
+         os.system("./Build && ./Build test")
+         os.system("cp -r blib/lib/* ../phylosift/lib")
+         os.chdir(METAMOS_ROOT)
+         os.system("rm -rf params-validate.tar.gz")
+         os.system("rm -rf Params-Validate-0.97/")
 
 if not os.path.exists("./CA") or 0:
    print "Celera Assembler binaries not found, optional for Assemble step, download now?"

@@ -396,15 +396,9 @@ if not os.path.exists("./phylosift") or not os.path.exists("./phylosift/lib/vers
          os.system("rm -rf version.tar.gz")
          os.system("rm -rf version-0.9903")
       if not os.path.exists("./phylosift/lib/Params"):
-         os.system("curl -L http://cpan.metacpan.org/authors/id/D/DR/DROLSKY/Params-Validate-0.97.tar.gz -o ./params-validate.tar.gz")
+         os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/params-validate.tar.gz -o ./params-validate.tar.gz")
          os.system("tar xvzf params-validate.tar.gz") 
-         os.chdir("./Params-Validate-0.97/")
-         os.system("perl Build.PL")
-         os.system("./Build && ./Build test")
-         os.system("cp -r blib/lib/* ../phylosift/lib")
-         os.chdir(METAMOS_ROOT)
          os.system("rm -rf params-validate.tar.gz")
-         os.system("rm -rf Params-Validate-0.97/")
 
 if not os.path.exists("./CA") or 0:
    print "Celera Assembler binaries not found, optional for Assemble step, download now?"

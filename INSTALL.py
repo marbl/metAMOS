@@ -368,7 +368,7 @@ if 1:
        os.chdir(METAMOS_ROOT)
        os.system("rm -rf matplotlib.tar.gz")
 
-if not os.path.exists("./phylosift"):
+if not os.path.exists("./phylosift") or not os.path.exists("./phylosift/lib/Version.pm"):
    print "PhyloSift binaries not found, optional for Annotate step, download now?"
    if silentInstall:
       dl = 'y'
@@ -377,11 +377,23 @@ if not os.path.exists("./phylosift"):
    else:
       dl = raw_input("Enter Y/N: ")
    if dl == 'y' or dl == 'Y':
-      #phylosift OSX binaries included inside Linux X86_64 tarball..
-      os.system("curl -L http://edhar.genomecenter.ucdavis.edu/~koadman/phylosift/releases/phylosift_v1.0.0_01.tar.bz2 -o ./phylosift.tar.bz2")
-      os.system("tar -xvjf phylosift.tar.bz2")
-      os.system("rm -rf phylosift.tar.bz2")
-      os.system("mv phylosift_v1.0.0_01 phylosift")
+      if not os.path.exists("./phylosift"): 
+         #phylosift OSX binaries included inside Linux X86_64 tarball..
+         os.system("curl -L http://edhar.genomecenter.ucdavis.edu/~koadman/phylosift/releases/phylosift_v1.0.0_01.tar.bz2 -o ./phylosift.tar.bz2")
+         os.system("tar -xvjf phylosift.tar.bz2")
+         os.system("rm -rf phylosift.tar.bz2")
+         os.system("mv phylosift_v1.0.0_01 phylosift")
+
+      if not os.path.exists("./phylosift/lib/Version.pm"):
+         #phylosift needs version but doesn't include it
+         os.system("curl -L http://search.cpan.org/CPAN/authors/id/A/AN/ANDYA/Perl-Version-1.011.tar.gz -o Perl-Version.tar.gz")
+         os.system("tar xvzf Perl-Version.tar.gz")
+         os.chdir("./Perl-Version-1.011/")
+         os.system("perl Makefile.PL")
+         os.system("make")
+         os.system("cp lib/Perl/Version.pm ../phylosift/lib")
+         os.chdir(METAMOS_ROOT)
+         os.system("rm -rf Perl-Version*")
 
 if not os.path.exists("./CA") or 0:
    print "Celera Assembler binaries not found, optional for Assemble step, download now?"

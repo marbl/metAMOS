@@ -15,9 +15,16 @@ elif __file__:
 try:
 
    sys._MEIPASS
-   print "Download/install latest version of MetAMOS frozen binary, if available? (note, this might require root/sudo access!)"
+   #print "Download/install latest version of MetAMOS frozen binary, if available? (note, this might require root/sudo access!)"
    dl = 'y'
-   dl = raw_input("Enter Y/N: ")
+   #dl = raw_input("Enter Y/N: ")
+
+   #add autoupdate.txt file in install dir if you would like MetAMOS to auto-update
+   try:
+       f = open("%s/autoupdate.ok","r")
+       f.close()
+   except IOError:
+       dl = 'n'
    if dl == 'y' or dl == 'Y':
        os.system("wget -P %s -N http://www.cbcb.umd.edu/confcour/temp/runPipeline"%(application_path))
        os.system("wget -P %s -N http://www.cbcb.umd.edu/confcour/temp/initPipeline"%(application_path))

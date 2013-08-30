@@ -39,6 +39,10 @@ os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+o
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python"+os.pathsep
 os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.pathsep
 
+if "PERL5LIB" not in os.environ:
+    os.environ["PERL5LIB"] =  INITIAL_SRC+os.sep+"phylosift"+os.sep+"lib"+os.sep
+else:
+    os.environ["PERL5LIB"] =  INITIAL_SRC+os.sep+"phylosift"+os.sep+"lib"+os.sep + os.pathsep + os.environ["PERL5LIB"]
 try:
     os.environ["PYTHONPATH"] += sys._MEIPASS + os.pathsep
     os.environ["PYTHONHOME"] = sys._MEIPASS + os.pathsep

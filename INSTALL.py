@@ -368,7 +368,7 @@ if 1:
        os.chdir(METAMOS_ROOT)
        os.system("rm -rf matplotlib.tar.gz")
 
-if not os.path.exists("./phylosift") or not os.path.exists("./phylosift/lib/version.pm") or not os.path.exists("./phylosift/lib/Params"):
+if not os.path.exists("./phylosift") or not os.path.exists("./phylosift/legacy/version.pm") or not os.path.exists("./phylosift/lib/Params"):
    print "PhyloSift binaries not found, optional for Annotate step, download now?"
    if silentInstall:
       dl = 'y'
@@ -379,12 +379,13 @@ if not os.path.exists("./phylosift") or not os.path.exists("./phylosift/lib/vers
    if dl == 'y' or dl == 'Y':
       if not os.path.exists("./phylosift"): 
          #phylosift OSX binaries included inside Linux X86_64 tarball..
-         os.system("curl -L http://edhar.genomecenter.ucdavis.edu/~koadman/phylosift/releases/phylosift_v1.0.0_01.tar.bz2 -o ./phylosift.tar.bz2")
+         #os.system("curl -L http://edhar.genomecenter.ucdavis.edu/~koadman/phylosift/releases/phylosift_v1.0.0_01.tar.bz2 -o ./phylosift.tar.bz2")
+         os.system("curl -L http://edhar.genomecenter.ucdavis.edu/~koadman/phylosift/devel/phylosift_20130829.tar.bz2 -o ./phylosift.tar.bz2")
          os.system("tar -xvjf phylosift.tar.bz2")
          os.system("rm -rf phylosift.tar.bz2")
-         os.system("mv phylosift_v1.0.0_01 phylosift")
+         os.system("mv phylosift_20130829 phylosift")
 
-      if not os.path.exists("./phylosift/lib/version.pm"):
+      if not os.path.exists("./phylosift/legacy/version.pm"):
          #phylosift needs version but doesn't include it
          os.system("curl -L http://www.cpan.org/authors/id/J/JP/JPEACOCK/version-0.9903.tar.gz -o version.tar.gz")
          os.system("tar xvzf version.tar.gz")

@@ -196,7 +196,7 @@ for o, a in opts:
         for insert in ins:
             data = insert.split(":")
             if len(data) < 2:
-                print "Need to provide both min & max!"
+                print "For library %d, need to provide both min & max insert size using min:max syntax!"%(len(inserts)+1)
                 sys.exit(1)
             min,max = data[0],data[1]#insert.split(",")
             inserts.append([min,max])
@@ -236,7 +236,7 @@ while i < len(readlibs):
      
     if readlibs[i].mated:
         if (len(inserts) <= j):
-           print "Error: no insert size specified for library %d\n"%(i)
+           print "Error: no insert size specified for library %d\n"%(i+1)
            sys.exit(2)
         readlibs[i].setMinMax(int(inserts[j][0]), int(inserts[j][1]))
         j += 1

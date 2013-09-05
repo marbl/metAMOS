@@ -30,10 +30,12 @@ def init(skipsteps, readlibs):
 #   - THREADS - replaced with thread parameter specified
 #   - KMER - the kmer requested
 #   - OFFSET - the phred offset (33/64)
+#   - PREFIX - the desied output name
+#   - DB - the location of dbs
 class GenericProgram:
    # for now we only support new assemblers
    stepName = STEP_NAMES.ASSEMBLE 
-   input = INPUT_TYPE.FASTQ 
+   inputType = INPUT_TYPE.FASTQ 
    name = ""
    output = ""
    location = ""
@@ -41,6 +43,7 @@ class GenericProgram:
    paired = ""
    paired_interleaved = ""
    unpaired = ""
+   allowPartition = False
    commandList = []
    isValid = False
 
@@ -53,6 +56,7 @@ class GenericProgram:
       self.paired = ""
       self.paired_interleaved = ""
       self.unpaired = ""
+      self.allowPartition = False 
       self.commandList = []
       self.isValid = False 
 
@@ -71,7 +75,7 @@ class GenericProgram:
             self.name = value
          elif (defn == "input"):
             try:
-               self.input = INPUT_TYPE.mapping[value.upper()]
+               self.inputType = INPUT_TYPE.mapping[value.upper()]
             except KeyError:
                print "Error: unknown input type specfied %s. Must be one of %s\n"%(value.upper(), INPUT_TYPE.mapping.keys())
                self.isValid = False
@@ -80,7 +84,7 @@ class GenericProgram:
          elif (defn == "location"):
            # get the location path
             self.location = value
-            self.location = self.location.replace("MACHINE", "%s-%s"%(_settings.OSTYPE, _settings.MACHINETYPE))
+            self.location = self.location.replace("[MACHINE]", "%s-%s"%(_settings.OSTYPE, _settings.MACHINETYPE))
             if not os.path.isabs(self.location):
                self.location = os.path.abspath("%s%s%s"%(_settings.METAMOS_UTILS, os.sep, self.location))
 
@@ -92,6 +96,8 @@ class GenericProgram:
             self.paired_interleaved = value
          elif (defn == "unpaired"):
             self.unpaired = value
+         elif (defn == "partition"):
+            self.allowPartition = str2bool(value.strip())
          elif (defn == "commands"):
             self.commandList.append(value)
 
@@ -99,13 +105,10 @@ class GenericProgram:
       if (len(self.commandList) == 0):
          print "Error no commands to run provided\n"
          self.isValid = False
-      if self.input == INPUT_TYPE.FASTA or self.input == INPUT_TYPE.FASTQ:
+      if self.inputType == INPUT_TYPE.FASTA or self.inputType == INPUT_TYPE.FASTQ:
          if ((self.paired == "" and self.paired_interleaved == "") or self.unpaired == ""):
-            print "Error: must specify handler for both paired and unpaired sequences\n"
+            print "Error: must specify handler for both paired and unpaired sequences"
             self.isValid = False
-      else:
-         print "Error: only FASTQ input is currently supported\n"
-         self.isValid = False
 
       for command in self.commandList:
          (commandName, sp, junk) = command.partition(' ')
@@ -122,12 +125,15 @@ class GenericProgram:
          raise(JobSignalledBreak)
 
       avram = getAvailableMemory(_settings)
-      params = ""
+      params = []
+      outputs = []
+      listOfInput = ""
       offset = ""
 
-      if self.input == INPUT_TYPE.FASTA or self.input == INPUT_TYPE.FASTQ:
+      if self.inputType == INPUT_TYPE.FASTA or self.inputType == INPUT_TYPE.FASTQ:
+         params.append("")
          suffix = ""
-         if self.input == INPUT_TYPE.FASTA:
+         if self.inputType == INPUT_TYPE.FASTA:
             suffix = "fasta"
          else:
             suffix = "fastq"
@@ -142,49 +148,76 @@ class GenericProgram:
                
             if lib.mated:
                if self.paired == "":
-                  params = params + " " + self.paired_interleaved.replace("LIB", "%d"%(lib.id)).replace("FIRST", "%s/Preprocess/out/lib%d.%s"%(_settings.rundir, lib.id, suffix))
+                  params[0] = params[0] + " " + self.paired_interleaved.replace("[LIB]", "%d"%(lib.id)).replace("[FIRST]", "%s/Preprocess/out/lib%d.%s"%(_settings.rundir, lib.id, suffix))
                else: 
-                  params = params + " " + self.paired.replace("LIB", "%d"%(lib.id)).replace("FIRST", "%s/Preprocess/out/lib%d.1.%s"%(_settings.rundir, lib.id, suffix)).replace("SECOND", "%s/Preprocess/out/lib%d.2.%s"%(_settings.rundir, lib.id, suffix))
+                  params[0] = params[0] + " " + self.paired.replace("[LIB]", "%d"%(lib.id)).replace("[FIRST]", "%s/Preprocess/out/lib%d.1.%s"%(_settings.rundir, lib.id, suffix)).replace("[SECOND]", "%s/Preprocess/out/lib%d.2.%s"%(_settings.rundir, lib.id, suffix))
             elif not lib.mated:
-                  params = params + " " + self.unpaired.replace("LIB", "%d"%(lib.id)).replace("FIRST", "%s/Preprocess/out/lib%d.%s"%(_settings.rundir, lib.id, suffix))
-      else:
-         print "Error: only FASTQ input is currently supported\n"
+                  params[0] = params[0] + " " + self.unpaired.replace("[LIB]", "%d"%(lib.id)).replace("[FIRST]", "%s/Preprocess/out/lib%d.%s"%(_settings.rundir, lib.id, suffix))
+      elif self.inputType == INPUT_TYPE.CONTIGS:
+         params.append("%s/Annotate/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX))
+         listOfInput += ":%s/Annotate/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX)
+         if _settings.annotate_unmapped:
+            outputs.append("%s/Annotate/out/%s.intermediate.ctg"%(_settings.rundir,_settings.PREFIX))
+            for lib in _readlibs:
+               listOfInput += ":%s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id)
+               run_process(_settings, "ln %s/Assemble/out/lib%d.unaligned.fasta %s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id, _settings.rundir, lib.id), STEP_NAMES.reverse_mapping[self.stepName].title())
+               params.append("%s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id))
+               outputs.append("%s/Annotate/out/%s.intermediate.lib%d"%(_settings.rundir, _settings.PREFIX, lib.id))
+      elif self.inputType == INPUT_TYPE.ORF_FA:
+         params.append("%s/Annotate/in/%s.fna"%(_settings.rundir, _settings.PREFIX))
+         listOfInput += ":%s/Annotate/in/%s.fna"%(_settings.rundir, _settings.PREFIX)
+      elif self.inputType == INPUT_TYPE.ORF_AA:
+         params.append("%s/Annotate/in/%s.faa"%(_settings.rundir, _settings.PREFIX))
+         listOfInput += ":%s/Annotate/in/%s.faa"%(_settings.rundir, _settings.PREFIX)
+         print "Parameters are %s\n"%(params)
 
       # get the thread parameters
+      # when thread params not available, should partition the data
       threadParams = ""
       if not self.threads == "":
          threadParams =  "%s %d"%(self.threads,_settings.threads)
 
-      for command in self.commandList:
-         (commandName, sp, junk) = command.partition(' ')
-         theCommand = "%s%s%s"%(self.location, os.sep, commandName)
-         if (not os.path.exists(theCommand)): 
-            print "Error: requested to run %s but not available in specified location %s. Please check your specification and try again"%(commandName, self.location)
-            raise(JobSignalledBreak)
+      i = 0
+      for param in params:
+         for command in self.commandList:
+            (commandName, sp, junk) = command.partition(' ')
+            theCommand = "%s%s%s"%(self.location, os.sep, commandName)
+            if (not os.path.exists(theCommand)): 
+               print "Error: requested to run %s but not available in specified location %s. Please check your specification and try again"%(commandName, self.location)
+               raise(JobSignalledBreak)
 
-         params = getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(self.name.lower()), commandName, "-").replace("KMER", "%d"%(_settings.kmer)) + " " + params
-         command = self.location + os.sep + command.replace("INPUT", params).replace("MEM", "%d"%(avram)).replace("THREADS", threadParams).replace("OFFSET", "33" if offset.lower() == "sanger" else "64")
-         run_process(_settings, command, STEP_NAMES.reverse_mapping[self.stepName].title())
+            param = param + " " + getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(self.name.lower()), commandName, "-").replace("[KMER]", "%d"%(_settings.kmer))
+            command = self.location + os.sep + command.replace("[INPUT]", param).replace("[DB]", _settings.DB_DIR).replace("[MEM]", "%d"%(avram)).replace("[THREADS]", threadParams).replace("[OFFSET]", "33" if offset.lower() == "sanger" else "64").replace("[OUTPUT]", self.output.replace("[PREFIX]", outputs[i]) if len(outputs) > i else "%s%s%s%sout%s%s"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep, os.sep, self.output.replace("[PREFIX]", _settings.PREFIX)))
+            run_process(_settings, command, STEP_NAMES.reverse_mapping[self.stepName].title())
+         i+=1
+
+      i = 0
+      for output in outputs:
+         if i == 0:
+            run_process(_settings, "unlink %s/%s/out/%s"%(_settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), self.output.replace("[PREFIX]", _settings.PREFIX)), STEP_NAMES.reverse_mapping[self.stepName].title())
+         run_process(_settings, "cat %s >> %s/%s/out/%s"%(self.output.replace("[PREFIX]", output), _settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), self.output.replace("[PREFIX]", _settings.PREFIX)), STEP_NAMES.reverse_mapping[self.stepName].title())
+         i = 1
 
       # symlink results
-      symlinkCmd = "ln %s/%s/out/%s %s/%s/out/%s%s"%(_settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), self.output, _settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), _settings.PREFIX, STEP_OUTPUTS.reverse_mapping[self.stepName])
+      symlinkCmd = "ln %s/%s/out/%s %s/%s/out/%s%s"%(_settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), self.output.replace("[PREFIX]", _settings.PREFIX), _settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), _settings.PREFIX, STEP_OUTPUTS.reverse_mapping[self.stepName])
       run_process(_settings, symlinkCmd, STEP_NAMES.reverse_mapping[self.stepName].title())
+      return listOfInput
 
 def getSupportedList(path, step):
-   if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ASSEMBLE):
+   if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ANNOTATE):
       return []
    programs = getProgramParams(path, "%s.generic"%(STEP_NAMES.reverse_mapping[step]))
    return programs.strip().split()
    
 def checkIfExists(step, programName):
-   if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ASSEMBLE):
+   if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ANNOTATE):
       return False
 
    programs = getSupportedList(_settings.METAMOS_UTILS, step)
    return programName.lower() in programs
 
 def getLocation(step, programName):
-   if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ASSEMBLE):
+   if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ANNOTATE):
       return "UNKNOWN"
    if not checkIfExists(step, programName):
       return "UNKNOWN" 
@@ -193,8 +226,18 @@ def getLocation(step, programName):
 
    return dispatch.location
 
+def getName(step, programName):
+   if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ANNOTATE):
+      return "UNKNOWN"
+   if not checkIfExists(step, programName):
+      return "UNKNOWN"
+   dispatch = GenericProgram(programName, step)
+   dispatch.read()
+
+   return dispatch.name
+
 def execute(step, programName):
-   if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ASSEMBLE):
+   if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ANNOTATE):
       print "Error: unsupported step #%d\n"%(step)
       raise(JobSignalledBreak)
 
@@ -204,4 +247,4 @@ def execute(step, programName):
 
    dispatch = GenericProgram(programName, step)
    dispatch.read()
-   dispatch.execute()
+   return dispatch.execute()

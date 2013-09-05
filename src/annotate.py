@@ -14,7 +14,7 @@ from splitfasta import *
 
 from multiprocessing import *
 
-
+import generic
 
 _MIN_SEQ_LENGTH = 10000000
 _USE_GRID = 0
@@ -416,8 +416,11 @@ def Annotate(input,output):
    pool.close()
    pool.join()
 
-   # merge results
-   run_process(_settings, "cat %s/Annotate/out/*.intermediate.hits > %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
+   if generic.checkIfExists(STEP_NAMES.ANNOTATE, _cls.lower()):
+      generic.execute(STEP_NAMES.ANNOTATE, _cls.lower())
+   else:
+      #  merge results
+      run_process(_settings, "cat %s/Annotate/out/*.intermediate.hits > %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
  
    if _cls == "phylosift":
        importPS = "%s%sperl%sImportPhyloSift.pl"%(_settings.METAMOS_UTILS, os.sep, os.sep)
@@ -444,6 +447,16 @@ def Annotate(input,output):
           raise(JobSignalledBreak)
        run_process(_settings, "cat %s/Annotate/out/*.intermediate.phymm.out > %s/Annotate/out/%s.phymm.out"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")
        run_process(_settings, "perl %s %s -f %s %s/Annotate/out/%s.phymm.out:%s/Assemble/out/%s.contig.cnt:%s"%(importPhymm, "-l" if _settings.local_krona else "", listOfFiles,_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate") # TODO: local url (after next KronaTools release)
+   elif generic.checkIfExists(STEP_NAMES.ANNOTATE, _cls.lower()):
+      genericImport = "%s%sperl%sImport%s.pl"%(_settings.METAMOS_UTILS, os.sep, os.sep, _cls.title())
+      if os.path.exists(genericImport):
+         run_process(_settings, "perl %s %s -c -i -f %s %s/Annotate/out/%s.hits:%s/Assemble/out/%s.contig.cnt:%s"%(genericImport, "-l" if _settings.local_krona else "", listOfFiles, _settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate") # TODO: local url (after next KronaTools release)
+      else:
+         genericImport = "%s%sperl%sImportGeneric.pl"%(_settings.METAMOS_UTILS, os.sep, os.sep)
+         if not os.path.exists(importPhymm):
+            print "Error: Krona importer for generic classifier not found in %s. Please check your path and try again.\n"%(genericImport)
+            raise(JobSignalledBreak)
+
 
    run_process(_settings, "unlink %s/Postprocess/in/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")
    run_process(_settings, "unlink %s/Postprocess/out/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")

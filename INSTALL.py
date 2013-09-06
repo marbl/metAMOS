@@ -174,6 +174,64 @@ if not os.path.exists("./Utilities/models") or not os.path.exists("./Utilities/D
         os.system("tar -C ./Utilities/ -xvf %s" % archive)
         os.system("rm %s"%archive)
 
+if not os.path.exists("./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+    print "Kraken not found, optional for Annotate step, download now?"
+    if silentInstall:
+       dl = 'y'
+    elif lightInstall:
+       dl = 'n'
+    else:
+       dl = raw_input("Enter Y/N: ")
+    if dl == 'y' or dl == 'Y':
+        archive = "kraken.tar.gz"
+        os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -o %s" %(archive, archive))
+        os.system("rm -rf ./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        os.system("tar -xvzf %s"%(archive))
+        os.system("mv kraken-0.9.1b ./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        os.chdir("./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        os.system("./install_kraken.sh `pwd`/bin")
+        os.chdir("%s"%(METAMOS_ROOT))
+        os.system("rm %s"%archive)
+
+if not os.path.exists("./Utilities/DB/kraken"):
+    print "Kraken DB not found, required for Kraken, download now?"
+    if silentInstall:
+       dl = 'y'
+    elif lightInstall:
+       dl = 'n'
+    else:
+       dl = raw_input("Enter Y/N: ")
+    if dl == 'y' or dl == 'Y':
+       settings = utils.Settings(1, 1, "", "")
+       settings.OSTYPE = OSTYPE
+       mem = utils.getAvailableMemory(settings)
+       if (mem < 100):
+          print "Insufficient memory to build full Kraken database. Requires at least 100GB of memory, using mini DB"
+          archive = "minikraken.tgz"
+          os.system("curl -L http://ccb.jhu.edu/software/kraken/dl/%s -o %s"%(archive, archive))
+          os.system("tar xvzf %s"%(archive))
+          os.system("mv minikraken_* ./Utilities/DB/kraken")
+          os.system("rm %s"%(archive))
+       else:
+          os.chdir("./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+          os.system("./bin/kraken-build --standard --threads %d --db %s/Utilities/DB/kraken"%(multiprocessing.cpu_count() - 1, METAMOS_ROOT)) 
+          os.chdir("%s"%(METAMOS_ROOT))
+
+if not os.path.exists("./LAP"):
+    print "LAP tool not found, needed for multiple assembly pipeline, download now?"
+
+    if silentInstall:
+       dl = 'y'
+    elif lightInstall:
+       dl = 'n'
+    else:
+       dl = raw_input("Enter Y/N: ")
+    if dl == 'y' or dl == 'Y':
+        os.system("curl -L http://www.cbcb.umd.edu/~cmhill/files/lap_release_1.1.zip -o lap_release_1.1.zip")
+        os.system("unzip lap_release_1.1.zip")
+        os.system("mv ./lap_release_1.1 ./LAP")
+        os.system("rm -rf lap_release_1.1.zip")
+
 if not os.path.exists("./Utilities/glimmer-mg"):
     print "Glimmer-MG not found, optional for FindORFS step. Caution, this will take approx. 24 hours to complete, including Phymm download & install. download & install now?"
     if silentInstall:

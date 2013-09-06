@@ -176,21 +176,22 @@ def printConfiguration(fileName=None):
     configurationText.append("Step-specific configuration:\n")
     for type in selected_programs.keys():
         configurationText.append("[" + type + "]\n")
-        prog = selected_programs[type]
-        if prog == None or prog == "none":
-           configurationText.append("None\n\n")
-        else:
-           (progName, citation) = utils.getProgramCitations(settings, prog)
-           if progName == "":
-               configurationText.append(prog + "\n")
+        progs = selected_programs[type].split(",")
+        for prog in progs:
+           if prog == None or prog == "none":
+              configurationText.append("None\n\n")
            else:
-               configurationText.append(progName + "\n")
-           try:
-              configurationText.append("\t" + eval("utils.Settings.%s"%(prog.replace("-", "_").upper()))+"\n")
-           except AttributeError:
-              configurationText.append("\t" + generic.getLocation(utils.STEP_NAMES.mapping[type.upper()], prog) + "\n")
-           if citation != "":
-               configurationText.append("\t" + citation + "\n\n")
+              (progName, citation) = utils.getProgramCitations(settings, prog)
+              if progName == "":
+                 configurationText.append(prog + "\n")
+              else:
+                 configurationText.append(progName + "\n")
+              try:
+                 configurationText.append("\t" + eval("utils.Settings.%s"%(prog.replace("-", "_").upper()))+"\n")
+              except AttributeError:
+                 configurationText.append("\t" + generic.getLocation(utils.STEP_NAMES.mapping[type.upper()], prog) + "\n")
+              if citation != "":
+                 configurationText.append("\t" + citation + "\n\n")
 
     # add step-indepent citations that are always run
     configurationText.append("[other]\n")
@@ -293,7 +294,7 @@ selected_programs["fannotate"] = "blast"
 selected_programs["scaffold"] = "bambus2"
 selected_programs["multialign"] = "mgcat"
 
-always_run_programs = ["krona"]
+always_run_programs = ["krona", "lap"]
 
 
 allsteps = ["Preprocess","Assemble","MapReads","MultiAlign","FindORFS","FindRepeats","Abundance","Annotate",\
@@ -476,25 +477,33 @@ for o, a in opts:
     elif o in ("-1","--lowmem"):
         lowmem = True
     elif o in ("-a","--assembler"):
-        selected_programs["assemble"] = a.lower()
-        if selected_programs["assemble"] == "metaidba":
+        if "metaidba" in a.lower():
             bowtie_mapping = 1
             
-        foundit = False
-        
-        for sa in supported_assemblers:
-            if selected_programs["assemble"] not in sa:
-                continue
-            else:
-                if selected_programs["assemble"] != "velvet":
+        assemblers = a.lower().split(",")
+        selected_programs["assemble"] = None 
+        for assembler in assemblers:
+           foundit = False
+           for sa in supported_assemblers:
+              if assembler not in sa:
+                 continue
+              else:
+                 if assembler != "velvet" or assembler == sa:
                     #some special cases required, velvet would trigger MetaVelvet, not velvet, etc
-                    selected_programs["assemble"] = sa
-                foundit = True
-                break
+                    if selected_programs["assemble"] != None:
+                       selected_programs["assemble"] += ","
+                    else:
+                       selected_programs["assemble"] = ""
+                    selected_programs["assemble"] += sa
+                 foundit = True
+                 break
         
-        if not foundit:
-            print "!!Sorry, %s is not a supported assembler. Using SOAPdenovo instead"%(selected_programs["assemble"])
-            selected_programs["assemble"] = "soapdenovo"
+           if not foundit:
+               print "!!Sorry, %s is not a supported assembler."%(assembler)
+
+        if selected_programs["assemble"] == None:
+           print "!!Sorry, no valid assembler specified. Using SOAPdenovo instead"
+           selected_programs["assemble"] = "soapdenovo"
 
         
     elif o in ("-g","--genecaller"):
@@ -799,14 +808,14 @@ if __name__ == "__main__":
     # initialize submodules
     preprocess.init(readlibs, skipsteps, selected_programs["assemble"], run_fastqc,filter)
     assemble.init(readlibs, skipsteps, selected_programs["assemble"], usecontigs)
-    mapreads.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["mapreads"], savebtidx,ctgbpcov,lowmem)
-    findorfs.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["findorfs"], min_ctg_len, min_ctg_cvg,read_orfs)
+    mapreads.init(readlibs, skipsteps, selected_programs["mapreads"], savebtidx,ctgbpcov,lowmem)
+    findorfs.init(readlibs, skipsteps, selected_programs["findorfs"], min_ctg_len, min_ctg_cvg,read_orfs)
     findreps.init(readlibs, skipsteps)
     multialign.init(readlibs, skipsteps, forcesteps, selected_programs["multialign"],refgenomes)
     annotate.init(readlibs, skipsteps, selected_programs["annotate"], nofcpblast)
     fannotate.init(skipsteps)
     abundance.init(readlibs, skipsteps, forcesteps, selected_programs["annotate"])
-    scaffold.init(readlibs, skipsteps, retainBank, selected_programs["assemble"])
+    scaffold.init(readlibs, skipsteps, retainBank)
     findscforfs.init(readlibs, skipsteps, selected_programs["findorfs"])
     propagate.init(readlibs, skipsteps, selected_programs["annotate"])
     classify.init(readlibs, skipsteps, selected_programs["annotate"], lowmem)

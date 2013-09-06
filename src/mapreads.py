@@ -6,7 +6,7 @@ from datetime import datetime
 
 from utils import *
 from preprocess import Preprocess
-from assemble import Assemble
+from assemble import ChooseBestAssembler
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
 import pysam
@@ -16,13 +16,11 @@ MAX_ENTRIES = 10000
 _readlibs = []
 _skipsteps = []
 _settings = Settings()
-_asm = None
 _mapper = "bowtie"
 _ctgbpcov = False
 _lowmem= False
-def init(reads, skipsteps, asm,mapper,savebtidx,ctgbpcov,lowmem):
+def init(reads, skipsteps, mapper,savebtidx,ctgbpcov,lowmem):
    global _readlibs
-   global _asm
    global _skipsteps
    global _savebtidx
    global _ctgbpcov
@@ -31,7 +29,6 @@ def init(reads, skipsteps, asm,mapper,savebtidx,ctgbpcov,lowmem):
    _mapper = mapper
    _readlibs = reads
    _skipsteps = skipsteps
-   _asm = asm
    _savebtidx = savebtidx
    _ctgbpcov = ctgbpcov
    _lowmem = lowmem
@@ -474,7 +471,7 @@ def map2contig():
 @files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/Assemble/out/mapreads.success"%(_settings.rundir))
 #@posttask(create_symlink,touch_file("completed.flag"))
 @posttask(touch_file("%s/Logs/mapreads.ok"%(_settings.rundir)))
-@follows(Assemble)
+@follows(ChooseBestAssembler)
 def MapReads(input,output):
 
    if "MapReads" in _skipsteps or "mapreads" in _skipsteps:

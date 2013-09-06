@@ -219,18 +219,30 @@ def runMetaVelvet(velvetPath, metavelvetPath, name):
    run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")
    run_process(_settings, "ln %s/Assemble/out/meta-velvetg.contigs.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
        
-@posttask(touch_file("%s/Logs/assemble.ok"%(_settings.rundir))) 
-@files("%s/Preprocess/out/preprocess.success"%(_settings.rundir),["%s/Logs/assemble.ok"%(_settings.rundir)])
-#@posttask(create_symlink,touch_file("completed.flag"))
+#@files("%s/Preprocess/out/preprocess.success"%(_settings.rundir),["%s/Logs/assemble.ok"%(_settings.rundir)])
 @follows(Preprocess)
+@split("%s/Preprocess/out/preprocess.success"%(_settings.rundir), "%s/Assemble/out/*.run"%(_settings.rundir))
+def SplitAssemblers(input_file_name, output_files): 
+   assemblers = _asm.split(",") 
+   for assembler in assemblers:
+      run_process(_settings, "touch %s/Assemble/out/%s.run"%(_settings.rundir, assembler), "Assemble")
+
+# warning: this is not thread safe so cannot be run in parallel
+@transform(SplitAssemblers, suffix(".run"), ".asm.contig")
 def Assemble(input,output):
+   originalPrefix = _settings.PREFIX
+   _settings.PREFIX = output.replace("%s/Assemble/out/"%(_settings.rundir), "")
+   _settings.PREFIX = _settings.PREFIX.replace(".asm.contig", "")
+   asmName = input.replace("%s/Assemble/out/"%(_settings.rundir), "")
+   asmName = asmName.replace(".run", "")
+
    #pick assembler
    if "Assemble" in _skipsteps or "assemble" in _skipsteps:
       run_process(_settings, "touch %s/Logs/assemble.skip"%(_settings.rundir), "Assemble")
       return 0
-   if _asm == "none" or _asm == None:
+   if asmName == "none" or asmName == None:
       pass
-   elif _asm == "soapdenovo":
+   elif asmName == "soapdenovo":
       #open & update config
       soapf = open("%s/config.txt"%(_settings.rundir),'r')
       soapd = soapf.read()
@@ -277,7 +289,7 @@ def Assemble(input,output):
           run_process(_settings, "%s/SOAPdenovo-63mer pregraph -p %d -d -K %d %s -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(_settings.SOAPDENOVO, _settings.threads, _settings.kmer, soapOptions, _settings.rundir,_settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
           run_process(_settings, "%s/SOAPdenovo-63mer contig -g %s/Assemble/out/%s.asm -R -M 3"%(_settings.SOAPDENOVO, _settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
       #if OK, convert output to AMOS
-   elif _asm == "metaidba":
+   elif asmName == "metaidba":
       bowtie_mapping = 1
       for lib in _readlibs:
           if lib.format != "fasta"  or (lib.mated and not lib.interleaved):
@@ -289,7 +301,7 @@ def Assemble(input,output):
           run_process(_settings, "%s/metaidba --read %s/Preprocess/out/lib%d.fasta --output  %s/Assemble/out/%s.asm %s --maxk %d"%(_settings.METAIDBA,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX,metaidbaOptions,_settings.kmer),"Assemble")
           run_process(_settings, "mv %s/Assemble/out/%s.asm-contig.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Assemble")
 
-   elif _asm == "newbler":
+   elif asmName == "newbler":
       if not os.path.exists(_settings.NEWBLER + os.sep + "newAssembly"):
          print "Error: Newbler not found in %s. Please check your path and try again.\n"%(_settings.NEWBLER)
          raise(JobSignalledBreak)
@@ -348,7 +360,7 @@ def Assemble(input,output):
       else:
          run_process(_settings, "ln %s/Assemble/out/assembly/454AllContigs.fna %s/Assemble/out/%s.asm.scafSeq"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
 
-   elif _asm == "amos":
+   elif asmName == "amos":
       run_process(_settings, "rm -rf %s/Assemble/in/%s.bnk"%(_settings.rundir, _settings.PREFIX), "Assemble")
       for lib in _readlibs:
          if lib.format == "fasta":
@@ -359,7 +371,7 @@ def Assemble(input,output):
       run_process(_settings, "%s/tigger -b %s/Assemble/in/%s.bnk"%(_settings.AMOS, _settings.rundir, _settings.PREFIX), "Assemble")
       run_process(_settings, "%s/make-consensus -B -b %s/Assemble/in/%s.bnk"%(_settings.AMOS, _settings.rundir, _settings.PREFIX), "Assemble")
       run_process(_settings, "%s/bank2fasta -b %s/Assemble/in/%s.bnk > %s.asm.contig"%(_settings.AMOS, _settings.rundir, _settings.PREFIX, _settings.PREFIX), "Assemble")
-   elif _asm.lower() == "ca":
+   elif asmName.lower() == "ca":
       #runCA script
       frglist = ""
       matedString = ""
@@ -382,18 +394,18 @@ def Assemble(input,output):
       run_process(_settings, "%s/terminator -g %s.gkpStore -t %s.tigStore/ 2 -o %s"%(_settings.CA, _settings.PREFIX, _settings.PREFIX, _settings.PREFIX),"Assemble")
       run_process(_settings, "%s/asmOutputFasta -p %s < %s.asm"%(_settings.CA, _settings.PREFIX, _settings.PREFIX), "Assemble")
       run_process(_settings, "ln %s.utg.fasta %s.asm.contig"%(_settings.PREFIX, _settings.PREFIX), "Assemble")
-   elif _asm == "velvet":
+   elif asmName == "velvet":
       runVelvet(_settings.VELVET, "velvet")
-   elif _asm == "velvet-sc":
+   elif asmName == "velvet-sc":
       runVelvet(_settings.VELVET_SC, "velvet-sc")
-   elif _asm == "metavelvet":
+   elif asmName == "metavelvet":
       runMetaVelvet(_settings.VELVET, _settings.METAVELVET, "metavelvet")
-   elif _asm.lower() == "sparseassembler":
+   elif asmName.lower() == "sparseassembler":
       runSparseAssembler(_settings.SPARSEASSEMBLER, "SparseAssembler");
-   elif generic.checkIfExists(STEP_NAMES.ASSEMBLE, _asm.lower()):
-      generic.execute(STEP_NAMES.ASSEMBLE, _asm.lower())
+   elif generic.checkIfExists(STEP_NAMES.ASSEMBLE, asmName.lower()):
+      generic.execute(STEP_NAMES.ASSEMBLE, asmName.lower())
    else:  
-      print "Error: %s is an unknown assembler. No valid assembler specified."%(_asm)
+      print "Error: %s is an unknown assembler. No valid assembler specified."%(asmName)
       raise(JobSignalledBreak)
 
    #if _usecontigs:
@@ -401,3 +413,17 @@ def Assemble(input,output):
    #stop here, for now
    #sys.exit(0)
    #check if sucessfully completed   
+   _settings.PREFIX = originalPrefix
+
+@posttask(touch_file("%s/Logs/assemble.ok"%(_settings.rundir)))
+@merge(Assemble, ["%s/Logs/assemble.ok"%(_settings.rundir)])
+def ChooseBestAssembler (input_file_names, output_file_name):
+   # for now we take the first one in the list
+
+   counter = 0
+   assemblers = _asm.split(",")
+   for assembler in assemblers:
+      run_process(_settings, "ln %s %s.asm.contig"%(input_file_names[counter], _settings.PREFIX), "Assemble") 
+      _settings.selectedAssembler = assembler
+      counter += 1
+      break

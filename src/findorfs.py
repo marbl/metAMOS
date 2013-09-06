@@ -12,24 +12,21 @@ from ruffus import *
 
 _readlibs = []
 _skipsteps = []
-_asm = None
 _settings = Settings()
 _orf = None 
 _min_ctg_len = 300
 _min_ctg_cvg = 3
 _read_orfs = False
 
-def init(reads, skipsteps, asm, orf, min_ctg_len, min_ctg_cvg,read_orfs):
+def init(reads, skipsteps, orf, min_ctg_len, min_ctg_cvg,read_orfs):
    global _readlibs
    global _skipsteps
-   global _asm
    global _orf
    global _min_ctg_cvg
    global _min_ctg_len
    global _read_orfs
    _readlibs = reads
    _skipsteps = skipsteps
-   _asm = asm
    _orf = orf
    _min_ctg_cvg = min_ctg_cvg
    _min_ctg_len = min_ctg_len

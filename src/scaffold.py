@@ -14,10 +14,10 @@ _readlibs = []
 _skipsteps = []
 _settings = Settings()
 _retainBank = False
-_asm = None
 _mated = False
+_asm = None
 
-def init(reads, skipsteps, retainBank, asm):
+def init(reads, skipsteps, retainBank):
    global _readlibs
    global _skipsteps
    global _retainBank
@@ -27,7 +27,7 @@ def init(reads, skipsteps, retainBank, asm):
    _readlibs = reads
    _skipsteps = skipsteps
    _retainBank = retainBank
-   _asm = asm.lower()
+   _asm = _settings.selectedAssembler.lower()
 
    for lib in _readlibs:
       if lib.mated == True:

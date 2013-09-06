@@ -129,10 +129,13 @@ class Settings:
    KRONA = ""
    REPEATOIRE = ""
 
+   LAP = ""
+
    BINARY_DIST = 0
 
    nopsutil = False
    nopysam = False
+   selectedAssembler = ""
 
    def __init__(self, kmer = None, threads = None, rundir = None, taxa_level = "", localKrona = False, annotateUnmapped = False, verbose = False, outputOnly = False, update = False):
 
@@ -174,6 +177,7 @@ class Settings:
       Settings.taxa_level = taxa_level
       Settings.local_krona = localKrona
       Settings.annotate_unmapped = annotateUnmapped
+      Settings.selectedAssembler = ""
       Settings.task_dict = []
 
       Settings.PREFIX = "proba"
@@ -263,6 +267,7 @@ class Settings:
                kronalibf.close()
                os.system("ln -s %s/taxonomy %s%sKronaTools%staxonomy"%(Settings.DB_DIR,Settings.METAMOSDIR,os.sep,os.sep))
       Settings.REPEATOIRE    = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.LAP	     = "%sLAP"%(Settings.METAMOS_UTILS)
 
 
 libcounter = 1
@@ -624,6 +629,12 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
        Settings.PHYLOSIFT = ""
     phylosiftMD5 = getMD5Sum(Settings.PHYLOSIFT + os.sep + "bin" + os.sep + "phylosift")
 
+    # now for the validators
+    Settings.LAP = "%s%sLAP"%(Settings.METAMOS_UTILS, os.sep)
+    if not os.path.exists(Settings.LAP + os.sep + "aligner" + os.sep + "calc_prob.py"):
+       Settings.LAP = getFromPath("calc_prop.py", "LAP")
+    lapMD5 = getMD5Sum(Settings.LAP + os.sep + "aligner" + os.sep + "calc_prob.py")
+
     # finally store the configuration 
     conf = open("%s/pipeline.conf"%(Settings.rundir),'w')
     if Settings.BINARY_DIST and 1: 
@@ -679,6 +690,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
 
     conf.write("REPEATOIRE:\t\t%s\t%s\n"%(Settings.REPEATOIRE, repeatoireMD5))
     conf.write("KRONA:\t\t\t%s\t%s\n"%(Settings.KRONA, kronaMD5))
+    conf.write("LAP:\t\t\t%s\t%s\n"%(Settings.LAP, lapMD5))
     conf.close()
 
     return Settings

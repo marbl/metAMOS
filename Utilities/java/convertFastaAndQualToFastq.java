@@ -16,11 +16,8 @@ public class convertFastaAndQualToFastq {
    }
 
    public void processFasta(String inputFile, String quals) throws Exception {
-      BufferedReader bf = null;
-      for (int i = 0; i < FILE_SUFFIX.length; i++) {
-         bf = Utils.getFile(inputFile, FILE_SUFFIX[i]);
-         if (bf != null ) { break; }
-      }
+      BufferedReader bf = Utils.getFile(inputFile, FILE_SUFFIX);
+      if (bf == null) { return; }
       BufferedReader qual = (quals == null || "null".equalsIgnoreCase(quals) ? null : Utils.getFile(quals, "qual"));
 
       String line = null;

@@ -15,9 +15,16 @@ elif __file__:
 try:
 
    sys._MEIPASS
-   print "Download/install latest version of MetAMOS frozen binary, if available? (note, this might require root/sudo access!)"
+   #print "Download/install latest version of MetAMOS frozen binary, if available? (note, this might require root/sudo access!)"
    dl = 'y'
-   dl = raw_input("Enter Y/N: ")
+   #dl = raw_input("Enter Y/N: ")
+
+   #add autoupdate.txt file in install dir if you would like MetAMOS to auto-update
+   try:
+       f = open("%s/autoupdate.ok","r")
+       f.close()
+   except IOError:
+       dl = 'n'
    if dl == 'y' or dl == 'Y':
        os.system("wget -P %s -N http://www.cbcb.umd.edu/confcour/temp/runPipeline"%(application_path))
        os.system("wget -P %s -N http://www.cbcb.umd.edu/confcour/temp/initPipeline"%(application_path))
@@ -189,7 +196,7 @@ for o, a in opts:
         for insert in ins:
             data = insert.split(":")
             if len(data) < 2:
-                print "Need to provide both min & max!"
+                print "For library %d, need to provide both min & max insert size using min:max syntax!"%(len(inserts)+1)
                 sys.exit(1)
             min,max = data[0],data[1]#insert.split(",")
             inserts.append([min,max])
@@ -229,7 +236,7 @@ while i < len(readlibs):
      
     if readlibs[i].mated:
         if (len(inserts) <= j):
-           print "Error: no insert size specified for library %d\n"%(i)
+           print "Error: no insert size specified for library %d\n"%(i+1)
            sys.exit(2)
         readlibs[i].setMinMax(int(inserts[j][0]), int(inserts[j][1]))
         j += 1

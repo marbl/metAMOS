@@ -105,6 +105,9 @@ def Postprocess(input,output):
        #run_process(_settings, "perl %s/ImportPhyloSift.pl -c -v -i %s/Postprocess/in/%s.hits:%s/Assemble/out/%s.contig.cvg"%(_settings.KRONA,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX), "Postprocess") 
        run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")
        run_process(_settings, "ln %s/Annotate/out/report.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
+   else:
+       run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")
+       run_process(_settings, "ln %s/Annotate/out/report.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
 
    # create sym links
    run_process(_settings, "unlink %s/Postprocess/out/abundance.krona.html"%(_settings.rundir), "Postprocess")

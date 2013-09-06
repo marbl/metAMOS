@@ -799,7 +799,10 @@ def getProgramCitations(settings, programName, comment="#"):
          _PROG_NAME_DICT[name] = commonName
          _PUB_DICT[name] = citation
 
-   return (_PROG_NAME_DICT[programName], _PUB_DICT[programName]) 
+   try:
+      return (_PROG_NAME_DICT[programName], _PUB_DICT[programName]) 
+   except KeyError:
+      return(programName, "UNKNOWN")
 
 def getProgramParams(configDir, fileName, module="", prefix="", comment="#", separator=""):
     # we process parameters in the following priority:

@@ -276,7 +276,7 @@ supported_programs["findorfs"] = supported_genecallers
 supported_programs["assemble"] = supported_assemblers
 supported_programs["mapreads"] = supported_mappers
 supported_programs["abundance"] = supported_abundance
-supported_programs["classify"] = supported_classifiers
+supported_programs["annotate"] = supported_classifiers
 supported_programs["fannotate"] = supported_fannotate
 supported_programs["scaffold"] = supported_scaffolders
 supported_programs["multialign"] = supported_aligners
@@ -288,7 +288,7 @@ selected_programs["assemble"] = "soapdenovo"
 selected_programs["findorfs"] = "fraggenescan"
 selected_programs["mapreads"] = "bowtie"
 selected_programs["abundance"] = "metaphyler"
-selected_programs["classify"] = "fcp"
+selected_programs["annotate"] = "fcp"
 selected_programs["fannotate"] = "blast"
 selected_programs["scaffold"] = "bambus2"
 selected_programs["multialign"] = "mgcat"
@@ -451,13 +451,13 @@ for o, a in opts:
     elif o in ("-r", "--retainBank"):
         retainBank = True
     elif o in ("-c", "--classifier"):
-        selected_programs["classify"] = a.lower()
+        selected_programs["annotate"] = a.lower()
         foundit = False
         for sc in supported_classifiers:
-            if selected_programs["classify"] not in sc:
+            if selected_programs["annotate"] not in sc:
                 continue
             else:
-                selected_programs["classify"] = sc
+                selected_programs["annotate"] = sc
                 foundit = True
                 break
         if sc == "metaphyler":
@@ -465,8 +465,8 @@ for o, a in opts:
             skipsteps.append("Propagate")
             skipsteps.append("Classify")
         if not foundit:
-            print "!!Sorry, %s is not a supported classification method. Using FCP instead"%(selected_programs["classify"])
-            selected_programs["classify"] = "fcp"
+            print "!!Sorry, %s is not a supported classification method. Using FCP instead"%(selected_programs["annotate"])
+            selected_programs["annotate"] = "fcp"
     elif o in ("-z", "--taxalevel"):
         utils.Settings.taxa_level = a.lower()
 
@@ -528,9 +528,9 @@ if not os.path.exists(settings.rundir) or settings.rundir == "":
     usage()
     sys.exit(1)
 
-if (settings.noblastdb or noblastdb) and (selected_programs["classify"] == "blast" or selected_programs["classify"] == "fcp"):
+if (settings.noblastdb or noblastdb) and (selected_programs["annotate"] == "blast" or selected_programs["annotate"] == "fcp"):
     print "**no DB directory available, cannot run blast or FCP for classification (model files in DB dir). replacing with phylosift!"
-    selected_programs["classify"] = "phylosift"
+    selected_programs["annotate"] = "phylosift"
 
 print "[Steps to be skipped]: ", skipsteps
 #remove started & ok flags in Logs
@@ -803,14 +803,14 @@ if __name__ == "__main__":
     findorfs.init(readlibs, skipsteps, selected_programs["assemble"], selected_programs["findorfs"], min_ctg_len, min_ctg_cvg,read_orfs)
     findreps.init(readlibs, skipsteps)
     multialign.init(readlibs, skipsteps, forcesteps, selected_programs["multialign"],refgenomes)
-    annotate.init(readlibs, skipsteps, selected_programs["classify"], nofcpblast)
+    annotate.init(readlibs, skipsteps, selected_programs["annotate"], nofcpblast)
     fannotate.init(skipsteps)
-    abundance.init(readlibs, skipsteps, forcesteps, selected_programs["classify"])
+    abundance.init(readlibs, skipsteps, forcesteps, selected_programs["annotate"])
     scaffold.init(readlibs, skipsteps, retainBank, selected_programs["assemble"])
     findscforfs.init(readlibs, skipsteps, selected_programs["findorfs"])
-    propagate.init(readlibs, skipsteps, selected_programs["classify"])
-    classify.init(readlibs, skipsteps, selected_programs["classify"], lowmem)
-    postprocess.init(readlibs, skipsteps, selected_programs["classify"])
+    propagate.init(readlibs, skipsteps, selected_programs["annotate"])
+    classify.init(readlibs, skipsteps, selected_programs["annotate"], lowmem)
+    postprocess.init(readlibs, skipsteps, selected_programs["annotate"])
     generic.init(skipsteps, readlibs)
 
     try:

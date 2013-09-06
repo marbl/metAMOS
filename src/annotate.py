@@ -456,6 +456,7 @@ def Annotate(input,output):
          if not os.path.exists(genericImport):
             print "Error: Krona importer for generic classifier not found in %s. Please check your path and try again.\n"%(genericImport)
             raise(JobSignalledBreak)
+         run_process(_settings, "perl %s %s -c -i -f %s %s/Annotate/out/%s.hits:%s/Assemble/out/%s.contig.cnt:%s"%(genericImport, "-l" if _settings.local_krona else "", listOfFiles, _settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX, _settings.taxa_level),"Annotate") # TODO: local url (after next KronaTools release)
 
 
    run_process(_settings, "unlink %s/Postprocess/in/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")

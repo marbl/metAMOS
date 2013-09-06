@@ -294,7 +294,7 @@ selected_programs["fannotate"] = "blast"
 selected_programs["scaffold"] = "bambus2"
 selected_programs["multialign"] = "mgcat"
 
-always_run_programs = ["krona", "lap"]
+always_run_programs = ["krona"]
 
 
 allsteps = ["Preprocess","Assemble","MapReads","MultiAlign","FindORFS","FindRepeats","Abundance","Annotate",\
@@ -482,6 +482,9 @@ for o, a in opts:
             
         assemblers = a.lower().split(",")
         selected_programs["assemble"] = None 
+        if len(assemblers) > 1:
+           always_run_programs.append("lap")
+
         for assembler in assemblers:
            foundit = False
            for sa in supported_assemblers:

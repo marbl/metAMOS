@@ -46,7 +46,10 @@ def extractNewblerReads():
           run_process(_settings, "%s/sffinfo -s %s/Preprocess/out/lib%d.noPairs.sff |awk '{if (match($1, \">\") == 1) { print $1\"_left\"; } else { print $0; }}' >> %s/Preprocess/out/lib%d.seq"%(_settings.NEWBLER, _settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
           run_process(_settings, "%s/sfffile -i %s/Assemble/out/454TrimRightPairs.txt -t %s/Assemble/out/454TrimRightPairs.txt -o %s/Preprocess/out/lib%d.noPairs.sff %s/Preprocess/out/lib%d.sff"%(_settings.NEWBLER, _settings.rundir, _settings.rundir, _settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
           run_process(_settings, "%s/sffinfo -s %s/Preprocess/out/lib%d.noPairs.sff |awk '{if (match($1, \">\") == 1) { print $1\"_right\"; } else { print $0; }}' >> %s/Preprocess/out/lib%d.seq"%(_settings.NEWBLER, _settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
-
+          run_process(_settings, "java -cp %s convertFastaAndQualToFastq %s/Preprocess/out/lib%d.seq > %s/Preprocess/out/lib%d.fastq"%(_settings.METAMOS_JAVA, _settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
+          run_process(_settings, "perl %s/perl/split_fastq.pl %s/Preprocess/out/lib%d.fastq %s/Preprocess/out/lib%d.1.fastq %s/Preprocess/out/lib%d.2.fastq"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id), "Preprocess")
+          run_process(_settings, "cp %s/Preprocess/out/lib%d.seq > %s/Preprocess/out/lib%d.fasta"%(_settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
+          run_process(_settings, "perl %s/perl/split_fasta.pl %s/Preprocess/out/lib%d.seq %s/Preprocess/out/lib%d.1.fasta %s/Preprocess/out/lib%d.2.fasta"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id), "Preprocess")
           run_process(_settings, "echo \"library\t%s\t%d\t%d\" >> %s/Preprocess/out/all.seq.mates"%(lib.sid, lib.mmin, lib.mmax, _settings.rundir), "Assemble")
           run_process(_settings, "cat %s/Assemble/out/454TrimLeftPairs.txt |awk '{print $1\"_left\t\"$1\"_right\"}' > %s/Preprocess/out/lib%d.seq.mates"%(_settings.rundir, _settings.rundir, lib.id), "Assemble")
           run_process(_settings, "cat %s/Assemble/out/454TrimLeftPairs.txt |awk '{print $1\"_left\t\"$1\"_right\t%s\"}' >> %s/Preprocess/out/all.seq.mates"%(_settings.rundir, lib.sid, _settings.rundir), "Assemble")
@@ -418,12 +421,41 @@ def Assemble(input,output):
 @posttask(touch_file("%s/Logs/assemble.ok"%(_settings.rundir)))
 @merge(Assemble, ["%s/Logs/assemble.ok"%(_settings.rundir)])
 def ChooseBestAssembler (input_file_names, output_file_name):
-   # for now we take the first one in the list
+   if not os.path.exists("%s/bowtie2"%(_settings.BOWTIE2)) or not os.path.exists("%s/aligner/calc_prob.py"%(_settings.LAP)):
+      print "Warning! LAP is not available, cannot select best assembly, chosing first available: %s!"%(_asm.split(",")[0])
+      run_process(_settings, "ln %s %s.asm.contig"%(input_file_names[0], _settings.PREFIX), "Assemble")
+      _settings.selectedAssembler = _asm.split(",")[0]
+      return
+
+   # build string of files to use for validation
+   os.environ["BT2_HOME"]=_settings.BOWTIE2
+
+   pairedReads = ""
+   unpairedReads = ""
+   for lib in _readlibs:
+      if lib.mated and pairedReads == "":
+         pairedReads="-1 %s/Preprocess/out/lib%d.1.fastq -2 %s/Preprocess/out/lib%d.2.fastq -m %d -t %d -I %d -X %d"%(_settings.rundir, lib.id, _settings.rundir, lib.id, lib.mean, lib.stdev, (lib.mean-5*lib.stdev), (lib.mean+5*lib.stdev))
+      elif not lib.paired and unpairedReads == "":
+         unpaired=" -i %s/Preprocess/out/lib%d.fastq"%(_settings.rundir, lib.id)
 
    counter = 0
+   bestScore = 0
+   bestAssembler = ""
+   bestAssembly = ""
    assemblers = _asm.split(",")
    for assembler in assemblers:
-      run_process(_settings, "ln %s %s.asm.contig"%(input_file_names[counter], _settings.PREFIX), "Assemble") 
-      _settings.selectedAssembler = assembler
+      abundanceFile = ""
+      if os.path.exists("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, assembler)):
+         abundanceFile = "-n %s/Assemble/out/%s.contig.cvg"%(_settings.rundir, assembler)
+      run_process(_settings, "python %s/aligner/calc_prob.py -a %s %s %s > %s/Assemble/out/%s.prob"%(_settings.LAP, input_file_names[counter], abundanceFile, pairedReads if pairedReads != "" else unpairedReads, _settings.rundir, assembler), "Assemble")
+      score = getCommandOutput("python %s/aligner/sum_prob.py -i %s/Assemble/out/%s.prob"%(_settings.LAP, _settings.rundir, assembler), True).split()[0]
+      if bestAssembler == "" or float(score) > bestScore:
+         bestScore = float(score)
+         bestAssembler = assembler
+         bestAssembly = input_file_names[counter]
       counter += 1
-      break
+
+   if _settings.VERBOSE:
+      print "*** metAMOS ran assemblers %s; best scoring assembler %s selected."%(_asm, bestAssembler)  
+   run_process(_settings, "ln %s %s.asm.contig"%(bestAssembly, _settings.PREFIX), "Assemble")
+   _settings.selectedAssembler = bestAssembler

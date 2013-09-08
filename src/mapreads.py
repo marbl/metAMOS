@@ -6,7 +6,7 @@ from datetime import datetime
 
 from utils import *
 from preprocess import Preprocess
-from assemble import ChooseBestAssembler
+from assemble import SplitMappers
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
 import pysam
@@ -116,15 +116,15 @@ def map2contig():
             if _mapper == "bowtie":
                 if "bowtie" not in _skipsteps and (lib.format == "fasta" or lib.format == "sff"):
                     if trim:
-                        run_process(_settings, "%s/bowtie -p %d -f -v 1 -M 2 --un %s/Assemble/out/lib%d.unaligned.fasta %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,lib.id_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                        run_process(_settings, "%s/bowtie -p %d -f -v 1 -M 2 --un %s/Assemble/out/%s.lib%d.unaligned.fasta %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.PREFIX,lib.id_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                     else:
-                        run_process(_settings, "%s/bowtie -p %d -f -l 25 -e 140 --best --strata -m 10 -k 1 --un %s/Assemble/out/lib%d.unaligned.fasta %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                        run_process(_settings, "%s/bowtie -p %d -f -l 25 -e 140 --best --strata -m 10 -k 1 --un %s/Assemble/out/%s.lib%d.unaligned.fasta %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.PREFIX,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                 elif "bowtie" not in _skipsteps and lib.format != "fasta":
                     if trim:
-                        run_process(_settings, "%s/bowtie  -p %d -v 1 -M 2 --un %s/Assemble/out/lib%d.unaligned.seq %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                        run_process(_settings, "%s/bowtie  -p %d -v 1 -M 2 --un %s/Assemble/out/%s.lib%d.unaligned.seq %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.PREFIX,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                     else:
-                        run_process(_settings, "%s/bowtie  -p %d -l 25 -e 140 --best --strata -m 10 -k 1 --un %s/Assemble/out/lib%d.unaligned.seq %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
-                    run_process(_settings, "java -cp %s convertFastqToFasta %s/Assemble/out/lib%d.unaligned.seq %s/Assemble/out/lib%d.unaligned.fasta %s/Assemble/out/lib%d.unaligned.fasta.qual"%(_settings.METAMOS_JAVA, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id), "MapReads")
+                        run_process(_settings, "%s/bowtie  -p %d -l 25 -e 140 --best --strata -m 10 -k 1 --un %s/Assemble/out/%s.lib%d.unaligned.seq %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.PREFIX,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                    run_process(_settings, "java -cp %s convertFastqToFasta %s/Assemble/out/%s.lib%d.unaligned.seq %s/Assemble/out/%s.lib%d.unaligned.fasta %s/Assemble/out/%s.lib%d.unaligned.fasta.qual"%(_settings.METAMOS_JAVA, _settings.rundir, _settings.PREFIX,lib.id, _settings.rundir, _settings.PREFIX, lib.id, _settings.rundir, _settings.PREFIX, lib.id), "MapReads")
 
                 infile = open("%s/Assemble/out/lib%d.bout"%(_settings.rundir,lib.id),'r')
                 readctgfile =  open("%s/Assemble/out/%s.lib%dcontig.reads"%(_settings.rundir,_settings.PREFIX, lib.id),'w')
@@ -178,10 +178,10 @@ def map2contig():
                 readctgfile.close()
             elif _mapper == "bowtie2":
                 if "bowtie" not in _skipsteps and (lib.format == "fasta" or lib.format == "sff"):
-                    run_process(_settings, "%s/bowtie2 -p %d -f -D 15 -R 2 -N 0 -L 20 -i S,1,1.10 --un %s/Assemble/out/lib%d.unaligned.fasta %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq -S %s/Assemble/out/lib%d.sam"%(_settings.BOWTIE2,_settings.threads,_settings.rundir,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                    run_process(_settings, "%s/bowtie2 -p %d -f -D 15 -R 2 -N 0 -L 20 -i S,1,1.10 --un %s/Assemble/out/%s.lib%d.unaligned.fasta %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq -S %s/Assemble/out/lib%d.sam"%(_settings.BOWTIE2,_settings.threads,_settings.rundir,_settings.PREFIX,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                 elif "bowtie" not in _skipsteps and lib.format != "fasta":
-                    run_process(_settings, "%s/bowtie2 -p %d -D 15 -R 2 -N 0 -L 20 -i S,1,1.10 --un %s/Assemble/out/lib%d.unaligned.seq %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq -S %s/Assemble/out/lib%d.sam"%(_settings.BOWTIE2,_settings.threads,_settings.rundir,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads") 
-                    run_process(_settings, "java -cp %s convertFastqToFasta %s/Assemble/out/lib%d.unaligned.seq %s/Assemble/out/lib%d.unaligned.fasta %s/Assemble/out/lib%d.unaligned.fasta.qual"%(_settings.METAMOS_JAVA, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id), "MapReads") 
+                    run_process(_settings, "%s/bowtie2 -p %d -D 15 -R 2 -N 0 -L 20 -i S,1,1.10 --un %s/Assemble/out/%s.lib%d.unaligned.seq %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq -S %s/Assemble/out/lib%d.sam"%(_settings.BOWTIE2,_settings.threads,_settings.rundir,_settings.PREFIX,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads") 
+                    run_process(_settings, "java -cp %s convertFastqToFasta %s/Assemble/out/%s.lib%d.unaligned.seq %s/Assemble/out/%s.lib%d.unaligned.fasta %s/Assemble/out/%s.lib%d.unaligned.fasta.qual"%(_settings.METAMOS_JAVA, _settings.rundir, _settings.PREFIX, lib.id, _settings.rundir, _settings.PREFIX, lib.id, _settings.rundir, _settings.PREFIX, lib.id), "MapReads") 
 
                 if not os.path.exists("%s/Assemble/out/lib%d.sam"%(_settings.rundir,lib.id)):
                     pass
@@ -468,21 +468,25 @@ def map2contig():
     else:
         contigdict = {}
 
-@files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/Assemble/out/mapreads.success"%(_settings.rundir))
-#@posttask(create_symlink,touch_file("completed.flag"))
+# warning: this is not thread safe so cannot be run in parallel
 @posttask(touch_file("%s/Logs/mapreads.ok"%(_settings.rundir)))
-@follows(ChooseBestAssembler)
+@posttask(touch_file("%s/Assemble/out/mapreads.success"%(_settings.rundir)))
+@transform(SplitMappers, suffix(".asm.contig"), ".contig.cvg")
 def MapReads(input,output):
-
    if "MapReads" in _skipsteps or "mapreads" in _skipsteps:
       run_process(_settings, "touch %s/Logs/mapreads.skip"%(_settings.rundir), "MapReads")
       return 0
+
+   print "Input is %s output %s\n"%(input, output)
+   originalPrefix = _settings.PREFIX
+   _settings.PREFIX = output.replace("%s/Assemble/out/"%(_settings.rundir), "")
+   _settings.PREFIX = _settings.PREFIX.replace(".contig.cvg", "")
+
    if _mapper == "bowtie" or _mapper == "bowtie2":
        map2contig()
    else:
        print "Read mapper not supported, time to exit"
        sys.exit(1)
-   run_process(_settings, "touch %s/Assemble/out/mapreads.success"%(_settings.rundir), "MapReads")
    #stop here, for now
    #sys.exit(0)
    #check if sucessfully completed   

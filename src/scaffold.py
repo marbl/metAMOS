@@ -15,19 +15,16 @@ _skipsteps = []
 _settings = Settings()
 _retainBank = False
 _mated = False
-_asm = None
 
 def init(reads, skipsteps, retainBank):
    global _readlibs
    global _skipsteps
    global _retainBank
-   global _asm
    global _mated
 
    _readlibs = reads
    _skipsteps = skipsteps
    _retainBank = retainBank
-   _asm = _settings.selectedAssembler.lower()
 
    for lib in _readlibs:
       if lib.mated == True:
@@ -38,6 +35,8 @@ def init(reads, skipsteps, retainBank):
 @posttask(touch_file("%s/Logs/scaffold.ok"%(_settings.rundir)))
 @files(["%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX)],"%s/Scaffold/out/%s.scaffolds.final"%(_settings.rundir,_settings.PREFIX))
 def Scaffold(input,output):
+   _asm = getSelectedAssembler(_settings)
+
    if "Scaffold" in _skipsteps or "scaffold" in _skipsteps:
       run_process(_settings, "touch %s/Logs/scaffold.skip"%(_settings.rundir), "Scaffold")
       return 0

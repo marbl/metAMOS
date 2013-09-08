@@ -111,7 +111,7 @@ def usage():
 if len(sys.argv) < 2:
     usage()
     sys.exit(1)
-allsteps = ["Preprocess","Assemble","MultiAlign","FindORFS","FindRepeats","Abundance","Annotate","FunctionalAnnotation","Scaffold","Propagate","FindScaffoldORFS","Classify","Postprocess"]
+allsteps = ["Preprocess","Assemble","Validate","MultiAlign","FindORFS","FindRepeats","Abundance","Annotate","FunctionalAnnotation","Scaffold","Propagate","FindScaffoldORFS","Classify","Postprocess"]
 
 today = datetime.datetime.now()
 #todaytime = date.fromtimestamp(time.time())

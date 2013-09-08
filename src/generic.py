@@ -118,8 +118,6 @@ class GenericProgram:
             self.location = getFromPath(commandName, self.name)
 
    def execute(self):
-      print "Starting execute"
-
       if not self.isValid:
          print "Error: cannot execute %s. Invalid configuration provided\n"%(self.name)
          raise(JobSignalledBreak)

@@ -135,7 +135,6 @@ class Settings:
 
    nopsutil = False
    nopysam = False
-   selectedAssembler = ""
 
    def __init__(self, kmer = None, threads = None, rundir = None, taxa_level = "", localKrona = False, annotateUnmapped = False, verbose = False, outputOnly = False, update = False):
 
@@ -177,7 +176,6 @@ class Settings:
       Settings.taxa_level = taxa_level
       Settings.local_krona = localKrona
       Settings.annotate_unmapped = annotateUnmapped
-      Settings.selectedAssembler = ""
       Settings.task_dict = []
 
       Settings.PREFIX = "proba"
@@ -267,7 +265,7 @@ class Settings:
                kronalibf.close()
                os.system("ln -s %s/taxonomy %s%sKronaTools%staxonomy"%(Settings.DB_DIR,Settings.METAMOSDIR,os.sep,os.sep))
       Settings.REPEATOIRE    = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
-      Settings.LAP	     = "%sLAP"%(Settings.METAMOS_UTILS)
+      Settings.LAP	     = "%sLAP"%(Settings.METAMOSDIR)
 
 
 libcounter = 1
@@ -630,7 +628,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
     phylosiftMD5 = getMD5Sum(Settings.PHYLOSIFT + os.sep + "bin" + os.sep + "phylosift")
 
     # now for the validators
-    Settings.LAP = "%s%sLAP"%(Settings.METAMOS_UTILS, os.sep)
+    Settings.LAP = "%s%sLAP"%(Settings.METAMOSDIR, os.sep)
     if not os.path.exists(Settings.LAP + os.sep + "aligner" + os.sep + "calc_prob.py"):
        Settings.LAP = getFromPath("calc_prop.py", "LAP")
     lapMD5 = getMD5Sum(Settings.LAP + os.sep + "aligner" + os.sep + "calc_prob.py")
@@ -880,3 +878,13 @@ def getAvailableMemory(settings):
    avram = (freemem/1000000000)
 
    return avram
+
+def getSelectedAssembler(settings):
+   if settings.rundir == "":
+      print "Error: attempted to get selected assembler before initialization"
+      raise (JobSignalledBreak)
+   elif not os.path.exists("%s/Validate/out/%s.asm.selected"%(settings.rundir, settings.PREFIX)):
+      print "Error: attempted to get selected assembler before validation"
+      raise (JobSignalledBreak)
+   else:
+      return getCommandOutput("cat %s/Validate/out/%s.asm.selected"%(settings.rundir, settings.PREFIX), False)

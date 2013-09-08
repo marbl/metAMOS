@@ -796,6 +796,7 @@ if __name__ == "__main__":
     import preprocess
     import assemble
     import mapreads
+    import validate
     import multialign
     import findorfs
     import findreps
@@ -812,6 +813,7 @@ if __name__ == "__main__":
     preprocess.init(readlibs, skipsteps, selected_programs["assemble"], run_fastqc,filter)
     assemble.init(readlibs, skipsteps, selected_programs["assemble"], usecontigs)
     mapreads.init(readlibs, skipsteps, selected_programs["mapreads"], savebtidx,ctgbpcov,lowmem)
+    validate.init(readlibs, skipsteps)
     findorfs.init(readlibs, skipsteps, selected_programs["findorfs"], min_ctg_len, min_ctg_cvg,read_orfs)
     findreps.init(readlibs, skipsteps)
     multialign.init(readlibs, skipsteps, forcesteps, selected_programs["multialign"],refgenomes)

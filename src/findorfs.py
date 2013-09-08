@@ -5,7 +5,7 @@ from operator import itemgetter
 
 from utils import *
 from assemble import Assemble
-from mapreads import MapReads
+from validate import Validate
 
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
@@ -282,7 +282,7 @@ def findFastaORFs(orf, contigs, outputFNA, outputFAA, outputCVG, outputMAP, min_
        #not recognized
        return 1
 
-@follows(MapReads)
+@follows(Validate)
 @posttask(touch_file("%s/Logs/findorfs.ok"%(_settings.rundir)))
 @files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.PREFIX))
 def FindORFS(input,output):

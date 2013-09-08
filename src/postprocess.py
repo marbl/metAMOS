@@ -116,6 +116,9 @@ def Postprocess(input,output):
    run_process(_settings, "unlink %s/Postprocess/out/%s.classified"%(_settings.rundir, _settings.taxa_level), "Postprocess")
    run_process(_settings, "ln -s %s/Classify/out %s/Postprocess/out/%s.classified"%(_settings.rundir, _settings.rundir, _settings.taxa_level), "Postprocess")
 
+   run_process(_settings, "unlink %s/Postporocess/out/lap.scores"%(_settings.rundir), "Postprocess")
+   run_process(_settings, "ln %s/Validate/out/%s.lap %s/Postprocess/out/lap.scores"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
+
    #command to open webbrowser?
    #try to open Krona output
    #if openbrowser:

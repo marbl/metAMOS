@@ -63,6 +63,19 @@ def outputLibraryInfo(html_prefix, markupFile, outputHeader, libcnt, format, mat
          markupFile.td("NA")
    markupFile.tr.close()
 
+def outputValidate(html_prefix, markupFile, outputHeader, assembler, score):
+   if outputHeader:
+      markupFile.table(border="1")
+      markupFile.tr()
+      markupFile.th("Assembler")
+      markupFile.th("LAP Score")
+      markupFile.tr.close()
+
+   markupFile.tr()
+   markupFile.add("<td align=\"left\">%s</td>"%(assembler.title()))
+   markupFile.add("<td align=\"right\">%.4f</td>"%(float(score)))
+   markupFile.tr.close()
+
 def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,dbdir):
 #if __name__ == "__main__":
 #    if len(sys.argv) < 5:
@@ -91,6 +104,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     steps.append("Preprocess")
     steps.append("Assemble")
     steps.append("MapReads")
+    steps.append("Validate")
     steps.append("FindORFS")
     steps.append("FindRepeats")
     steps.append("Scaffold")
@@ -106,6 +120,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     step_status["Preprocess"] = "OK"
     step_status["Assemble"] = "OK"
     step_status["MapReads"] = "OK"
+    step_status["Validate"] = "OK"
     step_status["FindORFS"] = "OK"
     step_status["FindRepeats"] = "OK"
     step_status["Scaffold"] = "OK"
@@ -265,6 +280,26 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     preprocess_out = open("%s/Preprocess.html"%(html_prefix), 'w')
     preprocess_out.write(preprocess.__str__())
     preprocess_out.close()
+
+    validate_out = open("%s/Validate.html"%(html_prefix), 'w')
+    firstScore = True
+    if os.path.exists("%s/Postprocess/out/lap.scores"%(MA_dir)):
+       laps = open("%s/Postprocess/out/lap.scores"%(MA_dir), 'r')
+       validate = markup.page()
+       validate.init()#bodyattrs={'style':"margin:0px"})
+       validate.p()
+       for line in laps:
+          line = line.replace("\n","")
+          if "#" in line:
+             continue
+          else:
+             res = line.split("\t")
+             outputValidate(html_prefix, validate, firstScore, res[0], res[1]) 
+             firstScore = False
+       validate.table.close()
+       laps.close()
+       validate_out.write(validate.__str__())
+    validate_out.close()
     
     # todo, need to add report for MapReads including # reads mapped (%), contig coverage histogram, and % reads between contigs and number of links histogram. Also re-estimated insert sizes for each lib
     #mapreads = markup.page()

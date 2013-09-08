@@ -21,6 +21,7 @@ def init(reads, skipsteps, asm, usecontigs):
    global _asm
    global _skipsteps
    global _usecontigs
+
    _readlibs = reads
    _skipsteps = skipsteps
    _asm = asm
@@ -222,10 +223,15 @@ def runMetaVelvet(velvetPath, metavelvetPath, name):
    run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")
    run_process(_settings, "ln %s/Assemble/out/meta-velvetg.contigs.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
        
-#@files("%s/Preprocess/out/preprocess.success"%(_settings.rundir),["%s/Logs/assemble.ok"%(_settings.rundir)])
 @follows(Preprocess)
 @split("%s/Preprocess/out/preprocess.success"%(_settings.rundir), "%s/Assemble/out/*.run"%(_settings.rundir))
 def SplitAssemblers(input_file_name, output_files): 
+   if "Assemble" in _skipsteps or "assemble" in _skipsteps:
+      run_process(_settings, "touch %s/Logs/assemble.skip"%(_settings.rundir), "Assemble")
+      return 0
+   if _asm == "none" or _asm == None:
+      return 0
+
    assemblers = _asm.split(",") 
    for assembler in assemblers:
       run_process(_settings, "touch %s/Assemble/out/%s.run"%(_settings.rundir, assembler), "Assemble")
@@ -420,42 +426,27 @@ def Assemble(input,output):
 
 @posttask(touch_file("%s/Logs/assemble.ok"%(_settings.rundir)))
 @merge(Assemble, ["%s/Logs/assemble.ok"%(_settings.rundir)])
-def ChooseBestAssembler (input_file_names, output_file_name):
-   if not os.path.exists("%s/bowtie2"%(_settings.BOWTIE2)) or not os.path.exists("%s/aligner/calc_prob.py"%(_settings.LAP)):
-      print "Warning! LAP is not available, cannot select best assembly, chosing first available: %s!"%(_asm.split(",")[0])
-      run_process(_settings, "ln %s %s.asm.contig"%(input_file_names[0], _settings.PREFIX), "Assemble")
-      _settings.selectedAssembler = _asm.split(",")[0]
-      return
+def CheckAsmResults (input_file_names, output_file_name):
+   if "Assemble" in _skipsteps or "assemble" in _skipsteps:
+      run_process(_settings, "touch %s/Logs/assemble.skip"%(_settings.rundir), "Assemble")
+      return 0
+   if _asm == "none" or _asm == None:
+      pass
+   else:
+      assemblers = _asm.split(",")
+      for assembler in assemblers:
+         if not os.path.exists("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, assembler)):
+            print "Error: %s assembler did not run successfully!"%(assembler)
+            raise(JobSignalledBreak)
+   run_process(_settings, "touch %s/Assemble/out/assemble.success"%(_settings.rundir), "Assemble")
 
-   # build string of files to use for validation
-   os.environ["BT2_HOME"]=_settings.BOWTIE2
-
-   pairedReads = ""
-   unpairedReads = ""
-   for lib in _readlibs:
-      if lib.mated and pairedReads == "":
-         pairedReads="-1 %s/Preprocess/out/lib%d.1.fastq -2 %s/Preprocess/out/lib%d.2.fastq -m %d -t %d -I %d -X %d"%(_settings.rundir, lib.id, _settings.rundir, lib.id, lib.mean, lib.stdev, (lib.mean-5*lib.stdev), (lib.mean+5*lib.stdev))
-      elif not lib.paired and unpairedReads == "":
-         unpaired=" -i %s/Preprocess/out/lib%d.fastq"%(_settings.rundir, lib.id)
-
-   counter = 0
-   bestScore = 0
-   bestAssembler = ""
-   bestAssembly = ""
-   assemblers = _asm.split(",")
-   for assembler in assemblers:
-      abundanceFile = ""
-      if os.path.exists("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, assembler)):
-         abundanceFile = "-n %s/Assemble/out/%s.contig.cvg"%(_settings.rundir, assembler)
-      run_process(_settings, "python %s/aligner/calc_prob.py -a %s %s %s > %s/Assemble/out/%s.prob"%(_settings.LAP, input_file_names[counter], abundanceFile, pairedReads if pairedReads != "" else unpairedReads, _settings.rundir, assembler), "Assemble")
-      score = getCommandOutput("python %s/aligner/sum_prob.py -i %s/Assemble/out/%s.prob"%(_settings.LAP, _settings.rundir, assembler), True).split()[0]
-      if bestAssembler == "" or float(score) > bestScore:
-         bestScore = float(score)
-         bestAssembler = assembler
-         bestAssembly = input_file_names[counter]
-      counter += 1
-
-   if _settings.VERBOSE:
-      print "*** metAMOS ran assemblers %s; best scoring assembler %s selected."%(_asm, bestAssembler)  
-   run_process(_settings, "ln %s %s.asm.contig"%(bestAssembly, _settings.PREFIX), "Assemble")
-   _settings.selectedAssembler = bestAssembler
+@follows(CheckAsmResults)
+@split("%s/Assemble/out/*.asm.contig"%(_settings.rundir), "%s/Assemble/out/*.asm.contig"%(_settings.rundir))
+def SplitMappers(input_file_name, output_files):
+   if "Assemble" in _skipsteps or "assemble" in _skipsteps:
+      run_process(_settings, "touch %s/Logs/assemble.skip"%(_settings.rundir), "Assemble")
+      return 0
+   if _asm == "none" or _asm == None:
+      pass
+   else:
+      pass

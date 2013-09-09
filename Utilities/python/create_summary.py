@@ -95,7 +95,6 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
 
     # set working dir
     os.chdir(html_prefix)
-    version = "1.0"
 
     if not os.path.exists(html_prefix+"asmstats.out"):
         libPath = rund.replace("bin", "lib")
@@ -103,8 +102,18 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
         run_process(_settings,"perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,ref_asm,html_prefix),"Classify")
     report = open(html_prefix+"asmstats.out",'r')
 
-    # get metamos version
     initialStep = "Annotate"
+
+    # get metamos version
+    version = "1.0"
+    summary = open("%s/pipeline.run"%(MA_dir), 'r')
+    for line in summary:
+       line = line.replace("\n","")
+       if "#" in line:
+          continue
+       elif "metAMOS Version:" in line:
+          version = line.replace("\n","").split("\t")[-1]
+    summary.close()
 
     steps = []
     steps.append("Preprocess")
@@ -610,7 +619,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     page.add("<a target=\"_blank\" href=\"pipeline.commands\">Run commands</a><br/><br/></div>")
     tableHTML = []
     tableHTML.append("<table style=\"font-size:12px\"><tr>")
-    tableHTML.append("<tr><td>Version:</td><td>%s</td></tr>", version)
+    tableHTML.append("<tr><td>Version:</td><td>%s</td></tr>"%(version))
     tableHTML.append("<tr><td>Created:<br/>&nbsp;</td><td>%s</td></tr>"%(ds))
     tableHTML.append("</table>")
     page.add("\n".join(tableHTML))

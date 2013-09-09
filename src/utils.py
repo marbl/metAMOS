@@ -888,3 +888,6 @@ def getSelectedAssembler(settings):
       raise (JobSignalledBreak)
    else:
       return getCommandOutput("cat %s/Validate/out/%s.asm.selected"%(settings.rundir, settings.PREFIX), False)
+
+def getVersion():
+   return getCommandOutput("cat %s%s/version.txt"%(sys.path[0], os.sep), False)

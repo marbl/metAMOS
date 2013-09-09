@@ -162,6 +162,7 @@ def updateCounter():
 def printConfiguration(fileName=None):
     configurationText = []
     configurationText.append("metAMOS configuration summary:\n")
+    configurationText.append("metAMOS Version:\t%s\n"%(utils.getVersion()))
     configurationText.append("Time and Date:\t\t%s\n"%(str(datetime.date.today())))
     configurationText.append("Working directory:\t%s\n"%(utils.Settings.rundir))
     configurationText.append("Prefix:\t\t\t%s\n"%(utils.Settings.PREFIX))
@@ -215,7 +216,7 @@ def printConfiguration(fileName=None):
         conf.close()
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hM:I:R:rjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iu1l:x:yz:LB",\
+    opts, args = getopt.getopt(sys.argv[1:], "hM:I:R:rjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iu1l:x:yz:LBV",\
                                    ["help", \
                                         "multialigner",\
                                         "isolate",\
@@ -248,7 +249,8 @@ try:
                                         "lowcpu",\
                                         "taxalevel",\
                                         "localKrona",\
-                                        "noblastdb"])
+                                        "noblastdb",\
+					"version"])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -334,7 +336,10 @@ nofcpblast = False
 noblastdb = False
 refgenomes = ""
 for o, a in opts:
-    if o in ("-v","--verbose"):
+    if o in ("-V", "--version"):
+       print "metAMOS Version %s"%(utils.getVersion())
+       sys.exit()
+    elif o in ("-v","--verbose"):
         utils.Settings.VERBOSE = True
     elif o in ("-h", "--help"):
         usage()

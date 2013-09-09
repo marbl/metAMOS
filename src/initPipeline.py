@@ -4,6 +4,10 @@ import os, sys, string, time, BaseHTTPServer, getopt, time, datetime
 #from datetime import date
 #from ruffus import *
 
+INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
+sys.path.append(INITIAL_SRC)
+import utils
+
 #code to discover frozen binary location
 application_path = ""
 if getattr(sys, 'frozen', False):
@@ -118,7 +122,7 @@ today = datetime.datetime.now()
 timestamp = "P_"+today.isoformat().replace("-","_").replace(".","").replace(":","").replace("T","_")
 #print timestamp
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hfsq1:2:m:c:i:d:or:l:", ["help", "fasta","fastq","sff","f1=","f2=","matelib=","asmcontig=","insertlen=","dir=","outtie=","readlen="])
+    opts, args = getopt.getopt(sys.argv[1:], "hfsq1:2:m:c:i:d:or:l:V", ["help", "fasta","fastq","sff","f1=","f2=","matelib=","asmcontig=","insertlen=","dir=","outtie=","readlen=","version"])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -139,7 +143,10 @@ contigs = ""
 lastLib = 0
 libs = ""
 for o, a in opts:
-    if o == "-v":
+    if o in ("-V", "--version"):
+       print "metAMOS Version %s"%(utils.getVersion())
+       sys.exit()
+    elif o == "-v":
         verbose = True
     elif o == "-o":
         innie = False

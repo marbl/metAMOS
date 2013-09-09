@@ -307,7 +307,7 @@ is a brief listing of the test scripts we currently include:
 ### F) Example output
 
 MetAMOS generates an interactive webpage once a run successfully completes:
-http://www.cbcb.umd.edu/software/metamos/summary.html
+http://treangen.github.io/metAMOS/example/html/summary.html
 
 This includes summary statistics and taxonomic information based on Krona
 Krona publication: Ondov BD, Bergman NH, Phillippy AM.. Interactive

@@ -1,0 +1,1 @@
+NODE_1_length_159717_cov_13.5281_ID_157256_gene135	NP_246353	rplD	NA	NA	NA	gammaproteobacteria	proteobacteria	

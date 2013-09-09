@@ -1,0 +1,69 @@
+metAMOS configuration summary:
+Time and Date:		2013-09-09
+Working directory:	/fs/wrenhomes/sergek/metAMOS/Test/test_kraken
+Prefix:			proba
+K-Mer:			55
+Threads:		8
+Taxonomic level:	phylum
+Verbose:		True
+Steps to skip:		FindRepeats, MultiAlign
+Steps to force:		Postprocess
+
+Step-specific configuration:
+[abundance]
+MetaPhyler
+	/fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64
+	Liu B, Gibbons T, Ghodsi M, Treangen T, Pop M. Accurate and fast estimation of taxonomic profiles from metagenomic shotgun sequences. BMC Genomics. 2011;12 Suppl 2:S4. Epub 2011 Jul 27.
+
+[multialign]
+M-GCAT
+	
+	Treangen TJ, Messeguer X. M-GCAT: interactively and efficiently constructing large-scale multiple genome comparison frameworks in closely related species. BMC Bioinformatics, 2006.
+
+[fannotate]
+BLAST
+	/fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64
+	Altschul SF, Gish W, Miller W, Myers EW, Lipman DJ. Basic local alignment search tool. J Mol Biol. 1990 Oct 5;215(3):403-10.
+
+[scaffold]
+Bambus 2
+	/fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin
+	Koren S, Treangen TJ, Pop M. Bambus 2: scaffolding metagenomes. Bioinformatics 27(21): 2964-2971 2011.
+
+[findorfs]
+MetaGeneMark
+	/cbcb/software/Linux-x86_64/bin/
+	Borodovsky M, Mills R, Besemer J, Lomsadze A: Prokaryotic gene prediction using GeneMark and GeneMark.hmm.Current protocols in bioinformatics editoral board Andreas D Baxevanis et al 2003, Chapter 4:Unit4.6-Unit4.6.
+
+[annotate]
+Kraken
+	/fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64/kraken/bin
+	Wood DE, Salzberg SL. Rapid phylogenetic sequence classification through repeated exact alignment. In preparation.
+
+[mapreads]
+Bowtie
+	/fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64
+	Langmead B, Trapnell C, Pop M, Salzberg SL. Ultrafast and memory-efficient alignment of short DNA sequences to the human genome. Genome Biol. 2009;10(3):R25. Epub 2009 Mar 4.
+
+[assemble]
+SPAdes
+	/fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64/spades/bin
+	Anton Bankevich, Sergey Nurk, Dmitry Antipov, Alexey A. Gurevich, Mikhail Dvorkin, Alexander S. Kulikov, Valery M. Lesin, Sergey I. Nikolenko, Son Pham, Andrey D. Prjibelski, Alexey V. Pyshkin, Alexander V. Sirotkin, Nikolay Vyahhi, Glenn Tesler, Max A. Alekseyev, and Pavel A. Pevzner. Journal of Computational Biology. May 2012, 19(5): 455-477. doi:10.1089/cmb.2012.0021.
+
+SOAPdenovo
+	/fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64
+	Li Y, Hu Y, Bolund L, Wang J: State of the art de novo assembly of human genomes from massively parallel sequencing data.Human genomics 2010, 4:271-277.
+
+Velvet
+	/fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64/velvet
+	Zerbino DR, Birney E. Velvet: algorithms for de novo short read assembly using de Bruijn graphs. Genome Res. 2008 May;18(5):821-9. Epub 2008 Mar 18.
+
+[other]
+Krona
+	/fs/wrenhomes/sergek/metAMOS/KronaTools/bin
+	Ondov BD, Bergman NH, Phillippy AM. Interactive metagenomic visualization in a Web browser. BMC Bioinformatics. 2011 Sep 30;12:385.
+
+LAP
+	/fs/wrenhomes/sergek/metAMOS/LAP
+	Ghodsi M, Hill CM, Astrovskaya I, Lin H, Sommer DD, Koren S, Pop M. De novo likelihood-based measures for comparing genome assemblies. BMC research notes 6 (2013): 334.
+

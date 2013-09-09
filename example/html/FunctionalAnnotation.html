@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <link rel="shortcut icon" href="http://krona.sourceforge.net/img/favicon.ico"/>
+  <script id="notfound">window.onload=function(){document.body.innerHTML="Could not get resources from \"http://krona.sourceforge.net\"."}</script>
+  <script src="http://krona.sourceforge.net/src/krona-2.0.js"></script>
+ </head>
+ <body>
+  <img id="hiddenImage" src="http://krona.sourceforge.net/img/hidden.png" style="display:none"/>
+  <img id="loadingImage" src="http://krona.sourceforge.net/img/loading.gif" style="display:none"/>
+  <noscript>Javascript must be enabled to view this page.</noscript>
+  <div style="display:none">
+  <krona collapse="true" key="true">
+   <attributes magnitude="count">
+    <list>members</list>
+    <attribute>magnitude</attribute>
+    <attribute display="Count" listAll="members">count</attribute>
+    <attribute display="Unassigned" listNode="members">unassigned</attribute>
+    <attribute display="EC" hrefBase="http://www.chem.qmul.ac.uk/iubmb/enzyme/EC" target="ec" mono="true">ec</attribute>
+    <attribute display="Avg. score">score</attribute>
+   </attributes>
+   <datasets>
+    <dataset>krona.ec</dataset>
+   </datasets>
+   <color attribute="score" hueStart="0" hueEnd="120" valueStart="0" valueEnd="5e-100" default="false" ></color>
+<node name="root">
+ <count><val>8</val></count>
+ <node name="Transferases">
+  <count><val>3</val></count>
+  <ec><val href="2">EC 2</val></ec>
+  <score><val>2e-120</val></score>
+  <node name="Transferring phosphorous-containing groups">
+   <count><val>3</val></count>
+   <ec><val href="2/7">EC 2.7</val></ec>
+   <score><val>2e-120</val></score>
+   <node name="Nucleotidyltransferases">
+    <count><val>3</val></count>
+    <ec><val href="2/7/7">EC 2.7.7</val></ec>
+    <score><val>2e-120</val></score>
+    <node name="DNA-directed RNA polymerase">
+     <count><val>3</val></count>
+     <score><val>2e-120</val></score>
+     <members>
+      <vals><val>Q05FH8</val><val>Q05FK5</val><val>Q05FH9</val></vals>
+     </members>
+     <ec><val href="2/7/7/6.html">EC 2.7.7.6</val></ec>
+    </node>
+   </node>
+  </node>
+ </node>
+ <node name="Ligases">
+  <count><val>1</val></count>
+  <ec><val href="6">EC 6</val></ec>
+  <score><val>0</val></score>
+  <node name="Forming carbon-nitrogen bonds">
+   <count><val>1</val></count>
+   <ec><val href="6/3">EC 6.3</val></ec>
+   <score><val>0</val></score>
+   <node name="Other carbon--nitrogen ligases">
+    <count><val>1</val></count>
+    <ec><val href="6/3/4">EC 6.3.4</val></ec>
+    <score><val>0</val></score>
+    <node name="Argininosuccinate synthase">
+     <count><val>1</val></count>
+     <score><val>0</val></score>
+     <members>
+      <vals><val>Q05FN6</val></vals>
+     </members>
+     <ec><val href="6/3/4/5.html">EC 6.3.4.5</val></ec>
+    </node>
+   </node>
+  </node>
+ </node>
+ <node name="Hydrolases">
+  <count><val>4</val></count>
+  <ec><val href="3">EC 3</val></ec>
+  <score><val>1.25e-100</val></score>
+  <node name="Acting on peptide bonds (peptide hydrolases)">
+   <count><val>1</val></count>
+   <ec><val href="3/4">EC 3.4</val></ec>
+   <score><val>5e-100</val></score>
+   <node name="Hydrolases. Acting on peptide bonds (peptide hydrolases). Serine endopeptidases">
+    <count><val>1</val></count>
+    <ec><val href="3/4/21">EC 3.4.21</val></ec>
+    <score><val>5e-100</val></score>
+    <node name="Endopeptidase Clp">
+     <count><val>1</val></count>
+     <score><val>5e-100</val></score>
+     <members>
+      <vals><val>Q05FR8</val></vals>
+     </members>
+     <ec><val href="3/4/21/92.html">EC 3.4.21.92</val></ec>
+    </node>
+   </node>
+  </node>
+  <node name="Acting on acid anhydrides">
+   <count><val>3</val></count>
+   <score><val>2e-173</val></score>
+   <members>
+    <vals><val>Q05FY9</val></vals>
+   </members>
+   <unassigned><val>1</val></unassigned>
+   <ec><val href="3/6">EC 3.6</val></ec>
+   <node name="Acting on acid anhydrides; catalyzing transmembrane movement of substances">
+    <count><val>2</val></count>
+    <ec><val href="3/6/3">EC 3.6.3</val></ec>
+    <score><val>0</val></score>
+    <node name="H(+)-transporting two-sector ATPase">
+     <count><val>2</val></count>
+     <score><val>0</val></score>
+     <members>
+      <vals><val>Q05FY1</val><val>Q05FY3</val></vals>
+     </members>
+     <ec><val href="3/6/3/14.html">EC 3.6.3.14</val></ec>
+    </node>
+   </node>
+  </node>
+ </node>
+</node>
+  </krona>
+</div></body></html>

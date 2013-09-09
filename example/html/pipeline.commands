@@ -1,0 +1,320 @@
+|2013-09-09 12:11:05|# [PREPROCESS]
+|2013-09-09 12:11:09| java -cp /fs/wrenhomes/sergek/metAMOS/Utilities/java:.:. outputDefaultQuality /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/in/carsonella_pe_filt.fna > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/in/carsonella_pe_filt.fna.qual
+|2013-09-09 12:11:09| rm /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/all.seq.mates
+|2013-09-09 12:11:13| cp /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/carsonella_pe_filt.fna /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.seq
+|2013-09-09 12:11:14| cp /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/carsonella_pe_filt.fna.qual /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.seq.qual
+|2013-09-09 12:11:14| which python
+|2013-09-09 12:11:14| echo $PYTHONPATH
+|2013-09-09 12:11:16| perl /fs/wrenhomes/sergek/metAMOS/Utilities/perl/split_fasta.pl /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.seq /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.1.fasta /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.2.fasta
+|2013-09-09 12:11:17| perl /fs/wrenhomes/sergek/metAMOS/Utilities/perl/split_fasta.pl /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.seq.qual /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.1.fasta.qual /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.2.fasta.qual
+|2013-09-09 12:11:17| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.seq /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.fasta
+|2013-09-09 12:11:24| java -cp /fs/wrenhomes/sergek/metAMOS/Utilities/java:. convertFastaAndQualToFastq /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.seq /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.seq.qual > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.fastq
+|2013-09-09 12:11:28| java -cp /fs/wrenhomes/sergek/metAMOS/Utilities/java:. convertFastaAndQualToFastq /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.1.fasta /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.1.fasta.qual > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.1.fastq
+|2013-09-09 12:11:31| java -cp /fs/wrenhomes/sergek/metAMOS/Utilities/java:. convertFastaAndQualToFastq /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.2.fasta /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.2.fasta.qual > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.2.fastq
+|2013-09-09 12:11:31| touch /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/preprocess.success
+|2013-09-09 12:11:33|# [ASSEMBLE]
+|2013-09-09 12:11:33| touch /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.run
+|2013-09-09 12:11:33| touch /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/soapdenovo.run
+|2013-09-09 12:11:33| touch /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/velvet.run
+|2013-09-09 12:11:38| /fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64/SOAPdenovo-63mer pregraph -p 8 -d -K 55 -R  -d  -D   -s /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/soapconfig.txt -o /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/soapdenovo.asm
+|2013-09-09 12:11:38| /fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64/SOAPdenovo-63mer contig -g /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/soapdenovo.asm -R -M 3
+|2013-09-09 12:25:09| /fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64/spades/bin/spades.py -o ./ -m 77 -t 8  --pe1-1 /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.1.fastq --pe1-2 /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.2.fastq -k 21,33,55 --careful  --phred-offset 33 
+|2013-09-09 12:25:09| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/contigs.fasta /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.asm.contig
+|2013-09-09 12:25:11| /fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64/velvet/velveth /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/ 55 -fasta -shortPaired /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.seq 
+|2013-09-09 12:25:17| /fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64/velvet/velvetg /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/  -ins_length 3500 -ins_length_sd 350 -cov_cutoff auto  -read_trkg yes -scaffolding no -amos_file yes
+|2013-09-09 12:25:17| rm /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/velvet.afg
+|2013-09-09 12:25:17| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/velvet_asm.afg /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/velvet.afg
+|2013-09-09 12:25:17| rm /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/velvet.asm.contig
+|2013-09-09 12:25:17| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/contigs.fa /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/velvet.asm.contig
+|2013-09-09 12:25:18| touch /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/assemble.success
+|2013-09-09 12:25:21|# [MAPREADS]
+|2013-09-09 12:25:22| /fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64/bowtie-build -o 2 /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/soapdenovo.asm.contig /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/IDX
+|2013-09-09 12:25:24| /fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64/bowtie -p 8 -f -l 25 -e 140 --best --strata -m 10 -k 1 --un /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/soapdenovo.lib1.unaligned.fasta /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/IDX /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.seq > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/lib1.bout
+|2013-09-09 12:25:28| cat /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/soapdenovo.lib1.mappedmates >> /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/soapdenovo.lib1.hdr 
+|2013-09-09 12:25:28| cp /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/soapdenovo.lib1.hdr /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/soapdenovo.lib1.mappedmates 
+|2013-09-09 12:25:29| /fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64/bowtie-build -o 2 /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.asm.contig /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/IDX
+|2013-09-09 12:25:31| /fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64/bowtie -p 8 -f -l 25 -e 140 --best --strata -m 10 -k 1 --un /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.lib1.unaligned.fasta /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/IDX /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.seq > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/lib1.bout
+|2013-09-09 12:25:36| cat /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.lib1.mappedmates >> /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.lib1.hdr 
+|2013-09-09 12:25:36| cp /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.lib1.hdr /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.lib1.mappedmates 
+|2013-09-09 12:25:38| /fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64/bowtie-build -o 2 /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/velvet.asm.contig /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/IDX
+|2013-09-09 12:25:39| /fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64/bowtie -p 8 -f -l 25 -e 140 --best --strata -m 10 -k 1 --un /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/velvet.lib1.unaligned.fasta /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/IDX /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.seq > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/lib1.bout
+|2013-09-09 12:25:44| cat /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/velvet.lib1.mappedmates >> /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/velvet.lib1.hdr 
+|2013-09-09 12:25:44| cp /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/velvet.lib1.hdr /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/velvet.lib1.mappedmates 
+|2013-09-09 12:25:46|# [VALIDATE]
+|2013-09-09 12:26:00| python /fs/wrenhomes/sergek/metAMOS/LAP/aligner/calc_prob.py -p 8 -a /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/soapdenovo.asm.contig -n /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/soapdenovo.contig.cvg -1 /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.1.fastq -2 /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.2.fastq -m 2002 -t 195 -I 1026 -X 2978 > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Validate/out/soapdenovo.prob
+|2013-09-09 12:26:16| python /fs/wrenhomes/sergek/metAMOS/LAP/aligner/calc_prob.py -p 8 -a /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.asm.contig -n /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.contig.cvg -1 /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.1.fastq -2 /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.2.fastq -m 2002 -t 195 -I 1026 -X 2978 > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Validate/out/spades.prob
+|2013-09-09 12:26:32| python /fs/wrenhomes/sergek/metAMOS/LAP/aligner/calc_prob.py -p 8 -a /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/velvet.asm.contig -n /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/velvet.contig.cvg -1 /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.1.fastq -2 /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.2.fastq -m 2002 -t 195 -I 1026 -X 2978 > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Validate/out/velvet.prob
+|2013-09-09 12:26:33| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.asm.contig /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.asm.contig
+|2013-09-09 12:26:33| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.asm.tigr /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.asm.tigr
+|2013-09-09 12:26:33| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.contig.cnt /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.contig.cnt
+|2013-09-09 12:26:33| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.contig.cvg /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.contig.cvg
+|2013-09-09 12:26:33| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.lib1.badmades /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.lib1.badmates
+|2013-09-09 12:26:33| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.lib1.hdr /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.lib1.hdr
+|2013-09-09 12:26:33| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.lib1.mappedmates /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.lib1.mappedmates
+|2013-09-09 12:26:33| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.lib1.mates_in_diff_contigs /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.lib1.mates_in_diff_contigs
+|2013-09-09 12:26:33| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.lib1contig.reads /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.lib1contig.reads
+|2013-09-09 12:26:33| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/spades.lib1.unaligned.fasta /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/lib1.unaligned.fasta
+|2013-09-09 12:26:34|# [FINDORFS]
+|2013-09-09 12:26:34| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/in/proba.asm.contig
+|2013-09-09 12:26:34| ln -s /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.asm.contig /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/in/
+|2013-09-09 12:26:36| /cbcb/software/Linux-x86_64/bin//gmhmmp -o /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.orfs -m /fs/wrenhomes/sergek/metAMOS/Utilities/config/MetaGeneMark_v1.mod -d -a /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/in/proba.asm.contig
+|2013-09-09 12:26:36| mv /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.fna /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.ctg.fna
+|2013-09-09 12:26:36| mv /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.faa /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.ctg.faa
+|2013-09-09 12:26:36| mv /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.gene.cvg /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.ctg.gene.cvg
+|2013-09-09 12:26:36| mv /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.gene.map /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.ctg.gene.map
+|2013-09-09 12:26:36| rm -r /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.fna
+|2013-09-09 12:26:36| cat /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba*.fna > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.fna
+|2013-09-09 12:26:36| rm -r /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.fna.bnk
+|2013-09-09 12:26:37| /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/toAmos_new -s /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.fna -b /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.fna.bnk
+|2013-09-09 12:26:37| rm -r /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.faa
+|2013-09-09 12:26:37| cat /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba*.faa > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.faa
+|2013-09-09 12:26:37| rm -r /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.faa.bnk
+|2013-09-09 12:26:37| /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/toAmos_new -s /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.faa -b /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.faa.bnk
+|2013-09-09 12:26:37| rm -r /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.gene.cvg
+|2013-09-09 12:26:37| cat /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba*.gene.cvg > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.gene.cvg
+|2013-09-09 12:26:37| rm -r /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.gene.map
+|2013-09-09 12:26:37| cat /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba*.gene.map > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.gene.map
+|2013-09-09 12:26:37| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/in/proba.faa
+|2013-09-09 12:26:37| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/in/proba.fna
+|2013-09-09 12:26:37| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindRepeats/in/proba.fna
+|2013-09-09 12:26:37| ln -s /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.faa /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/in/
+|2013-09-09 12:26:37| ln -s /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.fna /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/in/
+|2013-09-09 12:26:37| ln -s /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.faa /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindRepeats/in/
+|2013-09-09 12:26:37| ln -s /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.fna /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindRepeats/in/
+|2013-09-09 12:26:38|# [FINDREPEATS]
+|2013-09-09 12:26:38| touch /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Logs/findrepeats.skip
+|2013-09-09 12:26:39|# [ANNOTATE]
+|2013-09-09 12:26:39| touch /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.annots
+|2013-09-09 12:26:39| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/in/proba.asm.contig
+|2013-09-09 12:26:40| ln -s /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.asm.contig /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/in/
+|2013-09-09 12:26:40| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.hits
+|2013-09-09 12:26:40| rm -f /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/*.hits
+|2013-09-09 12:26:40| rm -f /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/*.epsilon-nb_results.txt
+|2013-09-09 12:26:40| rm -f /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/*.phymm.out
+|2013-09-09 12:26:40| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/lib1.unaligned.fasta /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/in/lib1.unaligned.fasta
+|2013-09-09 12:26:40| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/lib1.unaligned.fasta /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/in/lib1.unaligned.fasta
+|2013-09-09 12:26:43| /fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64/kraken/bin/kraken --threads 8 -db /fs/wrenhomes/sergek/metAMOS/Utilities/DB//kraken --output /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.intermediate.ctg.hits /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/in/proba.asm.contig --preload  
+|2013-09-09 12:26:45| /fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64/kraken/bin/kraken --threads 8 -db /fs/wrenhomes/sergek/metAMOS/Utilities/DB//kraken --output /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.intermediate.lib1.hits /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/in/lib1.unaligned.fasta --preload  
+|2013-09-09 12:26:45| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.hits
+|2013-09-09 12:26:45| cat /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.intermediate.ctg.hits >> /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.hits
+|2013-09-09 12:26:45| cat /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.intermediate.lib1.hits >> /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.hits
+|2013-09-09 12:26:45| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.hits /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.hits
+|2013-09-09 12:26:50| perl /fs/wrenhomes/sergek/metAMOS/Utilities/perl/ImportKraken.pl  -c -i -f /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/in/proba.asm.contig:/fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/lib1.unaligned.fasta /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.hits:/fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.contig.cnt:phylum
+|2013-09-09 12:26:50| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/in/proba.hits
+|2013-09-09 12:26:50| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.hits
+|2013-09-09 12:26:50| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.hits /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/in/proba.hits
+|2013-09-09 12:26:50| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.hits /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.hits
+|2013-09-09 12:26:51|# [FUNCTIONALANNOTATION]
+|2013-09-09 12:28:38| /fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64/blastall -p blastp -i /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.faa -d /fs/wrenhomes/sergek/metAMOS/Utilities/DB//uniprot_sprot.fasta -a 8 -e 0.001 -m 8 -b 1 > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FunctionalAnnotation/out/blast.out
+|2013-09-09 12:28:40| /fs/wrenhomes/sergek/metAMOS/KronaTools/bin/ktImportEC  /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FunctionalAnnotation/out/krona.ec.input
+|2013-09-09 12:28:42|# [SCAFFOLD]
+|2013-09-09 12:28:42| rm -rf /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk
+|2013-09-09 12:28:47| /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/toAmos_new -s /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/lib1.seq -m /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.lib1.mappedmates -b /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk 
+|2013-09-09 12:28:48| /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/toAmos_new -c /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.asm.tigr -b /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk 
+|2013-09-09 12:28:50| /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/asmQC -b /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk -scaff -recompute -update -numsd 2 
+|2013-09-09 12:28:50| perl /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/bank-unlock /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk
+|2013-09-09 12:28:51| /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/clk -b /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk
+|2013-09-09 12:28:51| /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/Bundler -b /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk
+|2013-09-09 12:28:51| /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/MarkRepeats -redundancy 50  -b /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.reps
+|2013-09-09 12:28:51| /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/OrientContigs -minRedundancy 5 -all  -redundancy 10  -b /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk -repeats /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.reps 
+|2013-09-09 12:28:52| /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/bank2fasta -eid  -b /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/out/proba.contigs
+|2013-09-09 12:28:52| /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/OutputMotifs -b /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/out/proba.motifs
+|2013-09-09 12:28:52| /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/OutputResults -b /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk -p /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/out/proba 
+|2013-09-09 12:28:52| /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/OutputScaffolds -b /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/out/proba.scaffolds.final
+|2013-09-09 12:28:52| /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/Linearize -b /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk
+|2013-09-09 12:28:52| /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/OutputResults -b /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk -p /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/out/proba.linearize 
+|2013-09-09 12:28:52| /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/OutputScaffolds -b /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/out/proba.linearize.scaffolds.final
+|2013-09-09 12:28:53|# [FINDSCAFFOLDORFS]
+|2013-09-09 12:28:56| /cbcb/software/Linux-x86_64/bin//gmhmmp -o /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindScaffoldORFS/out/proba.scaffolds.orfs -m /fs/wrenhomes/sergek/metAMOS/Utilities/config/MetaGeneMark_v1.mod -d -a /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/out/proba.linearize.scaffolds.final
+|2013-09-09 12:28:57|# [ABUNDANCE]
+|2013-09-09 12:28:57| ln /fs/wrenhomes/sergek/metAMOS/Utilities/DB//markers.pfasta /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Abundance/out/markers.pfasta
+|2013-09-09 12:28:59| /fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64/formatdb  -p T -i /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Abundance/out/markers.pfasta
+|2013-09-09 12:29:04| /fs/wrenhomes/sergek/metAMOS/Utilities/cpp/Linux-x86_64/blastall -p blastp -i /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.faa -d /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Abundance/out/markers.pfasta -m 8 -b 10 -v 10 -a 8 -o /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Abundance/out/proba.blastp
+|2013-09-09 12:29:08| perl /fs/wrenhomes/sergek/metAMOS/Utilities/perl/metaphyler_contigs.pl /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Abundance/out/proba.blastp proba /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FindORFS/out/proba.gene.cvg /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Abundance/out /fs/wrenhomes/sergek/metAMOS/Utilities
+|2013-09-09 12:29:23| perl /fs/wrenhomes/sergek/metAMOS/Utilities/perl/ImportMetaPhyler.pl  -c -v -i -p /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Abundance/out/proba.taxprof.pct.txt:phylum
+|2013-09-09 12:29:24|# [PROPAGATE]
+|2013-09-09 12:29:24| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.annots /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Propagate/in/proba.annots
+|2013-09-09 12:29:24| cat /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Propagate/in/proba.annots | grep -v "\"" | grep -v contigID |sed s/utg//g |sed s/ctg//g > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Propagate/in/proba.clusters
+|2013-09-09 12:29:24| /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/FilterEdgesByCluster -b /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk -clusters /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Propagate/in/proba.clusters -noRemoveEdges > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Propagate/out/proba.clusters
+|2013-09-09 12:29:27|# [POSTPROCESS]
+|2013-09-09 12:29:28| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/annotate.krona.html
+|2013-09-09 12:29:28| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/report.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/annotate.krona.html
+|2013-09-09 12:29:28| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/abundance.krona.html
+|2013-09-09 12:29:28| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Abundance/out/report.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/abundance.krona.html
+|2013-09-09 12:29:28| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.classified
+|2013-09-09 12:29:28| ln -s /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Classify/out /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.classified
+|2013-09-09 12:29:28| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postporocess/out/lap.scores
+|2013-09-09 12:29:28| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Validate/out/proba.lap /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/lap.scores
+|2013-09-09 12:29:28| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.original.annots
+|2013-09-09 12:29:28| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.annots /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.original.annots
+|2013-09-09 12:29:28| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.original.reads.annots
+|2013-09-09 12:29:28| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.reads.annots /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.original.reads.annots
+|2013-09-09 12:29:28| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.propagated.annots
+|2013-09-09 12:29:28| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.propagated.reads.annots
+|2013-09-09 12:29:29| cp /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Abundance/out/proba.classify.txt /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/. 
+|2013-09-09 12:29:29| cp /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/out/proba.linearize.scaffolds.final /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.scf.fa
+|2013-09-09 12:29:29| cp /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/out/proba.contigs /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.fa
+|2013-09-09 12:29:29| ln -s /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/
+|2013-09-09 12:29:29| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.lib1.contig.reads
+|2013-09-09 12:29:29| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.lib1contig.reads /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.lib1.contig.reads
+|2013-09-09 12:29:29| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.lib1.unaligned.fasta
+|2013-09-09 12:29:29| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/lib1.unaligned.fasta /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.lib1.unaligned.fasta
+|2013-09-09 12:29:29| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.cnt
+|2013-09-09 12:29:29| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.contig.cnt /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.cnt
+|2013-09-09 12:29:30| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.cvg
+|2013-09-09 12:29:30| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.contig.cvg /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.cvg
+|2013-09-09 12:29:30| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html
+|2013-09-09 12:29:30| mkdir  /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html
+|2013-09-09 12:29:30| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/phylum.classified
+|2013-09-09 12:29:30| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.classified /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/phylum.classified
+|2013-09-09 12:29:30| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/Annotate.html
+|2013-09-09 12:29:30| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/annotate.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/Annotate.html
+|2013-09-09 12:29:30| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/Abundance.html
+|2013-09-09 12:29:30| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/abundance.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/Abundance.html
+|2013-09-09 12:29:30| mv /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/*.fastqc /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html
+|2013-09-09 12:29:30| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/propagate.in.clusters
+|2013-09-09 12:29:30| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Propagate/in/proba.clusters /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/propagate.in.clusters
+|2013-09-09 12:29:30| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/propagate.out.clusters
+|2013-09-09 12:29:30| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Propagate/out/proba.clusters /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/propagate.out.clusters
+|2013-09-09 12:29:30| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/FunctionalAnnotation.html
+|2013-09-09 12:29:30| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FunctionalAnnotation/out/ec.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/FunctionalAnnotation.html
+|2013-09-09 12:29:30|# [CLASSIFY]
+|2013-09-09 12:29:30| perl -I /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/lib /fs/wrenhomes/sergek/metAMOS/Utilities/perl/statistics.pl /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.scf.fa > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/asmstats.out
+|2013-09-09 12:29:40| /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/analyze-read-depth -x 2 /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.bnk > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/covstats.out
+|2013-09-09 12:29:41| /fs/wrenhomes/sergek/metAMOS/AMOS/Linux-x86_64/bin/astats /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.bnk > /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/stats.out
+|2013-09-09 12:48:07|# [FINDREPEATS]
+|2013-09-09 12:48:07| touch /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Logs/findrepeats.skip
+|2013-09-09 12:48:09|# [POSTPROCESS]
+|2013-09-09 12:48:09| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/annotate.krona.html
+|2013-09-09 12:48:09| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/report.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/annotate.krona.html
+|2013-09-09 12:48:09| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/abundance.krona.html
+|2013-09-09 12:48:09| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Abundance/out/report.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/abundance.krona.html
+|2013-09-09 12:48:09| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.classified
+|2013-09-09 12:48:09| ln -s /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Classify/out /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.classified
+|2013-09-09 12:48:09| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postporocess/out/lap.scores
+|2013-09-09 12:48:09| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Validate/out/proba.lap /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/lap.scores
+|2013-09-09 12:48:09| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.original.annots
+|2013-09-09 12:48:09| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.annots /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.original.annots
+|2013-09-09 12:48:10| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.original.reads.annots
+|2013-09-09 12:48:10| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.reads.annots /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.original.reads.annots
+|2013-09-09 12:48:10| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.propagated.annots
+|2013-09-09 12:48:10| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.propagated.reads.annots
+|2013-09-09 12:48:11| cp /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Abundance/out/proba.classify.txt /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/. 
+|2013-09-09 12:48:11| cp /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/out/proba.linearize.scaffolds.final /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.scf.fa
+|2013-09-09 12:48:11| cp /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/out/proba.contigs /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.fa
+|2013-09-09 12:48:11| ln -s /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/
+|2013-09-09 12:48:11| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.lib1.contig.reads
+|2013-09-09 12:48:11| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.lib1contig.reads /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.lib1.contig.reads
+|2013-09-09 12:48:11| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.lib1.unaligned.fasta
+|2013-09-09 12:48:11| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/lib1.unaligned.fasta /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.lib1.unaligned.fasta
+|2013-09-09 12:48:11| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.cnt
+|2013-09-09 12:48:11| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.contig.cnt /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.cnt
+|2013-09-09 12:48:11| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.cvg
+|2013-09-09 12:48:11| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.contig.cvg /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.cvg
+|2013-09-09 12:48:11| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html
+|2013-09-09 12:48:11| mkdir  /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html
+|2013-09-09 12:48:11| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/phylum.classified
+|2013-09-09 12:48:11| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.classified /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/phylum.classified
+|2013-09-09 12:48:11| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/Annotate.html
+|2013-09-09 12:48:11| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/annotate.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/Annotate.html
+|2013-09-09 12:48:11| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/Abundance.html
+|2013-09-09 12:48:11| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/abundance.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/Abundance.html
+|2013-09-09 12:48:11| mv /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/*.fastqc /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html
+|2013-09-09 12:48:11| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/propagate.in.clusters
+|2013-09-09 12:48:11| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Propagate/in/proba.clusters /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/propagate.in.clusters
+|2013-09-09 12:48:11| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/propagate.out.clusters
+|2013-09-09 12:48:11| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Propagate/out/proba.clusters /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/propagate.out.clusters
+|2013-09-09 12:48:11| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/FunctionalAnnotation.html
+|2013-09-09 12:48:11| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FunctionalAnnotation/out/ec.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/FunctionalAnnotation.html
+|2013-09-09 13:01:05|# [FINDREPEATS]
+|2013-09-09 13:01:05| touch /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Logs/findrepeats.skip
+|2013-09-09 13:01:07|# [POSTPROCESS]
+|2013-09-09 13:01:07| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/annotate.krona.html
+|2013-09-09 13:01:07| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/report.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/annotate.krona.html
+|2013-09-09 13:01:07| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/abundance.krona.html
+|2013-09-09 13:01:07| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Abundance/out/report.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/abundance.krona.html
+|2013-09-09 13:01:07| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.classified
+|2013-09-09 13:01:07| ln -s /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Classify/out /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.classified
+|2013-09-09 13:01:07| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postporocess/out/lap.scores
+|2013-09-09 13:01:08| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Validate/out/proba.lap /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/lap.scores
+|2013-09-09 13:01:08| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postporocess/out/best.asm
+|2013-09-09 13:01:08| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Validate/out/proba.asm.selected /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/best.asm
+|2013-09-09 13:01:08| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.original.annots
+|2013-09-09 13:01:08| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.annots /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.original.annots
+|2013-09-09 13:01:08| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.original.reads.annots
+|2013-09-09 13:01:08| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.reads.annots /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.original.reads.annots
+|2013-09-09 13:01:08| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.propagated.annots
+|2013-09-09 13:01:08| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.propagated.reads.annots
+|2013-09-09 13:01:09| cp /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Abundance/out/proba.classify.txt /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/. 
+|2013-09-09 13:01:09| cp /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/out/proba.linearize.scaffolds.final /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.scf.fa
+|2013-09-09 13:01:09| cp /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/out/proba.contigs /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.fa
+|2013-09-09 13:01:09| ln -s /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/
+|2013-09-09 13:01:09| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.lib1.contig.reads
+|2013-09-09 13:01:09| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.lib1contig.reads /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.lib1.contig.reads
+|2013-09-09 13:01:09| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.lib1.unaligned.fasta
+|2013-09-09 13:01:09| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/lib1.unaligned.fasta /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.lib1.unaligned.fasta
+|2013-09-09 13:01:09| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.cnt
+|2013-09-09 13:01:09| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.contig.cnt /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.cnt
+|2013-09-09 13:01:09| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.cvg
+|2013-09-09 13:01:09| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.contig.cvg /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.cvg
+|2013-09-09 13:01:09| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html
+|2013-09-09 13:01:09| mkdir  /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html
+|2013-09-09 13:01:09| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/phylum.classified
+|2013-09-09 13:01:09| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.classified /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/phylum.classified
+|2013-09-09 13:01:09| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/Annotate.html
+|2013-09-09 13:01:09| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/annotate.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/Annotate.html
+|2013-09-09 13:01:09| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/Abundance.html
+|2013-09-09 13:01:09| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/abundance.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/Abundance.html
+|2013-09-09 13:01:09| mv /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/*.fastqc /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html
+|2013-09-09 13:01:09| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/propagate.in.clusters
+|2013-09-09 13:01:09| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Propagate/in/proba.clusters /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/propagate.in.clusters
+|2013-09-09 13:01:09| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/propagate.out.clusters
+|2013-09-09 13:01:09| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Propagate/out/proba.clusters /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/propagate.out.clusters
+|2013-09-09 13:01:09| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/FunctionalAnnotation.html
+|2013-09-09 13:01:09| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FunctionalAnnotation/out/ec.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/FunctionalAnnotation.html
+|2013-09-09 13:06:41|# [FINDREPEATS]
+|2013-09-09 13:06:41| touch /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Logs/findrepeats.skip
+|2013-09-09 13:06:44|# [POSTPROCESS]
+|2013-09-09 13:06:44| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/annotate.krona.html
+|2013-09-09 13:06:44| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/report.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/annotate.krona.html
+|2013-09-09 13:06:44| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/abundance.krona.html
+|2013-09-09 13:06:44| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Abundance/out/report.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/abundance.krona.html
+|2013-09-09 13:06:44| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.classified
+|2013-09-09 13:06:44| ln -s /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Classify/out /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.classified
+|2013-09-09 13:06:44| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postporocess/out/lap.scores
+|2013-09-09 13:06:44| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Validate/out/proba.lap /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/lap.scores
+|2013-09-09 13:06:44| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postporocess/out/best.asm
+|2013-09-09 13:06:44| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Validate/out/proba.asm.selected /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/best.asm
+|2013-09-09 13:06:44| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.original.annots
+|2013-09-09 13:06:44| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.annots /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.original.annots
+|2013-09-09 13:06:44| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.original.reads.annots
+|2013-09-09 13:06:44| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Annotate/out/proba.reads.annots /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.original.reads.annots
+|2013-09-09 13:06:44| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.propagated.annots
+|2013-09-09 13:06:44| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.propagated.reads.annots
+|2013-09-09 13:06:45| cp /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Abundance/out/proba.classify.txt /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/. 
+|2013-09-09 13:06:45| cp /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/out/proba.linearize.scaffolds.final /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.scf.fa
+|2013-09-09 13:06:45| cp /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/out/proba.contigs /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.fa
+|2013-09-09 13:06:45| ln -s /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Scaffold/in/proba.bnk /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/
+|2013-09-09 13:06:45| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.lib1.contig.reads
+|2013-09-09 13:06:45| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.lib1contig.reads /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.lib1.contig.reads
+|2013-09-09 13:06:45| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.lib1.unaligned.fasta
+|2013-09-09 13:06:45| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/lib1.unaligned.fasta /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.lib1.unaligned.fasta
+|2013-09-09 13:06:45| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.cnt
+|2013-09-09 13:06:45| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.contig.cnt /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.cnt
+|2013-09-09 13:06:45| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.cvg
+|2013-09-09 13:06:45| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Assemble/out/proba.contig.cvg /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/proba.ctg.cvg
+|2013-09-09 13:06:45| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html
+|2013-09-09 13:06:45| mkdir  /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html
+|2013-09-09 13:06:45| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/phylum.classified
+|2013-09-09 13:06:45| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/phylum.classified /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/phylum.classified
+|2013-09-09 13:06:45| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/Annotate.html
+|2013-09-09 13:06:45| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/annotate.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/Annotate.html
+|2013-09-09 13:06:45| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/Abundance.html
+|2013-09-09 13:06:45| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/abundance.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/Abundance.html
+|2013-09-09 13:06:45| mv /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Preprocess/out/*.fastqc /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html
+|2013-09-09 13:06:46| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/propagate.in.clusters
+|2013-09-09 13:06:46| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Propagate/in/proba.clusters /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/propagate.in.clusters
+|2013-09-09 13:06:46| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/propagate.out.clusters
+|2013-09-09 13:06:46| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Propagate/out/proba.clusters /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/propagate.out.clusters
+|2013-09-09 13:06:46| unlink /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/FunctionalAnnotation.html
+|2013-09-09 13:06:46| ln /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/FunctionalAnnotation/out/ec.krona.html /fs/wrenhomes/sergek/metAMOS/Test/test_kraken/Postprocess/out/html/FunctionalAnnotation.html

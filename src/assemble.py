@@ -412,7 +412,7 @@ def Assemble(input,output):
    elif asmName.lower() == "sparseassembler":
       runSparseAssembler(_settings.SPARSEASSEMBLER, "SparseAssembler");
    elif generic.checkIfExists(STEP_NAMES.ASSEMBLE, asmName.lower()):
-      generic.execute(STEP_NAMES.ASSEMBLE, asmName.lower())
+      generic.execute(STEP_NAMES.ASSEMBLE, asmName.lower(), _settings)
    else:  
       print "Error: %s is an unknown assembler. No valid assembler specified."%(asmName)
       raise(JobSignalledBreak)

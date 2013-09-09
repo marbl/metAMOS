@@ -199,6 +199,7 @@ class GenericProgram:
       # symlink results
       symlinkCmd = "ln %s/%s/out/%s %s/%s/out/%s%s"%(_settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), self.output.replace("[PREFIX]", _settings.PREFIX), _settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), _settings.PREFIX, STEP_OUTPUTS.reverse_mapping[self.stepName])
       run_process(_settings, symlinkCmd, STEP_NAMES.reverse_mapping[self.stepName].title())
+
       return listOfInput
 
 def getSupportedList(path, step):
@@ -234,7 +235,7 @@ def getName(step, programName):
 
    return dispatch.name
 
-def execute(step, programName):
+def execute(step, programName, settings):
    if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ANNOTATE):
       print "Error: unsupported step #%d\n"%(step)
       raise(JobSignalledBreak)
@@ -242,6 +243,9 @@ def execute(step, programName):
    if not checkIfExists(step, programName):
       print "Error: attempted to execute program %s which is not supported\n"%(programName)
       raise(JobSignalledBreak)
+
+   global _settings
+   _settings = settings
 
    dispatch = GenericProgram(programName, step)
    dispatch.read()

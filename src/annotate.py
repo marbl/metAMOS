@@ -417,7 +417,7 @@ def Annotate(input,output):
    pool.join()
 
    if generic.checkIfExists(STEP_NAMES.ANNOTATE, _cls.lower()):
-      generic.execute(STEP_NAMES.ANNOTATE, _cls.lower())
+      generic.execute(STEP_NAMES.ANNOTATE, _cls.lower(), _settings)
    else:
       #  merge results
       run_process(_settings, "cat %s/Annotate/out/*.intermediate.hits > %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Annotate")

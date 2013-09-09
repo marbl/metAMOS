@@ -310,6 +310,9 @@ def create_plots(handlef,TITLE):
     
     tkeys = tsvdata.keys()
     tkeys.sort()
+    if len(tkeys) == 1:
+       ff.write("0\t0\n")
+
     for row in tkeys:
         
         i = 0

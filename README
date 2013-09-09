@@ -188,6 +188,8 @@ For each step you can fine-tune the execution as follows
    -q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)
 [Assemble]
    -a = <string>: genome assembler to use (default = SOAPdenovo)
+		  this can also be a comma-separated list of assembler (for example: soap,velvet)
+		  in this case, all selected assemblers will be run and the best selected for subsequent analysis
    -k = <kmer size>: k-mer size to be used for assembly (default = 31)
    -o = <int>:    min overlap length
 [MapReads]

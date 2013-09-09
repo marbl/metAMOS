@@ -118,6 +118,8 @@ def Postprocess(input,output):
 
    run_process(_settings, "unlink %s/Postporocess/out/lap.scores"%(_settings.rundir), "Postprocess")
    run_process(_settings, "ln %s/Validate/out/%s.lap %s/Postprocess/out/lap.scores"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
+   run_process(_settings, "unlink %s/Postporocess/out/best.asm"%(_settings.rundir), "Postprocess")
+   run_process(_settings, "ln %s/Validate/out/%s.asm.selected %s/Postprocess/out/best.asm"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
 
    #command to open webbrowser?
    #try to open Krona output

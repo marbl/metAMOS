@@ -95,6 +95,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
 
     # set working dir
     os.chdir(html_prefix)
+    version = "1.0"
 
     if not os.path.exists(html_prefix+"asmstats.out"):
         libPath = rund.replace("bin", "lib")
@@ -102,6 +103,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
         run_process(_settings,"perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,ref_asm,html_prefix),"Classify")
     report = open(html_prefix+"asmstats.out",'r')
 
+    # get metamos version
     initialStep = "Annotate"
 
     steps = []
@@ -563,7 +565,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     page.add("<a target=\"_blank\" href=\"https://github.com/treangen/metAMOS/wiki\"><img style=\"padding-top:5px;\" src=\"name.png\"/>")
     page.add("<img src=\"blocks_dark_tiny.png\"/></a>")
 #    page.add("<img src=\"blocks_tiny2.jpg\"/>")
-    page.add("<div style=\"padding:2px;font-size:12px;\"><a target=\"_blank\" href=\"http://genomebiology.com/2013/14/1/R2">Treangen TJ, Koren S, et. al.  Genome Biol. 2013 Jan 15;14(1):R2. PMID: 23320958.</a></div>")
+    page.add("<div style=\"padding:2px;font-size:12px;\"><a target=\"_blank\" href=\"http://genomebiology.com/2013/14/1/R2\">Treangen TJ, Koren S, et. al.  Genome Biol. 2013 Jan 15;14(1):R2. PMID: 23320958.</a></div>")
     page.add("<br/>")
 #    page.div.close()
 #    page.td.close()
@@ -608,7 +610,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     page.add("<a target=\"_blank\" href=\"pipeline.commands\">Run commands</a><br/><br/></div>")
     tableHTML = []
     tableHTML.append("<table style=\"font-size:12px\"><tr>")
-    tableHTML.append("<tr><td>Version:</td><td>1.0</td></tr>")
+    tableHTML.append("<tr><td>Version:</td><td>%s</td></tr>", version)
     tableHTML.append("<tr><td>Created:<br/>&nbsp;</td><td>%s</td></tr>"%(ds))
     tableHTML.append("</table>")
     page.add("\n".join(tableHTML))

@@ -446,6 +446,12 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     script.append("<script type=\"text/javascript\">")
     script.append("var steps = ['%s'];"%("','".join(steps)))
     script.append("function load(step) {")
+    for step in steps:
+       print "Step status %s is %s"%(step, step_status[step])
+       if step_status[step] != "OK":
+          script.append("   if (step.toLowerCase() == \"%s\".toLowerCase()) {"%(step))
+          script.append("      return;")
+          script.append("   }")
     script.append("   for (var i = 0; i < steps.length; i++) {")
     script.append("      var current = steps[i].toLowerCase();")
     script.append("      if (current == step) {")

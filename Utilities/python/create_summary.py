@@ -63,7 +63,7 @@ def outputLibraryInfo(html_prefix, markupFile, outputHeader, libcnt, format, mat
          markupFile.td("NA")
    markupFile.tr.close()
 
-def outputValidate(html_prefix, markupFile, outputHeader, assembler, score):
+def outputValidate(html_prefix, markupFile, outputHeader, best, assembler, score):
    if outputHeader:
       markupFile.table(border="1")
       markupFile.tr()
@@ -71,9 +71,13 @@ def outputValidate(html_prefix, markupFile, outputHeader, assembler, score):
       markupFile.th("LAP Score")
       markupFile.tr.close()
 
+   isBest = False
+   if best == assembler:
+      isBest = True
+
    markupFile.tr()
-   markupFile.add("<td align=\"left\">%s</td>"%(assembler.title()))
-   markupFile.add("<td align=\"right\">%.4f</td>"%(float(score)))
+   markupFile.add("<td align=\"left\">%s%s%s</td>"%("<b>" if isBest else "", assembler.title(), "</b>" if isBest else ""))
+   markupFile.add("<td align=\"right\">%s%.4f%s</td>"%("<b>" if isBest else "", float(score), "</b>" if isBest else ""))
    markupFile.tr.close()
 
 def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,dbdir):
@@ -284,17 +288,22 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     validate_out = open("%s/Validate.html"%(html_prefix), 'w')
     firstScore = True
     if os.path.exists("%s/Postprocess/out/lap.scores"%(MA_dir)):
+       best = open("%s/Postprocess/out/best.asm"%(MA_dir), 'r')
+       bestAsm = best.read()
+       best.close()
        laps = open("%s/Postprocess/out/lap.scores"%(MA_dir), 'r')
        validate = markup.page()
        validate.init()#bodyattrs={'style':"margin:0px"})
        validate.p()
+       validate.add("Selected assembler: %s"%(bestAsm))
+       validate.br()
        for line in laps:
           line = line.replace("\n","")
           if "#" in line:
              continue
           else:
              res = line.split("\t")
-             outputValidate(html_prefix, validate, firstScore, res[0], res[1]) 
+             outputValidate(html_prefix, validate, firstScore, bestAsm, res[0], res[1]) 
              firstScore = False
        validate.table.close()
        laps.close()

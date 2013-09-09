@@ -118,6 +118,8 @@ def create_plots(handlef,TITLE):
                 l = len(seq)
                 if(l > SIZE_CUTOFF):
                     sample.sf_sizes[header] = l
+            if len(sample.sf_sizes) == 1:
+               sample.sf_sizes["none"] = 0
     
             #print " sf_size " + str(len(sample.sf_sizes))
             sample.sfsort_sizes = sorted(sample.sf_sizes.values(), reverse=True)

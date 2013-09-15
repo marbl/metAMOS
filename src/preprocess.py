@@ -13,18 +13,21 @@ from extract_mates_from_fastq import *
 
 _filter = True
 _readlibs = []
+_asmcontigs = []
 _skipsteps = []
 _asm = None
 _run_fastqc = False
 _settings = Settings() 
 
-def init(reads, skipsteps, asm, run_fastqc,filter):
+def init(reads, asmcontigs, skipsteps, asm, run_fastqc,filter):
    global _readlibs
+   global _asmcontigs
    global _skipsteps
    global _asm
    global _run_fastqc
    global _filter
    _readlibs = reads
+   _asmcontigs = asmcontigs
    _skipsteps = skipsteps
    _asm = asm
    _run_fastqc = run_fastqc
@@ -147,6 +150,9 @@ def parseInterleaved(rf,wf,fastq=True):
 #filtreadpaths)
 def Preprocess(input,output):
    global _run_fastqc
+
+   for contig in _asmcontigs:
+      run_process(_settings, "ln %s/Preprocess/in/%s %s/Preprocess/out/%s.asm.contig"%(_settings.rundir, contig, _settings.rundir, contig), "Preprocess")
 
    # update file names if necessary to avoid conflicts and create qual files
    for lib in _readlibs:

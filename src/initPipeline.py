@@ -139,7 +139,7 @@ maxreadlen = 150
 innie = True
 readlibs = []
 SFFLinkerType = "titanium"
-contigs = ""
+contigs = [] 
 lastLib = 0
 libs = ""
 for o, a in opts:
@@ -154,7 +154,8 @@ for o, a in opts:
         usage()
         sys.exit()
     elif o in ("-c"):
-        contigs = a
+        contigs.append(a)
+
     elif o in ("-q", "--fastq"):
         #reads = a
         format = "fastq"
@@ -252,9 +253,11 @@ if filesOK == False:
     print "Error, provided files do not exist: \n%s"%(errorMessage)
     sys.exit(1)
 
-if len(contigs) > 1 and not os.path.exists(contigs):
-    print "Error, provided contig file does not exist: ", contigs
-    sys.exit(1)
+for contig in contigs:
+   if len(contig) > 1 and not os.path.exists(contig):
+      print "Error, provided contig file does not exist: ", contig
+      sys.exit(1)
+
 if os.path.exists(id):
     print "Project directory already exists, please specify another"
     print "Alternatively, use runPipeline to run an existing project"
@@ -277,7 +280,10 @@ cf = open(id+"/pipeline.ini",'w')
 cf.write("#metAMOS pipeline configuration file\n")
 #if len(contigs) > 0:
 #   #user specified a contig file
-cf.write("asmcontigs:\t%s\n"%(contigs))
+cf.write("asmcontigs:\t%s\n"%(",".join(contigs)))
+for contig in contigs:
+   os.system("cp %s %s/Preprocess/in/%s "%(contig,id,os.path.basename(contig)))
+
 #cnt = 1
 i = 0
 while i < len(readlibs):

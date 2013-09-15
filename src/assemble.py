@@ -14,20 +14,18 @@ _readlibs = []
 _skipsteps = []
 _settings = Settings()
 _asm = None
-_usecontigs = False
+_asmcontigs = []
 
-def init(reads, skipsteps, asm, usecontigs):
+def init(reads, skipsteps, asm, asmcontigs):
    global _readlibs
    global _asm
    global _skipsteps
-   global _usecontigs
+   global _asmcontigs
 
    _readlibs = reads
    _skipsteps = skipsteps
    _asm = asm
-   _usecontigs = usecontigs
-   if _usecontigs:
-       _asm = None
+   _asmcontigs.extend(asmcontigs)
 
 def extractNewblerReads():
    run_process(_settings, "unlink %s/Preprocess/out/all.seq.mates"%(_settings.rundir), "Assemble")
@@ -229,9 +227,12 @@ def SplitAssemblers(input_file_name, output_files):
    if "Assemble" in _skipsteps or "assemble" in _skipsteps:
       run_process(_settings, "touch %s/Logs/assemble.skip"%(_settings.rundir), "Assemble")
       return 0
+
+   for contigs in _asmcontigs:
+      run_process(_settings, "touch %s/Assemble/out/%s.run"%(_settings.rundir, contigs), "Assemble")
+
    if _asm == "none" or _asm == None:
       return 0
-
    assemblers = _asm.split(",") 
    for assembler in assemblers:
       run_process(_settings, "touch %s/Assemble/out/%s.run"%(_settings.rundir, assembler), "Assemble")
@@ -251,6 +252,9 @@ def Assemble(input,output):
       return 0
    if asmName == "none" or asmName == None:
       pass
+   if os.path.exists("%s/Preprocess/out/%s.asm.contig"%(_settings.rundir, asmName)):
+      # we had contigs input
+      run_process(_settings, "ln %s/Preprocess/out/%s.asm.contig %s/Assemble/out/%s.asm.contig"%(_settings.rundir, asmName, _settings.rundir, asmName), "Assemble")
    elif asmName == "soapdenovo":
       #open & update config
       soapf = open("%s/config.txt"%(_settings.rundir),'r')
@@ -417,11 +421,6 @@ def Assemble(input,output):
       print "Error: %s is an unknown assembler. No valid assembler specified."%(asmName)
       raise(JobSignalledBreak)
 
-   #if _usecontigs:
-   #     map2contig()
-   #stop here, for now
-   #sys.exit(0)
-   #check if sucessfully completed   
    _settings.PREFIX = originalPrefix
 
 @posttask(touch_file("%s/Logs/assemble.ok"%(_settings.rundir)))

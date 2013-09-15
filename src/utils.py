@@ -373,6 +373,104 @@ class readLib:
     def __str__(self):
         pass
 
+def readConfigInfo(infile, filePrefix=""):
+   readlibs = []
+   asmcontigs = []
+
+   libs = []
+   readobjs = []
+   format = ""
+   mean = 0
+   stdev = 0
+   mmin = 0
+   mmax = 0
+   mated = True
+   interleaved = False
+   innie = True
+
+   linkerType = "titanium"
+   frg = ""
+   f1 = ""
+   f2 = ""
+   currlibno = 0
+   newlib = ""
+   libadded = False
+
+   for line in infile.xreadlines():
+      line = line.replace("\n","")
+
+      if "#" in line:
+         continue
+      elif "asmcontigs:" in line:
+         asmc = line.replace("\n","").split("\t")
+         if len(asmc) < 2:
+            continue
+         contigs = asmc[1].split(",")
+         for contig in contigs:
+            asmcontigs.append(contig)
+      elif "format:" in line:
+         if f1 and not libadded:
+            nread1 = Read(format,f1,mated,interleaved)
+            readobjs.append(nread1)
+            nread2 = ""
+            nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,innie,linkerType)
+            readlibs.append(nlib)
+         libadded = False
+         format = line.replace("\n","").split("\t")[-1]
+      elif "mated:" in line:
+         mated = str2bool(line.replace("\n","").split("\t")[-1])
+      elif "interleaved:" in line:
+         interleaved = str2bool(line.replace("\n","").split("\t")[-1])
+      elif "innie:" in line:
+         innie = str2bool(line.replace("\n","").split("\t")[-1])
+      elif "linker:" in line:
+          linkerType = line.replace("\n","").split("\t")[-1]
+      elif "f1:" in line:
+         data = line.split("\t")
+
+         f1 = "%s%s"%(filePrefix, data[1].split(",")[0])
+         inf = data[1].split(",")
+         mean = int(inf[3])
+         stdev = int(inf[4])
+         mmin = int(inf[1])
+         mmax = int(inf[2])
+         libs.append(f1)
+
+      elif "f2:" in line:
+         data = line.split("\t")
+         f2 = "%s%s"%(filePrefix,data[1].split(",")[0])
+         inf = data[1].split(",")
+         mean = int(inf[3])
+         stdev = int(inf[4])
+         mmin = int(inf[1])
+         mmax = int(inf[2])
+         libs.append(f2)
+        
+         nread1 = Read(format,f1,mated,interleaved)
+         readobjs.append(nread1)
+         nread2 = Read(format,f2,mated,interleaved)
+         readobjs.append(nread2)
+         nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,\
+                              innie,linkerType)
+         readlibs.append(nlib)
+         libadded = True
+      elif "frg" in line:
+         data = line.split("\t")
+         frg = "%s%s"%(filePrefix,data[1].split(",")[0])
+         mated = False
+         f1 = frg
+         libs.append(frg)
+
+   if f1 and not libadded:
+      nread1 = Read(format,f1,mated,interleaved)
+      readobjs.append(nread1)
+      nread2 = ""
+      nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,innie,\
+                          linkerType)
+      readlibs.append(nlib)
+
+   return (asmcontigs, readlibs)
+
 def concatContig(ctgfile):
     if len(sys.argv) < 3:
         print "usage: contig_file out_file"

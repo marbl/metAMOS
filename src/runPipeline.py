@@ -291,7 +291,7 @@ selected_programs["assemble"] = "soapdenovo"
 selected_programs["findorfs"] = "fraggenescan"
 selected_programs["mapreads"] = "bowtie"
 selected_programs["abundance"] = "metaphyler"
-selected_programs["annotate"] = "fcp"
+selected_programs["annotate"] = "kraken"
 selected_programs["fannotate"] = "blast"
 selected_programs["scaffold"] = "bambus2"
 selected_programs["multialign"] = "mgcat"
@@ -334,6 +334,7 @@ output_programs = 0
 settings = utils.Settings(DEFAULT_KMER, multiprocessing.cpu_count() - 1, "", DEFAULT_TAXA_LEVEL)
 nofcpblast = False
 noblastdb = False
+asmSpecified = False
 refgenomes = ""
 for o, a in opts:
     if o in ("-V", "--version"):
@@ -513,6 +514,7 @@ for o, a in opts:
            print "!!Sorry, no valid assembler specified. Using SOAPdenovo instead"
            selected_programs["assemble"] = "soapdenovo"
 
+        asmSpecified = True
         
     elif o in ("-g","--genecaller"):
         selected_programs["findorfs"] = a.lower()
@@ -567,111 +569,14 @@ else:
 #parse frag/libs out of pipeline.ini out of rundir
 inifile = settings.rundir+os.sep+"pipeline.ini"
 inf = open(inifile,'r')
-libs = []
-readlibs = []
-readobjs = []
-frgs = []
-format = ""
-mean = 0
-stdev = 0
-mmin = 0
-mmax = 0
-mated = True
-interleaved = False
-innie = True
-
-# This should be an option somewhere and probably belongs to initPipeline
-linkerType = "titanium"
-frg = ""
-f1 = ""
-f2 = ""
-currlibno = 0
-newlib = ""
-usecontigs = False
-libadded = False
-
-for line in inf:
-    line = line.replace("\n","")
-    if "#" in line:
-        continue
-    elif "asmcontigs:" in line:
-        asmc = line.replace("\n","").split("\t")[-1]
-        if len(asmc) <= 2:
-            continue
-        utils.run_process(settings, "cp %s %s/Assemble/out/%s"%(asmc,settings.rundir,\
-                          "proba.asm.contig"),"RunPipeline")
-        usecontigs = True
-        selected_programs["assemble"] = "none"
-        bowtie_mapping = 1
-    elif "format:" in line:
-
-        if f1 and not libadded:
-            nread1 = utils.Read(format,f1,mated,interleaved)
-            readobjs.append(nread1)
-            nread2 = ""
-            nlib = utils.readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,innie,linkerType)
-            readlibs.append(nlib)
-        libadded = False
-        format = line.replace("\n","").split("\t")[-1]
-    elif "mated:" in line:
-        mated = utils.str2bool(line.replace("\n","").split("\t")[-1])
-    elif "interleaved:" in line:
-        interleaved = utils.str2bool(line.replace("\n","").split("\t")[-1])
-    elif "innie:" in line:
-        innie = utils.str2bool(line.replace("\n","").split("\t")[-1])
-    elif "linker:" in line:
-        linkerType = line.replace("\n","").split("\t")[-1]
-    elif "f1:" in line:
-        data = line.split("\t")
-
-        fqlibs[data[0]] = data[1]
- 
-        f1 = "%s/Preprocess/in/%s"%(settings.rundir,data[1].split(",")[0])
-        inf = data[1].split(",")
-        mean = int(inf[3])
-        stdev = int(inf[4])
-        mmin = int(inf[1])
-        mmax = int(inf[2])
-        libs.append(f1)
-
-    elif "f2:" in line:
-        data = line.split("\t")
-
-        fqlibs[data[0]] = data[1]
-        f2 = "%s/Preprocess/in/%s"%(settings.rundir,data[1].split(",")[0])
-        inf = data[1].split(",")
-        mean = int(inf[3])
-        stdev = int(inf[4])
-        mmin = int(inf[1])
-        mmax = int(inf[2])
-        libs.append(f2)
-        
-        nread1 = utils.Read(format,f1,mated,interleaved)
-        readobjs.append(nread1)
-        nread2 = utils.Read(format,f2,mated,interleaved)
-        readobjs.append(nread2)
-        nlib = utils.readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,\
-                             innie,linkerType)
-        readlibs.append(nlib)
-        libadded = True
-    elif "frg" in line:
-
-        data = line.split("\t")
-        frg = "%s/Preprocess/in/%s"%(settings.rundir,data[1].split(",")[0])
-        mated = False
-        f1 = frg
-        libs.append(frg)
-if f1 and not libadded:
-    nread1 = utils.Read(format,f1,mated,interleaved)
-    readobjs.append(nread1)
-    nread2 = ""
-    nlib = utils.readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,innie,\
-                         linkerType)
-    readlibs.append(nlib)
+(asmcontigs, readlibs) = utils.readConfigInfo(inf, "%s/Preprocess/in/"%(settings.rundir))
+if len(asmcontigs) != 0 and not asmSpecified:
+   selected_programs["assemble"] = "none"
 
 if len(readlibs) > 1 and selected_programs["assemble"] == "metaidba":
     print "ERROR: meta-IDBA only supports 1 library, please select different assembler or reduce libraries"
     sys.exit(1)
+inf.close()
 
 infile = ""
 
@@ -815,8 +720,8 @@ if __name__ == "__main__":
     import postprocess
 
     # initialize submodules
-    preprocess.init(readlibs, skipsteps, selected_programs["assemble"], run_fastqc,filter)
-    assemble.init(readlibs, skipsteps, selected_programs["assemble"], usecontigs)
+    preprocess.init(readlibs, asmcontigs, skipsteps, selected_programs["assemble"], run_fastqc,filter)
+    assemble.init(readlibs, skipsteps, selected_programs["assemble"], asmcontigs)
     mapreads.init(readlibs, skipsteps, selected_programs["mapreads"], savebtidx,ctgbpcov,lowmem)
     validate.init(readlibs, skipsteps)
     findorfs.init(readlibs, skipsteps, selected_programs["findorfs"], min_ctg_len, min_ctg_cvg,read_orfs)

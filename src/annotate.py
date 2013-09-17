@@ -132,7 +132,7 @@ def annotateSeq(cls, contigs, orfAA, orfFA, output):
           print "Error: BLAST not found in %s. Please check your path and try again.\n"%(_settings.BLAST)
           raise(JobSignalledBreak)
 
-       run_process(_settings, "%s/blastall -v 1 -b 1 -a %d -p blastp -m 8 -e 0.00001 -i %s -d %s/refseq_protein -o %s/Annotate/out/%s.blastout"%(_settings.BLAST, _settings.threads,orfAA,_settings.DB_DIR,_settings.rundir,output),"Annotate")
+       run_process(_settings, "%s/blastall -v 1 -b 1 -a %d -p blastp -m 8 -e 0.00001 -i %s -d %s/refseq_protein -o %s/Annotate/out/%s.blastout"%(_settings.BLAST, _settings.threads,orfAA,_settings.BLASTDB_DIR,_settings.rundir,output),"Annotate")
        run_process(_settings, "mv %s/Annotate/out/%s.blastout  %s/Annotate/out/%s.intermediate.hits"%(_settings.rundir,output,_settings.rundir,output),"Annotate")
    elif cls == "phylosift":
        if _settings.PHYLOSIFT == "" or not os.path.exists(_settings.PHYLOSIFT + os.sep + "bin" + os.sep + "phylosift"):

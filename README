@@ -1,16 +1,18 @@
-# MetAMOS v1.2 "Maple Syrup" README
-Last updated: August 13th, 2013
+# MetAMOS v1.3 "Candied Bacon" README
+Last updated: September 18th, 2013
 ***********************************************************************************
-We are happy to announce version 1.2, a.k.a. Maple Syrup
+We are happy to announce version 1.3, a.k.a. Candied Bacon
 
 ## NEWS
-       1. 64-bit frozen Linux binary now available
-       2. Started migration to new HTML5 plots in HTML report
-       3. Added initial framework for generic module support
-       4. Added support for Spades
-       5. Updated bowtie2 support for long reads/contigs
-       6. Added several new tests
-       7. Numerous bug fixes
+       1. Updated 64-bit frozen Linux binary now available (fixed taxonomy dir issue)
+       2. Generic module support officialy supported for Assemble and Annotate step
+       3. Spades & Kraken added
+       4. Added prelim support for program workflows (core, optional, deprecated).
+       5. Added prelim support for new MultiAlign step
+       6. Numerous bug fixes
+
+*on deck: kmher, MaSuRCA, Ray Meta, and Viritas
+
 -----------------------------------------------------------------------------------
 ## **MetAMOS single file binary**
 

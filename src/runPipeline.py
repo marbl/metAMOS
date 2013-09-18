@@ -506,7 +506,7 @@ for o, a in opts:
         if "metaidba" in a.lower():
             bowtie_mapping = 1
             
-        assemblers = a.lower().split(",")
+        assemblers = a.lower().strip().split(",")
         selected_programs["assemble"] = None 
 
         for assembler in assemblers:
@@ -631,7 +631,7 @@ inf = open(inifile,'r')
 if len(asmcontigs) != 0 and not asmSpecified:
    selected_programs["assemble"] = "none"
 
-if len(readlibs) > 1 and selected_programs["assemble"] == "metaidba":
+if len(readlibs) > 1 and "metaidba" in selected_programs["assemble"]:
     print "ERROR: meta-IDBA only supports 1 library, please select different assembler or reduce libraries"
     sys.exit(1)
 inf.close()
@@ -667,7 +667,7 @@ asmfiles = []
 
 for lib in readlibs:
     if "MapReads" in forcesteps:
-        for a in selected_programs["assemble"].split(","):
+        for a in selected_programs["assemble"].strip().split(","):
            utils.run_process(settings, \
               "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,a),\
               "RunPipeline")

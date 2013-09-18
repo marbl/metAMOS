@@ -201,7 +201,7 @@ class GenericProgram:
       stepOut = "%s/%s/out/%s%s"%(_settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), _settings.PREFIX, STEP_OUTPUTS.reverse_mapping[self.stepName])
 
       if programOut != stepOut:
-         run_process(_settings, "unlink  %s"%(programOut), STEP_NAMES.reverse_mapping[self.stepName])
+         run_process(_settings, "unlink  %s"%(stepOut), STEP_NAMES.reverse_mapping[self.stepName])
       symlinkCmd = "ln %s %s"%(programOut, stepOut)
       run_process(_settings, symlinkCmd, STEP_NAMES.reverse_mapping[self.stepName].title())
 

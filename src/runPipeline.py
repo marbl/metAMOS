@@ -94,6 +94,7 @@ from ruffus import *
 from task import JobSignalledBreak
 skipsteps = ["FindRepeats"]
 isolate_genome = False
+asmScore = utils.SCORE_TYPE.LAP
 
 ## Get start time
 t1 = time.time()
@@ -123,19 +124,19 @@ def usage():
     print "   -t = <bool>:   filter input reads? (default = NO)"
     print "   -q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)"
     print "[Assemble]"
-    print "   -a = <string>: genome assembler to use (default = SOAPdenovo)"
+    print "   -a = <string>: genome assembler to use (default = %s, supported = %s)"%(selected_programs["assemble"], ",".join(supported_programs["assemble"]))
     print "   -k = <kmer size>: k-mer size to be used for assembly (default = " + str(DEFAULT_KMER) +  ")"
     print "   -o = <int>>:   min overlap length"
     print "[MapReads]"
-    print "   -m = <string>: read mapper to use? (default = bowtie)"
+    print "   -m = <string>: read mapper to use? (default = %s, supported = %s)"%(selected_programs["mapreads"], ",".join(supported_programs["mapreads"]))
     print "   -i = <bool>:   save bowtie (i)ndex? (default = NO)"
     print "   -b = <bool>:   create library specific per bp coverage of assembled contigs (default = NO)"
     print "[FindORFS]"
-    print "   -g = <string>: gene caller to use (default=FragGeneScan)"
+    print "   -g = <string>: gene caller to use (default = %s, supported = %s)"%(selected_programs["findorfs"], ",".join(supported_programs["findorfs"]))
     print "   -l = <int>:    min contig length to use for ORF call (default = 300)"
     print "   -x = <int>>:   min contig coverage to use for ORF call (default = 3X)"
     print "[Annotate]"
-    print "   -c = <string>: classifier to use for annotation (default = FCP)"
+    print "   -c = <string>: classifier to use for annotation (default = %s, supported = %s"%(selected_programs["annotate"], ",".join(supported_programs["annotate"]))
     print "   -u = <bool>:   annotate unassembled reads? (default = NO)"
 
     print "[Classify]"
@@ -173,6 +174,17 @@ def printConfiguration(fileName=None):
     configurationText.append("Steps to skip:\t\t%s\n"%(", ".join(skipsteps)))
     configurationText.append("Steps to force:\t\t%s\n"%(", ".join(forcesteps)))
 
+    # get metamos citations
+    configurationText.append("\n")
+    configurationText.append("[citation]\n")
+    (progName, citation) = utils.getProgramCitations(settings, "metamos")
+    configurationText.append(progName + "\n")
+    configurationText.append("\t" + citation + "\n\n")
+    if isolate_genome == True:
+       (progName, citation) = utils.getProgramCitations(settings, "metamos_isolate")
+       configurationText.append(progName + "\n")
+       configurationText.append("\t" + citation + "\n\n") 
+
     configurationText.append("\n")
     configurationText.append("Step-specific configuration:\n")
     for type in selected_programs.keys():
@@ -190,7 +202,10 @@ def printConfiguration(fileName=None):
               try:
                  configurationText.append("\t" + eval("utils.Settings.%s"%(prog.replace("-", "_").upper()))+"\n")
               except AttributeError:
-                 configurationText.append("\t" + generic.getLocation(utils.STEP_NAMES.mapping[type.upper()], prog) + "\n")
+                 try:
+                    configurationText.append("\t" + generic.getLocation(utils.STEP_NAMES.mapping[type.upper()], prog) + "\n")
+                 except KeyError:
+                     configurationText.append("UNKNOWN")
               if citation != "":
                  configurationText.append("\t" + citation + "\n\n")
 
@@ -216,7 +231,7 @@ def printConfiguration(fileName=None):
         conf.close()
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hM:I:R:rjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iu1l:x:yz:LBV",\
+    opts, args = getopt.getopt(sys.argv[1:], "hM:IR:rjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iu1l:x:yz:LBVX:S:",\
                                    ["help", \
                                         "multialigner",\
                                         "isolate",\
@@ -250,7 +265,9 @@ try:
                                         "taxalevel",\
                                         "localKrona",\
                                         "noblastdb",\
-					"version"])
+					"version",\
+                                        "validator",\
+                                        "asmscore"])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -273,6 +290,7 @@ supported_aligners = ["mgcat"]
 supported_classifiers = ["fcp","phylosift","phmmer","blast",\
                              "metaphyler", "phymm"]
 supported_classifiers.extend(generic.getSupportedList(utils.INITIAL_UTILS, utils.STEP_NAMES.ANNOTATE))
+supported_validators = ["lap", "ale", "quast", "frcbam", "freebayes", "cgal"]
 supported_fannotate = ["blast"]
 supported_scaffolders = ["bambus2"]
 supported_programs["findorfs"] = supported_genecallers
@@ -283,6 +301,7 @@ supported_programs["annotate"] = supported_classifiers
 supported_programs["fannotate"] = supported_fannotate
 supported_programs["scaffold"] = supported_scaffolders
 supported_programs["multialign"] = supported_aligners
+supported_programs["validate"] = supported_validators
 
 supported_taxonomic = ["kingdom", "phylum", "class", "order", "family", "genus", "species"]
 
@@ -295,6 +314,7 @@ selected_programs["annotate"] = "kraken"
 selected_programs["fannotate"] = "blast"
 selected_programs["scaffold"] = "bambus2"
 selected_programs["multialign"] = "mgcat"
+selected_programs["validate"] = "lap"
 
 always_run_programs = ["krona"]
 
@@ -488,8 +508,6 @@ for o, a in opts:
             
         assemblers = a.lower().split(",")
         selected_programs["assemble"] = None 
-        if len(assemblers) > 1:
-           always_run_programs.append("lap")
 
         for assembler in assemblers:
            foundit = False
@@ -533,6 +551,44 @@ for o, a in opts:
             print "!!Sorry, %s is not a supported gene caller. Using FragGeneScan instead"%(selected_programs["findorfs"])
             selected_programs["findorfs"] = "fraggenescan"
 
+    elif o in ("-S", "--asmscore"):
+       found = False
+       for sa in utils.SCORE_TYPE.reverse_mapping.keys():
+          print "Comparing %s to %s"%(a.upper(), utils.SCORE_TYPE.reverse_mapping[sa])
+          if a.upper() in utils.SCORE_TYPE.reverse_mapping[sa]:
+             asmScore = sa
+             found = True
+             break
+       if not found:   
+          print "Warning: invalid score type %s specified, supported: %s"%(a, ",".join(utils.SCORE_TYPE.reverse_mapping.values()))
+          asmScore = utils.SCORE_TYPE.LAP
+    elif o in ("-X", "--validator"):
+        validators = a.lower().split(",")
+        selected_programs["validate"] = None
+
+        for validator in validators:
+           if "snp" in validator:
+              validator = "freebayes"
+           foundit = False
+           for sa in supported_validators:
+              if validator not in sa:
+                 continue
+              else:
+                 if selected_programs["validate"] != None:
+                    selected_programs["validate"] += ","
+                 else:
+                    selected_programs["validate"] = ""
+                 selected_programs["validate"] += sa
+                 foundit = True
+                 break
+
+           if not foundit:
+               print "!!Sorry, %s is not a supported validator."%(validator)
+
+        if selected_programs["validate"] == None:
+           print "!!Sorry, no valid assembly validator specified. Using LAP instead"
+           selected_programs["validate"] = "lap"
+
     elif o in ("-f","--fastest"):
         runfast = True
     elif o in ("-b","--savebowtieidx"):
@@ -561,7 +617,9 @@ if not isolate_genome:
 else:
   try:
       selected_programs["multialign"]
-      selected_programs["assemble"] = "velvet"
+      selected_programs["validate"] = ",".join(supported_programs["validate"])
+      selected_programs["assemble"] = selected_programs["assemble"] + ",velvet"
+      asmScore = utils.SCORE_TYPE.ALL
   except KeyError:
       skipsteps.append("MultiAlign")
 
@@ -609,9 +667,14 @@ asmfiles = []
 
 for lib in readlibs:
     if "MapReads" in forcesteps:
-        utils.run_process(settings, \
-           "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX),\
-           "RunPipeline")
+        for a in selected_programs["assemble"].split(","):
+           utils.run_process(settings, \
+              "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,a),\
+              "RunPipeline")
+        for a in asmcontigs:
+                utils.run_process(settings, \
+                   "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,os.path.splitext(a)[0]),\
+                   "RunPipeline")
     if "Assemble" in forcesteps:
         utils.run_process(settings, \
            "touch %s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id),\
@@ -653,9 +716,6 @@ if "FINDORFS" in forcesteps or "findorfs" in forcesteps or "FindORFS" in forcest
           "rm %s/FindORFS/out/%s.faa"%(settings.rundir,settings.PREFIX),"RunPipeline")
    utils.run_process(settings, \
           "rm %s/FindORFS/out/%s.fna"%(settings.rundir,settings.PREFIX),"RunPipeline")
-   utils.run_process(settings, \
-          "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,settings.PREFIX),\
-          "RunPipeline")
 
 if "Assemble" not in skipsteps and "Assemble" in forcesteps:
     utils.run_process(settings, \
@@ -703,6 +763,11 @@ if __name__ == "__main__":
        if "bowtie2" == selected_programs["mapreads"]:
           selected_programs["mapreads"] = "bowtie"
 
+    if asmScore == utils.SCORE_TYPE.ALL:
+       selected_programs["validate"] = ",".join(supported_programs["validate"])
+    elif utils.SCORE_TYPE.reverse_mapping[asmScore].lower() not in selected_programs["validate"]:
+       selected_programs["validate"] = "%s,%s"%(selected_programs["validate"], asmScore.lower())
+
     import preprocess
     import assemble
     import mapreads
@@ -723,7 +788,7 @@ if __name__ == "__main__":
     preprocess.init(readlibs, asmcontigs, skipsteps, selected_programs["assemble"], run_fastqc,filter)
     assemble.init(readlibs, skipsteps, selected_programs["assemble"], asmcontigs)
     mapreads.init(readlibs, skipsteps, selected_programs["mapreads"], savebtidx,ctgbpcov,lowmem)
-    validate.init(readlibs, skipsteps)
+    validate.init(readlibs, skipsteps, selected_programs["validate"], asmScore)
     findorfs.init(readlibs, skipsteps, selected_programs["findorfs"], min_ctg_len, min_ctg_cvg,read_orfs)
     findreps.init(readlibs, skipsteps)
     multialign.init(readlibs, skipsteps, forcesteps, selected_programs["multialign"],refgenomes)

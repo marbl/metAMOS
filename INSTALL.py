@@ -424,7 +424,7 @@ if not os.path.exists("./Utilities/DB/uniprot_sprot.fasta"):
 # now workflow specific tools
 if "optional" in enabledWorkflows or manual:
     if not os.path.exists("./Utilities/cpp/%s-%s/metaphylerClassify"%(OSTYPE, MACHINETYPE)) or not os.path.exists("./Utilities/perl/metaphyler/markers/markers.protein") or not os.path.exists("./Utilities/perl/metaphyler/markers/markers.dna"):
-        if metaphyler in packagesToInstall:
+        if "metaphyler" in packagesToInstall:
            dl = 'y'
         else:
            print "Metaphyler (latest version) not found, optional for Annotate, download now?"

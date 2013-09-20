@@ -548,13 +548,13 @@ if "isolate" in enabledWorkflows or manual:
        if dl == 'y' or dl == 'Y':
           # check for mpi which is required
           command="mpicxx"
-          mpi=utils.getFromPath(command, "MPI")
+          mpi=utils.getFromPath(command, "MPI", False)
           if not os.path.exists("%s%s%s"%(mpi, os.sep, command)):
              command="openmpicxx"
-             mpi=utils.getFromPath(command, "MPI")
+             mpi=utils.getFromPath(command, "MPI", False)
              if not os.path.exists("%s%s%s"%(mpi, os.sep, command)):
                 mpi = command = ""
-                print "Error: cannot find MPI in your path. Please add it to your path or specify it with the MPI=/path/to/mpicxx parameter"
+                print "Error: cannot find MPI in your path. Please add it to your path."
           if command != "":
              os.system("curl -L http://downloads.sourceforge.net/project/denovoassembler/Ray-v2.2.0.tar.bz2 -o Ray-v2.2.0.tar.bz2")
              os.system("tar xvjf Ray-v2.2.0.tar.bz2")
@@ -578,97 +578,97 @@ if "isolate" in enabledWorkflows or manual:
           signalp = utils.getFromPath("signalp", "SignalP", False)
           if signalp == "":
              print "Warning: SignalP is not installed and is required for Prokka's gram option. Please download it and add it to your path."
-          else:
-             #os.system("curl -L http://www.vicbioinformatics.com/prokka-1.7.tar.gz -o prokka-1.7.tar.gz")
-             os.system("tar xvzf prokka-1.7.tar.gz")
-             os.system("mv prokka-1.7 ./Utilities/cpp%s%s-%s%sprokka"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+          #os.system("curl -L http://www.vicbioinformatics.com/prokka-1.7.tar.gz -o prokka-1.7.tar.gz")
+          os.system("tar xvzf prokka-1.7.tar.gz")
+          os.system("mv prokka-1.7 ./Utilities/cpp%s%s-%s%sprokka"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
 
-             bioperl = utils.getCommandOutput("perl -MBio::Seq -e 0 && echo $?", True)
-             if bioperl == "":
-                # phylosift comes with BioPerl, use it
-                os.system("curl -L http://edhar.genomecenter.ucdavis.edu/~koadman/phylosift/devel/phylosift_20130829.tar.bz2 -o ./phylosift.tar.bz2")
-                os.system("tar -xvjf phylosift.tar.bz2")
-                os.system("rm -rf phylosift.tar.bz2")
-                os.system("mv phylosift_20130829/lib ./Utilities/cpp%s%s-%s%sprokka"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-                os.system("rm -rf phylosift_20130829")
-                os.chdir("./Utilities/cpp%s%s-%s%sprokka/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-                os.system("cp prokka prokka.original")
-                os.system("cat prokka.original |awk '{if (match($0, \"use strict\")) { print \"use lib \\\"%s/Utilities/cpp%s%s-%s%sprokka/lib\\\";\"; print $0; } else { print $0}}' > prokka"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep))
-                os.chdir("%s"%(METAMOS_ROOT))
+          bioperl = utils.getCommandOutput("perl -MBio::Seq -e 0 && echo $?", True)
+          if bioperl == "":
+             # phylosift comes with BioPerl, use it
+             os.system("curl -L http://edhar.genomecenter.ucdavis.edu/~koadman/phylosift/devel/phylosift_20130829.tar.bz2 -o ./phylosift.tar.bz2")
+             os.system("tar -xvjf phylosift.tar.bz2")
+             os.system("rm -rf phylosift.tar.bz2")
+             os.system("mv phylosift_20130829/lib ./Utilities/cpp%s%s-%s%sprokka"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("rm -rf phylosift_20130829")
+             os.chdir("./Utilities/cpp%s%s-%s%sprokka/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("cp prokka prokka.original")
+             os.system("cat prokka.original |awk '{if (match($0, \"use strict\")) { print \"use lib \\\"%s/Utilities/cpp%s%s-%s%sprokka/lib\\\";\"; print $0; } else { print $0}}' > prokka"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.chdir("%s"%(METAMOS_ROOT))
 
-             aragorn = utils.getFromPath("aragorn", "aragorn", False)
-             if aragorn == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/aragorn"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
-                print "Aragorn missing, will install"
-                os.system("curl -L http://130.235.46.10/ARAGORN/Downloads/aragorn1.2.36.tgz -o aragorn.tar.gz")
-                os.system("tar xvzf aragorn.tar.gz")
-                os.chdir("aragorn1.2.36")
-                os.system("gcc -O3 -ffast-math -finline-functions -o aragorn aragorn1.2.36.c")
-                os.chdir("%s"%(METAMOS_ROOT))
-                os.system("mv aragorn1.2.36/aragorn ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
-                os.system("rm -rf aragorn1.2.36")
-                os.system("rm aragorn.tar.gz")
-             infernal = utils.getFromPath("cmscan", "Infernal", False)
-             if infernal == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/infernal"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
-                print "Infernal missing, will install"
-                if OSTYPE == "Darwin":
-                   os.system("curl -L http://selab.janelia.org/software/infernal/infernal-1.1rc4-macosx-intel.tar.gz -o infernal.tar.gz")
-                else:
-                   os.system("curl -L http://selab.janelia.org/software/infernal/infernal-1.1rc4-linux-intel-gcc.tar.gz -o infernal.tar.gz")
-                os.system("tar xvzf infernal.tar.gz")
-                os.system("mv infernal*/binaries/* ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
-                os.system("rm -rf infernal*")
-             barrnap = utils.getFromPath("barrnap", "barrnap", False)
-             if barrnap == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/barrnap"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
-                print "Barrnap missing, will install"
-                os.system("curl -L http://www.vicbioinformatics.com/barrnap-0.1.tar.gz -o barrnap.tar.gz")
-                os.system("tar xvzf barrnap.tar.gz")
-                os.system("mv barrnap-0.1/barrnap ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
-                os.system("mv barrnap-0.1/db ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
-                os.system("rm -rf barrnap-0.1")
-                os.system("rm barrnap.tar.gz")
+          aragorn = utils.getFromPath("aragorn", "aragorn", False)
+          if aragorn == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/aragorn"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
+             print "Aragorn missing, will install"
+             os.system("curl -L http://130.235.46.10/ARAGORN/Downloads/aragorn1.2.36.tgz -o aragorn.tar.gz")
+             os.system("tar xvzf aragorn.tar.gz")
+             os.chdir("aragorn1.2.36")
+             os.system("gcc -O3 -ffast-math -finline-functions -o aragorn aragorn1.2.36.c")
+             os.chdir("%s"%(METAMOS_ROOT))
+             os.system("mv aragorn1.2.36/aragorn ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
+             os.system("rm -rf aragorn1.2.36")
+             os.system("rm aragorn.tar.gz")
+          infernal = utils.getFromPath("cmscan", "Infernal", False)
+          if infernal == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/infernal"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
+             print "Infernal missing, will install"
+             if OSTYPE == "Darwin":
+                os.system("curl -L http://selab.janelia.org/software/infernal/infernal-1.1rc4-macosx-intel.tar.gz -o infernal.tar.gz")
+             else:
+                os.system("curl -L http://selab.janelia.org/software/infernal/infernal-1.1rc4-linux-intel-gcc.tar.gz -o infernal.tar.gz")
+             os.system("tar xvzf infernal.tar.gz")
+             os.system("mv infernal*/binaries/* ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
+             os.system("rm -rf infernal*")
+          barrnap = utils.getFromPath("barrnap", "barrnap", False)
+          if barrnap == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/barrnap"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
+             print "Barrnap missing, will install"
+             os.system("curl -L http://www.vicbioinformatics.com/barrnap-0.1.tar.gz -o barrnap.tar.gz")
+             os.system("tar xvzf barrnap.tar.gz")
+             os.system("mv barrnap-0.1/barrnap ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
+             os.system("mv barrnap-0.1/db ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
+             os.system("rm -rf barrnap-0.1")
+             os.system("rm barrnap.tar.gz")
 
-             hmmscan = utils.getFromPath("hmmscan", "HMMER3", False)
-             if hmmscan == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/hmmscan"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
-                print "HMMER3 is missing, will install"
-                if OSTYPE == "Darwin":
-                   os.system("curl -L ftp://selab.janelia.org/pub/software/hmmer3/3.1b1/hmmer-3.1b1-macosx-intel.tar.gz -o hmmer.tar.gz")
-                elif OSTYPE == "Linux" and MACHINETYPE == "x86_64":
-                   os.system("curl -L ftp://selab.janelia.org/pub/software/hmmer3/3.1b1/hmmer-3.1b1-linux-intel-x86_64.tar.gz -o hmmer.tar.gz")
-                elif OSTYPE == "Linux":
-                   os.system("curl -L ftp://selab.janelia.org/pub/software/hmmer3/3.1b1/hmmer-3.1b1-linux-intel-ia32.tar.gz -o hmmer.tar.gz") 
-                os.system("tar xvzf hmmer.tar.gz")
-                os.system("mv hmmer*/binaries/* ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
-                os.system("rm -rf hmmer*")
+          hmmscan = utils.getFromPath("hmmscan", "HMMER3", False)
+          if hmmscan == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/hmmscan"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
+             print "HMMER3 is missing, will install"
+             if OSTYPE == "Darwin":
+                os.system("curl -L ftp://selab.janelia.org/pub/software/hmmer3/3.1b1/hmmer-3.1b1-macosx-intel.tar.gz -o hmmer.tar.gz")
+             elif OSTYPE == "Linux" and MACHINETYPE == "x86_64":
+                os.system("curl -L ftp://selab.janelia.org/pub/software/hmmer3/3.1b1/hmmer-3.1b1-linux-intel-x86_64.tar.gz -o hmmer.tar.gz")
+             elif OSTYPE == "Linux":
+                os.system("curl -L ftp://selab.janelia.org/pub/software/hmmer3/3.1b1/hmmer-3.1b1-linux-intel-ia32.tar.gz -o hmmer.tar.gz") 
+             os.system("tar xvzf hmmer.tar.gz")
+             os.system("mv hmmer*/binaries/* ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
+             os.system("rm -rf hmmer*")
 
-             gnuparallel = utils.getFromPath("parallel", "GNU Parallel", False)
-             if gnuparallel == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/parallel"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
-                print "GNU Parallel is missing, will install"
-                os.system("curl -L http://ftp.gnu.org/gnu/parallel/parallel-20100424.tar.bz2 -o parallel.tar.gz")
-                os.system("tar xvjf parallel.tar.gz")
-                os.chdir("parallel-20100424")
-                os.system("./configure --prefix=`pwd`")
-                os.system("make install")
-                os.chdir("%s"%(METAMOS_ROOT))
-                os.system("mv parallel-20100424/parallel ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
-                os.system("rm -rf parallel-20100424")
-                os.system("rm parallel.tar.gz")
-            
-             blastp = utils.getFromPath("blastp", "BLAST+", False)
-             if blastp == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/blastp"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
-                os.system("ln %s/Utilities/cpp%s%s-%s%sblastp %s/Utilities/cpp%s%s-%s%sprokka/binaries%s%s%sblastp"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep, METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower(), os.sep))
+          gnuparallel = utils.getFromPath("parallel", "GNU Parallel", False)
+          if gnuparallel == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/parallel"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
+             print "GNU Parallel is missing, will install"
+             os.system("curl -L http://ftp.gnu.org/gnu/parallel/parallel-20100424.tar.bz2 -o parallel.tar.gz")
+             os.system("tar xvjf parallel.tar.gz")
+             os.chdir("parallel-20100424")
+             os.system("./configure --prefix=`pwd`")
+             os.system("make install")
+             os.chdir("%s"%(METAMOS_ROOT))
+             os.system("mv parallel-20100424/parallel ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
+             os.system("rm -rf parallel-20100424")
+             os.system("rm parallel.tar.gz")
+          
+          blastp = utils.getFromPath("blastp", "BLAST+", False)
+          if blastp == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/blastp"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
+             os.system("ln %s/Utilities/cpp%s%s-%s%sblastp %s/Utilities/cpp%s%s-%s%sprokka/binaries%s%s%sblastp"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep, METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower(), os.sep))
 
-             tbl2asn = utils.getFromPath("tbl2asn", "NCBI Tbl2Asn", False)
-             if tbl2asn == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/tbl2asn"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
-                print "NCBI Tbl2Asn is missing, will install"
-                if OSTYPE == "Darwin":
-                   os.system("curl -L ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/mac.tbl2asn.gz -o tbl2asn.gz")
-                elif OSTYPE == "Linux" and MACHINETYPE == "x86_64":
-                   os.system("curl -L ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux64.tbl2asn.gz -o tbl2asn.gz")
-                elif OSTYPE == "Linux":
-                   os.system("curl -L ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux.tbl2asn.gz -o tbl2asn.gz")
-                os.system("gunzip tbl2asn.gz")
-                os.system("chmod ug+x tbl2asn")
-                os.system("mv tbl2asn ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
+          tbl2asn = utils.getFromPath("tbl2asn", "NCBI Tbl2Asn", False)
+          if tbl2asn == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/tbl2asn"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
+             print "NCBI Tbl2Asn is missing, will install"
+             if OSTYPE == "Darwin":
+                os.system("curl -L ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/mac.tbl2asn.gz -o tbl2asn.gz")
+             elif OSTYPE == "Linux" and MACHINETYPE == "x86_64":
+                os.system("curl -L ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux64.tbl2asn.gz -o tbl2asn.gz")
+             elif OSTYPE == "Linux":
+                os.system("curl -L ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux.tbl2asn.gz -o tbl2asn.gz")
+             os.system("gunzip tbl2asn.gz")
+             os.system("chmod ug+x tbl2asn")
+             os.system("mv tbl2asn ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
+             os.system("rm tbl2asn.gz")
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        masurca = utils.getFromPath("runSRCA.pl", "MaSuRCA", False)
@@ -705,7 +705,119 @@ if "isolate" in enabledWorkflows or manual:
                 os.chdir("%s"%(METAMOS_ROOT))
                 os.system("rm -rf ./MaSuRCA-2.0.3.1")
                 os.system("rm msrca.tar.gz")
-    
+
+    if 0 and not os.path.exists("./Utilities/cpp%s%s-%s%sMIRA"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+       mira = utils.getFromPath("mira", "MIRA", False)
+       if mira == "":
+          if "mira" in packagesToInstall:
+             dl = 'y'
+          else:
+             print "MIRA binaries not found, optional for Assemble step, download now?"
+             dl = raw_input("Enter Y/N: ")
+          if dl == 'y' or dl == 'Y':
+             if OSTYPE == "Darwin":
+	        os.system("curl -L \"http://downloads.sourceforge.net/project/mira-assembler/MIRA/stable/mira_4.0rc1_darwin12.4.0_x86_64_static.tar.bz2?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fmira-assembler%2Ffiles%2FMIRA%2Fstable%2Fmira_4.0rc1_darwin12.4.0_x86_64_static.tar.bz2%2Fdownload&ts=1379625747&use_mirror=superb-dca2\" -o mira.tar.bz2")
+             else:
+                os.system("curl -L \"http://downloads.sourceforge.net/project/mira-assembler/MIRA/stable/mira_4.0rc1_linux-gnu_x86_64_static.tar.bz2?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fmira-assembler%2Ffiles%2FMIRA%2Fstable%2F&ts=1379625875&use_mirror=softlayer-dal\" -o mira.tar.bz2")
+             os.system("tar xvjf mira.tar.bz2")
+             os.system("rm -f mira.tar.bz2")
+             os.system("mv `ls -d mira*` ./Utilities/cpp%s%s-%s%smira"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+
+    if not os.path.exists("./Utilities/cpp%s%s-%s%sabyss"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+       abyss = utils.getFromPath("ABYSS", "ABySS", False)
+       if abyss == "":
+          if "abyss" in packagesToInstall:
+             dl = 'y'
+          else:
+             print "ABySS binaries not found, optional for Assemble step, download now?"
+             dl = raw_input("Enter Y/N: ")
+          if dl == 'y' or dl == 'Y':
+             os.system("curl -L https://sparsehash.googlecode.com/files/sparsehash-2.0.2.tar.gz -o sparse.tar.gz")
+             os.system("tar xvzf sparse.tar.gz")
+             os.chdir("sparsehash-2.0.2")
+             os.system("./configure --prefix=`pwd`")
+             os.system("make install")
+             os.chdir("%s"%(METAMOS_ROOT))
+             os.system("curl -L http://www.bcgsc.ca/platform/bioinfo/software/abyss/releases/1.3.6/abyss-1.3.6.tar.gz -o abyss.tar.gz")
+             os.system("tar xvzf abyss.tar.gz")
+             os.chdir("abyss-1.3.6")
+             os.environ["CFLAGS"] = "-I%s/sparsehash-2.0.2/include"%(METAMOS_ROOT)
+             os.environ["CPPFLAGS"] = "-I%s/sparsehash-2.0.2/include"%(METAMOS_ROOT)
+             os.environ["CXXFLAGS"] = "-I%s/sparsehash-2.0.2/include"%(METAMOS_ROOT)
+             os.system("./configure --enable-maxk=96 --prefix=`pwd`/build")
+             os.system("make install")
+             os.chdir("%s"%(METAMOS_ROOT))
+             os.system("mkdir ./Utilities/cpp%s%s-%s%sabyss"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("mv abyss-1.3.6/build/* ./Utilities/cpp%s%s-%s%sabyss/"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+
+             # update abysss to use installed mpi
+             command="mpirun"
+             mpi=utils.getFromPath(command, "MPI", False)
+             if not os.path.exists("%s%s%s"%(mpi, os.sep, command)):
+                command="openmpirun"
+                mpi=utils.getFromPath(command, "MPI", False)
+                if not os.path.exists("%s%s%s"%(mpi, os.sep, command)):
+                   mpi = command = ""
+             os.chdir("./Utilities/cpp%s%s-%s%sabyss/bin/"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("cp abyss-pe abyss-pe-orig")
+             if mpi != "" and os.path.exists("./Utilities/cpp%s%s-%s%sabyss/bin/ABYSS-P"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+                os.system("cat abyss-pe-orig |sed s/which\ mpirun/which\ %s/g > abyss-pe"%(command))
+             else:
+                print "Error: cannot find MPI in your path. Disabling ABySS threading."
+                os.system("cat abyss-pe-orig |awk -v found=0 -v skipping=0 '{if (match($0, \"ifdef np\")) {skipping=1; } if (skipping && match($1, \"ABYSS\")) {print $0; skipping=1; found=1} if (found && match($1, \"endif\")) {skipping=0;found = 0;} else if (skipping == 0) { print $0; } }' > abyss-pe")
+             os.chdir("%s"%(METAMOS_ROOT))
+             #os.system("rm -rf sparsehash-2.0.2")
+             #os.system("rm -rf sparse.tar.gz")
+             #os.system("rm -rf abyss-1.3.6")
+             #os.system("rm -rf abyss.tar.gz")
+
+    if not os.path.exists("./Utilities/cpp%s%s-%s%ssga"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+       sga = utils.getFromPath("sga", "SGA", False)
+       if sga == "":
+          if "sga" in packagesToInstall:
+             dl = 'y'
+          else:
+             print "SGA binaries not found, optional for Assemble step, download now?"
+             dl = raw_input("Enter Y/N: ")
+          if dl == 'y' or dl == 'Y':
+             os.system("curl -L https://sparsehash.googlecode.com/files/sparsehash-2.0.2.tar.gz -o sparse.tar.gz")
+             os.system("tar xvzf sparse.tar.gz")
+             os.chdir("sparsehash-2.0.2")
+             os.system("./configure --prefix=`pwd`")
+             os.system("make install")
+             os.chdir("%s"%(METAMOS_ROOT))
+             os.system("curl -L https://github.com/pezmaster31/bamtools/archive/master.zip -o bamtools.tar.gz")
+             os.system("tar xvzf bamtools.tar.gz")
+             os.system("curl -L http://sourceforge.net/projects/bio-bwa/files/bwa-0.7.5a.tar.bz2 -o bwa.tar.gz")
+             os.system("tar xvzf bwa.tar.gz")
+             os.chdir("bwa-0.7.5a")
+             os.system("make")
+             os.chdir("%s"%(METAMOS_ROOT))
+             os.system("curl -L https://github.com/jts/sga/archive/master.zip -o sga.tar.gz")
+             os.system("tar xvzf sga.tar.gz")
+             os.system("mv sga-master ./Utilities/cpp%s%s-%s%ssga"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("mv bamtools-master ./Utilities/cpp%s%s-%s%ssga/bamtools"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("mv sparsehash-2.0.2 ./Utilities/cpp%s%s-%s%ssga/sparsehash"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.chdir("./Utilities/cpp%s%s-%s%ssga/bamtools"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("mkdir build")
+             os.chdir("build")
+             os.system("cmake ..")
+             os.system("make")
+             os.chdir("%s"%(METAMOS_ROOT))
+             os.chdir("./Utilities/cpp%s%s-%s%ssga/src"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("sh ./autogen.sh")
+             os.system("./configure --with-sparsehash=`pwd`/../sparsehash --with-bamtools=`pwd`/../bamtools --prefix=`pwd`/../")
+             os.system("make install")
+             os.chdir("%s"%(METAMOS_ROOT))
+             os.system("mv bwa-0.7.5a/bwa ./Utilities/cpp%s%s-%s%ssga/bin/"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("ln %s/Utilities/cpp%s%s-%s%ssamtools %s/Utilities/cpp%s%s-%s%ssga/bin%ssamtools"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep, METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep))
+             os.system("rm -rf sparsehash-2.0.2")
+             os.system("rm -rf sparse.tar.gz")
+             os.system("rm -rf bamtools-master")
+             os.system("rm -rf bamtools.tar.gz")
+             os.system("rm -rf sga-master")
+             os.system("rm -rf sga.tar.gz")
+
     if not os.path.exists("./quast"):
         if "quast" in packagesToInstall:
            dl = 'y'
@@ -780,7 +892,7 @@ if "isolate" in enabledWorkflows or manual:
            print "ALE tool not found, optional for Validate step, download now?"
            dl = raw_input("Enter Y/N: ")
         if dl == 'y' or dl == 'Y':
-           os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/ALE.tar.gz -o ale.tar.gz")
+           os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/ale.tar.gz -o ale.tar.gz")
            os.system("tar xvzf ale.tar.gz")
            os.system("mv ALE ./Utilities/cpp/%s%s-%s%sALE"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
            os.chdir("./Utilities/cpp/%s%s-%s%sALE/src"%(os.sep, OSTYPE, MACHINETYPE, os.sep))

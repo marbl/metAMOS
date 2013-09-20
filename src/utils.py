@@ -404,6 +404,7 @@ class readLib:
     def __str__(self):
         pass
 
+
 def readConfigInfo(infile, filePrefix=""):
    readlibs = []
    asmcontigs = []
@@ -986,6 +987,20 @@ def run_process(settings,command,step=""):
               commandf.write("|%s| "%(dt)+command+"\n")
               commandf.close()
 
+def recruitGenomes(settings,query,genomeDir,outDir,maxMUMi=0.15):
+   print "recruiting genomes.."
+   run_process("%s/mgcat -M -r %s -d %s -o %d"%(settings.MGCAT,query,genomeDir,outDir)
+   rg = open("%s/recruited_genomes.lst",'r')
+   rglist = []
+   cnt = 0
+   for genome in rglist:
+       if os.path.exists(genome.replace("\n","")):
+           rglist.append(genome.replace("\n",""))
+           cnt +=1
+   print "done! recruited %d genomes!"%(cnt)
+   return rglist
+
+      
 def getProgramCitations(settings, programName, comment="#"):
    global _PUB_DICT
    global _PROG_NAME_DICT

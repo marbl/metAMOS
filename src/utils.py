@@ -881,18 +881,27 @@ def run_process(settings,command,step=""):
               commandf.write("|%s| "%(dt)+command+"\n")
               commandf.close()
 
-def recruitGenomes(settings,query,genomeDir,outDir,maxMUMi=0.15):
+def recruitGenomes(settings,query,genomeDir,outDir,top=1):
    print "recruiting genomes.."
    run_process("%s/mgcat -M -r %s -d %s -o %d"%(settings.MGCAT,query,genomeDir,outDir)
    rg = open("%s/recruited_genomes.lst",'r')
    rglist = []
    cnt = 0
    for genome in rglist:
-       if os.path.exists(genome.replace("\n","")):
-           rglist.append(genome.replace("\n",""))
+       genome = genome.replace("\n","")
+       seq,mumi = genome.split(",")
+       if os.path.exists(seq):
+           rglist.append([float(mumi),seq])
            cnt +=1
    print "done! recruited %d genomes!"%(cnt)
-   return rglist
+   rglist.sort()
+   int i = 0
+   gtr = []
+   while i < len(rglist):
+       gtr.append(rglist[i][1])
+       i++
+           
+   return gtr
 
       
 def getProgramCitations(settings, programName, comment="#"):

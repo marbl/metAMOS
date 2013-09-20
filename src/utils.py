@@ -55,9 +55,16 @@ def enum(*sequential, **named):
     enums['mapping'] = mapping
     return type('Enum', (), enums)
 
-STEP_NAMES = enum("ASSEMBLE", "ANNOTATE")
-STEP_OUTPUTS = enum(".asm.contig", ".hits")
+STEP_NAMES = enum("ASSEMBLE", "ANNOTATE", "SCAFFOLD")
+STEP_OUTPUTS = enum(".asm.contig", ".hits", ".linearize.scaffolds.final")
 INPUT_TYPE = enum("FASTQ", "FASTA", "CONTIGS", "SCAFFOLDS", "ORF_FA", "ORF_AA")
+
+SCORE_TYPE = enum("ALL", "LAP", "ALE", "CGAL", "SNP", "FRCBAM")
+SCORE_WEIGHTS = dict()
+for score in SCORE_TYPE.reverse_mapping.keys():
+   SCORE_WEIGHTS[score] = 1
+
+_failFast = True
 
 class AtomicCounter(object):
   def __init__(self, initval=0):
@@ -84,6 +91,7 @@ class Settings:
    annotate_unmapped = False
    task_dict = []
    noblastdb = False
+   doscaffolding = False
    VERBOSE = False
    OUTPUT_ONLY = False
 
@@ -102,6 +110,7 @@ class Settings:
    BAMBUS2 = ""
 
    SOAPDENOVO = ""
+   SOAPDENOVO2 = ""
    METAIDBA = ""
    CA = ""
    NEWBLER = ""
@@ -119,6 +128,9 @@ class Settings:
 
    METAGENEMARK = ""
    FRAGGENESCAN = ""
+   PROKKA = ""
+   SIGNALP = ""
+
    FCP = ""
    PHMMER = ""
    PHYMM = ""
@@ -130,13 +142,20 @@ class Settings:
    REPEATOIRE = ""
 
    LAP = ""
+   ALE = ""
+   FRCBAM = ""
+   FREEBAYES = ""
+   CGAL = ""
+   QUAST = ""
+
+   MPI = ""
 
    BINARY_DIST = 0
 
    nopsutil = False
    nopysam = False
 
-   def __init__(self, kmer = None, threads = None, rundir = None, taxa_level = "", localKrona = False, annotateUnmapped = False, verbose = False, outputOnly = False, update = False):
+   def __init__(self, kmer = None, threads = None, rundir = None, taxa_level = "", localKrona = False, annotateUnmapped = False, doScaffolding = False, verbose = False, outputOnly = False, update = False):
 
       if (Settings.rundir != "" and update == False):
          return
@@ -175,6 +194,7 @@ class Settings:
       Settings.rundir = rundir
       Settings.taxa_level = taxa_level
       Settings.local_krona = localKrona
+      Settings.doscaffolding = doScaffolding
       Settings.annotate_unmapped = annotateUnmapped
       Settings.task_dict = []
 
@@ -226,6 +246,7 @@ class Settings:
       Settings.BAMBUS2       = Settings.AMOS
 
       Settings.SOAPDENOVO    = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.SOAPDENOVO2   = "%s%scpp%s%s-%ssoap2/bin"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.METAIDBA      = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.CA            = "%s%sCA%s%s-%s%sbin"%(Settings.METAMOSDIR, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE.replace("x86_64", "amd64"), os.sep)
       Settings.NEWBLER       = "%s%snewbler%s%s-%s"%(Settings.METAMOSDIR, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
@@ -243,6 +264,8 @@ class Settings:
 
       Settings.METAGENEMARK  = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.FRAGGENESCAN  = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.PROKKA        = "%s%scpp%s%s-%s/prokka/bin"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.SIGNALP       = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
 
       Settings.FCP           = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.PHMMER        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
@@ -265,7 +288,14 @@ class Settings:
                kronalibf.close()
                os.system("ln -s %s/taxonomy %s%sKronaTools%staxonomy"%(Settings.DB_DIR,Settings.METAMOSDIR,os.sep,os.sep))
       Settings.REPEATOIRE    = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
-      Settings.LAP	     = "%sLAP"%(Settings.METAMOSDIR)
+      Settings.LAP	     = "%s%sLAP"%(Settings.METAMOSDIR, os.sep)
+      Settings.ALE           = "%s%scpp%s%s-%s/ALE/src"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.CGAL          = "%s%scpp%s%s-%s/cgal"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.FRCBAM        = "%s%scpp%s%s-%s/FRCbam/bin"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.FREEBAYES     = "%s%scpp%s%s-%s/freebayes/bin"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.QUAST         = "%s%squast"%(Settings.METAMOSDIR, os.sep)
+
+      Settings.MPI	     = "%s%smpirun"%(Settings.METAMOSDIR, os.sep)
 
 
 libcounter = 1
@@ -330,6 +360,7 @@ class readLib:
             self.pairDict[f1.id] = f2.id
             self.pairDict[f2.id] = f1.id
             self.f2.sid = self.sid
+        self.reads = []
         self.reads.append(f1)
         if self.f2 != "":
             self.reads.append(f2)
@@ -376,6 +407,7 @@ class readLib:
 def readConfigInfo(infile, filePrefix=""):
    readlibs = []
    asmcontigs = []
+   workflow = ""
 
    libs = []
    readobjs = []
@@ -395,12 +427,19 @@ def readConfigInfo(infile, filePrefix=""):
    currlibno = 0
    newlib = ""
    libadded = False
+   nlib = None
+   lib = None
 
    for line in infile.xreadlines():
       line = line.replace("\n","")
 
       if "#" in line:
          continue
+      elif "workflow:" in line:
+         wfc = line.replace("\n", "").split("\t")
+         if len(wfc) < 2:
+            continue
+         workflow = wfc[1]
       elif "asmcontigs:" in line:
          asmc = line.replace("\n","").split("\t")
          if len(asmc) < 2:
@@ -469,7 +508,7 @@ def readConfigInfo(infile, filePrefix=""):
                           linkerType)
       readlibs.append(nlib)
 
-   return (asmcontigs, readlibs)
+   return (asmcontigs, readlibs, workflow)
 
 def concatContig(ctgfile):
     if len(sys.argv) < 3:
@@ -546,9 +585,9 @@ def getCommandOutput(theCommand, checkForStderr):
     else:
        return checkStdout.strip()
 
-def getFromPath(theCommand, theName):
+def getFromPath(theCommand, theName, printWarning = True):
     result = getCommandOutput("which %s"%(theCommand), True)
-    if result == "":
+    if result == "" and printWarning:
        print "Warning: %s is not found, some functionality will not be available"%(theName)
        return ""
     else:
@@ -564,8 +603,8 @@ def cmdExists(cmd):
 
     return result
 
-def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped, verbose, outputOnly):
-    Settings(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped, verbose, outputOnly, True)
+def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped, verbose, outputOnly, doScaffolding):
+    Settings(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped, verbose, outputOnly, doScaffolding, True)
 
     getMachineType()
 
@@ -601,9 +640,14 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
 
     # 2. Soap
     Settings.SOAPDENOVO = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE) 
-    if not os.path.exists(Settings.SOAPDENOVO + os.sep + "soap63"):
-       Settings.SOAPDENOVO = getFromPath("soap63", "SOAPDENOVO")
-    soapMD5 = getMD5Sum(Settings.SOAPDENOVO + os.sep + "soap63")
+    if not os.path.exists(Settings.SOAPDENOVO + os.sep + "SOAPdenovo-63mer"):
+       Settings.SOAPDENOVO = ""
+    soapMD5 = getMD5Sum(Settings.SOAPDENOVO + os.sep + "SOAPdenovo-63mer")
+
+    Settings.SOAPDENOVO2 = "%s%scpp%s%s-%s/soap2/bin"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+    if not os.path.exists(Settings.SOAPDENOVO2 + os.sep + "SOAPdenovo-63mer"):
+       Settings.SOAPDENOVO2 = ""
+    soapMD5 = getMD5Sum(Settings.SOAPDENOVO2 + os.sep + "SOAPdenovo-63mer")
 
     # 3. CA
     Settings.CA = "%s%sCA%s%s-%s%sbin"%(Settings.METAMOSDIR, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE.replace("x86_64","amd64"), os.sep)
@@ -640,7 +684,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
     Settings.METAVELVET = "%s%scpp%s%s-%s%sMetaVelvet"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
     if not os.path.exists(Settings.METAVELVET + os.sep + "meta-velvetg"):
        Settings.METAVELVET = getFromPath("meta-velvetg", "METAVELVET")
-    metaVelvetMD5 = getMD5Sum(Settings.SOAPDENOVO + os.sep + "meta-velvetg")
+    metaVelvetMD5 = getMD5Sum(Settings.METAVELVET + os.sep + "meta-velvetg")
 
     # 8. SparseAssembler
     Settings.SPARSEASSEMBLER = "%s%scpp%s%s-%s%sSparseAssembler"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
@@ -677,21 +721,32 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
        Settings.SAMTOOLS = getFromPath("samtools", "samtools")
     samtoolsMD5 = getMD5Sum(Settings.SAMTOOLS + os.sep + "samtools")
 
-    # now for the annotation
+    # now the gene callers
     Settings.METAGENEMARK = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
     if not os.path.exists(Settings.METAGENEMARK + os.sep + "gmhmmp"):
        Settings.METAGENEMARK = getFromPath("gmhmmp", "MetaGeneMark")
     gmhmmpMD5 = getMD5Sum(Settings.METAGENEMARK + os.sep + "gmhmmp")
-    
-    Settings.METAPHYLER = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
-    if not os.path.exists(Settings.METAPHYLER + os.sep + "metaphylerClassify"):
-       Settings.METAPHYLER = getFromPath("metaphylerClassify", "metaphylerClassify")
-    metaphylerMD5 = getMD5Sum(Settings.METAPHYLER + os.sep + "metaphylerClassify")
+
+    Settings.PROKKA = "%s%scpp%s%s-%s/prokka/bin"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+    if not os.path.exists(Settings.PROKKA + os.sep + "prokka"):
+       Settings.PROKKA = getFromPath("prokka", "Prokka")
+    prokkaMD5 = getMD5Sum(Settings.PROKKA + os.sep + "prokka")
+
+    Settings.SIGNALP = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+    if not os.path.exists(Settings.SIGNALP + os.sep + "signalp"):
+       Settings.SIGNALP = getFromPath("signalp", "SignalP+")
+    signalpMD5 = getMD5Sum(Settings.SIGNALP + os.sep + "signalp")
 
     Settings.FRAGGENESCAN = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
     if not os.path.exists(Settings.FRAGGENESCAN + os.sep + "FragGeneScan"):
        Settings.FRAGGENESCAN = getFromPath("FragGeneScan","FragGeneScan")
     fraggenescanMD5 = getMD5Sum(Settings.FRAGGENESCAN + os.sep + "FragGeneScan")
+
+    # now for the annotation
+    Settings.METAPHYLER = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+    if not os.path.exists(Settings.METAPHYLER + os.sep + "metaphylerClassify"):
+       Settings.METAPHYLER = getFromPath("metaphylerClassify", "metaphylerClassify")
+    metaphylerMD5 = getMD5Sum(Settings.METAPHYLER + os.sep + "metaphylerClassify")
 
     Settings.FCP = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
     if not os.path.exists(Settings.FCP + os.sep + "nb-classify"):
@@ -731,6 +786,44 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
        Settings.LAP = getFromPath("calc_prop.py", "LAP")
     lapMD5 = getMD5Sum(Settings.LAP + os.sep + "aligner" + os.sep + "calc_prob.py")
 
+    Settings.ALE = "%s%scpp%s%s-%s/ALE/src"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+    if not os.path.exists(Settings.ALE + os.sep + "ALE"):
+       Settings.ALE = getFromPath("ALE", "ALE")
+    aleMD5 = getMD5Sum(Settings.ALE + os.sep + "ALE")
+
+    Settings.CGAL = "%s%scpp%s%s-%s/cgal"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+    if not os.path.exists(Settings.CGAL + os.sep + "cgal"):
+       Settings.CGAL = getFromPath("cgal", "CGAL")
+    cgalMD5 = getMD5Sum(Settings.CGAL + os.sep + "cgal")
+    
+    Settings.FRCBAM = "%s%scpp%s%s-%s/FRCbam/bin"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+    if not os.path.exists(Settings.FRCBAM + os.sep + "FRC"):
+       Settings.FRCBAM = getFromPath("FRC", "FRCbam")
+    frcMD5 = getMD5Sum(Settings.FRCBAM + os.sep + "FRC")
+
+    Settings.FREEBAYES = "%s%scpp%s%s-%s/freebayes/bin"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+    if not os.path.exists(Settings.FREEBAYES + os.sep + "freebayes"):
+       Settings.FREEBAYES = getFromPath("freebayes", "FreeBayes")
+    freebayesMD5 = getMD5Sum(Settings.FREEBAYES + os.sep + "freebayes")
+
+    Settings.QUAST = "%s%squast"%(Settings.METAMOSDIR, os.sep)
+    if not os.path.exists(Settings.QUAST + os.sep + "quast.py"):
+       Settings.QUAST = getFromPath("quast.py", "QUAST")
+    quastMD5 = getMD5Sum(Settings.QUAST + os.sep + "quast.py")
+
+    Settings.MPI = "%s%smpirun"%(Settings.METAMOSDIR, os.sep)
+    if not os.path.exists(Settings.MPI):
+       Settings.MPI = getFromPath("mpirun", "MPI", False)
+       if Settings.MPI == "":
+          Settings.MPI = getFromPath("openmpirun", "OPENMPI", False)
+          if Settings.MPI != "":
+             Settings.MPI = "%s%s%s"%(Settings.MPI, os.sep, "openmpirun")
+       else:
+          Settings.MPI = "%s%s%s"%(settings.MPI, os.sep, "mpirun")
+    if not os.path.exists(Settings.MPI):
+       print "Warning: MPI is not available, some functionality may not be available"
+    mpiMD5 = getMD5Sum(Settings.MPI)
+
     # finally store the configuration 
     conf = open("%s/pipeline.conf"%(Settings.rundir),'w')
     if Settings.BINARY_DIST and 1: 
@@ -764,6 +857,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
     conf.write("AMOS:\t\t\t%s\t%s\n"%(Settings.AMOS, amosMD5))
     conf.write("BAMBUS2:\t\t%s\t%s\n"%(Settings.BAMBUS2, bambusMD5))
     conf.write("SOAPDENOVO:\t\t\t%s\t%s\n"%(Settings.SOAPDENOVO, soapMD5))
+    conf.write("SOAPDENOVO2:\t\t\t%s\t%s\n"%(Settings.SOAPDENOVO2, soapMD5))
     conf.write("METAIDBA:\t\t%s\t%s\n"%(Settings.METAIDBA, metaidbaMD5))
     conf.write("Celera Assembler:\t%s\t%s\n"%(Settings.CA, CAMD5))
     conf.write("NEWBLER:\t\t%s\t%s\n"%(Settings.NEWBLER, newblerMD5))
@@ -777,6 +871,8 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
     conf.write("M-GCAT:\t\t\t%s\t%s\n"%(Settings.MGCAT, mgcatMD5))
     conf.write("METAGENEMARK:\t\t\t%s\t%s\n"%(Settings.METAGENEMARK, gmhmmpMD5))
     conf.write("FRAGGENESCAN:\t\t%s\t%s\n"%(Settings.FRAGGENESCAN, fraggenescanMD5))
+    conf.write("PROKKA:\t\t\t%s\t%s\n"%(Settings.PROKKA, prokkaMD5))
+    conf.write("SIGNALP:\t\t\t%s\t%s\n"%(Settings.SIGNALP, signalpMD5))
     conf.write("FCP:\t\t\t%s\t%s\n"%(Settings.FCP, fcpMD5))
     conf.write("PHMMER:\t\t\t%s\t%s\n"%(Settings.PHMMER, phmmerMD5))
     conf.write("PHYMM:\t\t\t%s\t%s\n"%(Settings.PHYMM, phymmMD5))
@@ -787,9 +883,19 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
     conf.write("REPEATOIRE:\t\t%s\t%s\n"%(Settings.REPEATOIRE, repeatoireMD5))
     conf.write("KRONA:\t\t\t%s\t%s\n"%(Settings.KRONA, kronaMD5))
     conf.write("LAP:\t\t\t%s\t%s\n"%(Settings.LAP, lapMD5))
+    conf.write("ALE:\t\t\t%s\t%s\n"%(Settings.LAP, aleMD5))
+    conf.write("CGAL:\t\t\t%s\t%s\n"%(Settings.LAP, cgalMD5))
+    conf.write("FRCBAM:\t\t\t%s\t%s\n"%(Settings.LAP, frcMD5))
+    conf.write("FREEBAYES:\t\t\t%s\t%s\n"%(Settings.LAP, freebayesMD5))
+    conf.write("QUAST:\t\t\t%s\t%s\n"%(Settings.LAP, quastMD5))
     conf.close()
 
     return Settings
+
+def setFailFast(fail):
+   global _failFast
+
+   _failFast = fail
 
 def run_process(settings,command,step=""):
        outf = ""
@@ -835,7 +941,7 @@ def run_process(settings,command,step=""):
               p = subprocess.Popen(command, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,close_fds=True,executable="/bin/bash", cwd=workingDir)
           fstdout,fstderr = p.communicate()
           rc = p.returncode
-          if rc != 0 and "rm " not in command and "ls " not in command and "unlink " not in command and "ln " not in command and "mkdir " not in command and "mv " not in command:
+          if rc != 0 and _failFast and "rm " not in command and "ls " not in command and "unlink " not in command and "ln " not in command and "mkdir " not in command and "mv " not in command:
               # flush all error/output streams
               outf.flush()
               outf.write(fstdout+fstderr)
@@ -949,6 +1055,7 @@ def getProgramParams(configDir, fileName, module="", prefix="", comment="#", sep
              if (line != ""):
                 if (line.endswith("\\")):
                    for next in spec:
+                      next = next.strip()
                       line = line.replace("\\", "") + next.replace("\\", "")
                       if not next.endswith("\\"):
                          break

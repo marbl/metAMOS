@@ -185,7 +185,6 @@ if 1:
        os.system("python ez_setup.py --user")
        
 if 1:
-   # or not os.path.exists("./Utilities/python/psutil"):
    fail = 0
    try:
        import psutil
@@ -205,7 +204,6 @@ if 1:
        os.chdir("%s"%(METAMOS_ROOT))
        os.system("rm -rf psutil.tar.gz")
 if 1:
-   #not os.path.exists("./Utilities/python/cython"):
    fail = 0
    try:
        import cython
@@ -217,7 +215,6 @@ if 1:
        print "cython modules not found, necessary for c-compiling python code, download now?"
        dl = raw_input("Enter Y/N: ")
    if fail and (dl == 'y' or dl == "Y"):
-       #os.system("easy_install cython")
        os.system("curl -L https://github.com/cython/cython/archive/master.zip -o ./cython.zip")
        os.system("unzip ./cython.zip")
        os.system("mv ./cython-master ./Utilities/python/cython")
@@ -225,11 +222,8 @@ if 1:
        os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
        os.chdir(METAMOS_ROOT)
        os.system("rm -rf cython.zip")
-       #os.system("tar -C ./Utilities/python -xvf cython.tar.gz")
-       #os.system("mv ./Utilities/python/pysam-0.6 ./Utilities/python/pysam")
 
 if 1:
-   # or not os.path.exists("./Utilities/python/pysam"):
    fail = 0
    try:
        import pysam
@@ -263,7 +257,6 @@ if 1:
           os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
        os.chdir(METAMOS_ROOT)
        os.system("rm -rf pysam.tar.gz")
-       #os.system("ln -s %s/Utilities/python/taxonomy.txt %s/Utilities/models/taxonomy.txt"%(sys.path[0], sys.path[0]))
 
 #WARNING: matplotlib causes install issues for multiple users
    fail = 0
@@ -437,7 +430,6 @@ if "optional" in enabledWorkflows or manual:
             os.system("cat ./Utilities/perl/metaphyler/installMetaphylerFORMATDB.pl  |sed 's/formatdb/\.\/Utilities\/cpp\/%s-%s\/formatdb/g' > ./Utilities/perl/metaphyler/installMetaphyler.pl"%(OSTYPE, MACHINETYPE));
             os.system("perl ./Utilities/perl/metaphyler/installMetaphyler.pl")
             os.system("cp ./Utilities/perl/metaphyler/metaphylerClassify ./Utilities/cpp/%s-%s/metaphylerClassify"%(OSTYPE, MACHINETYPE))
-            #os.system("cp ./Utilities/perl/metaphyler/metaphylerClassify ./Utilities/cpp/%s-%s/metaphylerClassify"%(OSTYPE, MACHINETYPE))
 
     if not os.path.exists("./Utilities/models") or not os.path.exists("./Utilities/DB/blast_data"):
         if "fcp" in packagesToInstall:
@@ -462,7 +454,6 @@ if "optional" in enabledWorkflows or manual:
        if dl == 'y' or dl == 'Y':
           if not os.path.exists("./phylosift"):
              #phylosift OSX binaries included inside Linux X86_64 tarball..
-             #os.system("curl -L http://edhar.genomecenter.ucdavis.edu/~koadman/phylosift/releases/phylosift_v1.0.0_01.tar.bz2 -o ./phylosift.tar.bz2")
              os.system("curl -L http://edhar.genomecenter.ucdavis.edu/~koadman/phylosift/devel/phylosift_20130829.tar.bz2 -o ./phylosift.tar.bz2")
              os.system("tar -xvjf phylosift.tar.bz2")
              os.system("rm -rf phylosift.tar.bz2")
@@ -921,7 +912,6 @@ sys.path.append(METAMOS_ROOT + os.sep + "Utilities" + os.sep + "python")
 from get_setuptools import use_setuptools
 use_setuptools()
 
-#os.system("
 print "Run setup.py.."
 os.system("python setup.py install_scripts --install-dir=`pwd` build_ext")
 #print "Compile & optimize"

@@ -1,0 +1,14 @@
+[CONFIG]
+input FASTQ
+name MIRA
+output mira_assembly/mira_d_results/mira_out.unpadded.fasta 
+scaffoldOutput mira_assembly/mira_d_results/mira_out.padded.fasta
+location cpp/[MACHINE]/mira/bin
+config config/mira.template
+paired readgroup = pe[LIB]\n data = [FIRST] [SECOND]\n technology = [TECHNOLOGY]\ntemplatesize = [MIN] [MAX]\nsegmentplacement = [ORIENTATION_FIGURE] \n segmentnaming = solexa
+mated readgroup = mp[LIB]\n data = [FIRST] [SECOND]\n technology = [TECHNOLOGY]\ntemplatesize = [MIN] [MAX]\nsegmentplacement = [ORIENTATION_FIGURE] \n segmentnaming = solexa
+unpaired readgroup = up[LIB]\n data = [FIRST]\n technology = [TECHNOLOGY]
+solexa -CO:fnicpst=yes
+sanger -CO:fnicpst=yes
+454 -CO:fnicpst=yes
+commands mira [INPUT]

@@ -29,56 +29,86 @@ def intOrZero(string):
     else:
         return '0'
 
-def outputLibraryInfo(html_prefix, markupFile, outputHeader, libcnt, format, mated, interleaved, mmin, mmax, outputFastQC):
-   if outputHeader:
-      markupFile.table(border="1")
-      markupFile.tr()
-      markupFile.th("Library #")
-      markupFile.th("Format")
-      markupFile.th("Mated?")
-      markupFile.th("Min Insert Size")
-      markupFile.th("Max Insert Size")
-      if outputFastQC:
-         markupFile.th("First FastQC Report")
-         markupFile.th("Second FastQC Report") 
-      markupFile.tr.close()
+def getTable(header, content):
+  result = "<div class=\"datagrid\"><table><thead><tr>"
+  for (h, align) in header:
+     result = "%s<th align=\"%s\">%s</th>"%(result, align, h)
+  result = "%s</tr></thead><tbody>"%(result)
+  
+  i = 0
+  for row in content:
+     if i % 2 == 0:
+        result = "%s<tr>"%(result)
+     else:
+        result = "%s<tr class=\"alt\">"%(result)
+     for (col, align) in row:
+        result = "%s<td align=\"%s\">%s</td>"%(result, align, col)
+     result = "%s</tr>"%(result)
+     i += 1
+  result = "%s</tbody></table></div>"%(result)
+  return result
 
-   markupFile.tr()
-   markupFile.add("<td align=\"left\">%d</td>"%(libcnt))
-   markupFile.add("<td align=\"left\">%s</td>"%(format))
-   markupFile.add("<td align=\"left\">%s</td>"%(mated))
-   markupFile.add("<td align=\"right\">%d</td>"%(mmin))
-   markupFile.add("<td align=\"right\">%d</td>"%(mmax))
+def outputLibraryInfo(headerArray, dataArray, outputHeader, libcnt, format, mated, interleaved, mmin, mmax, outputFastQC):
+   if outputHeader:
+      headerArray.append(["Library #", "left"])
+      headerArray.append(["Format", "left"])
+      headerArray.append(["Mated?", "left"])
+      headerArray.append(["Min Insert Size", "right"])
+      headerArray.append(["Max Insert Size", "right"])
+      if outputFastQC:
+         headerArray.append(["First FastQC Report", "left"])
+         headerArray.append(["Second FastQC Report", "left"]) 
+
+   row = []
+   row.append([libcnt, "left"])
+   row.append([format, "left"])
+   row.append([mated, "left"])
+   row.append([mmin, "right"])
+   row.append([mmax, "right"])
 
    if outputFastQC and os.path.exists("lib%d.1.fastqc/fastqc_report.html"%(libcnt)):
       if mated.lower() == "true":
          if interleaved.lower() == "true":
-            markupFile.td('<a target="_blank" href="lib%d.1.fastqc/fastqc_report.html">interleaved</a>'%(libcnt))
-            markupFile.td("NA")
+            row.append(["<a target=\"_blank\" href=\"lib%d.1.fastqc/fastqc_report.html\">interleaved</a>"%(libcnt), "left"])
+            row.append(["NA", "left"])
          else:
-            markupFile.td('<a target="_blank" href="lib%d.1.fastqc/fastqc_report.html">left</a>'%(libcnt))
-            markupFile.td('<a target="_blank" href="lib%d.2.fastqc/fastqc_report.html">right</a>'%(libcnt))
+            row.append(['<a target="_blank" href="lib%d.1.fastqc/fastqc_report.html">left</a>'%(libcnt), "left"])
+            row.append(['<a target="_blank" href="lib%d.2.fastqc/fastqc_report.html">right</a>'%(libcnt), "left"])
       else:
-         markupFile.td('<a target="_blank" href="lib%d.1.fastqc/fastqc_report.html">unmated</a>'%(libcnt))
-         markupFile.td("NA")
-   markupFile.tr.close()
+         row.append(['<a target="_blank" href="lib%d.1.fastqc/fastqc_report.html">unmated</a>'%(libcnt), "left"])
+         row.append(["NA", "left"])
+   dataArray.append(row)
 
-def outputValidate(html_prefix, markupFile, outputHeader, best, assembler, score):
+def outputValidate(headerArray, dataArray, outputHeader, best, results):
+   assembler = results[0]
+   isFirst = True
    if outputHeader:
-      markupFile.table(border="1")
-      markupFile.tr()
-      markupFile.th("Assembler")
-      markupFile.th("LAP Score")
-      markupFile.tr.close()
+      for r in results:
+         if isFirst:
+            headerArray.append([r.title(), "left"])
+            isFirst = False
+         else:
+            headerArray.append([r.title(), "right"])
+      return
 
    isBest = False
    if best == assembler:
       isBest = True
 
-   markupFile.tr()
-   markupFile.add("<td align=\"left\">%s%s%s</td>"%("<b>" if isBest else "", assembler.title(), "</b>" if isBest else ""))
-   markupFile.add("<td align=\"right\">%s%.4f%s</td>"%("<b>" if isBest else "", float(score), "</b>" if isBest else ""))
-   markupFile.tr.close()
+   row = []
+   isFirst = True
+   for r in results:
+      if isFirst:
+         row.append(["%s%s%s"%("<b>" if isBest else "", r.title(), "</b>" if isBest else ""), "left"])
+         isFirst = False
+      else:
+         score = ""
+         if r == None or r.lower() == "none":
+            score = "N/A"
+         else:
+            score = "%.4f"%(float(r))
+         row.append(["%s%s%s"%("<b>" if isBest else "", score, "</b>" if isBest else ""), "right"])
+   dataArray.append(row)
 
 def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,dbdir):
 #if __name__ == "__main__":
@@ -226,7 +256,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
 
     # generate preprocess
     preprocess = markup.page()
-    preprocess.init()#bodyattrs={'style':"margin:0px"})
+    preprocess.init(css="style.css")#bodyattrs={'style':"margin:0px"})
     preprocess.p()
 
     nQC = 0
@@ -245,6 +275,8 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     linkerType = ""
     libadded = False
     firstLib = True
+    headerArray = []
+    dataArray = []
     for line in summary:
        line = line.replace("\n","")
        if "#" in line:
@@ -253,11 +285,11 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
           asmc = line.replace("\n","").split("\t")[-1]
           if len(asmc) <= 2:
              continue
-          preprocess.add("Supplied assembly: %s"%(asmc))
+          preprocess.add("<div class=\"datagrid\">Pre-assembled contigs input: %s</div>"%(asmc))
           preprocess.br()
        elif "format:" in line:
           if format and not libadded:
-             outputLibraryInfo(html_prefix, preprocess, firstLib, libcnt, format, mated, interleaved, mmin, mmax, nQC > 0)
+             outputLibraryInfo(headerArray, dataArray, firstLib, libcnt, format, mated, interleaved, mmin, mmax, nQC > 0)
              libcnt += 1
           libadded = False
           format = line.replace("\n","").split("\t")[-1]
@@ -288,8 +320,8 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
           mated = False
           libadded = True
     if format and not libadded:
-       outputLibraryInfo(html_prefix, preprocess, firstLib, libcnt, format, mated, interleaved, mmin, mmax, nQC > 0)
-    preprocess.table.close()
+       outputLibraryInfo(headerArray, dataArray, firstLib, libcnt, format, mated, interleaved, mmin, mmax, nQC > 0)
+    preprocess.add(getTable(headerArray, dataArray))
     summary.close()
 
     preprocess_out = open("%s/Preprocess.html"%(html_prefix), 'w')
@@ -297,28 +329,62 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     preprocess_out.close()
 
     validate_out = open("%s/Validate.html"%(html_prefix), 'w')
+    headerArray = []
+    dataArray = []
     firstScore = True
+    bestAsm = ""
+    refs = [] 
     if os.path.exists("%s/Postprocess/out/lap.scores"%(MA_dir)):
        best = open("%s/Postprocess/out/best.asm"%(MA_dir), 'r')
        bestAsm = best.read()
        best.close()
        laps = open("%s/Postprocess/out/lap.scores"%(MA_dir), 'r')
        validate = markup.page()
-       validate.init()#bodyattrs={'style':"margin:0px"})
+       validate.init(css="style.css")
        validate.p()
+       validate.add("<div class=\"datagrid\">")
        validate.add("Selected assembler: %s"%(bestAsm))
+       ref = open("%s/Postprocess/out/ref.asm"%(MA_dir), 'r')
+       first = True
+       for r in ref.xreadlines():
+           refs.append(r)
+           if first:
+              validate.br()
+              first = False
+           validate.add("Selected reference: %s"%(r))
        validate.br()
+       ref.close()
        for line in laps:
           line = line.replace("\n","")
           if "#" in line:
              continue
           else:
              res = line.split("\t")
-             outputValidate(html_prefix, validate, firstScore, bestAsm, res[0], res[1]) 
+             outputValidate(headerArray, dataArray, firstScore, bestAsm, res)
              firstScore = False
-       validate.table.close()
+       validate.add(getTable(headerArray, dataArray))
+       validate.add("</div>")
        laps.close()
-       validate_out.write(validate.__str__())
+
+    # when we have quast, we will add our table to their report, otherwise write standalone report
+    if os.path.exists("%s/Postprocess/out/quast/report.html"%(MA_dir)):
+       os.system("cp %s/Postprocess/out/quast/report.html %s/Postprocess/out/quast/~report.html"%(MA_dir, MA_dir))
+       quastIn = open("%s/Postprocess/out/quast/~report.html"%(MA_dir), 'r')
+       quastOut = open("%s/Postprocess/out/quast/report.html"%(MA_dir), 'w')
+       skip = False
+       for line in quastIn.xreadlines():
+          if not skip:
+             quastOut.write(line + "\n")
+          else:
+             quastOut.write("margin-left: 10px;")
+             skip = False
+
+          if ".content" in line:
+             skip = True
+       quastIn.close()
+       quastOut.close()
+       validate.iframe(id_="quast", src_="%s/Postprocess/out/quast/report.html"%(MA_dir), width="800", height="1000")
+    validate_out.write(validate.__str__())
     validate_out.close()
     
     # todo, need to add report for MapReads including # reads mapped (%), contig coverage histogram, and % reads between contigs and number of links histogram. Also re-estimated insert sizes for each lib

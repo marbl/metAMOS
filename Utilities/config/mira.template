@@ -1,0 +1,4 @@
+project = mira
+job = genome,denovo,accurate
+parameters = -GE:not=[THREADS] [TECHNOLOGY_PARAMETERS]
+[INPUT]

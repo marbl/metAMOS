@@ -9,6 +9,7 @@ from utils import *
 from task import JobSignalledBreak
 
 LIBRARY_TYPES = enum("PAIRED", "MATED")
+TECHNOLOGY_TYPES = enum("SOLEXA", "SANGER", "PACBIO", "454")
 SYSTEM_COMMANDS = [ "bash", "ln", "rm", "cp", "ls" ]
 
 _readlibs = []
@@ -30,8 +31,12 @@ def init(skipsteps, readlibs):
 #   - MACHINE - replaced with linux-64bit, etc
 #   - FIRST - replaced with left mates in mated read or interleaved or unpaired reads otherwise
 #   - SECOND - replaced with right mates, on in paired non-interleaved libs
+#   - ORIENTATION - replaced with either innie or outtie
+#   - ORIENTATION_FIGURE - replaced with ---> <--- or <--- ---> for pe and mp, respectively
 #   - MEAN - replaced with mean
 #   - SD - replaced with standard dev
+#   - MIN - replaced with min
+#   - MAX - replaced with max
 #   - THREADS - replaced with thread parameter specified
 #   - KMER - the kmer requested
 #   - OFFSET - the phred offset (33/64)
@@ -39,14 +44,17 @@ def init(skipsteps, readlibs):
 #   - DB - the location of dbs
 #   - RUNDIR - the location where the program is running
 #   - LOCATION - the location where the program executable lives
+#   - TECHNOLOGY - the type of sequencing data
 class GenericProgram:
    # for now we only support new assemblers
    stepName = STEP_NAMES.ASSEMBLE 
    inputType = INPUT_TYPE.FASTQ 
    name = ""
    output = ""
+   scaffoldOutput = ""
    location = ""
    threads = ""
+   threadsSupportedOn = []
    paired = ""
    paired_interleaved = ""
    mated = ""
@@ -59,13 +67,16 @@ class GenericProgram:
    allowPartition = False
    commandList = []
    isValid = False
+   technologyParams = dict()
 
    def __init__(self, name = "", step=STEP_NAMES.ASSEMBLE):
       self.name = name.lower()
       self.stepName = step
       self.output = ""
+      self.scaffoldOutput = ""
       self.location = ""
       self.threads = ""
+      self.threadsSupportedOn = []
       self.paired = ""
       self.paired_interleaved = ""
       self.mated = ""
@@ -76,6 +87,7 @@ class GenericProgram:
       self.allowPartition = False 
       self.commandList = []
       self.isValid = False 
+      self.technologyParams = dict()
 
    def getCommandBin(self, command):
       # skip any leading special flags
@@ -93,7 +105,7 @@ class GenericProgram:
            reading=False
       (commandName, sp, junk) = command[count:].partition(' ')
       if commandName in SYSTEM_COMMANDS:
-         theCommand = getFromPath(commandName, self.name) + os.sep + commandName
+         theCommand = getFromPath(commandName, self.name, False) + os.sep + commandName
       else:
          theCommand = "%s%s%s"%(self.location, os.sep, commandName)
       return (commandName, theCommand)
@@ -119,6 +131,8 @@ class GenericProgram:
                self.isValid = False
          elif (defn == "output"):
             self.output = value
+         elif (defn == "scaffoldOutput"):
+            self.scaffoldOutput = value
          elif (defn == "location"):
            # get the location path
             self.location = value
@@ -127,6 +141,8 @@ class GenericProgram:
                self.location = os.path.abspath("%s%s%s"%(_settings.METAMOS_UTILS, os.sep, self.location))
          elif (defn == "threads"):
             self.threads = value
+         elif (defn == "threadsSupport"):
+            self.threadsSupportedOn = value.strip().split()
          elif (defn == "paired"):
             self.paired = value  
          elif (defn == "paired_interleaved"):
@@ -155,6 +171,8 @@ class GenericProgram:
             self.allowPartition = str2bool(value.strip())
          elif (defn == "commands"):
             self.commandList.extend(value.split("&&"))
+         elif(defn.upper() in TECHNOLOGY_TYPES.mapping):
+            self.technologyParams[TECHNOLOGY_TYPES.mapping[defn.upper()]] = value
 
       # check integrity
       if (len(self.commandList) == 0):
@@ -180,9 +198,25 @@ class GenericProgram:
          (commandName, theCommand) = self.getCommandBin(command)
          if (not os.path.exists(theCommand)):
             # try to find in path
-            self.location = getFromPath(commandName, self.name)
+            self.location = getFromPath(commandName, self.name, False)
+
+   def getThreadParams(self):
+      threadParams = ""
+      if (len(self.threadsSupportedOn) == 0 or _settings.OSTYPE.upper() in self.threadsSupportedOn):
+         if self.threads == "":
+            if self.threads.endswith("="):
+               threadParams =  "%s%d"%(self.threads,_settings.threads)
+            else:
+               threadParams =  "%s %d"%(self.threads,_settings.threads)
+         elif self.config != None and len(self.config) != 0:
+            threadParams = "%d"%(_settings.threads)
+
+      return threadParams.strip()
 
    def getLibInput(self, separator=" "):
+         techParams = ""
+         techAdded = []
+
          suffix = ""
          if self.inputType == INPUT_TYPE.FASTA:
             suffix = "fasta"
@@ -192,6 +226,8 @@ class GenericProgram:
          input = ""
          offset = ""
          havePE = haveMP = False
+         pelist = ""
+         mplist = ""
 
          if self.maxLibs == 0:
             self.maxLibs = len(_readlibs)
@@ -209,25 +245,46 @@ class GenericProgram:
                   print "Error: inconsistent PHRED offsets in libraries. Previous library had %s and current library %d has %s\n"%(offset, lib.id, read.qformat)
                   raise(JobSignalledBreak)
 
+            orientation = "outtie"
+            orientationFig = "<--- --->"
+            if lib.innie:
+               orientation = "innie"
+               orientationFig = "---> <---"
+            if lib.format == "sff":
+               pyroType = TECHNOLOGY_TYPES.mapping["454"]
+               technology = TECHNOLOGY_TYPES.reverse_mapping[pyroType].lower()
+               if pyroType in self.technologyParams and technology not in techAdded:
+                  techParams = "%s_SETTINGS %s"%(technology.upper(), self.technologyParams[pyroType])
+                  techAdded.append(technology)
+            else:
+               technology = TECHNOLOGY_TYPES.reverse_mapping[TECHNOLOGY_TYPES.SOLEXA].lower()
+               if TECHNOLOGY_TYPES.SOLEXA in self.technologyParams and technology not in techAdded:
+                  techParams = "%s_SETTINGS %s"%(technology.upper(), self.technologyParams[TECHNOLOGY_TYPES.SOLEXA])
+                  techAdded.append(technology)
+
+            # eventually check others
+
             if lib.mated:
                if lib.innie:
                   havePE = True
+                  pelist = "%s lib%s"%(pelist, lib.id)
                   if self.paired == "":
-                     input = input + separator + self.paired_interleaved.replace("[LIB]", "%d"%(lib.id)).replace("[FIRST]", "%s/Preprocess/out/lib%d.%s"%(_settings.rundir, lib.id, suffix)).replace("[MEAN]", "%d"%(lib.mean)).replace("[SD]", "%d"%(lib.stdev))
+                     input = input + separator + self.paired_interleaved.replace("[LIB]", "%d"%(lib.id)).replace("[FIRST]", "%s/Preprocess/out/lib%d.%s"%(_settings.rundir, lib.id, suffix)).replace("[MEAN]", "%d"%(lib.mean)).replace("[SD]", "%d"%(lib.stdev)).replace("[MIN]", "%d"%(lib.mmin)).replace("[MAX]", "%d"%(lib.mmax)).replace("[TECHNOLOGY]", technology).replace("[ORIENTATION]", orientation).replace("[ORIENTATION_FIGURE]", orientationFig)
                   else:
-                     input = input + separator + self.paired.replace("[LIB]", "%d"%(lib.id)).replace("[FIRST]", "%s/Preprocess/out/lib%d.1.%s"%(_settings.rundir, lib.id, suffix)).replace("[SECOND]", "%s/Preprocess/out/lib%d.2.%s"%(_settings.rundir, lib.id, suffix)).replace("[MEAN]", "%d"%(lib.mean)).replace("[SD]", "%d"%(lib.stdev))
+                     input = input + separator + self.paired.replace("[LIB]", "%d"%(lib.id)).replace("[FIRST]", "%s/Preprocess/out/lib%d.1.%s"%(_settings.rundir, lib.id, suffix)).replace("[SECOND]", "%s/Preprocess/out/lib%d.2.%s"%(_settings.rundir, lib.id, suffix)).replace("[MEAN]", "%d"%(lib.mean)).replace("[SD]", "%d"%(lib.stdev)).replace("[MIN]", "%d"%(lib.mmin)).replace("[MAX]", "%d"%(lib.mmax)).replace("[TECHNOLOGY]", technology).replace("[ORIENTATION]", orientation).replace("[ORIENTATION_FIGURE]", orientationFig)
                else:
                   haveMP = True
+                  mplist = "%s lib%s"%(mplist, lib.id) 
                   if self.mated == "":
-                     input = input + separator + self.mated_interleaved.replace("[LIB]", "%d"%(lib.id)).replace("[FIRST]", "%s/Preprocess/out/lib%d.%s"%(_settings.rundir, lib.id, suffix)).replace("[MEAN]", "%d"%(lib.mean)).replace("[SD]", "%d"%(lib.stdev))
+                     input = input + separator + self.mated_interleaved.replace("[LIB]", "%d"%(lib.id)).replace("[FIRST]", "%s/Preprocess/out/lib%d.%s"%(_settings.rundir, lib.id, suffix)).replace("[MEAN]", "%d"%(lib.mean)).replace("[SD]", "%d"%(lib.stdev)).replace("[MIN]", "%d"%(lib.mmin)).replace("[MAX]", "%d"%(lib.mmax)).replace("[TECHNOLOGY]", technology).replace("[ORIENTATION]", orientation).replace("[ORIENTATION_FIGURE]", orientationFig)
                   else:
-                     input = input + separator + self.mated.replace("[LIB]", "%d"%(lib.id)).replace("[FIRST]", "%s/Preprocess/out/lib%d.1.%s"%(_settings.rundir, lib.id, suffix)).replace("[SECOND]", "%s/Preprocess/out/lib%d.2.%s"%(_settings.rundir, lib.id, suffix)).replace("[MEAN]", "%d"%(lib.mean)).replace("[SD]", "%d"%(lib.stdev))
+                     input = input + separator + self.mated.replace("[LIB]", "%d"%(lib.id)).replace("[FIRST]", "%s/Preprocess/out/lib%d.1.%s"%(_settings.rundir, lib.id, suffix)).replace("[SECOND]", "%s/Preprocess/out/lib%d.2.%s"%(_settings.rundir, lib.id, suffix)).replace("[MEAN]", "%d"%(lib.mean)).replace("[SD]", "%d"%(lib.stdev)).replace("[MIN]", "%d"%(lib.mmin)).replace("[MAX]", "%d"%(lib.mmax)).replace("[TECHNOLOGY]", technology).replace("[ORIENTATION]", orientation).replace("[ORIENTATION_FIGURE]", orientationFig)
             elif not lib.mated:
-                  input = input + separator + self.unpaired.replace("[LIB]", "%d"%(lib.id)).replace("[FIRST]", "%s/Preprocess/out/lib%d.%s"%(_settings.rundir, lib.id, suffix))
+                  input = input + separator + self.unpaired.replace("[LIB]", "%d"%(lib.id)).replace("[FIRST]", "%s/Preprocess/out/lib%d.%s"%(_settings.rundir, lib.id, suffix)).replace("[TECHNOLOGY]", technology)
 
-            return (havePE, haveMP, offset, input)
+            return (havePE, haveMP, offset, input, pelist.strip(), mplist.strip(), techParams.strip())
 
-   def processConfig(self, libs, offset, avram):
+   def processConfig(self, libs, offset, pelist, mplist, techParams, avram):
       configFile = ""
 
       if self.config != None and len(self.config) != 0:
@@ -239,9 +296,10 @@ class GenericProgram:
             for line in template.xreadlines():
                line = line.strip()
                if "[INPUT]" in line:
-                  spec.write(libs.strip() + "\n")
+                  for l in libs.strip().split("\\n"):
+                     spec.write(l.strip() + "\n")
                else:
-                  line = line.replace("[MACHINE]", "%s-%s"%(_settings.OSTYPE, _settings.MACHINETYPE)).replace("[MPI]", _settings.MPI).replace("[DB]", _settings.DB_DIR).replace("[MEM]", "%d"%(avram)).replace("[THREADS]","%s %d"%(self.threads,_settings.threads)).replace("[OFFSET]", "33" if offset.lower() == "sanger" else "64").replace("[OUTPUT]", "%s%s%s%sout%s%s"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep, os.sep, self.output.replace("[PREFIX]", _settings.PREFIX))).replace("[RUNDIR]", "%s%s%s%sout"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep)).replace("[KMER]", "%d"%(_settings.kmer)).replace("[LOCATION]", "%s%s"%(self.location,os.sep))
+                  line = line.replace("[MACHINE]", "%s-%s"%(_settings.OSTYPE, _settings.MACHINETYPE)).replace("[MPI]", _settings.MPI).replace("[PELIST]", pelist).replace("[MPLIST]", mplist).replace("[PREFIX]", _settings.PREFIX).replace("[DB]", _settings.DB_DIR).replace("[MEM]", "%d"%(avram)).replace("[THREADS]",self.getThreadParams()).replace("[OFFSET]", "33" if offset.lower() == "sanger" else "64").replace("[OUTPUT]", "%s%s%s%sout%s%s"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep, os.sep, self.output.replace("[PREFIX]", _settings.PREFIX))).replace("[RUNDIR]", "%s%s%s%sout"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep)).replace("[KMER]", "%d"%(_settings.kmer)).replace("[LOCATION]", "%s%s"%(self.location,os.sep)).replace("[TECHNOLOGY_PARAMETERS]", techParams)
                   spec.write(line + "\n")
             template.close()
             spec.close()
@@ -258,16 +316,17 @@ class GenericProgram:
       avram = getAvailableMemory(_settings)
       params = []
       outputs = []
+      techParams = ""
       listOfInput = ""
-      offset = ""
+      offset = pelist = mplist = ""
 
       if self.inputType == INPUT_TYPE.FASTA or self.inputType == INPUT_TYPE.FASTQ:
          if self.config != None and len(self.config) != 0:
-            (havePE, haveMP, offset, input) = self.getLibInput("\n")
-            configFile = self.processConfig(input, offset, avram)
+            (havePE, haveMP, offset, input, pelist, mplist, techParams) = self.getLibInput("\n")
+            configFile = self.processConfig(input, offset, pelist, mplist, techParams, avram)
             params.append("%s"%(configFile))
          else:
-            (havePE, haveMP, offset, input) = self.getLibInput()
+            (havePE, haveMP, offset, input, pelist, mplist, techParams) = self.getLibInput()
             params.append(input)
 
          # check for required libs
@@ -302,25 +361,31 @@ class GenericProgram:
          listOfInput += ":%s/Annotate/in/%s.faa"%(_settings.rundir, _settings.PREFIX)
          print "Parameters are %s\n"%(params)
 
-      # get the thread parameters
-      # when thread params not available, should partition the data
-      threadParams = ""
-      if not self.threads == "":
-         threadParams =  "%s %d"%(self.threads,_settings.threads)
-
       i = 0
       for param in params:
          for command in self.commandList:
             (commandName, theCommand) = self.getCommandBin(command)
             if (not os.path.exists(theCommand)): 
-               print "Error: requested to run %s but not available in specified location %s. Please check your specification and try again"%(commandName, self.location)
-               raise(JobSignalledBreak)
+               print "Error: requested to run %s (%s) but not available in specified location %s. Please check your specification and try again"%(self.name, commandName, self.location)
+               return
             if ("[MPI]" in command and not os.path.exists(_settings.MPI)):
                print "Error: requested to run %s but required MPI is not available"%(commandName)
-               raise(JobSignalledBreak)
+               command = command.replace("[MPI]", "").replace("[THREADS]", "")
+
+            if ("[FIRST]" in command or "[SECOND]" in command):
+               if self.maxLibs != 1:
+                  print "Error: program %s requested library file as part of command but more than one library is available"%(self.name)
+                  return
+               else:
+                  suffix = ""
+                  if self.inputType == INPUT_TYPE.FASTA:
+                     suffix = "fasta"
+                  else:
+                     suffix = "fastq"
+                  command = command.replace("[FIRST]", "%s/Preprocess/out/lib%d.1.%s"%(_settings.rundir, 1, suffix)).replace("[SECOND]", "%s/Preprocess/out/lib%d.2.%s"%(_settings.rundir, 1, suffix))
 
             param = param + " " + getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(self.name.lower()), commandName, "-").replace("[KMER]", "%d"%(_settings.kmer))
-            command = command.replace(commandName, theCommand, 1).replace("[MPI]", _settings.MPI).replace("[INPUT]", param).replace("[DB]", _settings.DB_DIR).replace("[MEM]", "%d"%(avram)).replace("[THREADS]", threadParams).replace("[OFFSET]", "33" if offset.lower() == "sanger" else "64").replace("[OUTPUT]", self.output.replace("[PREFIX]", outputs[i]) if len(outputs) > i else "%s%s%s%sout%s%s"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep, os.sep, self.output.replace("[PREFIX]", _settings.PREFIX))).replace("[RUNDIR]", "%s%s%s%sout"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep)).replace("[KMER]", "%d"%(_settings.kmer))
+            command = command.replace(commandName, theCommand, 1).replace("[MPI]", _settings.MPI).replace("[INPUT]", param).replace("[PELIST]", pelist).replace("[MPLIST]", mplist).replace("[PREFIX]", _settings.PREFIX).replace("[DB]", _settings.DB_DIR).replace("[MEM]", "%d"%(avram)).replace("[THREADS]", self.getThreadParams()).replace("[OFFSET]", "33" if offset.lower() == "sanger" else "64").replace("[OUTPUT]", self.output.replace("[PREFIX]", outputs[i]) if len(outputs) > i else "%s%s%s%sout%s%s"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep, os.sep, self.output.replace("[PREFIX]", _settings.PREFIX))).replace("[RUNDIR]", "%s%s%s%sout"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep)).replace("[KMER]", "%d"%(_settings.kmer)).replace("[TECHNOLOGY_PARAMETERS]", techParams)
             run_process(_settings, command, STEP_NAMES.reverse_mapping[self.stepName].title())
          i+=1
 
@@ -340,6 +405,10 @@ class GenericProgram:
          symlinkCmd = "ln %s %s"%(programOut, stepOut)
          run_process(_settings, symlinkCmd, STEP_NAMES.reverse_mapping[self.stepName].title())
 
+      if _settings.doscaffolding and self.scaffoldOutput != "" and self.stepName == STEP_NAMES.ASSEMBLE:
+         programOut = "%s/%s/out/%s"%(_settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), self.scaffoldOutput.replace("[PREFIX]", _settings.PREFIX))
+
+         run_process(_settings, "ln %s %s/%s/out/%s%s"%(programOut, _settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), _settings.PREFIX, STEP_OUTPUTS.reverse_mapping[STEP_NAMES.mapping["SCAFFOLD"]]), STEP_NAMES.reverse_mapping[self.stepName].title()) 
       return listOfInput
 
 def getSupportedList(path, step):

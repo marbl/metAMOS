@@ -101,10 +101,10 @@ if int(p) >= 1:
    HAVE_QUIET_HEAD=True
 
 # get list of supported workflows
-enabledWorkflows = []
+enabledWorkflows = set()
 packagesToInstall = set()
 knownPackages = set()
-workflows = workflow.getAllWorkflows(sys.path[0])
+workflows = workflow.getAllWorkflows("%s/Utilities/workflows"%(METAMOS_ROOT))
 for flow in workflows:
    knownPackages.update(workflows[flow].programList)
 
@@ -117,30 +117,31 @@ if (len(sys.argv) > 1):
       arg = sys.argv[i]
       if arg.lower() in workflows.keys():
          packagesToInstall.update(workflows[arg.lower()].programList)
-         enabledWorkflows.extend(workflows[arg.lower()].getDerivedName())
+         enabledWorkflows.update(workflows[arg.lower()].getDerivedName())
       elif arg.lower() == "full":
          for flow in workflows:
              packagesToInstall.update(workflows[flow].programList)
-             enabledWorkflows.extend(workflows[flow].getDerivedName())
+             enabledWorkflows.update(workflows[flow].getDerivedName())
          print "Installing all available workflows"
       elif arg.lower() == "manual":
         manual = True
         for flow in workflows:
-           enabledWorkflows.append(workflows[flow].getDerivedName())
+           enabledWorkflows.update(workflows[flow].getDerivedName())
       elif arg.lower() in knownPackages:
          packagesToInstall.add(arg.lower())
          for flow in workflows:
             if arg.lower() in workflows[flow].programList:
-               enabledWorkflows.extend(workflows[flow].getDerivedName())
+               enabledWorkflows.update(workflows[flow].getDerivedName())
                break
       else:
          if arg != "help":
             print "Unknown program or workflow %s specified."%(arg)
          fail = True
 else:
-    enabledWorkflows.extend(workflow.getSupportedWorkflows(sys.path[0]))
-    for workflowName in enabledWorkflows:
-       packagesToInstall.update(workflows[workflowName].programList)
+    availableWf = workflow.getSupportedWorkflows("%s/Utilities/workflows"%(METAMOS_ROOT), False)
+    for wf in availableWf:
+       enabledWorkflows.update(wf.getDerivedName())
+       packagesToInstall.update(wf.programList)
 
     print "Installing %s metAMOS workflow"%(",".join(enabledWorkflows))
 
@@ -569,9 +570,10 @@ if "isolate" in enabledWorkflows or manual:
           signalp = utils.getFromPath("signalp", "SignalP", False)
           if signalp == "":
              print "Warning: SignalP is not installed and is required for Prokka's gram option. Please download it and add it to your path."
-          #os.system("curl -L http://www.vicbioinformatics.com/prokka-1.7.tar.gz -o prokka-1.7.tar.gz")
+          os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/prokka-1.7.tar.gz -o prokka-1.7.tar.gz")
           os.system("tar xvzf prokka-1.7.tar.gz")
           os.system("mv prokka-1.7 ./Utilities/cpp%s%s-%s%sprokka"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+          os.system("rm prokka-1.7.tar.gz")
 
           bioperl = utils.getCommandOutput("perl -MBio::Seq -e 0 && echo $?", True)
           if bioperl == "":
@@ -663,7 +665,7 @@ if "isolate" in enabledWorkflows or manual:
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        masurca = utils.getFromPath("runSRCA.pl", "MaSuRCA", False)
-       if masurca == "":
+       if masurca == "" and OSTYPE != "Darwin":
           if "masurca" in packagesToInstall:
              dl = 'y'
           else:
@@ -697,7 +699,7 @@ if "isolate" in enabledWorkflows or manual:
                 os.system("rm -rf ./MaSuRCA-2.0.3.1")
                 os.system("rm msrca.tar.gz")
 
-    if 0 and not os.path.exists("./Utilities/cpp%s%s-%s%sMIRA"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+    if not os.path.exists("./Utilities/cpp%s%s-%s%smira"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        mira = utils.getFromPath("mira", "MIRA", False)
        if mira == "":
           if "mira" in packagesToInstall:
@@ -707,9 +709,9 @@ if "isolate" in enabledWorkflows or manual:
              dl = raw_input("Enter Y/N: ")
           if dl == 'y' or dl == 'Y':
              if OSTYPE == "Darwin":
-	        os.system("curl -L \"http://downloads.sourceforge.net/project/mira-assembler/MIRA/stable/mira_4.0rc1_darwin12.4.0_x86_64_static.tar.bz2?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fmira-assembler%2Ffiles%2FMIRA%2Fstable%2Fmira_4.0rc1_darwin12.4.0_x86_64_static.tar.bz2%2Fdownload&ts=1379625747&use_mirror=superb-dca2\" -o mira.tar.bz2")
+	        os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc1_darwin12.4.0_x86_64_static.tar.bz2 -o mira.tar.bz2")
              else:
-                os.system("curl -L \"http://downloads.sourceforge.net/project/mira-assembler/MIRA/stable/mira_4.0rc1_linux-gnu_x86_64_static.tar.bz2?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fmira-assembler%2Ffiles%2FMIRA%2Fstable%2F&ts=1379625875&use_mirror=softlayer-dal\" -o mira.tar.bz2")
+                os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc1_linux-gnu_x86_64_static.tar.bz2 -o mira.tar.bz2")
              os.system("tar xvjf mira.tar.bz2")
              os.system("rm -f mira.tar.bz2")
              os.system("mv `ls -d mira*` ./Utilities/cpp%s%s-%s%smira"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
@@ -820,6 +822,26 @@ if "isolate" in enabledWorkflows or manual:
             os.system("tar xvzf quast.tar.gz")
             os.system("mv ./quast-2.2 ./quast")
             os.system("rm -rf quast.tar.gz")
+
+            # since quast requires a reference, also download refseq
+            ftpSite = "ftp://ftp.ncbi.nih.gov/genomes/Bacteria"
+            file = "all.fna.tar.gz"
+            print "Downloading refseq genomes (%s)..."%(file)
+            print "\tThis file is large and may take time to download"
+            #os.system("curl -L %s/%s -o genomes.tar.gz"%(ftpSite, file)
+            os.system("mkdir -p ./Utilities/DB/refseq/temp")
+            os.system("mv genomes.tar.gz ./Utilities/DB/refseq/temp")
+            os.chdir("./Utilities/DB/refseq/temp")
+            os.system("tar xvzf genomes.tar.gz")
+            os.chdir("..")
+            print "Current directory is %s"%(os.getcwd())
+            for file in os.listdir("%s/temp"%(os.getcwd())):
+               file = "%s%stemp%s%s"%(os.getcwd(), os.sep, os.sep, file)
+               if os.path.isdir(file):
+                  prefix = os.path.splitext(os.path.basename(file))[0]
+                  os.system("cat %s/*.fna > %s.fna"%(file, prefix))
+            os.system("rm -rf temp")
+            os.chdir("%s"%(METAMOS_ROOT))
    
     if not os.path.exists("./Utilities/cpp%s%s-%s%sfreebayes"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
         if "freebayes" in packagesToInstall:

@@ -3,6 +3,7 @@
 fraggenescan	FragGeneScan	Rho M, Tang H, Ye Y: FragGeneScan: predicting genes in short and error-prone reads. Nucleic Acids Research 2010, 38:e191-e191.
 metagenemark	MetaGeneMark	Borodovsky M, Mills R, Besemer J, Lomsadze A: Prokaryotic gene prediction using GeneMark and GeneMark.hmm.Current protocols in bioinformatics editoral board Andreas D Baxevanis et al 2003, Chapter 4:Unit4.6-Unit4.6.
 soapdenovo	SOAPdenovo	Li Y, Hu Y, Bolund L, Wang J: State of the art de novo assembly of human genomes from massively parallel sequencing data.Human genomics 2010, 4:271-277.
+soapdenovo2	SOAPdenovo2	Luo, R, Liu, B, Xie, Y, Li, Z, Huang, W, Yuan, J, He G, Chen Y, Pan Q, Liu Y, Tang J, Wu G, Zhang H, Shi Y, Liu Y, Yu C, Wang B, Lu Y, Han C, Cheung DW, Yiu S, Peng S, Xiaoqian Z, Liu G, Liao X, Li Y, Yang H, Wang J, Lam T, Wang J. SOAPdenovo2: an empirically improved memory-efficient short-read de novo assembler. GigaScience, 1(1), 18, 2012.
 metaidba	Meta-IDBA	Peng Y, Leung HCM, Yiu SM, Chin FYL: Meta-IDBA: a de Novo assembler for metagenomic data. Bioinformatics 2011, 27:i94-i101.
 velvet	Velvet	Zerbino DR, Birney E. Velvet: algorithms for de novo short read assembly using de Bruijn graphs. Genome Res. 2008 May;18(5):821-9. Epub 2008 Mar 18.
 metavelvet	MetaVelvet	Namiki T, Hachiya T, Tanaka H, Sakakibara Y: MetaVelvet : An extension of Velvet assembler to de novo metagenome assembly from short sequence reads. In; 2011.
@@ -26,4 +27,17 @@ velvet-sc	Velvet-SC	Chitsaz H, Yee-Greenbaum JL, Tesler G, Lombardo MJ, Dupont C
 krona	Krona	Ondov BD, Bergman NH, Phillippy AM. Interactive metagenomic visualization in a Web browser. BMC Bioinformatics. 2011 Sep 30;12:385.
 spades	SPAdes	Anton Bankevich, Sergey Nurk, Dmitry Antipov, Alexey A. Gurevich, Mikhail Dvorkin, Alexander S. Kulikov, Valery M. Lesin, Sergey I. Nikolenko, Son Pham, Andrey D. Prjibelski, Alexey V. Pyshkin, Alexander V. Sirotkin, Nikolay Vyahhi, Glenn Tesler, Max A. Alekseyev, and Pavel A. Pevzner. Journal of Computational Biology. May 2012, 19(5): 455-477. doi:10.1089/cmb.2012.0021.
 kraken	Kraken	Wood DE, Salzberg SL. Rapid phylogenetic sequence classification through repeated exact alignment. In preparation.
-lap	LAP	Ghodsi M, Hill CM, Astrovskaya I, Lin H, Sommer DD, Koren S, Pop M. De novo likelihood-based measures for comparing genome assemblies. BMC research notes 6 (2013): 334.
+lap	LAP	Ghodsi M, Hill CM, Astrovskaya I, Lin H, Sommer DD, Koren S, Pop M. De novo likelihood-based measures for comparing genome assemblies. BMC research notes 6:334, 2013.
+ale	ALE	Clark, SC, Egan, R, Frazier, PI, Wang, Z. ALE: a generic assembly likelihood evaluation framework for assessing the accuracy of genome and metagenome assemblies. Bioinformatics, 29(4) 435-443, 2013.
+quast	QUAST	Gurevich, A, Saveliev, V, Vyahhi, N, Tesler, G. QUAST: quality assessment tool for genome assemblies. Bioinformatics, 29(8), 1072-1075, 2013.	
+frcbam	FRCbam	Vezzi, F, Narzisi, G, Mishra, B. Reevaluating assembly evaluations with feature response curves: GAGE and assemblathons. PloS ONE, 7(12), e52210, 2013.
+cgal	CGAL	Rahman, A, Pachter, L CGAL: computing genome assembly likelihoods. Genome biology, 14(1), R8, 2013.
+masurca	MaSuRCA	Zimin, A, Marçais, G, Puiu, D, Roberts, M, Salzberg, SL, Yorke, JA. The MaSuRCA genome assembler. Bioinformatics, btt476, 2013.
+ray	Ray	Boisvert, S, Raymond, F, Godzaridis, É, Laviolette, F, Corbeil, J. Ray Meta: scalable de novo metagenome assembly and profiling. Genome biology, 13(12), R122, 2013.
+freebayes	FreeBayes	Garrison, E, Marth, G. Haplotype-based variant detection from short-read sequencing. arXiv preprint arXiv:1207.3907, 2012.
+prokka	Prokka	Prokka: Prokaryotic Genome Annotation System - http://vicbioinformatics.com/
+abyss	ABySS	Simpson, JT, Wong, K, Jackman, SD, Schein, JE, Jones, SJ, Birol, İ. ABySS: a parallel assembler for short read sequence data. Genome research, 19(6), 1117-1123, 2009.
+sga	SGA	Simpson, JT, Durbin, R. Efficient de novo assembly of large genomes using compressed data structures. Genome Research, 22(3), 549-556, 2012.
+mira	MIRA	Chevreux, B, Wetter, T, Suhai, S. Genome Sequence Assembly Using Trace Signals and Additional Sequence Information. In German Conference on Bioinformatics (pp. 45-56), 1999.
+metamos	MetAMOS	Treangen, TJ ⇔  Koren, S, Sommer, DD, Liu, B, Astrovskaya, I, Ondov, B, Darling AE, Phillippy AM, Pop, M. MetAMOS: a modular and open source metagenomic assembly and analysis pipeline. Genome biology, 14(1), R2, 2013.
+metamos_isolate	MetAMOS Isolate	InPrep

@@ -37,9 +37,6 @@ def init(reads, skipsteps, retainBank):
 def Scaffold(input,output):
    _asm = getSelectedAssembler(_settings)
 
-   if "Scaffold" in _skipsteps or "scaffold" in _skipsteps:
-      run_process(_settings, "touch %s/Logs/scaffold.skip"%(_settings.rundir), "Scaffold")
-      return 0
    global _retainBank
 
    # check if we need to do scaffolding
@@ -86,6 +83,15 @@ def Scaffold(input,output):
        run_process(_settings, "rm %s/Scaffold/in/%s.bnk/SCF.*"%(_settings.rundir,_settings.PREFIX),"SCAFFOLD")
 
    # after the banks are created, skip the scaffolding when we have no mates
+   if "Scaffold" in _skipsteps or "scaffold" in _skipsteps:
+      run_process(_settings, "%s/bank2fasta -eid -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.contigs"%(_settings.AMOS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
+      if os.path.exists("%s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX)):
+         run_process(_settings, "ln %s/Assemble/out/%s.linearize.scaffolds.final %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
+      else:
+         run_process(_settings, "ln %s/Assemble/out/%s.asm.contig %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
+      run_process(_settings, "touch %s/Logs/scaffold.skip"%(_settings.rundir), "Scaffold")
+      return 0
+
    if _mated == False and numMates == 0:
        print "No mate pair info available for scaffolding, skipping"
        run_process(_settings, "%s/bank2fasta -eid -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.contigs"%(_settings.AMOS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")

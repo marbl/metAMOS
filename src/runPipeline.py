@@ -25,6 +25,7 @@ if validate_install:
         sys.exit(1)
 
 import utils
+import workflow
 ppath = ""
 if "PYTHONPATH" not in os.environ:
    os.environ["PYTHONPATH"] = ""
@@ -189,7 +190,7 @@ def printConfiguration(fileName=None):
     configurationText.append("Step-specific configuration:\n")
     for type in selected_programs.keys():
         configurationText.append("[" + type + "]\n")
-        progs = selected_programs[type].split(",")
+        progs = set(selected_programs[type].split(","))
         for prog in progs:
            if prog == None or prog == "none":
               configurationText.append("None\n\n")
@@ -230,9 +231,8 @@ def printConfiguration(fileName=None):
         conf.write(''.join(configurationText))
         conf.close()
 
-try:
-    opts, args = getopt.getopt(sys.argv[1:], "hM:IR:rjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iu1l:x:yz:LBVX:S:",\
-                                   ["help", \
+shortOptions = "hM:IR:rjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iu1l:x:yz:LBVX:S:"
+longOptions = ["help", \
                                         "multialigner",\
                                         "isolate",\
                                         "refgenomes",\
@@ -265,9 +265,11 @@ try:
                                         "taxalevel",\
                                         "localKrona",\
                                         "noblastdb",\
-					"version",\
+                                        "version",\
                                         "validator",\
-                                        "asmscore"])
+                                        "asmscore"]
+try:
+    opts, args = getopt.getopt(sys.argv[1:], shortOptions, longOptions)
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -280,7 +282,7 @@ import generic
 
 supported_programs = {}
 supported_genecallers = ["fraggenescan","metagenemark","glimmermg"]
-supported_assemblers = ["soapdenovo","newbler","ca","velvet","velvet-sc","metavelvet",\
+supported_assemblers = ["newbler", "soapdenovo","soapdenovo2","ca","velvet","velvet-sc","metavelvet",\
                             "metaidba","sparseassembler","minimus"]
 supported_assemblers.extend(generic.getSupportedList(utils.INITIAL_UTILS, utils.STEP_NAMES.ASSEMBLE))
 
@@ -356,6 +358,55 @@ nofcpblast = False
 noblastdb = False
 asmSpecified = False
 refgenomes = ""
+
+# get the required rundirectory so we can get further options from the workflow
+for o, a in opts:
+    if o in ("-d", "--projectdir"):
+        utils.Settings.rundir = os.path.abspath(a)
+        if not os.path.exists(a):
+          print "project dir %s does not exist!"%(settings.rundir)
+          usage()
+          sys.exit(1)
+if not os.path.exists(settings.rundir) or settings.rundir == "":
+    print "project dir %s does not exist!"%(settings.rundir)
+    usage()
+    sys.exit(1)
+
+inifile = settings.rundir+os.sep+"pipeline.ini"
+inf = open(inifile,'r')
+(asmcontigs, readlibs, wfName) = utils.readConfigInfo(inf, "%s/Preprocess/in/"%(settings.rundir))
+
+if wfName != "":
+   #parse frag/libs out of pipeline.ini out of rundir
+   availableWf = workflow.getSupportedWorkflows("%s/workflows"%(utils.INITIAL_UTILS), True)
+   availableWf.extend(workflow.getSupportedWorkflows(os.getcwd(), True))
+   availableWorkflows = dict()
+   for wf in availableWf:
+      availableWorkflows[wf.name] = wf
+
+   if wfName.lower() not in availableWorkflows.keys():
+      print "Error: unknown wofkflow %s specified. Please choose one of %s."%(wfName, ",".join(availableWorkflows.keys()))
+      sys.exit(1)
+   wf = availableWorkflows[wfName]
+   try:
+      wfopts, wfargs = getopt.getopt(wf.commandList.strip().split(), shortOptions, longOptions)
+      if wf.canModify():
+         wfopts.extend(opts)
+         wfargs.extend(args)
+         opts = wfopts
+         args = wfargs
+      else:
+         for o, a in opts:
+            if o in ("-V", "--version") or o in ("-h", "--help"):
+               wfopts.append([o, a])
+         opts = wfopts
+         args = wfargs
+   except getopt.GetoptError, err:
+      # print help information and exit:
+       print str(err) # will print something like "option -a not recognized"
+       usage()
+       sys.exit(2)
+
 for o, a in opts:
     if o in ("-V", "--version"):
        print "metAMOS Version %s"%(utils.getVersion())
@@ -421,7 +472,7 @@ for o, a in opts:
     elif o in ("-k", "--kmersize"):
         utils.Settings.kmer = int(a)
     elif o in ("-4", "--454"):
-       selected_programs["assemble"] = "newbler"
+       selected_programs["assemble"] = "newbler,%s"%(selected_programs["assemble"])
        selected_programs["mapreads"] = "bowtie2"
     elif o in ("-f", "--forcesteps"):
         forcesteps = a.split(",")
@@ -510,12 +561,17 @@ for o, a in opts:
         selected_programs["assemble"] = None 
 
         for assembler in assemblers:
+           if assembler == "soap2":
+              assembler="soapdenovo2"
+           elif assembler == "soap":
+              assembler="soapdenovo"
+
            foundit = False
            for sa in supported_assemblers:
               if assembler not in sa:
                  continue
               else:
-                 if assembler != "velvet" or assembler == sa:
+                 if (assembler != "velvet" and assembler != "soapdenovo") or assembler == sa:
                     #some special cases required, velvet would trigger MetaVelvet, not velvet, etc
                     if selected_programs["assemble"] != None:
                        selected_programs["assemble"] += ","
@@ -598,11 +654,6 @@ for o, a in opts:
     else:
         assert False, "unhandled option"
 
-if not os.path.exists(settings.rundir) or settings.rundir == "":
-    print "project dir %s does not exist!"%(settings.rundir)
-    usage()
-    sys.exit(1)
-
 if (settings.noblastdb or noblastdb) and (selected_programs["annotate"] == "blast" or selected_programs["annotate"] == "fcp"):
     print "**no DB directory available, cannot run blast or FCP for classification (model files in DB dir). replacing with phylosift!"
     selected_programs["annotate"] = "phylosift"
@@ -616,24 +667,27 @@ if not isolate_genome:
   skipsteps.append("MultiAlign")
 else:
   try:
+      settings.doscaffolding = True
       selected_programs["multialign"]
       selected_programs["validate"] = ",".join(supported_programs["validate"])
       selected_programs["assemble"] = selected_programs["assemble"] + ",velvet"
+      selected_programs["findorfs"] = "prokka"
       asmScore = utils.SCORE_TYPE.ALL
+      skipsteps.append("Scaffold")
+      skipsteps.append("Propagate")
   except KeyError:
       skipsteps.append("MultiAlign")
 
-  
-#parse frag/libs out of pipeline.ini out of rundir
-inifile = settings.rundir+os.sep+"pipeline.ini"
-inf = open(inifile,'r')
-(asmcontigs, readlibs) = utils.readConfigInfo(inf, "%s/Preprocess/in/"%(settings.rundir))
 if len(asmcontigs) != 0 and not asmSpecified:
    selected_programs["assemble"] = "none"
 
 if len(readlibs) > 1 and "metaidba" in selected_programs["assemble"]:
     print "ERROR: meta-IDBA only supports 1 library, please select different assembler or reduce libraries"
     sys.exit(1)
+
+if "scaffold" in skipsteps or "Scaffold" in skipsteps:
+   skipsteps.append("Propagate")
+
 inf.close()
 
 infile = ""
@@ -656,6 +710,7 @@ for lib in readlibs:
    for read in lib.reads:
       readpaths.append("%s/Preprocess/in/"%(settings.rundir)+read.fname)
       filtreadpaths.append("%s/Preprocess/out/"%(settings.rundir)+read.fname)
+      print "Processing lib %s read %s"%(lib.id, read.fname)
 
 if "Preprocess" in forcesteps:
    for path in readpaths:
@@ -667,11 +722,14 @@ asmfiles = []
 
 for lib in readlibs:
     if "MapReads" in forcesteps:
+     if "MapReads" in forcesteps:
         for a in selected_programs["assemble"].strip().split(","):
-           utils.run_process(settings, \
+           if os.path.exists("%s/Assemble/out/%s.asm.contig"%(settings.rundir,a)):
+              utils.run_process(settings, \
               "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,a),\
               "RunPipeline")
         for a in asmcontigs:
+           if os.path.exists("%s/Assemble/out/%s.asm.contig"%(settings.rundir,os.path.splitext(a)[0])):
                 utils.run_process(settings, \
                    "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,os.path.splitext(a)[0]),\
                    "RunPipeline")
@@ -726,7 +784,7 @@ if __name__ == "__main__":
     print "Starting metAMOS pipeline"
     if settings.threads < 1:
         settings.threads = 1
-    settings = utils.initConfig(settings.kmer, settings.threads, settings.rundir, settings.taxa_level, settings.local_krona, settings.annotate_unmapped, settings.VERBOSE, settings.OUTPUT_ONLY)
+    settings = utils.initConfig(settings.kmer, settings.threads, settings.rundir, settings.taxa_level, settings.local_krona, settings.annotate_unmapped, settings.doscaffolding, settings.VERBOSE, settings.OUTPUT_ONLY)
     # add krona to system path
     currPath = os.environ["PATH"]
     if utils.Settings.KRONA not in currPath:

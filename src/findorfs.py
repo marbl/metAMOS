@@ -256,6 +256,41 @@ def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS",min_l
     #    genecnt +=1
     #cvgg.close()
 
+def parse_prokka(orf_file,is_scaff=False, error_stream="FindORFS",min_len=_min_ctg_len,min_cvg=_min_ctg_cvg):
+    coverageFile = open("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, _settings.PREFIX), 'r')
+    cvg_dict = {}
+    len_dict = {}
+
+    for line in coverageFile:
+        data = line.split()
+        cvg_dict[data[0]] = float(data[1])
+    coverageFile.close()
+    genefile = ""
+    if is_scaff:
+        genefile = open("%s/FindScaffoldORFS/out/prokka/%s.gff"%(_settings.rundir,_settings.PREFIX),'r')
+        genectg = open("%s/FindScaffoldORFS/out/%s.gene.map"%(_settings.rundir, _settings.PREFIX), 'w')
+        cvgg = open("%s/FindScaffoldORFS/out/%s.gene.cvg"%(_settings.rundir,_settings.PREFIX),'w')
+    else:
+        genefile = open("%s/FindORFS/out/prokka/%s.gff"%(_settings.rundir,_settings.PREFIX),'r')
+        genectg = open("%s/FindORFS/out/%s.gene.map"%(_settings.rundir, _settings.PREFIX), 'w')
+        cvgg = open("%s/FindORFS/out/%s.gene.cvg"%(_settings.rundir,_settings.PREFIX),'w')
+
+    for line in genefile.xreadlines():
+       if "#" in line:
+          continue
+       elif line.startswith(">"):
+          break
+       (ctgID, geneA, geneB, start, end, index, geneori, geneC, id) = line.strip().split("\t", 9)
+       id = id.split(";")[0].replace("ID=", "")
+       genectg.write("%s\t%s\n"%(ctgID, id))
+       try:
+          cvgg.write("%s\t%s\n"%(id, cvg_dict[ctgID]))
+       except KeyError:
+          cvgg.write("%s\t%s\n"%(id, 1))
+    genectg.close()
+    cvgg.close()
+    genefile.close()
+
 def findFastaORFs(orf, contigs, outputFNA, outputFAA, outputCVG, outputMAP, min_len, min_cvg):
    if orf == "metagenemark":
        if not os.path.exists(_settings.METAGENEMARK + os.sep + "gmhmmp"):
@@ -278,6 +313,23 @@ def findFastaORFs(orf, contigs, outputFNA, outputFAA, outputCVG, outputMAP, min_
        run_process(_settings,"mv %s/FindORFS/out/%s.orfs.faa %s/FindORFS/out/%s"%(_settings.rundir,_settings.PREFIX,_settings.rundir,outputFAA), "FindORFS")
        run_process(_settings,"mv %s/FindORFS/out/%s.gene.cvg %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputCVG), "FindORFS")
        run_process(_settings,"mv %s/FindORFS/out/%s.gene.map %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputMAP), "FindORFS")
+   elif orf == "prokka":
+      if not os.path.exists(_settings.PROKKA + os.sep + "prokka"):
+         print "Error: Prokka not found in %s. Please check your paths and try again"%(_settings.PROKKA)
+         raise(JobSignalledBreak)
+
+      prokkaOptions = getProgramParams(_settings.METAMOS_UTILS, "prokka.spec", "", "-")
+      if "--gram" in prokkaOptions and not os.path.exists(_settings.SIGNALP + os.sep + "signalp"):
+         print "Warning: Prokka option --gram requires SignalP which is not found. Disabling"
+         prokkaOptions = prokkaOptions.replace("--gram", "")
+
+      run_process(_settings, "%s/prokka --outdir %s/FindORFS/out/prokka --prefix %s --force %s"%(_settings.PROKKA, _settings.rundir, _settings.PREFIX, contigs), "FindORFS")
+      parse_prokka("%s/FindORFS/out/prokka/%s.gff"%(_settings.rundir,_settings.PREFIX), 0, "FindORFS", min_len, min_cvg)
+      run_process(_settings, "ln %s/FindORFS/out/prokka/%s.ffn %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputFNA), "FindORFS")
+      run_process(_settings, "ln %s/FindORFS/out/prokka/%s.faa %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputFAA), "FindORFS")
+      run_process(_settings,"mv %s/FindORFS/out/%s.gene.cvg %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputCVG), "FindORFS")
+      run_process(_settings,"mv %s/FindORFS/out/%s.gene.map %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputMAP), "FindORFS")
+
    else:
        #not recognized
        return 1

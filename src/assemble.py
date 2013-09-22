@@ -132,14 +132,20 @@ def runVelvet(velvetPath, name):
    velvetgCommandLine = "%s/velvetg %s/Assemble/out/ "%(velvetPath, _settings.rundir) 
    velvetgCommandLine += getVelvetGCommand(velvetPath)
    velvetgCommandLine += " %s"%(getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(name), "", "-"))
-   velvetgCommandLine += " -read_trkg yes -scaffolding no -amos_file yes";
+   velvetgCommandLine += " -read_trkg yes -scaffolding %s -amos_file yes"%("yes -exp_cov auto" if _settings.doscaffolding else "no");
    run_process(_settings, "%s"%(velvetgCommandLine), "Assemble")
 
    # make symlinks
    run_process(_settings, "rm %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.PREFIX), "Assemble")
    run_process(_settings, "ln %s/Assemble/out/velvet_asm.afg %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
    run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")
-   run_process(_settings, "ln %s/Assemble/out/contigs.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
+
+   if _settings.doscaffolding:
+      run_process(_settings, "java -cp %s SplitFastaByLetter %s/Assemble/out/contigs.fa NNN > %s/Assemble/out/%s.asm.contig"%(_settings.METAMOS_JAVA, _settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
+      run_process(_settings, "ln %s/Assemble/out/contigs.fa %s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
+   else:
+      run_process(_settings, "ln %s/Assemble/out/contigs.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
+
 
 def runSparseAssembler(sparsePath, name):
    if not os.path.exists(sparsePath + os.sep + "SparseAssembler"):
@@ -197,7 +203,7 @@ def runMetaVelvet(velvetPath, metavelvetPath, name):
    velvetgCommandLine = "%s/meta-velvetg %s/Assemble/out/ "%(metavelvetPath, _settings.rundir)
    velvetgCommandLine += getVelvetGCommand(velvetPath)
    velvetgCommandLine += " %s"%(getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(name), "", "-"))
-   velvetgCommandLine += " -read_trkg yes -scaffolding no -amos_file yes"
+   velvetgCommandLine += " -read_trkg yes -scaffolding %s -amos_file yes"%("yes -exp_cov auto" if _settings.doscaffolding else "no")
    run_process(_settings, "%s"%(velvetgCommandLine), "Assemble")
    
    # get coverage peaks
@@ -211,7 +217,7 @@ def runMetaVelvet(velvetPath, metavelvetPath, name):
       # finally re-run velvetg with the peaks
       velvetgCommandLine = "%s/meta-velvetg %s/Assemble/out/ "%(metavelvetPath, _settings.rundir)
       velvetgCommandLine += getVelvetGCommand(velvetPath)
-      velvetgCommandLine += " -read_trkg yes -scaffolding no -amos_file yes"
+      velvetgCommandLine += " -read_trkg yes -scaffolding %s -amos_file yes"%("yes" if _settings.doscaffolding else "no")
       velvetgCommandLine += " -exp_covs %s"%(checkStdout.strip())
       run_process(_settings, "%s"%(velvetgCommandLine), "Assemble")
 
@@ -219,8 +225,12 @@ def runMetaVelvet(velvetPath, metavelvetPath, name):
    run_process(_settings, "rm %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.PREFIX), "Assemble")
    run_process(_settings, "ln %s/Assemble/out/meta-velvetg.asm.afg %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
    run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")
-   run_process(_settings, "ln %s/Assemble/out/meta-velvetg.contigs.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
-       
+   if _settings.doscaffolding:
+      run_process(_settings, "java -cp %s SplitFastaByLetter %s/Assemble/out/meta-velvetg.contigs.fa NNN > %s/Assemble/out/%s.asm.contig"%(_settings.METAMOS_JAVA, _settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
+      run_process(_settings, "ln %s/Assemble/out/meta-velvetg.contigs.fa %s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
+   else:
+      run_process(_settings, "ln %s/Assemble/out/meta-velvetg.contigs.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
+
 @follows(Preprocess)
 @split("%s/Preprocess/out/preprocess.success"%(_settings.rundir), "%s/Assemble/out/*.run"%(_settings.rundir))
 def SplitAssemblers(input_file_name, output_files): 
@@ -229,22 +239,30 @@ def SplitAssemblers(input_file_name, output_files):
       return 0
 
    for contigs in _asmcontigs:
-      run_process(_settings, "touch %s/Assemble/out/%s.run"%(_settings.rundir, contigs), "Assemble")
+      run_process(_settings, "touch %s/Assemble/out/%s.run"%(_settings.rundir, os.path.splitext(contigs)[0]), "Assemble")
 
    if _asm == "none" or _asm == None:
       return 0
-   assemblers = _asm.split(",") 
+   assemblers = set(_asm.split(","))
    for assembler in assemblers:
       run_process(_settings, "touch %s/Assemble/out/%s.run"%(_settings.rundir, assembler), "Assemble")
 
 # warning: this is not thread safe so cannot be run in parallel
 @transform(SplitAssemblers, suffix(".run"), ".asm.contig")
 def Assemble(input,output):
+   # turn off fail fast option
+   setFailFast(False)
+
    originalPrefix = _settings.PREFIX
    _settings.PREFIX = output.replace("%s/Assemble/out/"%(_settings.rundir), "")
    _settings.PREFIX = _settings.PREFIX.replace(".asm.contig", "")
    asmName = input.replace("%s/Assemble/out/"%(_settings.rundir), "")
    asmName = asmName.replace(".run", "")
+   mated = False
+   for lib in _readlibs:
+      if lib.mated:
+         mated = True
+         break
 
    #pick assembler
    if "Assemble" in _skipsteps or "assemble" in _skipsteps:
@@ -254,8 +272,9 @@ def Assemble(input,output):
       pass
    if os.path.exists("%s/Preprocess/out/%s.asm.contig"%(_settings.rundir, asmName)):
       # we had contigs input
+      run_process(_settings, "unlink %s/Assemble/out/%s.asm.contig"%(_settings.rundir, asmName), "Assemble")
       run_process(_settings, "ln %s/Preprocess/out/%s.asm.contig %s/Assemble/out/%s.asm.contig"%(_settings.rundir, asmName, _settings.rundir, asmName), "Assemble")
-   elif asmName == "soapdenovo":
+   elif asmName == "soapdenovo" or asmName == "soapdenovo2":
       #open & update config
       soapf = open("%s/config.txt"%(_settings.rundir),'r')
       soapd = soapf.read()
@@ -263,6 +282,7 @@ def Assemble(input,output):
       cnt = 1
       libno = 1
       #print libs
+      print "Processing soap asm"
       for lib in _readlibs:
           if (lib.format == "fastq" or lib.format == "fasta")  and lib.mated and not lib.interleaved:
               soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(_settings.rundir,lib.f1.fname))
@@ -275,8 +295,9 @@ def Assemble(input,output):
               soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Assemble/in/%s"%(_settings.rundir,lib.f1.fname))
               soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Assemble/in/%s"%(_settings.rundir,lib.f1.fname+".f2"))
 
-          elif lib.format == "fasta"  and lib.mated and lib.interleaved:
-              soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(_settings.rundir,lib.f1.fname))
+          elif lib.format == "fasta"  and lib.mated:
+              soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/lib%d.1.fastq"%(_settings.rundir,lib.id))
+              soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir,lib.id))
           else:
               soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(_settings.rundir,lib.f1.fname))
 
@@ -285,22 +306,32 @@ def Assemble(input,output):
       soapw.write(soapd)
       soapw.close()
 
-      if not os.path.exists(_settings.SOAPDENOVO + os.sep + "soap63"):
-         print "Error: SOAPdenovo not found in %s. Please check your path and try again.\n"%(_settings.SOAPDENOVO)
+      binPath = _settings.SOAPDENOVO
+      if asmName == "soapdenovo2":
+         binPath = _settings.SOAPDENOVO2
+
+      if not os.path.exists(binPath + os.sep + "SOAPdenovo-63mer"):
+         print "Error: %s not found in %s. Please check your path and try again.\n"%(asmName.title(), binPath)
          raise(JobSignalledBreak)
 
       soapOptions = getProgramParams(_settings.METAMOS_UTILS, "soap.spec", "pregraph", "-") 
       soapContigOptions = getProgramParams(_settings.METAMOS_UTILS, "soap.spec", "contig", "-")
+      soapMapOptions = getProgramParams(_settings.METAMOS_UTILS, "soap.spec", "map", "-")
+      soapScaffOptions = getProgramParams(_settings.METAMOS_UTILS, "soap.spec", "scaff", "-") 
 
       #start stopwatch
+      soapEXE="SOAPdenovo-63mer"
       if _settings.kmer > 63:
-          
-          run_process(_settings, "%s/soap127 pregraph -p %d %d %s -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(_settings.SOAPDENOVO, _settings.threads, _settings.kmer, soapOptions, _settings.rundir,_settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
-          run_process(_settings, "%s/soap127 contig -g %s/Assemble/out/%s.asm %s"%(_settings.SOAPDENOVO,_settings.rundir,_settings.PREFIX, soapContigOptions),"Assemble")#SOAPdenovo config.txt
-      else:
-          
-          run_process(_settings, "%s/SOAPdenovo-63mer pregraph -p %d -d -K %d %s -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(_settings.SOAPDENOVO, _settings.threads, _settings.kmer, soapOptions, _settings.rundir,_settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
-          run_process(_settings, "%s/SOAPdenovo-63mer contig -g %s/Assemble/out/%s.asm -R -M 3"%(_settings.SOAPDENOVO, _settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
+         soapEXE="SOAPdenovo-127mer"
+
+      run_process(_settings, "%s/%s pregraph -p %d -K %d %s -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(binPath, soapEXE, _settings.threads, _settings.kmer, soapOptions, _settings.rundir,_settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
+      run_process(_settings, "%s/%s contig -g %s/Assemble/out/%s.asm %s"%(binPath, soapEXE, _settings.rundir,_settings.PREFIX, soapContigOptions),"Assemble")#SOAPdenovo config.txt
+
+      if _settings.doscaffolding and mated:
+         run_process(_settings, "%s/%s map -g %s/Assemble/out/%s.asm -p %d %s -s %s/soapconfig.txt"%(binPath, soapEXE, _settings.rundir,_settings.PREFIX, _settings.threads, soapMapOptions, _settings.rundir),"Assemble")#SOAPdenovo config.txt
+         run_process(_settings, "%s/%s scaff -g %s/Assemble/out/%s.asm -p %d %s"%(binPath, soapEXE, _settings.rundir,_settings.PREFIX, _settings.threads, soapScaffOptions),"Assemble")#SOAPdenovo config.txt
+         run_process(_settings, "ln %s/Assemble/out/%s.asm.scafSeq %s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Assemble")
+
       #if OK, convert output to AMOS
    elif asmName == "metaidba":
       bowtie_mapping = 1
@@ -331,11 +362,7 @@ def Assemble(input,output):
          if (len(mymatch) == 1 and mymatch[0] != None):
             NEWBLER_VERSION = float(mymatch[0])
 
-      mated = False;
       for lib in _readlibs:
-          if lib.mated:
-             mated = True;
-
           if lib.format == "fasta":
               run_process(_settings, "%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(_settings.NEWBLER, _settings.rundir, _settings.rundir,lib.id),"Assemble")
           elif lib.format == "sff":
@@ -368,10 +395,8 @@ def Assemble(input,output):
       # make symlink for subsequent steps
       run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")
       run_process(_settings, "ln %s/Assemble/out/assembly/454AllContigs.fna %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
-      if mated == True:
-         run_process(_settings, "ln %s/Assemble/out/assembly/454Scaffolds.fna %s/Assemble/out/%s.asm.scafSeq"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
-      else:
-         run_process(_settings, "ln %s/Assemble/out/assembly/454AllContigs.fna %s/Assemble/out/%s.asm.scafSeq"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
+      if _settings.doscaffolding and mated == True:
+         run_process(_settings, "ln %s/Assemble/out/assembly/454Scaffolds.fna %s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
 
    elif asmName == "amos":
       run_process(_settings, "rm -rf %s/Assemble/in/%s.bnk"%(_settings.rundir, _settings.PREFIX), "Assemble")
@@ -401,12 +426,16 @@ def Assemble(input,output):
             run_process(_settings, "%s/convert-fasta-to-v2.pl -l %s %s -s %s/Preprocess/out/lib%d.seq -q %s/Preprocess/out/lib%d.seq.qual > %s/Preprocess/out/lib%d.frg"%(_settings.CA, lib.sid, matedString, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id),"Assemble")
          frglist += "%s/Preprocess/out/lib%d.frg "%(_settings.rundir, lib.id)
 
-      run_process(_settings, "%s/runCA -p %s -d %s/Assemble/out/ -s %s/config/asm.spec %s"%(_settings.CA,_settings.PREFIX,_settings.rundir,_settings.METAMOS_UTILS,frglist),"Assemble")
+      run_process(_settings, "%s/runCA -p %s -d %s/Assemble/out/ -s %s/config/asm.spec %s %s"%(_settings.CA,_settings.PREFIX,_settings.rundir,_settings.METAMOS_UTILS,"stopAfter=terminator" if _settings.doscaffolding else "", frglist),"Assemble")
       #convert CA to AMOS
       run_process(_settings, "%s/gatekeeper -dumpfrg -allreads %s.gkpStore > %s.frg"%(_settings.CA, _settings.PREFIX, _settings.PREFIX),"Assemble")
-      run_process(_settings, "%s/terminator -g %s.gkpStore -t %s.tigStore/ 2 -o %s"%(_settings.CA, _settings.PREFIX, _settings.PREFIX, _settings.PREFIX),"Assemble")
-      run_process(_settings, "%s/asmOutputFasta -p %s < %s.asm"%(_settings.CA, _settings.PREFIX, _settings.PREFIX), "Assemble")
-      run_process(_settings, "ln %s.utg.fasta %s.asm.contig"%(_settings.PREFIX, _settings.PREFIX), "Assemble")
+      if _settings.doscaffolding: 
+         run_process(_settings, "ln 9-terminator/%s.ctg.fasta %s.asm.contig"%(_settings.PREFIX, _settings.PREFIX), "Assemble")
+         run_process(_settings, "ln 9-terminator/%s.scf.fasta %s.linearize.scaffolds.final"%(_settings.PREFIX, _settings.PREFIX), "Assemble")
+      else:
+         run_process(_settings, "%s/terminator -g %s.gkpStore -t %s.tigStore/ 2 -o %s"%(_settings.CA, _settings.PREFIX, _settings.PREFIX, _settings.PREFIX),"Assemble")
+         run_process(_settings, "%s/asmOutputFasta -p %s < %s.asm"%(_settings.CA, _settings.PREFIX, _settings.PREFIX), "Assemble")
+         run_process(_settings, "ln %s.utg.fasta %s.asm.contig"%(_settings.PREFIX, _settings.PREFIX), "Assemble")
    elif asmName == "velvet":
       runVelvet(_settings.VELVET, "velvet")
    elif asmName == "velvet-sc":
@@ -421,11 +450,16 @@ def Assemble(input,output):
       print "Error: %s is an unknown assembler. No valid assembler specified."%(asmName)
       raise(JobSignalledBreak)
 
+   if not os.path.exists("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX)):
+      run_process(_settings, "touch %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "Assemble")
    _settings.PREFIX = originalPrefix
+   setFailFast(True)
 
 @posttask(touch_file("%s/Logs/assemble.ok"%(_settings.rundir)))
 @merge(Assemble, ["%s/Logs/assemble.ok"%(_settings.rundir)])
 def CheckAsmResults (input_file_names, output_file_name):
+   successfull = 0
+
    if "Assemble" in _skipsteps or "assemble" in _skipsteps:
       run_process(_settings, "touch %s/Logs/assemble.skip"%(_settings.rundir), "Assemble")
       return 0
@@ -434,9 +468,23 @@ def CheckAsmResults (input_file_names, output_file_name):
    else:
       assemblers = _asm.split(",")
       for assembler in assemblers:
-         if not os.path.exists("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, assembler)):
-            print "Error: %s assembler did not run successfully!"%(assembler)
-            raise(JobSignalledBreak)
+         if not os.path.exists("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, assembler)) or os.path.getsize("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, assembler)) == 0:
+            print "*** MetAMOS Warning: %s assembler did not run successfully!"%(assembler)
+            run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, assembler), "Assemble")
+            run_process(_settings, "touch %s/Assemble/out/%s.failed"%(_settings.rundir, assembler), "Assemble")
+         else:
+            successfull+=1
+      for contigs in _asmcontigs:
+         contig = os.path.splitext(contigs)[0]
+         if not os.path.exists("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, contig)) or os.path.getsize("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, contig)) == 0:
+            print "*** MetAMOS Warning: %s input contigs could not be processed!"%(contig)
+            run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, contig), "Assemble")
+            run_process(_settings, "touch %s/Assemble/out/%s.failed"%(_settings.rundir, contig), "Assemble")
+         else:
+            successfull+=1
+   if successfull == 0:
+      print "** MetAMOS Error: no selected assembler ran successfully! Please check the logs in %s/Log/ASSEMBLE.log for details."%(_settings.rundir)
+      raise(JobSignalledBreak)
    run_process(_settings, "touch %s/Assemble/out/assemble.success"%(_settings.rundir), "Assemble")
 
 @follows(CheckAsmResults)

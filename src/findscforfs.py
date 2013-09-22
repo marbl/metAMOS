@@ -7,6 +7,7 @@ from utils import *
 from scaffold import Scaffold
 from findorfs import parse_genemarkout
 from findorfs import parse_fraggenescanout
+from findorfs import parse_prokka
 
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
@@ -25,7 +26,7 @@ def init(reads, skipsteps,orf):
 
 @follows(Scaffold)
 @posttask(touch_file("%s/Logs/findscaffoldorfs.ok"%(_settings.rundir)))
-@files("%s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir,_settings.PREFIX),"%s/FindScaffoldORFS/out/%s.scaffolds.orfs"%(_settings.rundir,_settings.PREFIX))
+@files("%s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir,_settings.PREFIX),"%s/FindScaffoldORFS/out/%s.fna"%(_settings.rundir,_settings.PREFIX))
 def FindScaffoldORFS(input,output):
    if "FindScaffoldORFS" in _skipsteps:
       run_process(_settings, "touch %s/FindScaffoldORFS/out/%s.scaffolds.faa"%(_settings.rundir, _settings.PREFIX))
@@ -44,6 +45,21 @@ def FindScaffoldORFS(input,output):
        parse_fraggenescanout("%s/FindScaffoldORFS/out/%s.orfs"%(_settings.rundir,_settings.PREFIX), 1, "FindScaffoldORFS")
        run_process(_settings,"cp %s/FindScaffoldORFS/out/%s.orfs.ffn %s/FindScaffoldORFS/out/%s.fna"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindScaffoldORFS")
        run_process(_settings,"cp %s/FindScaffoldORFS/out/%s.orfs.faa %s/FindScaffoldORFS/out/%s.faa"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindScaffoldORFS")
+   elif _orf == "prokka":
+      if not os.path.exists(_settings.PROKKA + os.sep + "prokka"):
+         print "Error: Prokka not found in %s. Please check your paths and try again"%(_settings.PROKKA)
+         raise(JobSignalledBreak)
+
+      prokkaOptions = getProgramParams(_settings.METAMOS_UTILS, "prokka.spec", "", "-")
+      if "--gram" in prokkaOptions and not os.path.exists(_settings.SIGNALP + os.sep + "signalp"):
+         print "Warning: Prokka option --gram requires SignalP which is not found. Disabling"
+         prokkaOptions = prokkaOptions.replace("--gram", "")
+
+      run_process(_settings, "%s/prokka --outdir %s/FindScaffoldORFS/out/prokka --prefix %s --force %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.PROKKA, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "FindScaffoldORFS")
+      parse_prokka("%s/FindScaffoldORFS/out/prokka/%s.gff"%(_settings.rundir,_settings.PREFIX), 1, "FindScaffoldORFS")
+
+      run_process(_settings, "ln %s/FindScaffoldORFS/out/prokka/%s.ffn %s/FindScaffoldORFS/out/%s.fna"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "FindScaffoldORFS")
+      run_process(_settings, "ln %s/FindScaffoldORFS/out/prokka/%s.faa %s/FindScaffoldORFS/out/%s.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "FindScaffoldORFS")
    else:
        #not recognized
        return 1

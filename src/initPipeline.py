@@ -1,12 +1,16 @@
 #!python
 
-import os, sys, string, time, BaseHTTPServer, getopt, time, datetime
+import os, sys, string, time, BaseHTTPServer, getopt, time, datetime, tempfile
 #from datetime import date
 #from ruffus import *
 
 INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
+HOME_DIR      = "%s"%(sys.path[0])
+UTILS_DIR     = "%s%sUtilities"%(sys.path[0], os.sep) 
+
 sys.path.append(INITIAL_SRC)
 import utils
+import workflow
 
 #code to discover frozen binary location
 application_path = ""
@@ -111,10 +115,56 @@ def usage():
     print "-o: reads are in outtie orientation (default innie)"
     print "-q: boolean, reads are in fastq format (default is fastq)"
     print "-s/--sff: boolean, reads are in SFF format (default is fastq)"
+    print "-W: workflow name, automatically set options for runPipeline and download data, if applicable"
+
+def isRemote(file):
+   return file.startswith("ftp://") or file.startswith("http://") or file.startswith("https://")
+
+def checkFileExists(file):
+   if isRemote(file):
+      result = utils.getCommandOutput("curl -L -I %s && echo $?"%(file), False)
+      if result == "":
+         return False
+      return True
+   else:
+      return os.path.exists(file)
+
+def getBaseFileName(file):
+   base = os.path.basename(file)
+   return base.replace(".bz2", "").replace(".gz", "")
+
+def getFile(inFile, dest):
+   base = os.path.basename(inFile)
+   dest = dest.replace(".bz2", "").replace(".gz", "")
+   doremove = False
+
+   if isRemote(inFile):
+      base = "%s/download_%s"%(os.path.dirname(dest), base)
+      os.system("curl -# -L %s -o %s"%(inFile, base))
+      doremove = True
+
+   if base.endswith("bz2"):
+      os.system("bunzip2 -c %s > %s"%(base, dest))
+   elif base.endswith("gz"):
+      os.system("gunzip -c %s > %s"%(base, dest))
+   else:
+      os.system("cp %s %s"%(base, dest))
+
+   if doremove:
+      os.system("rm -f %s"%(base))
     
 if len(sys.argv) < 2:
     usage()
     sys.exit(1)
+
+selectedWorkflow = ""
+selectedCommands = ""
+availableWf = workflow.getSupportedWorkflows("%s/workflows"%(UTILS_DIR), True)
+availableWf.extend(workflow.getSupportedWorkflows(os.getcwd(), True))
+availableWorkflows = dict()
+for wf in availableWf:
+   availableWorkflows[wf.name] = wf
+
 allsteps = ["Preprocess","Assemble","Validate","MultiAlign","FindORFS","FindRepeats","Abundance","Annotate","FunctionalAnnotation","Scaffold","Propagate","FindScaffoldORFS","Classify","Postprocess"]
 
 today = datetime.datetime.now()
@@ -122,7 +172,7 @@ today = datetime.datetime.now()
 timestamp = "P_"+today.isoformat().replace("-","_").replace(".","").replace(":","").replace("T","_")
 #print timestamp
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hfsq1:2:m:c:i:d:or:l:V", ["help", "fasta","fastq","sff","f1=","f2=","matelib=","asmcontig=","insertlen=","dir=","outtie=","readlen=","version"])
+    opts, args = getopt.getopt(sys.argv[1:], "hfsq1:2:m:c:i:d:or:l:VW:", ["help", "fasta","fastq","sff","f1=","f2=","matelib=","asmcontig=","insertlen=","dir=","outtie=","readlen=","version", "workflow"])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -139,13 +189,28 @@ maxreadlen = 150
 innie = True
 readlibs = []
 SFFLinkerType = "titanium"
-contigs = [] 
+contigs = dict()
 lastLib = 0
 libs = ""
 for o, a in opts:
     if o in ("-V", "--version"):
        print "metAMOS Version %s"%(utils.getVersion())
        sys.exit()
+    elif o in ("-W", "--workflow"):
+       if a.lower() not in availableWorkflows.keys():
+          print "Error: unknown wofkflow %s specified. Please choose one of %s."%(a.lower(), ",".join(availableWorkflows.keys()))
+          sys.exit(1)
+       wf = availableWorkflows[a.lower()]
+
+       # process any requested contigs/libs
+       for lib in wf.readlibs:
+          nlib = readLib(lib.format, lib.f1.fname, "" if lib.interleaved or not lib.mated else lib.f2.fname, lib.innie, lib.linkerType, lib.mated, lib.interleaved)
+          readlibs.append(nlib)
+          inserts.append([lib.mmin, lib.mmax])
+       for contig in wf.asmcontigs:
+          contigs[os.path.basename(contig)] = contig
+       selectedWorkflow = wf.name
+       selectedCommands = wf.commandList
     elif o == "-v":
         verbose = True
     elif o == "-o":
@@ -154,7 +219,7 @@ for o, a in opts:
         usage()
         sys.exit()
     elif o in ("-c"):
-        contigs.append(a)
+        contigs[os.path.basename(a)] = a
 
     elif o in ("-q", "--fastq"):
         #reads = a
@@ -227,18 +292,18 @@ errorMessage = ""
 while i < len(readlibs):
     mylib = readlibs[i]
     if mylib.interleaved:
-        if not os.path.exists(mylib.f12):
+        if not checkFileExists(mylib.f12):
             filesOK = False
             errorMessage += "File %s from library %d does not exist\n"%(mylib.f12, i+1)
     elif mylib.mated:
-        if not os.path.exists(mylib.f1) or not os.path.exists(mylib.f2):
+        if not checkFileExists(mylib.f1) or not checkFileExists(mylib.f2):
             filesOK = False
-            if not os.path.exists(mylib.f1):
+            if not checkFileExists(mylib.f1):
                 errorMessage += "File %s from library %d does not exist\n"%(mylib.f1, i+1)
-            if not os.path.exists(mylib.f2):
+            if not checkFileExists(mylib.f2):
                 errorMessage += "File %s from library %d does not exist\n"%(mylib.f2, i+1)
     else:
-        if not os.path.exists(mylib.f1):
+        if not checkFileExists(mylib.f1):
             filesOK = False  
             errorMessage += "File %s from library %d does not exist\n"%(mylib.f1, i+1)
      
@@ -253,9 +318,9 @@ if filesOK == False:
     print "Error, provided files do not exist: \n%s"%(errorMessage)
     sys.exit(1)
 
-for contig in contigs:
-   if len(contig) > 1 and not os.path.exists(contig):
-      print "Error, provided contig file does not exist: ", contig
+for contig in contigs.keys():
+   if len(contig) > 1 and not checkFileExists(contigs[contig]):
+      print "Error, provided contig file does not exist: ", contigs[contig]
       sys.exit(1)
 
 if os.path.exists(id):
@@ -280,9 +345,11 @@ cf = open(id+"/pipeline.ini",'w')
 cf.write("#metAMOS pipeline configuration file\n")
 #if len(contigs) > 0:
 #   #user specified a contig file
-cf.write("asmcontigs:\t%s\n"%(",".join(contigs)))
-for contig in contigs:
-   os.system("cp %s %s/Preprocess/in/%s "%(contig,id,os.path.basename(contig)))
+cf.write("inherit:\t%s\n"%(selectedWorkflow))
+cf.write("command:\t%s\n"%(selectedCommands))
+cf.write("asmcontigs:\t%s\n"%(",".join(contigs.keys())))
+for contig in contigs.keys():
+   getFile(contigs[contig], "%s/Preprocess/in/%s"%(id,contig))
 
 #cnt = 1
 i = 0
@@ -307,23 +374,20 @@ while i < len(readlibs):
     else:
         cf.write("lib%dformat:\tfasta\n"%(i+1))
         if mylib.interleaved or not mylib.mated:
-            filen = os.path.basename(f1)
-            if os.path.exists("%s.qual"%(f1)):
-                os.system("cp %s.qual %s/Preprocess/in/. "%(f1,id))
+            if checkFileExists("%s.qual"%(f1)):
+                getFile("%s.qual"%(f1), "%s/Preprocess/in/%s"%(id,getBaseFileName(f1)))
         else:
-            filen1 = os.path.basename(f1)
-            filen2 = os.path.basename(f2)
-            if os.path.exists("%s.qual"%(f1)):
-                os.system("cp %s.qual %s/Preprocess/in/."%(f1,id))
+            if checkFileExists("%s.qual"%(f1)):
+                getFile("%s.qual"%(f1), "%s/Preprocess/in/%s"%(id,getBaseFileName(f1)))
             if os.path.exists("%s.qual"%(f2)):
-                os.system("cp %s.qual %s/Preprocess/in/. "%(f2,id))
+                getFile("%s.qual"%(f2), "%s/Preprocess/in/%s"%(id,getBaseFileName(f2)))
     if not mylib.mated:
         filen = os.path.basename(f1)
         cf.write("lib%dmated:\tFalse\n"%(i+1))
         cf.write("lib%dinterleaved:\tFalse\n"%(i+1))
-        cf.write("lib%dfrg:\t%s\n"%(i+1,filen))
-        if os.path.exists("%s"%(f1)):
-            os.system("cp %s %s/Preprocess/in/. "%(f1,id))
+        cf.write("lib%dfrg:\t%s\n"%(i+1,getBaseFileName(f1)))
+        if checkFileExists("%s"%(f1)):
+            getFile("%s.qual"%(f1), "%s/Preprocess/in/%s"%(id,getBaseFileName(f1)))
 
     #os.system("ln -t %s -s %s/Preprocess/in/%s"%(frg,id,filen))
     elif mylib.mated:
@@ -335,25 +399,22 @@ while i < len(readlibs):
 
         if not mylib.interleaved:
             cf.write("lib%dinterleaved:\tFalse\n"%(i+1))
-            filen1 =  os.path.basename(f1)
-            filen2 =  os.path.basename(f2)
             min = mylib.mmin
             max = mylib.mmax
             mean = mylib.mean
             stdev = mylib.stdev
-            cf.write("lib%df1:\t%s,%d,%d,%d,%d\n"%(i+1,filen1,min,max,mean,stdev))
-            cf.write("lib%df2:\t%s,%d,%d,%d,%d\n"%(i+1,filen2,min,max,mean,stdev))
-            os.system("cp %s %s/Preprocess/in/. "%(f1,id))
-            os.system("cp %s  %s/Preprocess/in/. "%(f2,id))
+            cf.write("lib%df1:\t%s,%d,%d,%d,%d\n"%(i+1,getBaseFileName(f1),min,max,mean,stdev))
+            cf.write("lib%df2:\t%s,%d,%d,%d,%d\n"%(i+1,getBaseFileName(f2),min,max,mean,stdev))
+            getFile(f1, "%s/Preprocess/in/%s"%(id,os.getBaseFileName(f1)))
+            getFile(f2, "%s/Preprocess/in/%s"%(id,os.getBaseFileName(f2)))
         elif mylib.interleaved:
             cf.write("lib%dinterleaved:\tTrue\n"%(i+1))
-            filen1 =  os.path.basename(f1)
             min = mylib.mmin
             max = mylib.mmax
             mean = mylib.mean
             stdev = mylib.stdev
-            cf.write("lib%df1:\t%s,%d,%d,%d,%d\n"%(i+1,filen1,min,max,mean,stdev))
-            os.system("cp %s %s/Preprocess/in/. "%(f1,id))
+            cf.write("lib%df1:\t%s,%d,%d,%d,%d\n"%(i+1,getBaseFileName(f1),min,max,mean,stdev))
+            getFile(f1, "%s/Preprocess/in/%s"%(id,getBaseFileName(f1)))
 
     if 1:
         soapf = open("%s/config.txt"%(id),'a')
@@ -381,7 +442,8 @@ while i < len(readlibs):
         elif mylib.format == "fastq" and not mylib.mated:
             soaplib += "q=LIB%dQ1REPLACE\n"%(i+1)
         elif mylib.format == "fasta" and mylib.mated and mylib.interleaved:
-            soaplib += "p=LIB%dQ1REPLACE\n"%(i+1)
+            soaplib += "q1=LIB%dQ1REPLACE\n"%(i+1)
+            soaplib += "q2=LIB%dQ2REPLACE\n"%(i+1)
         elif mylib.format == "sff" and mylib.mated:
             soaplib += "q1=LIB%dQ1REPLACE\n"%(i+1)
             soaplib += "q2=LIB%dQ2REPLACE\n"%(i+1)

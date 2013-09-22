@@ -477,7 +477,6 @@ def MapReads(input,output):
       run_process(_settings, "touch %s/Logs/mapreads.skip"%(_settings.rundir), "MapReads")
       return 0
 
-   print "Input is %s output %s\n"%(input, output)
    originalPrefix = _settings.PREFIX
    _settings.PREFIX = output.replace("%s/Assemble/out/"%(_settings.rundir), "")
    _settings.PREFIX = _settings.PREFIX.replace(".contig.cvg", "")

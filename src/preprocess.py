@@ -152,7 +152,7 @@ def Preprocess(input,output):
    global _run_fastqc
 
    for contig in _asmcontigs:
-      run_process(_settings, "ln %s/Preprocess/in/%s %s/Preprocess/out/%s.asm.contig"%(_settings.rundir, contig, _settings.rundir, contig), "Preprocess")
+      run_process(_settings, "ln %s/Preprocess/in/%s %s/Preprocess/out/%s.asm.contig"%(_settings.rundir, contig, _settings.rundir, os.path.splitext(contig)[0]), "Preprocess")
 
    # update file names if necessary to avoid conflicts and create qual files
    for lib in _readlibs:
@@ -565,7 +565,7 @@ def Preprocess(input,output):
                run_process(_settings, "unlink %s/Preprocess/out/lib%d.sff"%(_settings.rundir, lib.id), "Preprocess")
                run_process(_settings, "ln %s/Preprocess/in/%s %s/Preprocess/out/lib%d.sff"%(_settings.rundir, lib.f1.fname, _settings.rundir, lib.id), "Preprocess")
 
-               if _asm == "newbler":
+               if "newbler" in asm:
                   if _run_fastqc:
                      print "Warning: FastQC cannot run on SFF files, skipping."
                      _run_fastqc = false

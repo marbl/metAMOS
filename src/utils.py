@@ -62,7 +62,10 @@ INPUT_TYPE = enum("FASTQ", "FASTA", "CONTIGS", "SCAFFOLDS", "ORF_FA", "ORF_AA")
 SCORE_TYPE = enum("ALL", "LAP", "ALE", "CGAL", "SNP", "FRCBAM")
 SCORE_WEIGHTS = dict()
 for score in SCORE_TYPE.reverse_mapping.keys():
-   SCORE_WEIGHTS[score] = 1
+   if score == SCORE_TYPE.LAP or score == SCORE_TYPE.ALE or score == SCORE_TYPE.CGAL:
+      SCORE_WEIGHTS[score] = 0.33 # should this be the case?
+   else:
+      SCORE_WEIGHTS[score] = 1
 
 _failFast = True
 
@@ -436,7 +439,7 @@ def readConfigInfo(infile, filePrefix=""):
 
       if "#" in line:
          continue
-      elif "workflow:" in line:
+      elif "inherit:" in line:
          wfc = line.replace("\n", "").split("\t")
          if len(wfc) < 2:
             continue
@@ -760,7 +763,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
     phmmerMD5 = getMD5Sum(Settings.PHMMER + os.sep + "phmmer")
 
     Settings.MGCAT = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
-    if not os.path.exists(Settings.PHMMER + os.sep + "mgcat"):
+    if not os.path.exists(Settings.MGCAT + os.sep + "mgcat"):
        Settings.MGCAT = getFromPath("mgcat", "mgcat")
     mgcatMD5 = getMD5Sum(Settings.MGCAT + os.sep + "mgcat")
 
@@ -987,25 +990,34 @@ def run_process(settings,command,step=""):
               commandf.write("|%s| "%(dt)+command+"\n")
               commandf.close()
 
-def recruitGenomes(settings,query,genomeDir,outDir,top=1):
+def recruitGenomes(settings,query,genomeDir,outDir,stepName, top=1):
+   if not os.path.exists(outDir):
+      run_process(settings, "mkdir -p %s"%(outDir), stepName.title())
    print "recruiting genomes.."
-   run_process("%s/mgcat -M -r %s -d %s -o %d"%(settings.MGCAT,query,genomeDir,outDir)
-   rg = open("%s/recruited_genomes.lst",'r')
-   rglist = []
-   cnt = 0
-   for genome in rglist:
-       genome = genome.replace("\n","")
-       seq,mumi = genome.split(",")
-       if os.path.exists(seq):
-           rglist.append([float(mumi),seq])
-           cnt +=1
-   print "done! recruited %d genomes!"%(cnt)
-   rglist.sort()
-   int i = 0
+   setFailFast(False)
+   run_process(settings, "%s/mgcat -M -r %s -d %s -o %s -p %d"%(settings.MGCAT,query,genomeDir,outDir,settings.threads), stepName.title())
+   setFailFast(True)
+
    gtr = []
-   while i < len(rglist):
-       gtr.append(rglist[i][1])
-       i++
+   if os.path.exists("%s/recruited_genomes.lst"%(outDir)):
+      rg = open("%s/recruited_genomes.lst"%(outDir),'r')
+      rglist = []
+      cnt = 0
+      for genome in rg.xreadlines():
+         genome = genome.replace("\n","")
+         seq,mumi = genome.split(",")
+         if os.path.exists(seq):
+            rglist.append([float(mumi),seq])
+            cnt +=1
+      print "done! recruited %d genomes!"%(cnt)
+      rglist.sort()
+      i = 0
+      while i < len(rglist) and i < top:
+         gtr.append(rglist[i][1])
+         i+=1
+   else:
+      print "Error: recruiting references failed"
+      raise(JobSignalledBreak)
            
    return gtr
 

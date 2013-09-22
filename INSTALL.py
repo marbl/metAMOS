@@ -546,7 +546,7 @@ if "isolate" in enabledWorkflows or manual:
              mpi=utils.getFromPath(command, "MPI", False)
              if not os.path.exists("%s%s%s"%(mpi, os.sep, command)):
                 mpi = command = ""
-                print "Error: cannot find MPI in your path. Please add it to your path."
+                print "Error: cannot find MPI, required to build Ray. Please add it to your path."
           if command != "":
              os.system("curl -L http://downloads.sourceforge.net/project/denovoassembler/Ray-v2.2.0.tar.bz2 -o Ray-v2.2.0.tar.bz2")
              os.system("tar xvjf Ray-v2.2.0.tar.bz2")
@@ -665,7 +665,8 @@ if "isolate" in enabledWorkflows or manual:
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        masurca = utils.getFromPath("runSRCA.pl", "MaSuRCA", False)
-       if masurca == "" and OSTYPE != "Darwin":
+       if masurca == "":
+# and OSTYPE != "Darwin":
           if "masurca" in packagesToInstall:
              dl = 'y'
           else:
@@ -680,6 +681,8 @@ if "isolate" in enabledWorkflows or manual:
                 os.system("tar xvzf msrca.tar.gz")
                 os.system("mv ./MaSuRCA-2.0.3.1 ./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
                 os.chdir("./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+                os.system("cp install.sh install.orig")
+                os.system("cat install.orig |sed s/\-\-prefix/\-\-disable\-shared\ \-\-prefix/g > install.sh")
                 # patch CA
                 if not ALLOW_FAST:
                    os.system("cd CA/kmer/ && cp configure.sh configure.original")
@@ -828,7 +831,7 @@ if "isolate" in enabledWorkflows or manual:
             file = "all.fna.tar.gz"
             print "Downloading refseq genomes (%s)..."%(file)
             print "\tThis file is large and may take time to download"
-            #os.system("curl -L %s/%s -o genomes.tar.gz"%(ftpSite, file)
+            os.system("curl -L %s/%s -o genomes.tar.gz"%(ftpSite, file))
             os.system("mkdir -p ./Utilities/DB/refseq/temp")
             os.system("mv genomes.tar.gz ./Utilities/DB/refseq/temp")
             os.chdir("./Utilities/DB/refseq/temp")

@@ -15,17 +15,20 @@ _skipsteps = []
 _settings = Settings()
 _asm = None
 _asmcontigs = []
+_autoPickKmer = False
 
-def init(reads, skipsteps, asm, asmcontigs):
+def init(reads, skipsteps, asm, asmcontigs, autoPickKmer):
    global _readlibs
    global _asm
    global _skipsteps
    global _asmcontigs
+   global _autoPickKmer
 
    _readlibs = reads
    _skipsteps = skipsteps
    _asm = asm
    _asmcontigs.extend(asmcontigs)
+   _autoPickKmer = autoPickKmer
 
 def extractNewblerReads():
    run_process(_settings, "unlink %s/Preprocess/out/all.seq.mates"%(_settings.rundir), "Assemble")
@@ -237,6 +240,36 @@ def SplitAssemblers(input_file_name, output_files):
    if "Assemble" in _skipsteps or "assemble" in _skipsteps:
       run_process(_settings, "touch %s/Logs/assemble.skip"%(_settings.rundir), "Assemble")
       return 0
+
+   if _autoPickKmer:
+      if os.path.exists("%s%skmergenie"%(_settings.KMERGENIE, os.sep)):
+         fileList = open("%s/Assemble/out/%s.kmergenie.in"%(_settings.rundir, _settings.PREFIX),'w')
+         maxK = 71
+         for lib in _readlibs:
+            run_process(_settings, "head -n 4 %s/Preprocess/out/lib%d.fastq > %s/Assemble/out/tmp.fastq"%(_settings.rundir, lib.id, _settings.rundir), "Assemble")
+            readLen = getCommandOutput("java -cp %s SizeFasta %s/Assemble/out/tmp.fastq |awk '{print $NF}'"%(_settings.METAMOS_JAVA, _settings.rundir), False)
+            run_process(_settings, "rm %s/Assemble/out/tmp.fastq"%(_settings.rundir), "Assemble")
+            if int(readLen) > maxK:
+               maxK = int(readLen)
+            fileList.write("%s/Preprocess/out/lib%d.fastq\n"%(_settings.rundir, lib.id))
+         fileList.close()
+
+         # now we can pick
+         run_process(_settings, "%s/kmergenie %s/Assemble/out/%s.kmergenie.in -t %d -k %s -o %s"%(_settings.KMERGENIE, _settings.rundir, _settings.PREFIX, _settings.threads, maxK, _settings.PREFIX), "Assemble")
+         result = open("%s/Assemble/out/%s_report.html"%(_settings.rundir, _settings.PREFIX), 'r')
+         for line in result.xreadlines():
+            if "Predicted best k:" in line:
+               _settings.kmer = line.replace("<p><h2>Predicted best k:", "").replace("</h2></p>", "").strip() 
+               # if we got an even kmer, update to odd since most assemblers require this
+               if int(_settings.kmer) % 2 == 0:
+                  _settings.kmer = "%s"%(int(_settings.kmer) + 1)
+               print "*** metAMOS: Selected kmer size %s"%(_settings.kmer)
+            elif "Predicted assembly size:" in line:
+               genomeSize = line.replace("<p><h4>Predicted assembly size:", "").replace("</h4></p>", "").strip()
+               print "*** metAMOS: Estimated genome size %s"%(genomeSize)
+         result.close() 
+      else:
+         print "Warning: could not auto-pick a kmer, KmerGenie not found. Defaulting to %s"%(_settings.kmer)
 
    for contigs in _asmcontigs:
       run_process(_settings, "touch %s/Assemble/out/%s.run"%(_settings.rundir, os.path.splitext(contigs)[0]), "Assemble")

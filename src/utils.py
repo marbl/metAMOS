@@ -117,6 +117,8 @@ class Settings:
    METAVELVET = ""
    SPARSEASSEMBLER = ""
 
+   KMERGENIE = ""
+
    MGCAT = ""
 
    METAPHYLER = ""
@@ -252,6 +254,7 @@ class Settings:
       Settings.VELVET_SC     = "%s%scpp%s%s-%s%svelvet-sc"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
       Settings.METAVELVET    = "%s%scpp%s%s-%s%sMetaVelvet"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
       Settings.SPARSEASSEMBLER = "%s%scpp%s%s-%s%sSparseAssembler"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
+      Settings.KMERGENIE = "%s%scpp%s%s-%s%skmergenie"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
       Settings.PHYMM = "%s%sperl%sphymm%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, os.sep)
 
       Settings.METAPHYLER        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
@@ -293,7 +296,7 @@ class Settings:
       Settings.FREEBAYES     = "%s%scpp%s%s-%s/freebayes/bin"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.QUAST         = "%s%squast"%(Settings.METAMOSDIR, os.sep)
 
-      Settings.MPI	     = "%s%smpirun"%(Settings.METAMOSDIR, os.sep)
+      Settings.MPI	     = "%s%smpiexec"%(Settings.METAMOSDIR, os.sep)
 
 
 libcounter = 1
@@ -788,6 +791,11 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
        Settings.PHYLOSIFT = ""
     phylosiftMD5 = getMD5Sum(Settings.PHYLOSIFT + os.sep + "bin" + os.sep + "phylosift")
 
+    Settings.KMERGENIE = "%s%scpp%s%s-%s%skmergenie"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
+    if not os.path.exists(Settings.KMERGENIE + os.sep + "kmergenie"):
+       Settings.KMERGENIE = getFromPath("kmergenie", "KmerGenie")
+    kmergenieMD5 = getMD5Sum(Settings.KMERGENIE + os.sep + "kmergenie")
+
     # now for the validators
     Settings.LAP = "%s%sLAP"%(Settings.METAMOSDIR, os.sep)
     if not os.path.exists(Settings.LAP + os.sep + "aligner" + os.sep + "calc_prob.py"):
@@ -819,15 +827,15 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
        Settings.QUAST = getFromPath("quast.py", "QUAST")
     quastMD5 = getMD5Sum(Settings.QUAST + os.sep + "quast.py")
 
-    Settings.MPI = "%s%smpirun"%(Settings.METAMOSDIR, os.sep)
+    Settings.MPI = "%s%smpiexec"%(Settings.METAMOSDIR, os.sep)
     if not os.path.exists(Settings.MPI):
-       Settings.MPI = getFromPath("mpirun", "MPI", False)
+       Settings.MPI = getFromPath("mpiexec", "MPI", False)
        if Settings.MPI == "":
-          Settings.MPI = getFromPath("openmpirun", "OPENMPI", False)
+          Settings.MPI = getFromPath("openmpiexec", "OPENMPI", False)
           if Settings.MPI != "":
-             Settings.MPI = "%s%s%s"%(Settings.MPI, os.sep, "openmpirun")
+             Settings.MPI = "%s%s%s"%(Settings.MPI, os.sep, "openmpiexec")
        else:
-          Settings.MPI = "%s%s%s"%(Settings.MPI, os.sep, "mpirun")
+          Settings.MPI = "%s%s%s"%(Settings.MPI, os.sep, "mpiexec")
     if not os.path.exists(Settings.MPI):
        print "Warning: MPI is not available, some functionality may not be available"
     mpiMD5 = getMD5Sum(Settings.MPI)
@@ -888,6 +896,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
     conf.write("PHYLOSIFT:\t\t%s\t%s\n"%(Settings.PHYLOSIFT, phylosiftMD5))
     conf.write("FASTQC:\t\t\t%s\t%s\n"%(Settings.FASTQC, fastqcMD5))
 
+    conf.write("KMERGENIE:\t\t%s\t%s\n"%(Settings.KMERGENIE, kmergenieMD5))
     conf.write("REPEATOIRE:\t\t%s\t%s\n"%(Settings.REPEATOIRE, repeatoireMD5))
     conf.write("KRONA:\t\t\t%s\t%s\n"%(Settings.KRONA, kronaMD5))
     conf.write("LAP:\t\t\t%s\t%s\n"%(Settings.LAP, lapMD5))

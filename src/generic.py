@@ -299,7 +299,7 @@ class GenericProgram:
                   for l in libs.strip().split("\\n"):
                      spec.write(l.strip() + "\n")
                else:
-                  line = line.replace("[MACHINE]", "%s-%s"%(_settings.OSTYPE, _settings.MACHINETYPE)).replace("[MPI]", _settings.MPI).replace("[PELIST]", pelist).replace("[MPLIST]", mplist).replace("[PREFIX]", _settings.PREFIX).replace("[DB]", _settings.DB_DIR).replace("[MEM]", "%d"%(avram)).replace("[THREADS]",self.getThreadParams()).replace("[OFFSET]", "33" if offset.lower() == "sanger" else "64").replace("[OUTPUT]", "%s%s%s%sout%s%s"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep, os.sep, self.output.replace("[PREFIX]", _settings.PREFIX))).replace("[RUNDIR]", "%s%s%s%sout"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep)).replace("[KMER]", "%d"%(_settings.kmer)).replace("[LOCATION]", "%s%s"%(self.location,os.sep)).replace("[TECHNOLOGY_PARAMETERS]", techParams)
+                  line = line.replace("[MACHINE]", "%s-%s"%(_settings.OSTYPE, _settings.MACHINETYPE)).replace("[MPI]", _settings.MPI).replace("[PELIST]", pelist).replace("[MPLIST]", mplist).replace("[PREFIX]", _settings.PREFIX).replace("[DB]", _settings.DB_DIR).replace("[MEM]", "%d"%(avram)).replace("[THREADS]",self.getThreadParams()).replace("[OFFSET]", "33" if offset.lower() == "sanger" else "64").replace("[OUTPUT]", "%s%s%s%sout%s%s"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep, os.sep, self.output.replace("[PREFIX]", _settings.PREFIX))).replace("[RUNDIR]", "%s%s%s%sout"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep)).replace("[KMER]", "%s"%(_settings.kmer)).replace("[LOCATION]", "%s%s"%(self.location,os.sep)).replace("[TECHNOLOGY_PARAMETERS]", techParams)
                   spec.write(line + "\n")
             template.close()
             spec.close()
@@ -361,6 +361,9 @@ class GenericProgram:
          listOfInput += ":%s/Annotate/in/%s.faa"%(_settings.rundir, _settings.PREFIX)
          print "Parameters are %s\n"%(params)
 
+      # lots of tools expect to be able to get themselves from path so add run dir to path
+      oldPath = os.environ["PATH"]
+      os.environ["PATH"] = self.location + os.pathsep + oldPath
       i = 0
       for param in params:
          for command in self.commandList:
@@ -384,8 +387,8 @@ class GenericProgram:
                      suffix = "fastq"
                   command = command.replace("[FIRST]", "%s/Preprocess/out/lib%d.1.%s"%(_settings.rundir, 1, suffix)).replace("[SECOND]", "%s/Preprocess/out/lib%d.2.%s"%(_settings.rundir, 1, suffix))
 
-            param = param + " " + getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(self.name.lower()), commandName, "-").replace("[KMER]", "%d"%(_settings.kmer))
-            command = command.replace(commandName, theCommand, 1).replace("[MPI]", _settings.MPI).replace("[INPUT]", param).replace("[PELIST]", pelist).replace("[MPLIST]", mplist).replace("[PREFIX]", _settings.PREFIX).replace("[DB]", _settings.DB_DIR).replace("[MEM]", "%d"%(avram)).replace("[THREADS]", self.getThreadParams()).replace("[OFFSET]", "33" if offset.lower() == "sanger" else "64").replace("[OUTPUT]", self.output.replace("[PREFIX]", outputs[i]) if len(outputs) > i else "%s%s%s%sout%s%s"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep, os.sep, self.output.replace("[PREFIX]", _settings.PREFIX))).replace("[RUNDIR]", "%s%s%s%sout"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep)).replace("[KMER]", "%d"%(_settings.kmer)).replace("[TECHNOLOGY_PARAMETERS]", techParams)
+            param = param + " " + getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(self.name.lower()), commandName, "-").replace("[KMER]", "%s"%(_settings.kmer))
+            command = command.replace(commandName, theCommand, 1).replace("[MPI]", _settings.MPI).replace("[INPUT]", param).replace("[PELIST]", pelist).replace("[MPLIST]", mplist).replace("[PREFIX]", _settings.PREFIX).replace("[DB]", _settings.DB_DIR).replace("[MEM]", "%d"%(avram)).replace("[THREADS]", self.getThreadParams()).replace("[OFFSET]", "33" if offset.lower() == "sanger" else "64").replace("[OUTPUT]", self.output.replace("[PREFIX]", outputs[i]) if len(outputs) > i else "%s%s%s%sout%s%s"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep, os.sep, self.output.replace("[PREFIX]", _settings.PREFIX))).replace("[RUNDIR]", "%s%s%s%sout"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep)).replace("[KMER]", "%s"%(_settings.kmer)).replace("[TECHNOLOGY_PARAMETERS]", techParams)
             run_process(_settings, command, STEP_NAMES.reverse_mapping[self.stepName].title())
          i+=1
 
@@ -409,6 +412,9 @@ class GenericProgram:
          programOut = "%s/%s/out/%s"%(_settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), self.scaffoldOutput.replace("[PREFIX]", _settings.PREFIX))
 
          run_process(_settings, "ln %s %s/%s/out/%s%s"%(programOut, _settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), _settings.PREFIX, STEP_OUTPUTS.reverse_mapping[STEP_NAMES.mapping["SCAFFOLD"]]), STEP_NAMES.reverse_mapping[self.stepName].title()) 
+
+      # restore path
+      os.environ["PATH"] = oldPath
       return listOfInput
 
 def getSupportedList(path, step):

@@ -95,6 +95,7 @@ from ruffus import *
 from task import JobSignalledBreak
 skipsteps = ["FindRepeats"]
 isolate_genome = False
+userKmerSupplied = False
 asmScores = "%d"%(utils.SCORE_TYPE.LAP)
 asmScoreWeights = dict()
 
@@ -470,6 +471,7 @@ for o, a in opts:
         pass
     elif o in ("-k", "--kmersize"):
         utils.Settings.kmer = a
+        userKmerSupplied=True
     elif o in ("-4", "--454"):
        selected_programs["assemble"] = "newbler,%s"%(selected_programs["assemble"])
        selected_programs["mapreads"] = "bowtie2"
@@ -702,6 +704,9 @@ if len(readlibs) > 1 and "metaidba" in selected_programs["assemble"]:
 if "scaffold" in skipsteps or "Scaffold" in skipsteps:
    skipsteps.append("Propagate")
 
+if userKmerSupplied == False:
+   always_run_programs.append("kmergenie")
+
 inf.close()
 
 infile = ""
@@ -861,7 +866,7 @@ if __name__ == "__main__":
 
     # initialize submodules
     preprocess.init(readlibs, asmcontigs, skipsteps, selected_programs["assemble"], run_fastqc,filter)
-    assemble.init(readlibs, skipsteps, selected_programs["assemble"], asmcontigs)
+    assemble.init(readlibs, skipsteps, selected_programs["assemble"], asmcontigs, userKmerSupplied == False)
     mapreads.init(readlibs, skipsteps, selected_programs["mapreads"], savebtidx,ctgbpcov,lowmem)
     validate.init(readlibs, skipsteps, selected_programs["validate"], asmScores)
     findorfs.init(readlibs, skipsteps, selected_programs["findorfs"], min_ctg_len, min_ctg_cvg,read_orfs)

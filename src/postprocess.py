@@ -129,6 +129,10 @@ def Postprocess(input,output):
    else:
       run_process(_settings, "touch %s/Postprocess/out/ref.asm"%(_settings.rundir), "Postprocess")
 
+   if os.path.exists("%s/Assemble/out/%s_report.html"%(_settings.rundir, _settings.PREFIX)):
+      run_process(_settings, "unlink %s/Postprocess/out/kmergenie_report.html"%(_settings.rundir), "Postprocess")
+      run_process(_settings, "ln %s/Assemble/out/%s_report.html %s/Postprocess/out/kmergenie_report.html"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
+
    #command to open webbrowser?
    #try to open Krona output
    #if openbrowser:

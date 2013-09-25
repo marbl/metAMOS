@@ -99,7 +99,7 @@ def outputValidate(headerArray, dataArray, outputHeader, best, results):
    isFirst = True
    for r in results:
       if isFirst:
-         row.append(["%s%s%s"%("<b>" if isBest else "", r.title(), "</b>" if isBest else ""), "left"])
+         row.append(["%s%s%s"%("<b>" if isBest else "", r, "</b>" if isBest else ""), "left"])
          isFirst = False
       else:
          score = ""
@@ -323,6 +323,9 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
        outputLibraryInfo(headerArray, dataArray, firstLib, libcnt, format, mated, interleaved, mmin, mmax, nQC > 0)
     preprocess.add(getTable(headerArray, dataArray))
     summary.close()
+
+    if os.path.exists("%s/Postprocess/out/kmergenie_report.html"%(MA_dir)):
+       preprocess.iframe(id_="KmerGenie", src_="%s/Postprocess/out/kmergenie_report.html"%(MA_dir), width="800", height="5000")
 
     preprocess_out = open("%s/Preprocess.html"%(html_prefix), 'w')
     preprocess_out.write(preprocess.__str__())

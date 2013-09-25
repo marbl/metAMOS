@@ -1,5 +1,5 @@
 [![githalytics.com alpha](https://cruel-carlota.pagodabox.com/50642308f8120a4dd17e617e46cc21b1 "githalytics.com")](http://githalytics.com/treangen/metAMOS)
-# MetAMOS v1.3 "Candied Bacon" README
+# MetAMOS v1.3 "Candied Bacon"
 
 Last updated: September 18th, 2013
 
@@ -287,14 +287,14 @@ MetAMOS. All of these regression test scripts are available inside the
 /Test directory and include all necessary datasets to run them. Here
 is a brief listing of the test scripts we currently include:
 
-*Test initPipeline
-./Test/test_create.sh
+* Test initPipeline
+** ./Test/test_create.sh
 
-*Vanilla test
-./Test/run_test.sh
+* Vanilla test
+** ./Test/run_test.sh
 
-*Test PhlyoSift
-./Test/test_amphora.sh
+* Test PhlyoSift
+** ./Test/test_amphora.sh
 
 *Test Minimus
 ./Test/test_minimus.sh

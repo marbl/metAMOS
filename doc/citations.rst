@@ -39,4 +39,5 @@ prokka	Prokka	Prokka: Prokaryotic Genome Annotation System - http://vicbioinform
 abyss	ABySS	Simpson, JT, Wong, K, Jackman, SD, Schein, JE, Jones, SJ, Birol, İ. ABySS: a parallel assembler for short read sequence data. Genome research, 19(6), 1117-1123, 2009.
 sga	SGA	Simpson, JT, Durbin, R. Efficient de novo assembly of large genomes using compressed data structures. Genome Research, 22(3), 549-556, 2012.
 mira	MIRA	Chevreux, B, Wetter, T, Suhai, S. Genome Sequence Assembly Using Trace Signals and Additional Sequence Information. In German Conference on Bioinformatics (pp. 45-56), 1999.
+kmergenie	KmerGenie	Chikhi, R, Medvedev, P. Informed and Automated k-Mer Size Selection for Genome Assembly. Bioinformatics btt310, 2013.
 metamos	MetAMOS	Treangen, TJ ⇔  Koren, S, Sommer, DD, Liu, B, Astrovskaya, I, Ondov, B, Darling AE, Phillippy AM, Pop, M. MetAMOS: a modular and open source metagenomic assembly and analysis pipeline. Genome biology, 14(1), R2, 2013.

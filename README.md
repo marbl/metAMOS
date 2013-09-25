@@ -167,6 +167,7 @@ input and runs the following steps by default:
 usage info:
 
 usage: runPipeline [options] -d projectdir
+
    -h = <bool>:   print help [this message]
    -j = <bool>:   just output all of the programs and citations then exit (default = NO)
    -v = <bool>:   verbose output? (default = NO)
@@ -175,67 +176,89 @@ usage: runPipeline [options] -d projectdir
 [options]: [pipeline_opts] [misc_opts]
 
 [pipeline_opts]: options that affect the pipeline execution
+
 Pipeline consists of the following steps:
+
   Preprocess, Assemble, FindORFS, MapReads, Abundance, Annotate,
   Scaffold, Propagate, Classify, Postprocess
+
 Each of these steps can be referred to by the following options:
-   -f = <string>: force this step to be run (default = NONE)
-   -s = <string>: start at this step in the pipeline (default = Preprocess)
-   -e = <string>: end at this step in the pipeline (default = Postprocess)
-   -n = <string>: step to skip in pipeline (default=NONE)
+
+*   -f = <string>: force this step to be run (default = NONE)
+*   -s = <string>: start at this step in the pipeline (default = Preprocess)
+*   -e = <string>: end at this step in the pipeline (default = Postprocess)
+*   -n = <string>: step to skip in pipeline (default=NONE)
 
 For each step you can fine-tune the execution as follows
+
 [Preprocess]
-   -t = <bool>:   filter input reads? (default = NO)
-   -q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)
+
+*   -t = <bool>:   filter input reads? (default = NO)
+*   -q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)
+
+
 [Assemble]
-   -a = <string>: genome assembler to use (default = SOAPdenovo)
+
+*   -a = <string>: genome assembler to use (default = SOAPdenovo)
 		  this can also be a comma-separated list of assembler (for example: soap,velvet)
 		  in this case, all selected assemblers will be run and the best selected for subsequent analysis
-   -k = <kmer size>: k-mer size to be used for assembly (default = 31)
-   -o = <int>:    min overlap length
+*   -k = <kmer size>: k-mer size to be used for assembly (default = 31)
+*   -o = <int>:    min overlap length
+
+
 [MapReads]
-   -m = <string>: read mapper to use? (default = bowtie)
-   -i = <bool>:   save bowtie (i)ndex? (default = NO)
-   -b = <bool>:   create library specific per bp coverage of assembled contigs (default = NO)
+
+*   -m = <string>: read mapper to use? (default = bowtie)
+*   -i = <bool>:   save bowtie (i)ndex? (default = NO)
+*   -b = <bool>:   create library specific per bp coverage of assembled contigs (default = NO)
+
+
 [FindORFS]
-   -g = <string>: gene caller to use (default=FragGeneScan)
-   -l = <int>:    min contig length to use for ORF call (default = 300)
-   -x = <int>:    min contig coverage to use for ORF call (default = 3X)
+
+*   -g = <string>: gene caller to use (default=FragGeneScan)
+*   -l = <int>:    min contig length to use for ORF call (default = 300)
+*   -x = <int>:    min contig coverage to use for ORF call (default = 3X)
+
+
 [Annotate]
-   -c = <string>: classifier to use for annotation (default = FCP)
-   -u = <bool>:   annotate unassembled reads? (default = NO)
+
+*   -c = <string>: classifier to use for annotation (default = FCP)
+*   -u = <bool>:   annotate unassembled reads? (default = NO)
+
+
 [Classify]
-   -z = <string>: taxonomic level to categorize at (default = class)
+
+*   -z = <string>: taxonomic level to categorize at (default = class)
 
 [misc_opts]: Miscellaneous options
-   -r = <bool>:   retain the AMOS bank?  (default = NO)
-   -p = <int>:    number of threads to use (be greedy!) (default=1)
-   -4 = <bool>:   454 data? (default = NO)
+
+*   -r = <bool>:   retain the AMOS bank?  (default = NO)
+*   -p = <int>:    number of threads to use (be greedy!) (default=1)
+*   -4 = <bool>:   454 data? (default = NO)
 
 For example, to enable read filtering:
 
--t
+*   -t
 
 and to enable meta-IDBA as the assembler:
 
--a metaidba
+*   -a metaidba
 
 And to use PhyloSift to annotate:
 
--c phylosift
+*   -c phylosift
 
 Any single step in the pipeline can be skipped by passing the
 following parameter to runPipeline:
 
--n,--skipsteps=Step1,..
+*   -n,--skipsteps=Step1,..
 
 MetAMOS reruns steps based on timestamp information, so if the input
 files for a step in the pipeline hasn't changed since the last run, it
 will be skipped automatically. However, you can forefully run any step
 in the pipeline by passing the following parameter to runPipeline:
 
--f,--force=Step1,..
+*   -f,--force=Step1,..
 
 MetAMOS stores a summary of the input libraries in pipeline.ini 
 in the working directory. The pipeline.conf file stores the list 

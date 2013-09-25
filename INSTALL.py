@@ -570,7 +570,7 @@ if "isolate" in enabledWorkflows or manual:
            os.system("tar xvzf kmer.tar.gz")
            os.system("mv kmergenie-1.5692 ./Utilities/cpp%s%s-%s%skmergenie"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
            os.chdir("./Utilities/cpp%s%s-%s%skmergenie"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-           os.system("make k=200")
+           os.system("make k=300")
            os.chdir("%s"%(METAMOS_ROOT))
            os.system("rm -rf kmer.tar.gz")
 

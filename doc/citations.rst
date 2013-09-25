@@ -40,4 +40,3 @@ abyss	ABySS	Simpson, JT, Wong, K, Jackman, SD, Schein, JE, Jones, SJ, Birol, İ.
 sga	SGA	Simpson, JT, Durbin, R. Efficient de novo assembly of large genomes using compressed data structures. Genome Research, 22(3), 549-556, 2012.
 mira	MIRA	Chevreux, B, Wetter, T, Suhai, S. Genome Sequence Assembly Using Trace Signals and Additional Sequence Information. In German Conference on Bioinformatics (pp. 45-56), 1999.
 metamos	MetAMOS	Treangen, TJ ⇔  Koren, S, Sommer, DD, Liu, B, Astrovskaya, I, Ondov, B, Darling AE, Phillippy AM, Pop, M. MetAMOS: a modular and open source metagenomic assembly and analysis pipeline. Genome biology, 14(1), R2, 2013.
-metamos_isolate	MetAMOS Isolate	InPrep

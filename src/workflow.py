@@ -5,7 +5,8 @@ from datetime import date
 from datetime import time
 from datetime import datetime
 from operator import itemgetter
-from utils import *
+from utils import readConfigInfo
+from utils import str2bool
 
 _workflows = dict()
 _verbose = False
@@ -168,6 +169,15 @@ def getSupportedWorkflows(path = "%s%sUtilities%sworkflows"%(sys.path[0], os.sep
 
    return enabled
    
+def getSupportedWorkflowNames(path = "%s%sUtilities%sworkflows"%(sys.path[0], os.sep, os.sep), includeRuntime = False):
+   wfs = getSupportedWorkflows(path, includeRuntime)
+
+   names = set()
+   for wf in wfs:
+      names.update(wf.getDerivedName())
+
+   return names
+
 def updateSupportedWorkflows(workflowList, path = "%s%sUtilities%sworkflows"%(sys.path[0], os.sep, os.sep)):
    workflow_file = open("%s%senabled.ini"%(path, os.sep), 'w')
    workflow_file.write("\n".join(workflowList))

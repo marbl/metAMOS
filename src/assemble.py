@@ -244,8 +244,10 @@ def SplitAssemblers(input_file_name, output_files):
    if _asm == "none" or _asm == None:
       return 0
    assemblers = set(_asm.split(","))
+   kmers = set(_settings.kmer.split(","))
    for assembler in assemblers:
-      run_process(_settings, "touch %s/Assemble/out/%s.run"%(_settings.rundir, assembler), "Assemble")
+      for kmer in kmers:
+         run_process(_settings, "touch %s/Assemble/out/%s.%s.run"%(_settings.rundir, assembler, kmer), "Assemble")
 
 # warning: this is not thread safe so cannot be run in parallel
 @transform(SplitAssemblers, suffix(".run"), ".asm.contig")
@@ -254,26 +256,34 @@ def Assemble(input,output):
    setFailFast(False)
 
    originalPrefix = _settings.PREFIX
-   _settings.PREFIX = output.replace("%s/Assemble/out/"%(_settings.rundir), "")
-   _settings.PREFIX = _settings.PREFIX.replace(".asm.contig", "")
+   originalKmer = _settings.kmer
+   asmPrefix = output.replace("%s/Assemble/out/"%(_settings.rundir), "")
+   asmPrefix = asmPrefix.replace(".asm.contig", "")
    asmName = input.replace("%s/Assemble/out/"%(_settings.rundir), "")
    asmName = asmName.replace(".run", "")
+
+   if (len(asmName.split(".")) > 1):
+      (asmName, kmer) = asmName.split(".")
+      _settings.kmer = int(kmer)
+   _settings.PREFIX = asmPrefix
+
    mated = False
    for lib in _readlibs:
       if lib.mated:
          mated = True
          break
 
-   #pick assembler
    if "Assemble" in _skipsteps or "assemble" in _skipsteps:
       run_process(_settings, "touch %s/Logs/assemble.skip"%(_settings.rundir), "Assemble")
       return 0
-   if asmName == "none" or asmName == None:
-      pass
+
    if os.path.exists("%s/Preprocess/out/%s.asm.contig"%(_settings.rundir, asmName)):
       # we had contigs input
       run_process(_settings, "unlink %s/Assemble/out/%s.asm.contig"%(_settings.rundir, asmName), "Assemble")
       run_process(_settings, "ln %s/Preprocess/out/%s.asm.contig %s/Assemble/out/%s.asm.contig"%(_settings.rundir, asmName, _settings.rundir, asmName), "Assemble")
+   #pick assembler
+   elif asmName == "none" or asmName == None:
+      pass
    elif asmName == "soapdenovo" or asmName == "soapdenovo2":
       #open & update config
       soapf = open("%s/config.txt"%(_settings.rundir),'r')
@@ -282,42 +292,42 @@ def Assemble(input,output):
       cnt = 1
       libno = 1
       #print libs
-      print "Processing soap asm"
       for lib in _readlibs:
-          if (lib.format == "fastq" or lib.format == "fasta")  and lib.mated and not lib.interleaved:
-              soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(_settings.rundir,lib.f1.fname))
-              soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(_settings.rundir,lib.f2.fname))
+         if (lib.format == "fastq" or lib.format == "fasta")  and lib.mated and not lib.interleaved:
+             soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(_settings.rundir,lib.f1.fname))
+             soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(_settings.rundir,lib.f2.fname))
 
-          elif lib.format == "fastq"  and lib.mated and lib.interleaved:
-              #this is NOT supported by SOAP, make sure files are split into two..
-              #need to update lib.f2 path
-              run_process(_settings, "perl %s/perl/split_fastq.pl %s/Preprocess/out/%s %s/Assemble/in/%s %s/Assemble/in/%s.f2"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname,_settings.rundir,lib.f1.fname,_settings.rundir,lib.f1.fname),"Assemble")
-              soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Assemble/in/%s"%(_settings.rundir,lib.f1.fname))
-              soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Assemble/in/%s"%(_settings.rundir,lib.f1.fname+".f2"))
-
-          elif lib.format == "fasta"  and lib.mated:
-              soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/lib%d.1.fastq"%(_settings.rundir,lib.id))
-              soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir,lib.id))
-          else:
-              soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(_settings.rundir,lib.f1.fname))
+         elif lib.format == "fastq"  and lib.mated and lib.interleaved:
+             #this is NOT supported by SOAP, make sure files are split into two..
+             #need to update lib.f2 path
+             run_process(_settings, "perl %s/perl/split_fastq.pl %s/Preprocess/out/%s %s/Assemble/in/%s %s/Assemble/in/%s.f2"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname,_settings.rundir,lib.f1.fname,_settings.rundir,lib.f1.fname),"Assemble")
+             soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Assemble/in/%s"%(_settings.rundir,lib.f1.fname))
+             soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Assemble/in/%s"%(_settings.rundir,lib.f1.fname+".f2"))
+         elif lib.format == "fasta"  and lib.mated:
+             soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/lib%d.1.fastq"%(_settings.rundir,lib.id))
+             soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir,lib.id))
+         else:
+             soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(_settings.rundir,lib.f1.fname))
 
       #cnt +=1
       soapw = open("%s/soapconfig.txt"%(_settings.rundir),'w')
       soapw.write(soapd)
       soapw.close()
 
+      specName = "soap.spec"
       binPath = _settings.SOAPDENOVO
       if asmName == "soapdenovo2":
          binPath = _settings.SOAPDENOVO2
+         specName = "soap2.spec"
 
       if not os.path.exists(binPath + os.sep + "SOAPdenovo-63mer"):
          print "Error: %s not found in %s. Please check your path and try again.\n"%(asmName.title(), binPath)
          raise(JobSignalledBreak)
 
-      soapOptions = getProgramParams(_settings.METAMOS_UTILS, "soap.spec", "pregraph", "-") 
-      soapContigOptions = getProgramParams(_settings.METAMOS_UTILS, "soap.spec", "contig", "-")
-      soapMapOptions = getProgramParams(_settings.METAMOS_UTILS, "soap.spec", "map", "-")
-      soapScaffOptions = getProgramParams(_settings.METAMOS_UTILS, "soap.spec", "scaff", "-") 
+      soapOptions = getProgramParams(_settings.METAMOS_UTILS, specName, "pregraph", "-") 
+      soapContigOptions = getProgramParams(_settings.METAMOS_UTILS, specName, "contig", "-")
+      soapMapOptions = getProgramParams(_settings.METAMOS_UTILS, specName, "map", "-")
+      soapScaffOptions = getProgramParams(_settings.METAMOS_UTILS, specName, "scaff", "-") 
 
       #start stopwatch
       soapEXE="SOAPdenovo-63mer"
@@ -336,14 +346,14 @@ def Assemble(input,output):
    elif asmName == "metaidba":
       bowtie_mapping = 1
       for lib in _readlibs:
-          if lib.format != "fasta"  or (lib.mated and not lib.interleaved):
-              print "Warning: meta-IDBA requires reads to be in (interleaved) fasta format, converting library"
-          #apparently connect = scaffold? need to convert fastq to interleaved fasta to run, one lib per run??
-          #print "%s/metaidba --read %s/Preprocess/out/lib%d.fasta --output  %s/Assemble/out/%s.asm --mink 21 --maxk %d --cover 1 --connect"%(_settings.METAIDBA,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX,_settings.kmer)
+         if lib.format != "fasta"  or (lib.mated and not lib.interleaved):
+             print "Warning: meta-IDBA requires reads to be in (interleaved) fasta format, converting library"
+         #apparently connect = scaffold? need to convert fastq to interleaved fasta to run, one lib per run??
+         #print "%s/metaidba --read %s/Preprocess/out/lib%d.fasta --output  %s/Assemble/out/%s.asm --mink 21 --maxk %d --cover 1 --connect"%(_settings.METAIDBA,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX,_settings.kmer)
 
-          metaidbaOptions = getProgramParams(_settings.METAMOS_UTILS, "metaidba.spec", "", "--")
-          run_process(_settings, "%s/metaidba --read %s/Preprocess/out/lib%d.fasta --output  %s/Assemble/out/%s.asm %s --maxk %d"%(_settings.METAIDBA,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX,metaidbaOptions,_settings.kmer),"Assemble")
-          run_process(_settings, "mv %s/Assemble/out/%s.asm-contig.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Assemble")
+      metaidbaOptions = getProgramParams(_settings.METAMOS_UTILS, "metaidba.spec", "", "--")
+      run_process(_settings, "%s/metaidba --read %s/Preprocess/out/lib%d.fasta --output  %s/Assemble/out/%s.asm %s --maxk %d"%(_settings.METAIDBA,_settings.rundir,lib.id,_settings.rundir,_settings.PREFIX,metaidbaOptions,_settings.kmer),"Assemble")
+      run_process(_settings, "mv %s/Assemble/out/%s.asm-contig.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Assemble")
 
    elif asmName == "newbler":
       if not os.path.exists(_settings.NEWBLER + os.sep + "newAssembly"):
@@ -356,25 +366,25 @@ def Assemble(input,output):
       p = subprocess.Popen("%s/newAssembly --version | head -n 1"%(_settings.NEWBLER), shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE) 
       (checkStdout, checkStderr) = p.communicate()
       if checkStderr != "":
-         print "Warning: Cannot determine Newbler version"
+        print "Warning: Cannot determine Newbler version"
       else:
          mymatch = re.findall('\d+\.\d+', checkStdout.strip())
          if (len(mymatch) == 1 and mymatch[0] != None):
             NEWBLER_VERSION = float(mymatch[0])
 
       for lib in _readlibs:
-          if lib.format == "fasta":
-              run_process(_settings, "%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(_settings.NEWBLER, _settings.rundir, _settings.rundir,lib.id),"Assemble")
-          elif lib.format == "sff":
-              run_process(_settings, "%s/addRun %s %s/Assemble/out %s/Preprocess/out/lib%d.sff"%(_settings.NEWBLER, ("-p" if lib.mated else ""), _settings.rundir, _settings.rundir, lib.id), "Assemble")
-          elif lib.format == "fastq" and lib.interleaved:
-              if (NEWBLER_VERSION < 2.6):
-                 print "Error: FASTQ + Newbler only supported in Newbler version 2.6+. You are using version %s."%(_settings.NEWBLER_VERSION)
-                 raise(JobSignalledBreak)
-              run_process(_settings, "%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(_settings.NEWBLER, _settings.rundir, _settings.rundir, lib.id),"Assemble")
-          elif not lib.interleaved:
-              print "Error: Only interleaved fastq files are supported for Newbler"
-              raise(JobSignalledBreak)
+         if lib.format == "fasta":
+             run_process(_settings, "%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(_settings.NEWBLER, _settings.rundir, _settings.rundir,lib.id),"Assemble")
+         elif lib.format == "sff":
+             run_process(_settings, "%s/addRun %s %s/Assemble/out %s/Preprocess/out/lib%d.sff"%(_settings.NEWBLER, ("-p" if lib.mated else ""), _settings.rundir, _settings.rundir, lib.id), "Assemble")
+         elif lib.format == "fastq" and lib.interleaved:
+             if (NEWBLER_VERSION < 2.6):
+                print "Error: FASTQ + Newbler only supported in Newbler version 2.6+. You are using version %s."%(_settings.NEWBLER_VERSION)
+                raise(JobSignalledBreak)
+             run_process(_settings, "%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(_settings.NEWBLER, _settings.rundir, _settings.rundir, lib.id),"Assemble")
+         elif not lib.interleaved:
+             print "Error: Only interleaved fastq files are supported for Newbler"
+             raise(JobSignalledBreak)
 
       newblerCmd = "%s%srunProject "%(_settings.NEWBLER, os.sep)
       # read spec file to input to newbler parameters
@@ -396,7 +406,7 @@ def Assemble(input,output):
       run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")
       run_process(_settings, "ln %s/Assemble/out/assembly/454AllContigs.fna %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
       if _settings.doscaffolding and mated == True:
-         run_process(_settings, "ln %s/Assemble/out/assembly/454Scaffolds.fna %s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
+          run_process(_settings, "ln %s/Assemble/out/assembly/454Scaffolds.fna %s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
 
    elif asmName == "amos":
       run_process(_settings, "rm -rf %s/Assemble/in/%s.bnk"%(_settings.rundir, _settings.PREFIX), "Assemble")
@@ -445,13 +455,14 @@ def Assemble(input,output):
    elif asmName.lower() == "sparseassembler":
       runSparseAssembler(_settings.SPARSEASSEMBLER, "SparseAssembler");
    elif generic.checkIfExists(STEP_NAMES.ASSEMBLE, asmName.lower()):
-      generic.execute(STEP_NAMES.ASSEMBLE, asmName.lower(), _settings)
+       generic.execute(STEP_NAMES.ASSEMBLE, asmName.lower(), _settings)
    else:  
       print "Error: %s is an unknown assembler. No valid assembler specified."%(asmName)
       raise(JobSignalledBreak)
 
    if not os.path.exists("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX)):
       run_process(_settings, "touch %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "Assemble")
+   _settings.kmer = originalKmer
    _settings.PREFIX = originalPrefix
    setFailFast(True)
 
@@ -467,13 +478,22 @@ def CheckAsmResults (input_file_names, output_file_name):
       pass
    else:
       assemblers = _asm.split(",")
+      kmers = _settings.kmer.split(",")
+
       for assembler in assemblers:
-         if not os.path.exists("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, assembler)) or os.path.getsize("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, assembler)) == 0:
+         successAsm = 0
+         for kmer in kmers:
+            if not os.path.exists("%s/Assemble/out/%s.%s.asm.contig"%(_settings.rundir, assembler, kmer)) or os.path.getsize("%s/Assemble/out/%s.%s.asm.contig"%(_settings.rundir, assembler, kmer)) == 0:
+               if _settings.VERBOSE:
+                  print "*** MetAMOS Warning: %s assembler with kmer %s did not run successfully!"%(assembler, kmer)
+               run_process(_settings, "rm %s/Assemble/out/%s.%s.asm.contig"%(_settings.rundir, assembler, kmer), "Assemble")
+               run_process(_settings, "touch %s/Assemble/out/%s.%s.failed"%(_settings.rundir, assembler, kmer), "Assemble")
+            else:
+               successfull+=1
+               successAsm+=1
+         if successAsm == 0:
             print "*** MetAMOS Warning: %s assembler did not run successfully!"%(assembler)
-            run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, assembler), "Assemble")
-            run_process(_settings, "touch %s/Assemble/out/%s.failed"%(_settings.rundir, assembler), "Assemble")
-         else:
-            successfull+=1
+
       for contigs in _asmcontigs:
          contig = os.path.splitext(contigs)[0]
          if not os.path.exists("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, contig)) or os.path.getsize("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, contig)) == 0:

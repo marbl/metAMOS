@@ -15,19 +15,19 @@ CGAL_NUM_ALIGN = 100
 _readlibs = []
 _skipsteps = []
 _settings = Settings()
-_scoreType = SCORE_TYPE.LAP
+_scores = None
 _validators = []
 
 def init(reads, skipsteps, validators, scoreType):
    global _readlibs
    global _skipsteps
-   global _scoreType
+   global _scores
    global _validators
 
    _readlibs = reads
    _skipsteps = skipsteps
-   _scoreType = scoreType
-   _validators = validators.strip().split(",")
+   _scores = "%s"%(scoreType)
+   _validators = set(validators.strip().split(","))
 
 def minScore():
    return -1 * (sys.maxint - 1)
@@ -60,6 +60,8 @@ def runQUAST(asmNames, asmFiles, min, max, genomeSize, reference):
    if not os.path.exists(os.path.abspath(reference)):
       return minScore()
 
+   # quast cannot handle dots in names of the files
+   asmNames = asmNames.replace(".", "_")
    run_process(_settings, "ln %s %s/Validate/out/%s.ref.fasta"%(os.path.abspath(reference), _settings.rundir, _settings.PREFIX), "Validate")
    run_process(_settings, "%s/metaquast.py --est-ref-size %s -o %s/Validate/out/quast -R %s/Validate/out/%s.ref.fasta -T %d -l \"%s\" %s"%(_settings.QUAST, genomeSize, _settings.rundir, _settings.rundir, _settings.PREFIX, _settings.threads, asmNames, asmFiles), "Validate")
 
@@ -93,6 +95,7 @@ def runFRCBAM(inputsam, prefix, assembly, min, max, genomeSize):
    if getBAMMapped("%s.sorted.bam"%(inputsam)) == 0:
       return minScore()
 
+   os.environ["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"] + os.pathsep + _settings.FRCBAM
    run_process(_settings, "%s/FRC --pe-sam %s.sorted.bam --pe-min-insert %d --pe-max-insert %d --genome-size %s --output frc_%s"%(_settings.FRCBAM, inputsam, min, max, genomeSize, prefix), "Validate")
    num_features = getCommandOutput("cat %s/Validate/out/frc_%s_FRC.txt |tail -n 1 |awk '{print $1}'"%(_settings.rundir, prefix), False)
 
@@ -251,50 +254,56 @@ def Validate (input_file_names, output_file_name):
           lapfile.flush()
 
    # select assembly
+   global _scores
    if bestAssembler == "": 
-      if _scoreType == SCORE_TYPE.ALL:
-         assemblerVotes = dict()
-         assemblyVotes = dict()
-         currMaxVote = 0
-         for type in bestAssemblers:
-            if bestAssemblers[type] not in assemblerVotes:
-               assemblerVotes[bestAssemblers[type]] = 0
-               assemblyVotes[bestAssemblies[type]] = 0
-            weight = 1
-            try:
-               weight = SCORE_WEIGHTS[type]
-            except KeyError:
-               print "Uknown Type %s using weight %d"%(SCORE_TYPE.reverse_mapping[type], weight)
-               weight = 1
-            assemblerVotes[bestAssemblers[type]] += weight
-            assemblyVotes[bestAssemblies[type]] += weight
-            print "Votes for assembler %s is %s (type %s just voted)"%(bestAssemblers[type], assemblerVotes[bestAssemblers[type]], SCORE_TYPE.reverse_mapping[type])
-     
-         for assembler in assemblerVotes:
-            if assemblerVotes[assembler] > currMaxVote:
-               bestAssembler = assembler
-               currMaxVote = assemblerVotes[assembler]
+      if "%s"%(SCORE_TYPE.ALL) in _scores:
+         _scores = SCORE_TYPE.reverse_mapping.keys()
 
-         currMaxVote = 0
-         for assembly in assemblyVotes:
-            if assemblyVotes[assembly] > currMaxVote:
-               bestAssembly = assembly
-               currMaxVote = assemblyVotes[assembly]
-         if getAsmName(bestAssembly) != bestAssembler:
-            print "Error: inconsistent assembly and assembler chosen %s %s"%(bestAssembly, bestAssembler)
-            raise(JobSignalledBreak)
-      else:
+      assemblerVotes = dict()
+      assemblyVotes = dict()
+      currMaxVote = 0
+      processedType = dict()
+
+      for type in _scores:
+         if type == "":
+            continue
+
+         type = int(type)
+         if type == SCORE_TYPE.ALL:
+            continue
+         if type not in bestAssemblers.keys():
+            type = SCORE_TYPE.LAP
+            print "Warning: selected score %s was not available, defaulting to using LAP"%(SCORE_TYPE.reverse_mapping[type].upper())
+         if type in processedType.keys():
+            continue
+         processedType[type] = True
+
+         if bestAssemblers[type] not in assemblerVotes:
+            assemblerVotes[bestAssemblers[type]] = 0
+            assemblyVotes[bestAssemblies[type]] = 0
+         weight = 1
          try:
-            score = bestScores[_scoreType]
-            bestAssembler = bestAssemblers[_scoreType]
-            bestAssembly = bestAssemblies[_scoreType]
-         except:
-            score = None
-         if score == None:
-            print "Warning: selected score %s was not available, defaulting to using LAP"%(SCORE_TYPE.reverse_mapping[_scoreType].upper())
-            score = bestScores[SCORE_TYPE.LAP]
-            bestAssembler = bestAssemblers[SCORE_TYPE.LAP]
-            bestAssembly = bestAssemblies[SCORE_TYPE.LAP]
+            weight = SCORE_WEIGHTS[type]
+         except KeyError:
+            print "Uknown Type %s using weight %d"%(SCORE_TYPE.reverse_mapping[type], weight)
+            weight = 1
+         assemblerVotes[bestAssemblers[type]] += weight
+         assemblyVotes[bestAssemblies[type]] += weight
+         print "Votes for assembler %s is %s (type %s just voted)"%(bestAssemblers[type], assemblerVotes[bestAssemblers[type]], SCORE_TYPE.reverse_mapping[type])
+     
+      for assembler in assemblerVotes:
+         if assemblerVotes[assembler] > currMaxVote:
+            bestAssembler = assembler
+            currMaxVote = assemblerVotes[assembler]
+
+      currMaxVote = 0
+      for assembly in assemblyVotes:
+         if assemblyVotes[assembly] > currMaxVote:
+            bestAssembly = assembly
+            currMaxVote = assemblyVotes[assembly]
+      if getAsmName(bestAssembly) != bestAssembler:
+         print "Error: inconsistent assembly and assembler chosen %s %s"%(bestAssembly, bestAssembler)
+         raise(JobSignalledBreak)
 
    if "quast" in _validators:
       # recruit a reference

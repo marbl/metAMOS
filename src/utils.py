@@ -61,11 +61,6 @@ INPUT_TYPE = enum("FASTQ", "FASTA", "CONTIGS", "SCAFFOLDS", "ORF_FA", "ORF_AA")
 
 SCORE_TYPE = enum("ALL", "LAP", "ALE", "CGAL", "SNP", "FRCBAM")
 SCORE_WEIGHTS = dict()
-for score in SCORE_TYPE.reverse_mapping.keys():
-   if score == SCORE_TYPE.LAP or score == SCORE_TYPE.ALE or score == SCORE_TYPE.CGAL:
-      SCORE_WEIGHTS[score] = 0.33 # should this be the case?
-   else:
-      SCORE_WEIGHTS[score] = 1
 
 _failFast = True
 
@@ -86,7 +81,7 @@ class Settings:
    asmfiles = []
    runfiles = []
 
-   kmer = 55
+   kmer = "55"
    threads = 16
    rundir = ""
    taxa_level = "class"
@@ -407,6 +402,15 @@ class readLib:
     def __str__(self):
         pass
 
+def getDefaultWeight(sa):
+   return 0.33 if sa == SCORE_TYPE.LAP or sa == SCORE_TYPE.ALE or sa == SCORE_TYPE.CGAL else 1
+
+def initValidationScores(weights = dict()):
+   for score in SCORE_TYPE.reverse_mapping.keys():
+      if score in weights:
+         SCORE_WEIGHTS[score] = weights[score]
+      else:
+         SCORE_WEIGHTS[score] = getDefaultWeight(score)
 
 def readConfigInfo(infile, filePrefix=""):
    readlibs = []
@@ -823,7 +827,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
           if Settings.MPI != "":
              Settings.MPI = "%s%s%s"%(Settings.MPI, os.sep, "openmpirun")
        else:
-          Settings.MPI = "%s%s%s"%(settings.MPI, os.sep, "mpirun")
+          Settings.MPI = "%s%s%s"%(Settings.MPI, os.sep, "mpirun")
     if not os.path.exists(Settings.MPI):
        print "Warning: MPI is not available, some functionality may not be available"
     mpiMD5 = getMD5Sum(Settings.MPI)
@@ -1141,4 +1145,7 @@ def getVersion():
             version = version.strip().split("README")[0]
       readme_file.close()
 
-   return version
+   import workflow
+   wfs = workflow.getSupportedWorkflowNames("%s/Utilities/workflows"%(sys.path[0]), False)
+
+   return version + " workflows: " + ",".join(wfs)

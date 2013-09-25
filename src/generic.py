@@ -203,7 +203,7 @@ class GenericProgram:
    def getThreadParams(self):
       threadParams = ""
       if (len(self.threadsSupportedOn) == 0 or _settings.OSTYPE.upper() in self.threadsSupportedOn):
-         if self.threads == "":
+         if self.threads != "":
             if self.threads.endswith("="):
                threadParams =  "%s%d"%(self.threads,_settings.threads)
             else:

@@ -557,6 +557,23 @@ if "isolate" in enabledWorkflows or manual:
              os.chdir("%s"%(METAMOS_ROOT))
              os.system("rm -rf Ray-v2.2.0.tar.bz2")
 
+    if not os.path.exists("./Utilities/cpp%s%s-%s%skmergenie"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+        kmerGenie = utils.getFromPath("kmergenie", "Kmer Genie", False)
+        if kmerGenie == "":
+           if "kmergenie" in packagesToInstall:
+              dl = 'y'
+           else:
+              print "Kmer Genie was not found, optional for Assemble step, download now?"
+              dl = raw_input("Enter Y/N: ")
+        if dl == 'y' or dl == 'Y':
+           os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/kmergenie-1.5692.tar.gz -o kmer.tar.gz")
+           os.system("tar xvzf kmer.tar.gz")
+           os.system("mv kmergenie-1.5692 ./Utilities/cpp%s%s-%s%skmergenie"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+           os.chdir("./Utilities/cpp%s%s-%s%skmergenie"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+           os.system("make k=200")
+           os.chdir("%s"%(METAMOS_ROOT))
+           os.system("rm -rf kmer.tar.gz")
+
     if not os.path.exists("./Utilities/cpp%s%s-%s%sprokka"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        prokaBin = utils.getFromPath("prokka", "Prokka", False)
        dl = 'n'
@@ -578,13 +595,14 @@ if "isolate" in enabledWorkflows or manual:
           bioperl = utils.getCommandOutput("perl -MBio::Seq -e 0 && echo $?", True)
           perltime = utils.getCommandOutput("perl -MTime::Piece -e 0 && echo $?", True)
           xmlsimple = utils.getCommandOutput("perl -MXML::Simple -e 0 && echo $?", True)
-          if bioperl == "":
-             # phylosift comes with BioPerl, use it
-             os.system("curl -L http://edhar.genomecenter.ucdavis.edu/~koadman/phylosift/devel/phylosift_20130829.tar.bz2 -o ./phylosift.tar.bz2")
-             os.system("tar -xvjf phylosift.tar.bz2")
-             os.system("rm -rf phylosift.tar.bz2")
-             os.system("mv phylosift_20130829/lib ./Utilities/cpp%s%s-%s%sprokka"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-             os.system("rm -rf phylosift_20130829")
+
+          # always install bioperl, otherwise parts may be missing or it may be the wrong version
+          # phylosift comes with BioPerl, use it
+          os.system("curl -L http://edhar.genomecenter.ucdavis.edu/~koadman/phylosift/devel/phylosift_20130829.tar.bz2 -o ./phylosift.tar.bz2")
+          os.system("tar -xvjf phylosift.tar.bz2")
+          os.system("rm -rf phylosift.tar.bz2")
+          os.system("mv phylosift_20130829/lib ./Utilities/cpp%s%s-%s%sprokka"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+          os.system("rm -rf phylosift_20130829")
 
           if perltime == "":
              os.system("curl -L http://search.cpan.org/CPAN/authors/id/M/MS/MSERGEANT/Time-Piece-1.08.tar.gz -o time.tar.gz")
@@ -597,7 +615,15 @@ if "isolate" in enabledWorkflows or manual:
              pathToCopy = os.path.dirname(pathToCopy)
              print "Got time path %s"%(pathToCopy)
              os.system("mkdir -p ./Utilities/cpp%s%s-%s%sprokka/lib"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-             os.system("mv %s/* ./Utilities/cpp%s%s-%s%sprokka/lib"%(pathToCopy, os.sep, OSTYPE, MACHINETYPE, os.sep))
+             # copy one at a time in case of conflicts
+             for file in os.listdir("%s%s"%(pathToCopy, os.sep)):
+                toCopy = file
+                file = "%s%s%s"%(pathToCopy, os.sep, toCopy)
+                print "Processing file %s base is %s"%(file, toCopy)
+                if os.path.exists("./Utilities/cpp%s%s-%s%sprokka/lib/%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, toCopy)):
+                   os.system("mv %s/* ./Utilities/cpp%s%s-%s%sprokka/lib/%s/"%(file, os.sep, OSTYPE, MACHINETYPE, os.sep, toCopy))
+                else:
+                   os.system("mv %s ./Utilities/cpp%s%s-%s%sprokka/lib/"%(file, os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("rm -rf time.tar.gz")
              os.system("rm -rf Time-Piece-1.08") 
 
@@ -612,7 +638,14 @@ if "isolate" in enabledWorkflows or manual:
              pathToCopy = os.path.dirname(pathToCopy)
              print "Got time path %s"%(pathToCopy)
              os.system("mkdir -p ./Utilities/cpp%s%s-%s%sprokka/lib"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-             os.system("mv %s/* ./Utilities/cpp%s%s-%s%sprokka/lib"%(pathToCopy, os.sep, OSTYPE, MACHINETYPE, os.sep))
+             for file in os.listdir("%s%s"%(pathToCopy, os.sep)):
+                toCopy = file
+                file = "%s%s%s"%(pathToCopy, os.sep, toCopy)
+                print "Processing file %s base is %s"%(file, toCopy)
+                if os.path.exists("./Utilities/cpp%s%s-%s%sprokka/lib/%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, toCopy)):
+                   os.system("mv %s/* ./Utilities/cpp%s%s-%s%sprokka/lib/%s/"%(file, os.sep, OSTYPE, MACHINETYPE, os.sep, toCopy))
+                else:
+                   os.system("mv %s ./Utilities/cpp%s%s-%s%sprokka/lib/"%(file, os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("rm -rf xml.tar.gz")
              os.system("rm -rf XML-Simple-1.08")
 

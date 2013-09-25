@@ -788,8 +788,7 @@ if "isolate" in enabledWorkflows or manual:
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        masurca = utils.getFromPath("runSRCA.pl", "MaSuRCA", False)
-       if masurca == "":
-# and OSTYPE != "Darwin":
+       if masurca == "" and OSTYPE != "Darwin":
           if "masurca" in packagesToInstall:
              dl = 'y'
           else:

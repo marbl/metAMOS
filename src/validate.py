@@ -95,7 +95,10 @@ def runFRCBAM(inputsam, prefix, assembly, min, max, genomeSize):
    if getBAMMapped("%s.sorted.bam"%(inputsam)) == 0:
       return minScore()
 
-   os.environ["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"] + os.pathsep + _settings.FRCBAM
+   if "LD_LIBRARY_PATH" in os.environ:
+      os.environ["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"] + os.pathsep + _settings.FRCBAM
+   else:
+      os.environ["LD_LIBRARY_PATH"] = _settings.FRCBAM
    run_process(_settings, "%s/FRC --pe-sam %s.sorted.bam --pe-min-insert %d --pe-max-insert %d --genome-size %s --output frc_%s"%(_settings.FRCBAM, inputsam, min, max, genomeSize, prefix), "Validate")
    num_features = getCommandOutput("cat %s/Validate/out/frc_%s_FRC.txt |tail -n 1 |awk '{print $1}'"%(_settings.rundir, prefix), False)
 

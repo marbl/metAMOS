@@ -12,7 +12,7 @@ shellv = os.environ["SHELL"]
 ## Setting up paths
 INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
 ## Hardcode a k-mer size
-DEFAULT_KMER  = 31
+DEFAULT_KMER  = "31"
 ## Hardcode a default taxonomic classification level
 DEFAULT_TAXA_LEVEL = "class"
 sys.path.append(INITIAL_SRC)
@@ -95,7 +95,8 @@ from ruffus import *
 from task import JobSignalledBreak
 skipsteps = ["FindRepeats"]
 isolate_genome = False
-asmScore = utils.SCORE_TYPE.LAP
+asmScores = "%d"%(utils.SCORE_TYPE.LAP)
+asmScoreWeights = dict()
 
 ## Get start time
 t1 = time.time()
@@ -168,7 +169,7 @@ def printConfiguration(fileName=None):
     configurationText.append("Time and Date:\t\t%s\n"%(str(datetime.date.today())))
     configurationText.append("Working directory:\t%s\n"%(utils.Settings.rundir))
     configurationText.append("Prefix:\t\t\t%s\n"%(utils.Settings.PREFIX))
-    configurationText.append("K-Mer:\t\t\t%d\n"%(utils.Settings.kmer))
+    configurationText.append("K-Mer:\t\t\t%s\n"%(utils.Settings.kmer))
     configurationText.append("Threads:\t\t%d\n"%(utils.Settings.threads)) 
     configurationText.append("Taxonomic level:\t%s\n"%(utils.Settings.taxa_level))
     configurationText.append("Verbose:\t\t%s\n"%(utils.Settings.VERBOSE))
@@ -361,12 +362,19 @@ refgenomes = ""
 
 # get the required rundirectory so we can get further options from the workflow
 for o, a in opts:
-    if o in ("-d", "--projectdir"):
+    if o in ("-V", "--version"):
+       print "metAMOS Version %s"%(utils.getVersion())
+       sys.exit()
+    elif o in ("-h", "--help"):
+        usage()
+        sys.exit()
+    elif o in ("-d", "--projectdir"):
         utils.Settings.rundir = os.path.abspath(a)
         if not os.path.exists(a):
           print "project dir %s does not exist!"%(settings.rundir)
           usage()
           sys.exit(1)
+
 if not os.path.exists(settings.rundir) or settings.rundir == "":
     print "project dir %s does not exist!"%(settings.rundir)
     usage()
@@ -396,9 +404,6 @@ if wfName != "":
          opts = wfopts
          args = wfargs
       else:
-         for o, a in opts:
-            if o in ("-V", "--version") or o in ("-h", "--help"):
-               wfopts.append([o, a])
          opts = wfopts
          args = wfargs
    except getopt.GetoptError, err:
@@ -408,14 +413,8 @@ if wfName != "":
        sys.exit(2)
 
 for o, a in opts:
-    if o in ("-V", "--version"):
-       print "metAMOS Version %s"%(utils.getVersion())
-       sys.exit()
-    elif o in ("-v","--verbose"):
+    if o in ("-v","--verbose"):
         utils.Settings.VERBOSE = True
-    elif o in ("-h", "--help"):
-        usage()
-        sys.exit()
     elif o in ("-i","--indexbowtie"):
         bowtie_mapping = 1
     elif o in ("-B","--noblastdb"):
@@ -470,7 +469,7 @@ for o, a in opts:
     elif o in ("-o", "--minoverlap"):
         pass
     elif o in ("-k", "--kmersize"):
-        utils.Settings.kmer = int(a)
+        utils.Settings.kmer = a
     elif o in ("-4", "--454"):
        selected_programs["assemble"] = "newbler,%s"%(selected_programs["assemble"])
        selected_programs["mapreads"] = "bowtie2"
@@ -608,16 +607,31 @@ for o, a in opts:
             selected_programs["findorfs"] = "fraggenescan"
 
     elif o in ("-S", "--asmscore"):
-       found = False
-       for sa in utils.SCORE_TYPE.reverse_mapping.keys():
-          print "Comparing %s to %s"%(a.upper(), utils.SCORE_TYPE.reverse_mapping[sa])
-          if a.upper() in utils.SCORE_TYPE.reverse_mapping[sa]:
-             asmScore = sa
-             found = True
-             break
-       if not found:   
-          print "Warning: invalid score type %s specified, supported: %s"%(a, ",".join(utils.SCORE_TYPE.reverse_mapping.values()))
-          asmScore = utils.SCORE_TYPE.LAP
+       asmScores = ""
+       scores = a.lower().strip().split(",")
+       for s in scores:
+          sSplit = s.upper().strip().split(":")
+          score = sSplit[0]
+          found = False
+          for sa in utils.SCORE_TYPE.reverse_mapping.keys():
+             if score.upper() in utils.SCORE_TYPE.reverse_mapping[sa]:
+                if asmScores != "":
+                    asmScores += ","
+                else:
+                    asmScores = ""
+                asmScores += "%d"%(sa)
+                weight = utils.getDefaultWeight(sa)
+                if len(sSplit) > 1:
+                    weight = float(sSplit[1])
+                asmScoreWeights[sa] = weight
+                found = True
+                break
+          if not found:
+             print "Warning: invalid score type %s specified, supported: %s"%(score, ",".join(utils.SCORE_TYPE.reverse_mapping.values()))
+
+       if asmScores == "":
+          asmScores = "%d"%(utils.SCORE_TYPE.LAP)
+
     elif o in ("-X", "--validator"):
         validators = a.lower().split(",")
         selected_programs["validate"] = None
@@ -672,7 +686,7 @@ else:
       selected_programs["validate"] = ",".join(supported_programs["validate"])
       selected_programs["assemble"] = selected_programs["assemble"] + ",velvet"
       selected_programs["findorfs"] = "prokka"
-      asmScore = utils.SCORE_TYPE.ALL
+      asmScores = "%d"%(utils.SCORE_TYPE.ALL)
       skipsteps.append("Scaffold")
       skipsteps.append("Propagate")
   except KeyError:
@@ -710,7 +724,6 @@ for lib in readlibs:
    for read in lib.reads:
       readpaths.append("%s/Preprocess/in/"%(settings.rundir)+read.fname)
       filtreadpaths.append("%s/Preprocess/out/"%(settings.rundir)+read.fname)
-      print "Processing lib %s read %s"%(lib.id, read.fname)
 
 if "Preprocess" in forcesteps:
    for path in readpaths:
@@ -821,10 +834,14 @@ if __name__ == "__main__":
        if "bowtie2" == selected_programs["mapreads"]:
           selected_programs["mapreads"] = "bowtie"
 
-    if asmScore == utils.SCORE_TYPE.ALL:
-       selected_programs["validate"] = ",".join(supported_programs["validate"])
-    elif utils.SCORE_TYPE.reverse_mapping[asmScore].lower() not in selected_programs["validate"]:
-       selected_programs["validate"] = "%s,%s"%(selected_programs["validate"], asmScore.lower())
+    for asmScore in asmScores.split(","):
+       if int(asmScore) == utils.SCORE_TYPE.ALL:
+          selected_programs["validate"] = ",".join(supported_programs["validate"])
+       elif utils.SCORE_TYPE.reverse_mapping[int(asmScore)].lower() not in selected_programs["validate"]:
+          selected_programs["validate"] = "%s,%s"%(selected_programs["validate"], asmScore.lower())
+
+    # intialize weights
+    utils.initValidationScores(asmScoreWeights)
 
     import preprocess
     import assemble
@@ -846,7 +863,7 @@ if __name__ == "__main__":
     preprocess.init(readlibs, asmcontigs, skipsteps, selected_programs["assemble"], run_fastqc,filter)
     assemble.init(readlibs, skipsteps, selected_programs["assemble"], asmcontigs)
     mapreads.init(readlibs, skipsteps, selected_programs["mapreads"], savebtidx,ctgbpcov,lowmem)
-    validate.init(readlibs, skipsteps, selected_programs["validate"], asmScore)
+    validate.init(readlibs, skipsteps, selected_programs["validate"], asmScores)
     findorfs.init(readlibs, skipsteps, selected_programs["findorfs"], min_ctg_len, min_ctg_cvg,read_orfs)
     findreps.init(readlibs, skipsteps)
     multialign.init(readlibs, skipsteps, forcesteps, selected_programs["multialign"],refgenomes)

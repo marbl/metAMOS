@@ -6,8 +6,6 @@ output ray/Contigs.fasta
 scaffoldOutput ray/Scaffolds.fasta
 location cpp/[MACHINE]/Ray/bin
 threads -n
-#disable threading, not yet tested
-threadsSupport NONE
 paired_interleaved -i [FIRST]
 paired -p [FIRST] [SECOND]
 commands rm -rf [RUNDIR]/ray && \

@@ -287,17 +287,10 @@ MetAMOS. All of these regression test scripts are available inside the
 /Test directory and include all necessary datasets to run them. Here
 is a brief listing of the test scripts we currently include:
 
-* Test initPipeline
-** ./Test/test_create.sh
-
-* Vanilla test
-** ./Test/run_test.sh
-
-* Test PhlyoSift
-** ./Test/test_amphora.sh
-
-*Test Minimus
-./Test/test_minimus.sh
+* ./Test/test_create.sh (Test initPipeline)
+* ./Test/run_test.sh (Vanilla test)
+* ./Test/test_phylosift.sh (Test phylosift)
+* ./Test/test_minimus.sh (Test Minimumus)
 
 *Test Preprocess filtration of non-interleaved fastq files
 ./Test/test_filter_noninterleaved_fastq.s

@@ -630,7 +630,7 @@ if "isolate" in enabledWorkflows or manual:
           aragorn = utils.getFromPath("aragorn", "aragorn", False)
           aragornVersion = ""
           if aragorn != "":
-             aragornVersion = utils.getCommandOutput("%s/aragorn -h 2>&1 | grep -i '^ARAGORN v' |sed s/v//g |awk '{printf(\"\%2.2f\n\", $2)}'", True)
+             aragornVersion = utils.getCommandOutput("%s/aragorn -h 2>&1 | grep -i '^ARAGORN v' |sed s/v//g |awk '{printf(\"%%2.2f\n\", $2)}'", True)
              if float(aragornVersion) < 1.2:
                 aragorn = ""
           if aragorn == "":
@@ -666,7 +666,7 @@ if "isolate" in enabledWorkflows or manual:
           hmmscan = utils.getFromPath("hmmscan", "HMMER3", False)
           hmmscanVersion = ""
           if hmmscan != "":
-             hmmscanVersion = utils.getCommandOutput("%s/hmmscan -h | grep '^# HMMER' |awk '{printf(\"\%2.2f\n\", $3)}'"%(hmmscan), True)
+             hmmscanVersion = utils.getCommandOutput("%s/hmmscan -h | grep '^# HMMER' |awk '{printf(\"%%2.2f\\n\", $3)}'"%(hmmscan), True)
              print "Found HMM SCAN %s %s"%(hmmscan, hmmscanVersion)
              if float(hmmscanVersion) < 3.1:
                 hmmscan = ""
@@ -701,7 +701,7 @@ if "isolate" in enabledWorkflows or manual:
 
           prodigal = utils.getFromPath("prodigal", "PRODIGAL", False)
           if prodigal != "":
-             prodigalVersion = utils.getCommandOutput("%s/prodigal -v 2>&1 | grep -i '^Prodigal V' |sed s/V//g |awk '{printf(\"\%2.2f\n\", $2)}'"%(prodigal), True)
+             prodigalVersion = utils.getCommandOutput("%s/prodigal -v 2>&1 | grep -i '^Prodigal V' |sed s/V//g |awk '{printf(\"%%2.2f\n\", $2)}'"%(prodigal), True)
              print "Found prodigal %s %s"%(prodigal, prodigalVersion)
              if float(prodigalVersion) < 2.6:
                 prodigal = ""

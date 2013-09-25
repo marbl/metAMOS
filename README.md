@@ -1,5 +1,8 @@
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/50642308f8120a4dd17e617e46cc21b1 "githalytics.com")](http://githalytics.com/treangen/metAMOS)# MetAMOS v1.3 "Candied Bacon" README
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/50642308f8120a4dd17e617e46cc21b1 "githalytics.com")](http://githalytics.com/treangen/metAMOS)
+# MetAMOS v1.3 "Candied Bacon" README
+
 Last updated: September 18th, 2013
+
 ***********************************************************************************
 We are happy to announce version 1.3, a.k.a. Candied Bacon
 
@@ -35,7 +38,6 @@ The revised installation procedure is simply:
 1. Download tarball
 2. Extract
 3. Run a test script or two
-4. have fun!
 
 Mac OSX equivalent will be soon appearing [here](http://www.cbcb.umd.edu/confcour/temp/metAMOS_binary_noblastdbs_osx.tar.gz) 
 
@@ -71,16 +73,16 @@ should not be any other major prerequisites as most everything that is
 needed is distributed with MetAMOS inside of the /Utilities
 directory. Depending on your platform/Linux distribution, you might need to download and install the following BEFORE running INSTALL.py:
 
-1) git
-2) gcc
-3) automake
-4) python-tools
-5) python-devel
-6) zlib-devel
-7) numpy
-8) freetype, freetype-devel
-9) libpng-devel
-10) matplotlib
+1. git
+2. gcc
+3. automake
+4. python-tools
+5. python-devel
+6. zlib-devel
+7. numpy
+8. freetype, freetype-devel
+9. libpng-devel
+10. matplotlib
 
 Additionally, there is some software that MetAMOS can
 incorporate into its pipeline that we are not allowed to distribute,
@@ -108,8 +110,8 @@ complete (plan on a few hours to 2 days).
 Before you get started using MetAMOS a brief review of its design will
 help clarify its intended use. MetAMOS gas two main components:
 
-1) initPipeline
-2) runPipeline
+1.  initPipeline
+2.  runPipeline
 
 The first component, initPipeline, is for creating new projects and
 also initiliazing sequence libraries. Currently interleaved &
@@ -118,38 +120,40 @@ must be specified before the file. Once specified, they remain in effect
 until a different file type is specified.
 
 usage: initPipeline -f/-q -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500 
+
 options: -s -c -q, -f, -1, -2, -d, -m, -i
--1: either non-paired file of reads or first file in pair, can be list of multiple separated by a comma
--2: second paired read file, can be list of multiple separated by a comma
--c:  fasta file containing contigs
--d: output project directory (required)
--f: boolean, reads are in fasta format (default is fastq)
--h: display help message
--i: insert size of library, can be list separated by commas for multiple libraries
--l: SFF linker type
--m: interleaved file of paired reads
--o: reads are in outtie orientation (default innie)
--q: boolean, reads are in fastq format (default is fastq)
--s/--sff: boolean, reads are in SFF format (default is fastq)
+
+* -1: either non-paired file of reads or first file in pair, can be list of multiple separated by a comma
+* -2: second paired read file, can be list of multiple separated by a comma
+* -c:  fasta file containing contigs
+* -d: output project directory (required)
+* -f: boolean, reads are in fasta format (default is fastq)
+* -h: display help message
+* -i: insert size of library, can be list separated by commas for multiple libraries
+* -l: SFF linker type
+* -m: interleaved file of paired reads
+* -o: reads are in outtie orientation (default innie)
+* -q: boolean, reads are in fastq format (default is fastq)
+* -s/--sff: boolean, reads are in SFF format (default is fastq)
 
 For example, to input a:
+
 (non-interleaved fastq, single library)
-initPipeline -q -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500
+*initPipeline -q -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500
 
 (non-interleaved fasta, single library)
-initPipeline -f -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500
+*initPipeline -f -1 file.fastq.1 -2 file.fastq.2 -d projectDir -i 300:500
 
 (interleaved fastq, single library)
-initPipeline -q -m file.fastq.12  -d projectDir -i 300:500
+*initPipeline -q -m file.fastq.12  -d projectDir -i 300:500
 
 (interleaved fastq, multiple libraries)
-initPipeline -q -m file.fastq.12,file2.fastq.12  -d projectDir -i 300:500,1000:2000
+*initPipeline -q -m file.fastq.12,file2.fastq.12  -d projectDir -i 300:500,1000:2000
 
 (interleaved fastq, multiple libraries, existing assembly)
-initPipeline -q -m file.fastq.12,file2.fastq.12 -c file.contig.fa -d projectDir -i 300:500,1000:2000
+*initPipeline -q -m file.fastq.12,file2.fastq.12 -c file.contig.fa -d projectDir -i 300:500,1000:2000
 
-The second component, runPipeline, takes a project directory as
-input and runs the following steps by default:
+The second component, runPipeline, takes a project directory as input and runs the following steps by default:
 
 1. Preprocess
 2. Assemble

@@ -576,6 +576,8 @@ if "isolate" in enabledWorkflows or manual:
           os.system("rm prokka-1.7.tar.gz")
 
           bioperl = utils.getCommandOutput("perl -MBio::Seq -e 0 && echo $?", True)
+          perltime = utils.getCommandOutput("perl -MTime::Piece -e 0 && echo $?", True)
+          xmlsimple = utils.getCommandOutput("perl -MXML::Simple -e 0 && echo $?", True)
           if bioperl == "":
              # phylosift comes with BioPerl, use it
              os.system("curl -L http://edhar.genomecenter.ucdavis.edu/~koadman/phylosift/devel/phylosift_20130829.tar.bz2 -o ./phylosift.tar.bz2")
@@ -583,13 +585,55 @@ if "isolate" in enabledWorkflows or manual:
              os.system("rm -rf phylosift.tar.bz2")
              os.system("mv phylosift_20130829/lib ./Utilities/cpp%s%s-%s%sprokka"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("rm -rf phylosift_20130829")
+
+          if perltime == "":
+             os.system("curl -L http://search.cpan.org/CPAN/authors/id/M/MS/MSERGEANT/Time-Piece-1.08.tar.gz -o time.tar.gz")
+             os.system("tar -xvzf time.tar.gz")
+             os.chdir("Time-Piece-1.08")
+             os.system("perl Makefile.PL PREFIX=`pwd`/build")
+             os.system("make install")
+             os.chdir("%s"%(METAMOS_ROOT))
+             pathToCopy = utils.getCommandOutput("find Time-Piece-1.08/build -type d -name \"Time\" |grep -v auto", False)
+             pathToCopy = os.path.dirname(pathToCopy)
+             print "Got time path %s"%(pathToCopy)
+             os.system("mkdir -p ./Utilities/cpp%s%s-%s%sprokka/lib"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("mv %s/* ./Utilities/cpp%s%s-%s%sprokka/lib"%(pathToCopy, os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("rm -rf time.tar.gz")
+             os.system("rm -rf Time-Piece-1.08") 
+
+          if xmlsimple == "":
+             os.system("curl -L http://search.cpan.org/CPAN/authors/id/G/GR/GRANTM/XML-Simple-1.08.tar.gz -o xml.tar.gz")
+             os.system("tar -xvzf xml.tar.gz")
+             os.chdir("XML-Simple-1.08")
+             os.system("perl Makefile.PL PREFIX=`pwd`/build")
+             os.system("make install")
+             os.chdir("%s"%(METAMOS_ROOT))
+             pathToCopy = utils.getCommandOutput("find XML-Simple-1.08/build -type d -name \"XML\" |grep -v auto", False)
+             pathToCopy = os.path.dirname(pathToCopy)
+             print "Got time path %s"%(pathToCopy)
+             os.system("mkdir -p ./Utilities/cpp%s%s-%s%sprokka/lib"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("mv %s/* ./Utilities/cpp%s%s-%s%sprokka/lib"%(pathToCopy, os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("rm -rf xml.tar.gz")
+             os.system("rm -rf XML-Simple-1.08")
+
+          if os.path.exists("./Utilities/cpp%s%s-%s%sprokka/lib"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
              os.chdir("./Utilities/cpp%s%s-%s%sprokka/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("cp prokka prokka.original")
              os.system("cat prokka.original |awk '{if (match($0, \"use strict\")) { print \"use lib \\\"%s/Utilities/cpp%s%s-%s%sprokka/lib\\\";\"; print $0; } else { print $0}}' > prokka"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.chdir("%s"%(METAMOS_ROOT))
+          # for some reason prokka adds its binaries to the end of path, not beginning so if your path has the wrong version of a program, it will crash. Update
+          os.chdir("./Utilities/cpp%s%s-%s%sprokka/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+          os.system("cp prokka prokka.original")
+          os.system("cat prokka.original |awk '{if (match($0, \"ENV{PATH}\")) { print \"$ENV{PATH} = $BINDIR . \\\":\\\" . $ENV{PATH};\"; } else { print $0}}' > prokka")
+          os.chdir("%s"%(METAMOS_ROOT))
 
           aragorn = utils.getFromPath("aragorn", "aragorn", False)
-          if aragorn == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/aragorn"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
+          aragornVersion = ""
+          if aragorn != "":
+             aragornVersion = utils.getCommandOutput("%s/aragorn -h 2>&1 | grep -i '^ARAGORN v' |sed s/v//g |awk '{printf(\"\%2.2f\n\", $2)}'", True)
+             if float(aragornVersion) < 1.2:
+                aragorn = ""
+          if aragorn == "":
              print "Aragorn missing, will install"
              os.system("curl -L http://130.235.46.10/ARAGORN/Downloads/aragorn1.2.36.tgz -o aragorn.tar.gz")
              os.system("tar xvzf aragorn.tar.gz")
@@ -620,6 +664,12 @@ if "isolate" in enabledWorkflows or manual:
              os.system("rm barrnap.tar.gz")
 
           hmmscan = utils.getFromPath("hmmscan", "HMMER3", False)
+          hmmscanVersion = ""
+          if hmmscan != "":
+             hmmscanVersion = utils.getCommandOutput("%s/hmmscan -h | grep '^# HMMER' |awk '{printf(\"\%2.2f\n\", $3)}'"%(hmmscan), True)
+             print "Found HMM SCAN %s %s"%(hmmscan, hmmscanVersion)
+             if float(hmmscanVersion) < 3.1:
+                hmmscan = ""
           if hmmscan == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/hmmscan"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
              print "HMMER3 is missing, will install"
              if OSTYPE == "Darwin":
@@ -649,6 +699,28 @@ if "isolate" in enabledWorkflows or manual:
           if blastp == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/blastp"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
              os.system("ln %s/Utilities/cpp%s%s-%s%sblastp %s/Utilities/cpp%s%s-%s%sprokka/binaries%s%s%sblastp"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep, METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower(), os.sep))
 
+          prodigal = utils.getFromPath("prodigal", "PRODIGAL", False)
+          if prodigal != "":
+             prodigalVersion = utils.getCommandOutput("%s/prodigal -v 2>&1 | grep -i '^Prodigal V' |sed s/V//g |awk '{printf(\"\%2.2f\n\", $2)}'"%(prodigal), True)
+             print "Found prodigal %s %s"%(prodigal, prodigalVersion)
+             if float(prodigalVersion) < 2.6:
+                prodigal = ""
+
+          if prodigal == "":
+             os.system("curl -L https://prodigal.googlecode.com/files/prodigal.v2_60.tar.gz -o prodigal.tar.gz")
+             os.system("tar xvzf prodigal.tar.gz")
+             os.system("rm -rf prodigal.tar.gz")
+             os.system("curl -L https://prodigal.googlecode.com/files/prodigal_v2.60.bugfix1.tar.gz -o prodigal.tar.gz")
+             os.system("tar xvzf prodigal.tar.gz")
+             os.system("mv prodigal_v2.60.bugfix1/* prodigal.v2_60/")
+             os.chdir("prodigal.v2_60")
+             os.system("make")
+             os.chdir("%s"%(METAMOS_ROOT))
+             os.system("mv prodigal.v2_60/prodigal ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
+             os.system("rm -rf prodigal.tar.gz")
+             os.system("rm -rf prodigal.v2_60") 
+             os.system("rm -rf prodigal_v2.60.bugfix1")
+
           tbl2asn = utils.getFromPath("tbl2asn", "NCBI Tbl2Asn", False)
           if tbl2asn == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/tbl2asn"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
              print "NCBI Tbl2Asn is missing, will install"
@@ -662,6 +734,24 @@ if "isolate" in enabledWorkflows or manual:
              os.system("chmod ug+x tbl2asn")
              os.system("mv tbl2asn ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
              os.system("rm tbl2asn.gz")
+
+    if not os.path.exists("./Utilities/cpp%s%s-%s%ssoap2"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+       if "soap2" in packagesToInstall:
+          if "soap2" in packagesToInstall:
+             dl = 'y'
+          else:
+             print "SOAPdenovo2 binaries not found, optional for Assemble step, download now?"
+             dl = raw_input("Enter Y/N: ")
+          if dl == 'y' or dl == 'Y':
+             os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/soap2.tar.gz -o soap.tar.gz")
+             os.system("tar xvzf soap2.tar.gz")
+             os.chdir("SOAPdenovo2-src-r240")
+             os.system("make")
+             os.chdir("%s"%(METAMOS_ROOT))
+             os.system("mkdir -p ./Utilities/cpp%s%s-%s%ssoap2/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("mv SOAPdenovo2-src-r240/SOAPdenovo-* ./Utilities/cpp%s%s-%s%ssoap2/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("rm -rf SOAPdenovo2-src-r240")
+             os.system("rm -rf soap2.tar.gz")
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        masurca = utils.getFromPath("runSRCA.pl", "MaSuRCA", False)
@@ -680,6 +770,8 @@ if "isolate" in enabledWorkflows or manual:
                 os.system("tar xvzf msrca.tar.gz")
                 os.system("mv ./MaSuRCA-2.0.3.1 ./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
                 os.chdir("./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+                os.system("cp install.sh install.orig")
+                os.system("cat install.orig |sed s/\-\-prefix/\-\-disable\-shared\ \-\-prefix/g > install.sh")
                 # patch CA
                 if not ALLOW_FAST:
                    os.system("cd CA/kmer/ && cp configure.sh configure.original")
@@ -709,15 +801,16 @@ if "isolate" in enabledWorkflows or manual:
              dl = raw_input("Enter Y/N: ")
           if dl == 'y' or dl == 'Y':
              if OSTYPE == "Darwin":
-	        os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc1_darwin12.4.0_x86_64_static.tar.bz2 -o mira.tar.bz2")
+	        os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc2_darwin12.5.0_x86_64_static.tar.bz2 -o mira.tar.bz2")
              else:
-                os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc1_linux-gnu_x86_64_static.tar.bz2 -o mira.tar.bz2")
+                os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc2_linux-gnu_x86_64_static.tar.bz2 -o mira.tar.bz2")
              os.system("tar xvjf mira.tar.bz2")
              os.system("rm -f mira.tar.bz2")
              os.system("mv `ls -d mira*` ./Utilities/cpp%s%s-%s%smira"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%sabyss"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        abyss = utils.getFromPath("ABYSS", "ABySS", False)
+       abyss = "" # remove before commit
        if abyss == "":
           if "abyss" in packagesToInstall:
              dl = 'y'
@@ -731,9 +824,12 @@ if "isolate" in enabledWorkflows or manual:
              os.system("./configure --prefix=`pwd`")
              os.system("make install")
              os.chdir("%s"%(METAMOS_ROOT))
+             os.system("curl -L http://sourceforge.net/projects/boost/files/boost/1.49.0/boost_1_49_0.tar.gz -o boost.tar.gz")
+             os.system("tar xvzf boost.tar.gz")
              os.system("curl -L http://www.bcgsc.ca/platform/bioinfo/software/abyss/releases/1.3.6/abyss-1.3.6.tar.gz -o abyss.tar.gz")
              os.system("tar xvzf abyss.tar.gz")
              os.chdir("abyss-1.3.6")
+             os.system("ln -s %s/boost_1_49_0/boost boost"%(METAMOS_ROOT))
              os.environ["CFLAGS"] = "-I%s/sparsehash-2.0.2/include"%(METAMOS_ROOT)
              os.environ["CPPFLAGS"] = "-I%s/sparsehash-2.0.2/include"%(METAMOS_ROOT)
              os.environ["CXXFLAGS"] = "-I%s/sparsehash-2.0.2/include"%(METAMOS_ROOT)
@@ -759,10 +855,12 @@ if "isolate" in enabledWorkflows or manual:
                 print "Error: cannot find MPI in your path. Disabling ABySS threading."
                 os.system("cat abyss-pe-orig |awk -v found=0 -v skipping=0 '{if (match($0, \"ifdef np\")) {skipping=1; } if (skipping && match($1, \"ABYSS\")) {print $0; skipping=1; found=1} if (found && match($1, \"endif\")) {skipping=0;found = 0;} else if (skipping == 0) { print $0; } }' > abyss-pe")
              os.chdir("%s"%(METAMOS_ROOT))
-             #os.system("rm -rf sparsehash-2.0.2")
-             #os.system("rm -rf sparse.tar.gz")
-             #os.system("rm -rf abyss-1.3.6")
-             #os.system("rm -rf abyss.tar.gz")
+             os.system("rm -rf sparsehash-2.0.2")
+             os.system("rm -rf sparse.tar.gz")
+             os.system("rm -rf abyss-1.3.6")
+             os.system("rm -rf abyss.tar.gz")
+             os.system("rm -rf boost_1_49_0")
+             os.system("rm -rf boost.tar.gz")
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%ssga"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        sga = utils.getFromPath("sga", "SGA", False)
@@ -780,14 +878,14 @@ if "isolate" in enabledWorkflows or manual:
              os.system("make install")
              os.chdir("%s"%(METAMOS_ROOT))
              os.system("curl -L https://github.com/pezmaster31/bamtools/archive/master.zip -o bamtools.tar.gz")
-             os.system("tar xvzf bamtools.tar.gz")
-             os.system("curl -L http://sourceforge.net/projects/bio-bwa/files/bwa-0.7.5a.tar.bz2 -o bwa.tar.gz")
-             os.system("tar xvzf bwa.tar.gz")
+             os.system("unzip bamtools.tar.gz")
+             os.system("curl -L http://sourceforge.net/projects/bio-bwa/files/bwa-0.7.5a.tar.bz2 -o bwa.tar.bz2")
+             os.system("tar xvjf bwa.tar.bz2")
              os.chdir("bwa-0.7.5a")
              os.system("make")
              os.chdir("%s"%(METAMOS_ROOT))
              os.system("curl -L https://github.com/jts/sga/archive/master.zip -o sga.tar.gz")
-             os.system("tar xvzf sga.tar.gz")
+             os.system("unzip sga.tar.gz")
              os.system("mv sga-master ./Utilities/cpp%s%s-%s%ssga"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("mv bamtools-master ./Utilities/cpp%s%s-%s%ssga/bamtools"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("mv sparsehash-2.0.2 ./Utilities/cpp%s%s-%s%ssga/sparsehash"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
@@ -810,6 +908,8 @@ if "isolate" in enabledWorkflows or manual:
              os.system("rm -rf bamtools.tar.gz")
              os.system("rm -rf sga-master")
              os.system("rm -rf sga.tar.gz")
+             os.system("rm -rf bwa.tar.gz")
+             os.system("rm -rf bwa-0.7.5.a")
 
     if not os.path.exists("./quast"):
         if "quast" in packagesToInstall:
@@ -828,7 +928,7 @@ if "isolate" in enabledWorkflows or manual:
             file = "all.fna.tar.gz"
             print "Downloading refseq genomes (%s)..."%(file)
             print "\tThis file is large and may take time to download"
-            #os.system("curl -L %s/%s -o genomes.tar.gz"%(ftpSite, file)
+            os.system("curl -L %s/%s -o genomes.tar.gz"%(ftpSite, file))
             os.system("mkdir -p ./Utilities/DB/refseq/temp")
             os.system("mv genomes.tar.gz ./Utilities/DB/refseq/temp")
             os.chdir("./Utilities/DB/refseq/temp")
@@ -884,6 +984,7 @@ if "isolate" in enabledWorkflows or manual:
             os.chdir("./Utilities/cpp/%s%s-%s%sFRCbam/src/samtools"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
             os.system("make")
             os.chdir("%s/Utilities/cpp/%s%s-%s%sFRCbam"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep))
+            boostFlags = ""
             if os.path.exists("/opt/local/lib/libboost_system-mt.a"):
                os.environ["LDFLAGS"]="-L/opt/local/lib -lboost_system-mt"
             elif os.path.exists("/opt/local/lib/libboost_system.a"):
@@ -892,9 +993,27 @@ if "isolate" in enabledWorkflows or manual:
                os.environ["LDFLAGS"]="-L/usr/lib -lboost_system-mt"
             elif os.path.exists("/usr/lib/libboost_system.a"):
                os.environ["LDFLAGS"]="-L/usr/lib -lboost_system"
+            else:
+               # install boost ourselves
+               os.system("curl -L http://sourceforge.net/projects/boost/files/boost/1.49.0/boost_1_49_0.tar.gz -o boost.tar.gz")
+               os.system("tar xvzf boost.tar.gz")
+               os.chdir("boost_1_49_0")
+               os.system("sh bootstrap.sh")
+               os.system("./b2 install --prefix=`pwd`/build threading=multi")
+               ldflags = "-L%s/build/lib -lboost_system"%(os.getcwd())
+               if os.path.exists("%s/build/lib/libboost_system-mt.a"%(os.getcwd())):
+                  ldflags = "-L%s/build/lib -lboost_system-mt"%(os.getcwd())
+               os.environ["LDFLAGS"]=ldflags
+               os.environ["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"] + os.pathsep + "%s/build/lib"%(os.getcwd())
+               boostFlags = "--with-boost=%s/build/ --disable-shared --enable-static-boost --enable-static-FRC"%(os.getcwd())
+               os.chdir("..")
+               os.system("rm -rf boost.tar.gz")
     
-            os.system("./configure --prefix=%s/Utilities/cpp/%s%s-%s%sFRCbam/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep))
+            os.system("./configure --prefix=%s/Utilities/cpp/%s%s-%s%sFRCbam/ %s"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep, boostFlags))
             os.system("make install")
+            if boostFlags != "":
+               os.system("cp boost_1_49_0/build/lib/* ./bin")
+
             os.chdir("%s"%(METAMOS_ROOT))
             os.system("rm -rf frcbam.zip")
 
@@ -909,7 +1028,7 @@ if "isolate" in enabledWorkflows or manual:
            os.system("tar xvzf ale.tar.gz")
            os.system("mv ALE ./Utilities/cpp/%s%s-%s%sALE"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
            os.chdir("./Utilities/cpp/%s%s-%s%sALE/src"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-           os.system("make") 
+           os.system("make all") 
            os.chdir("%s"%(METAMOS_ROOT))
            os.system("rm -rf ale.tar.gz")
 

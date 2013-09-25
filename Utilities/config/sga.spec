@@ -10,7 +10,7 @@ threadSystem	LINUX
 paired --pe-mode 1 [FIRST] [SECOND] -o [PREFIX].pp.fastq
 commands sga preprocess [INPUT] && \
          sga index -a ropebwt [THREADS] --no-reverse [PREFIX].pp.fastq && \
-         sga correct -k 41 --learn [THREADS] -o [PREFIX].ec.fastq [PREFIX].pp.fastq && \
+         sga correct -k 21 --learn [THREADS] -o [PREFIX].ec.fastq [PREFIX].pp.fastq && \
          sga index -a ropebwt [THREADS] [PREFIX].ec.fastq && \
          sga filter -x 2 [THREADS] [PREFIX].ec.fastq && \
          sga overlap -m [KMER] [THREADS] [PREFIX].ec.filter.pass.fa && \

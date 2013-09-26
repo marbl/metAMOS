@@ -6,7 +6,7 @@ output [PREFIX]-contigs.fa
 scaffoldOutput [PREFIX]-scaffolds.fa
 location cpp/[MACHINE]/sga/bin
 threads -t
-threadSystem	LINUX
+threadsSupport	LINUX
 paired --pe-mode 1 [FIRST] [SECOND] -o [PREFIX].pp.fastq
 commands sga preprocess [INPUT] && \
          sga index -a ropebwt [THREADS] --no-reverse [PREFIX].pp.fastq && \

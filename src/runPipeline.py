@@ -413,6 +413,9 @@ if wfName != "":
        usage()
        sys.exit(2)
 
+# update the list of options we have
+utils.updateConfigCommands(inifile, opts)
+
 for o, a in opts:
     if o in ("-v","--verbose"):
         utils.Settings.VERBOSE = True

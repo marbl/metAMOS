@@ -415,6 +415,27 @@ def initValidationScores(weights = dict()):
       else:
          SCORE_WEIGHTS[score] = getDefaultWeight(score)
 
+def updateConfigCommands(infileName, opts):
+   # build the list of commands
+   commands = ""
+   for o, a in opts:
+      if "--" in o:
+         commands = "%s %s=%s"%(commands, o, a)
+      else:
+         commands = "%s %s %s"%(commands, o, a)
+
+   tempFileName = "%s.tmp"%(infileName)
+   tempFile = open(tempFileName, 'w')
+   infile = open(infileName, 'r')
+   for line in infile.xreadlines():
+      if "command:" in line:
+          tempFile.write("command:\t%s\n"%(commands.strip()))
+      else:
+          tempFile.write(line)
+   infile.close()
+   tempFile.close()
+   os.system("mv %s %s"%(tempFileName, infileName))
+
 def readConfigInfo(infile, filePrefix=""):
    readlibs = []
    asmcontigs = []

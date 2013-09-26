@@ -204,7 +204,7 @@ for o, a in opts:
 
        # process any requested contigs/libs
        for lib in wf.readlibs:
-          nlib = readLib(lib.format, lib.f1.fname, "" if lib.interleaved or not lib.mated else lib.f2.fname, lib.innie, lib.linkerType, lib.mated, lib.interleaved)
+          nlib = readLib(lib.format, lib.f1.path, "" if lib.interleaved or not lib.mated else lib.f2.path, lib.innie, lib.linkerType, lib.mated, lib.interleaved)
           readlibs.append(nlib)
           inserts.append([lib.mmin, lib.mmax])
        for contig in wf.asmcontigs:
@@ -347,6 +347,7 @@ cf.write("#metAMOS pipeline configuration file\n")
 #   #user specified a contig file
 cf.write("inherit:\t%s\n"%(selectedWorkflow))
 cf.write("command:\t%s\n"%(selectedCommands))
+cf.write("modify:\t%s\n"%(False))
 cf.write("asmcontigs:\t%s\n"%(",".join(contigs.keys())))
 for contig in contigs.keys():
    getFile(contigs[contig], "%s/Preprocess/in/%s"%(id,contig))
@@ -405,8 +406,8 @@ while i < len(readlibs):
             stdev = mylib.stdev
             cf.write("lib%df1:\t%s,%d,%d,%d,%d\n"%(i+1,getBaseFileName(f1),min,max,mean,stdev))
             cf.write("lib%df2:\t%s,%d,%d,%d,%d\n"%(i+1,getBaseFileName(f2),min,max,mean,stdev))
-            getFile(f1, "%s/Preprocess/in/%s"%(id,os.getBaseFileName(f1)))
-            getFile(f2, "%s/Preprocess/in/%s"%(id,os.getBaseFileName(f2)))
+            getFile(f1, "%s/Preprocess/in/%s"%(id,getBaseFileName(f1)))
+            getFile(f2, "%s/Preprocess/in/%s"%(id,getBaseFileName(f2)))
         elif mylib.interleaved:
             cf.write("lib%dinterleaved:\tTrue\n"%(i+1))
             min = mylib.mmin

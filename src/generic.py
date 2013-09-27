@@ -136,7 +136,7 @@ class GenericProgram:
          elif (defn == "location"):
            # get the location path
             self.location = value
-            self.location = self.location.replace("[MACHINE]", "%s-%s"%(_settings.OSTYPE, _settings.MACHINETYPE))
+            self.location = self.location.replace("[MACHINE]", "%s-%s"%(_settings.OSTYPE, _settings.MACHINETYPE)).replace("[MACHINE-CA]", "%s-%s"%(_settings.OSTYPE, _settings.MACHINETYPE.replace("x86_64", "amd64")))
             if not os.path.isabs(self.location):
                self.location = os.path.abspath("%s%s%s"%(_settings.METAMOS_UTILS, os.sep, self.location))
          elif (defn == "threads"):
@@ -299,7 +299,7 @@ class GenericProgram:
                   for l in libs.strip().split("\\n"):
                      spec.write(l.strip() + "\n")
                else:
-                  line = line.replace("[MACHINE]", "%s-%s"%(_settings.OSTYPE, _settings.MACHINETYPE)).replace("[MPI]", _settings.MPI).replace("[PELIST]", pelist).replace("[MPLIST]", mplist).replace("[PREFIX]", _settings.PREFIX).replace("[DB]", _settings.DB_DIR).replace("[MEM]", "%d"%(avram)).replace("[THREADS]",self.getThreadParams()).replace("[OFFSET]", "33" if offset.lower() == "sanger" else "64").replace("[OUTPUT]", "%s%s%s%sout%s%s"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep, os.sep, self.output.replace("[PREFIX]", _settings.PREFIX))).replace("[RUNDIR]", "%s%s%s%sout"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep)).replace("[KMER]", "%s"%(_settings.kmer)).replace("[LOCATION]", "%s%s"%(self.location,os.sep)).replace("[TECHNOLOGY_PARAMETERS]", techParams)
+                  line = line.replace("[MACHINE]", "%s-%s"%(_settings.OSTYPE, _settings.MACHINETYPE)).replace("[MACHINE-CA]", "%s-%s"%(_settings.OSTYPE, _settings.MACHINETYPE.replace("x86_64", "amd64"))).replace("[MPI]", _settings.MPI).replace("[PELIST]", pelist).replace("[MPLIST]", mplist).replace("[PREFIX]", _settings.PREFIX).replace("[DB]", _settings.DB_DIR).replace("[MEM]", "%d"%(avram)).replace("[THREADS]",self.getThreadParams()).replace("[OFFSET]", "33" if offset.lower() == "sanger" else "64").replace("[OUTPUT]", "%s%s%s%sout%s%s"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep, os.sep, self.output.replace("[PREFIX]", _settings.PREFIX))).replace("[RUNDIR]", "%s%s%s%sout"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep)).replace("[KMER]", "%s"%(_settings.kmer)).replace("[LOCATION]", "%s%s"%(self.location,os.sep)).replace("[TECHNOLOGY_PARAMETERS]", techParams)
                   spec.write(line + "\n")
             template.close()
             spec.close()
@@ -409,9 +409,11 @@ class GenericProgram:
          run_process(_settings, symlinkCmd, STEP_NAMES.reverse_mapping[self.stepName].title())
 
       if _settings.doscaffolding and self.scaffoldOutput != "" and self.stepName == STEP_NAMES.ASSEMBLE:
-         programOut = "%s/%s/out/%s"%(_settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), self.scaffoldOutput.replace("[PREFIX]", _settings.PREFIX))
-
-         run_process(_settings, "ln %s %s/%s/out/%s%s"%(programOut, _settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), _settings.PREFIX, STEP_OUTPUTS.reverse_mapping[STEP_NAMES.mapping["SCAFFOLD"]]), STEP_NAMES.reverse_mapping[self.stepName].title()) 
+         scfOut = "%s/%s/out/%s"%(_settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), self.scaffoldOutput.replace("[PREFIX]", _settings.PREFIX))
+         if os.path.exists(scfOut):
+            run_process(_settings, "ln %s %s/%s/out/%s%s"%(scfOut, _settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), _settings.PREFIX, STEP_OUTPUTS.reverse_mapping[STEP_NAMES.mapping["SCAFFOLD"]]), STEP_NAMES.reverse_mapping[self.stepName].title()) 
+         else:
+            run_process(_settings, "ln %s %s/%s/out/%s%s"%(programOut, _settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), _settings.PREFIX, STEP_OUTPUTS.reverse_mapping[STEP_NAMES.mapping["SCAFFOLD"]]), STEP_NAMES.reverse_mapping[self.stepName].title())    
 
       # restore path
       os.environ["PATH"] = oldPath

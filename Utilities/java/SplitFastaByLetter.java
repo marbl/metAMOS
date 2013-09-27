@@ -10,9 +10,9 @@ import java.util.HashMap;
 public class SplitFastaByLetter {  
    private String letter = "N";
  
-   private static final NumberFormat nf = new DecimalFormat("############.#");
    private static final String[] FASTA_ENDS = {"fasta", "fa"}; 
-
+   private static final NumberFormat nf = new DecimalFormat("############.#");
+   
    public SplitFastaByLetter() {
    }
   
@@ -20,7 +20,7 @@ public class SplitFastaByLetter {
       if (fastaSeq.length() == 0) {
          return;
       }
-      String[] split = fastaSeq.trim().split(letter + "+");
+      String[] split = fastaSeq.trim().toUpperCase().split(letter + "+");
 
       for (int i = 0; i < split.length; i++) {
          System.out.println(">" + ID + "_" + i);
@@ -38,7 +38,7 @@ public class SplitFastaByLetter {
       while ((line = bf.readLine()) != null) {
          if (line.startsWith(">")) {
             outputFasta(fastaSeq.toString(), header);
-            header = line.substring(1);
+            header = line.split("\\s+")[0].substring(1);
             fastaSeq = new StringBuffer();
          }
          else {

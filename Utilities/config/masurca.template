@@ -3,7 +3,7 @@
 PATHS
 JELLYFISH_PATH=[LOCATION]
 SR_PATH=[LOCATION]
-CA_PATH=[LOCATION]/../CA/bin
+CA_PATH=[LOCATION]/../CA/[MACHINE-CA]/bin
 END
 #DATA is specified as type {PE,JUMP,OTHER}= two_letter_prefix mean stdev fastq(.gz)_fwd_reads fastq(.gz)_rev_reads
 #NOTE that PE reads are always assumed to be innies, i.e. ---> <---,and JUMP are assumed to be outties <--- --->; if there are any jump libraries that are innies, such as longjump, specify them as JUMP and specify NEGATIVE mean

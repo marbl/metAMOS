@@ -8,5 +8,10 @@ config config/masurca.template
 paired PE=p[LIB] [MEAN] [SD] [FIRST] [SECOND]
 mated JUMP=s[LIB] [MEAN] [SD] [FIRST] [SECOND]
 required PAIRED
-commands runSRCA.pl [INPUT] && \
-		bash assemble.sh
+commands rm -rf CA && \
+ 	 rm -rf work1 && \
+ 	 rm -rf super* && \
+ 	 rm -rf guillaumeKUnitigsAtLeast32bases_all.* && \
+	 rm -rf k_u_* && \
+	 runSRCA.pl [INPUT] && \
+	 bash assemble.sh

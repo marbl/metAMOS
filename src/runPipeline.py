@@ -569,21 +569,23 @@ for o, a in opts:
               assembler="soapdenovo2"
            elif assembler == "soap":
               assembler="soapdenovo"
+           elif assembler == "idba":
+              assembler="idba-ud"
 
            foundit = False
            for sa in supported_assemblers:
               if assembler not in sa:
                  continue
               else:
-                 if (assembler != "velvet" and assembler != "soapdenovo") or assembler == sa:
+                 if (assembler != "velvet" and assembler != "soapdenovo" and assembler != "idba") or assembler == sa:
                     #some special cases required, velvet would trigger MetaVelvet, not velvet, etc
                     if selected_programs["assemble"] != None:
                        selected_programs["assemble"] += ","
                     else:
                        selected_programs["assemble"] = ""
                     selected_programs["assemble"] += sa
-                 foundit = True
-                 break
+                    foundit = True
+                    break
         
            if not foundit:
                print "!!Sorry, %s is not a supported assembler."%(assembler)

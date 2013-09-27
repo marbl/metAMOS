@@ -142,13 +142,14 @@ def getFile(inFile, dest):
       base = "%s/download_%s"%(os.path.dirname(dest), base)
       os.system("curl -# -L %s -o %s"%(inFile, base))
       doremove = True
+      inFile = base
 
    if base.endswith("bz2"):
-      os.system("bunzip2 -c %s > %s"%(base, dest))
+      os.system("bunzip2 -c %s > %s"%(inFile, dest))
    elif base.endswith("gz"):
-      os.system("gunzip -c %s > %s"%(base, dest))
+      os.system("gunzip -c %s > %s"%(inFile, dest))
    else:
-      os.system("cp %s %s"%(base, dest))
+      os.system("cp %s %s"%(inFile, dest))
 
    if doremove:
       os.system("rm -f %s"%(base))

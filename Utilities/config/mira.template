@@ -1,4 +1,4 @@
 project = mira
 job = genome,denovo,accurate
-parameters = -NW:cnfs=no -GE:not=[THREADS] [TECHNOLOGY_PARAMETERS]
+parameters = -AS:mo=[KMER] -NW:cnfs=no -GE:not=[THREADS] [TECHNOLOGY_PARAMETERS]
 [INPUT]

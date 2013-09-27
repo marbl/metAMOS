@@ -818,8 +818,6 @@ if "isolate" in enabledWorkflows or manual:
                    os.system("cd SuperReads-0.3.2/src && cp runSRCA.pl runSRCA.original")
                    os.system("cd SuperReads-0.3.2/src && cat runSRCA.original |sed s/head\ \-q/head/g > runSRCA.pl")
                 os.system("bash install.sh")
-                os.system("rm -rf CA/bin")
-                os.system("mv CA/%s-%s/bin CA/"%(OSTYPE, MACHINETYPE.replace("x86_64", "amd64")))
                 os.chdir("%s"%(METAMOS_ROOT))
                 os.system("rm -rf ./MaSuRCA-2.0.3.1")
                 os.system("rm msrca.tar.gz")
@@ -841,9 +839,27 @@ if "isolate" in enabledWorkflows or manual:
              os.system("rm -f mira.tar.bz2")
              os.system("mv `ls -d mira*` ./Utilities/cpp%s%s-%s%smira"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
 
+    if not os.path.exists("./Utilities/cpp%s%s-%s%sidba"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+       idba = utils.getFromPath("idba", "IDBA-UD", False)
+       if idba == "":
+          if "idba" in packagesToInstall:
+             dl = 'y'
+          else:
+             print "IDBA-UD binaries not found, optional for Assemble step, download now?"
+             dl = raw_input("Enter Y/N: ")
+          if dl == 'y' or dl == 'Y':
+             os.system("curl -L http://hku-idba.googlecode.com/files/idba-1.1.1.tar.gz -o idba.tar.gz")
+             os.system("tar xvzf idba.tar.gz")
+             os.system("mv idba-1.1.1 ./Utilities/cpp%s%s-%s%sidba"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.chdir("./Utilities/cpp%s%s-%s%sidba"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("mv src/sequence/short_sequence.h src/sequence/short_sequence.orig")
+             os.system("cat src/sequence/short_sequence.orig |awk '{if (match($0, \"kMaxShortSequence = 128\")) print \"static const uint32_t kMaxShortSequence = 32768;\"; else print $0}' > src/sequence/short_sequence.h")
+             os.system("./configure")
+             os.system("make")
+             os.chdir("%s"%(METAMOS_ROOT))
+
     if not os.path.exists("./Utilities/cpp%s%s-%s%sabyss"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        abyss = utils.getFromPath("ABYSS", "ABySS", False)
-       abyss = "" # remove before commit
        if abyss == "":
           if "abyss" in packagesToInstall:
              dl = 'y'

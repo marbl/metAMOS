@@ -502,6 +502,24 @@ if "optional" in enabledWorkflows or manual:
                print "    running fastacmd (might take a few min)..."
                os.system(".%sUtilities%scpp%s%s-%s%sfastacmd -d ./Utilities/DB/refseq_protein -p T -a T -D 1 -o ./Utilities/DB/allprots.faa"%(os.sep, os.sep, os.sep, OSTYPE, MACHINETYPE, os.sep))
 
+# sra toolkit
+if not os.path.exists("./Utilities/cpp%s%s-%s%ssra"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+    sra = utils.getFromPath("srapath", "SRA PATH", False)
+    if sra == "":
+       if "sra" in packagesToInstall:
+          dl = 'y'
+       else:
+          print "SRA binaries not found, optional for initPipeline step, download now?"
+          dl = raw_input("Enter Y/N: ")
+       if dl == 'y' or dl == 'Y':
+           if OSTYPE == 'Linux' and MACHINETYPE == "x86_64":
+              os.system("curl -L http://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/2.3.3-3/sratoolkit.2.3.3-3-centos_linux64.tar.gz -o sra.tar.gz")
+           elif  OSTYPE == "Darwin" and MACHINETYPE == "x86_64":
+               os.system("curl -L http://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/2.3.3-3/sratoolkit.2.3.3-3-mac64.tar.gz -o sra.tar.gz")
+           os.system("tar xvzf sra.tar.gz")
+           os.system("mv sratoolkit.2.3.3-3-* ./Utilities/cpp%s%s-%s%ssra"%(os.sep, OSTYPE, MACHINETYPE, os.sep)) 
+           os.system("rm -rf sra.tar.gz")
+
 if "isolate" in enabledWorkflows or manual:
     if not os.path.exists("./CA") or 0:
       if "ca" in packagesToInstall:

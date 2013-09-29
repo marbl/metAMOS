@@ -12,6 +12,8 @@ sys.path.append(INITIAL_SRC)
 import utils
 import workflow
 
+settings = utils.Settings(1, 1, "", "")
+
 #code to discover frozen binary location
 application_path = ""
 if getattr(sys, 'frozen', False):
@@ -117,11 +119,16 @@ def usage():
     print "-s/--sff: boolean, reads are in SFF format (default is fastq)"
     print "-W: workflow name, automatically set options for runPipeline and download data, if applicable"
 
+def isSRAID(file):
+   return utils.translateToSRAURL(settings, file) != ""
+
 def isRemote(file):
-   return file.startswith("ftp://") or file.startswith("http://") or file.startswith("https://")
+   return isSRAID(file) or file.startswith("ftp://") or file.startswith("http://") or file.startswith("https://")
 
 def checkFileExists(file):
    if isRemote(file):
+      if isSRAID(file):
+         file = utils.translateToSRAURL(settings, file)
       result = utils.getCommandOutput("curl -L -I %s && echo $?"%(file), False)
       if result == "":
          return False
@@ -131,14 +138,21 @@ def checkFileExists(file):
 
 def getBaseFileName(file):
    base = os.path.basename(file)
-   return base.replace(".bz2", "").replace(".gz", "")
+   return base.replace(".bz2", "").replace(".gz", "").replace(".sra", "")
 
 def getFile(inFile, dest):
    base = os.path.basename(inFile)
    dest = dest.replace(".bz2", "").replace(".gz", "")
    doremove = False
 
-   if isRemote(inFile):
+   if isSRAID(inFile):
+      inFile = utils.translateToSRAURL(settings, inFile)
+      base = os.path.basename(inFile)
+      os.system("curl -# -L %s -o %s"%(inFile, base))
+      os.system("%s/cpp%s%s-%s%ssra/bin/fastq-dump --split-3 -O %s %s"%(settings.METAMOS_UTILS, os.sep, settings.OSTYPE, settings.MACHINETYPE, os.sep, os.path.dirname(dest), base))
+      os.system("rm -rf %s"%(base))
+      return
+   elif isRemote(inFile):
       base = "%s/download_%s"%(os.path.dirname(dest), base)
       os.system("curl -# -L %s -o %s"%(inFile, base))
       doremove = True
@@ -353,6 +367,15 @@ cf.write("asmcontigs:\t%s\n"%(",".join(contigs.keys())))
 for contig in contigs.keys():
    getFile(contigs[contig], "%s/Preprocess/in/%s"%(id,contig))
 
+for lib in readlibs:
+   if mylib.format != "fastq":
+      if ((lib.f1 != "" and isSRAID(lib.f1)) or (lib.f2 != "" and isSRAID(lib.f2)) or (lib.f12 != "" and isSRAID(lib.f12))) :
+         print "Error: SRA runs can currently only be initialized using fastq format"
+         sys.exit(1)
+   elif mylib.mated and not mylib.interleaved and ((lib.f1 != "" and isSRAID(lib.f1)) or (lib.f2 != "" and isSRAID(lib.f2))):
+      print "Error: SRA runs can currently only be initialized using mated interleaved or unmated"
+      sys.exit(1)
+
 #cnt = 1
 i = 0
 while i < len(readlibs):
@@ -388,6 +411,7 @@ while i < len(readlibs):
         cf.write("lib%dmated:\tFalse\n"%(i+1))
         cf.write("lib%dinterleaved:\tFalse\n"%(i+1))
         cf.write("lib%dfrg:\t%s\n"%(i+1,getBaseFileName(f1)))
+        getFile("%s"%(f1), "%s/Preprocess/in/%s"%(id,getBaseFileName(f1)))
         if checkFileExists("%s"%(f1)):
             getFile("%s.qual"%(f1), "%s/Preprocess/in/%s"%(id,getBaseFileName(f1)))
 
@@ -410,12 +434,18 @@ while i < len(readlibs):
             getFile(f1, "%s/Preprocess/in/%s"%(id,getBaseFileName(f1)))
             getFile(f2, "%s/Preprocess/in/%s"%(id,getBaseFileName(f2)))
         elif mylib.interleaved:
-            cf.write("lib%dinterleaved:\tTrue\n"%(i+1))
             min = mylib.mmin
             max = mylib.mmax
             mean = mylib.mean
             stdev = mylib.stdev
-            cf.write("lib%df1:\t%s,%d,%d,%d,%d\n"%(i+1,getBaseFileName(f1),min,max,mean,stdev))
+
+            if isSRAID(f1):
+               cf.write("lib%dinterleaved:\tFalse\n"%(i+1))
+               cf.write("lib%df1:\t%s_1.fastq,%d,%d,%d,%d\n"%(i+1,getBaseFileName(f1),min,max,mean,stdev))
+               cf.write("lib%df2:\t%s_2.fastq,%d,%d,%d,%d\n"%(i+1,getBaseFileName(f1),min,max,mean,stdev))
+            else:
+               cf.write("lib%dinterleaved:\tTrue\n"%(i+1))
+               cf.write("lib%df1:\t%s,%d,%d,%d,%d\n"%(i+1,getBaseFileName(f1),min,max,mean,stdev))
             getFile(f1, "%s/Preprocess/in/%s"%(id,getBaseFileName(f1)))
 
     if 1:

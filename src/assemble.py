@@ -522,6 +522,9 @@ def CheckAsmResults (input_file_names, output_file_name):
                run_process(_settings, "rm %s/Assemble/out/%s.%s.asm.contig"%(_settings.rundir, assembler, kmer), "Assemble")
                run_process(_settings, "touch %s/Assemble/out/%s.%s.failed"%(_settings.rundir, assembler, kmer), "Assemble")
             else:
+               # remove ambiguity codes
+               run_process(_settings, "mv %s/Assemble/out/%s.%s.asm.contig %s/Assemble/out/%s.%s.asm.contigWIUPAC.fa"%(_settings.rundir, assembler, kmer, _settings.rundir, assembler, kmer), "Assemble")
+               run_process(_settings, "java -cp %s RemoveIUPAC %s/Assemble/out/%s.%s.asm.contigWIUPAC.fa >%s/Assemble/out/%s.%s.asm.contig"%(_settings.METAMOS_JAVA, _settings.rundir, assembler, kmer, _settings.rundir, assembler, kmer), "Assembler")
                # split contigs if necessary
                numNs = getCommandOutput("grep NNN %s/Assemble/out/%s.%s.asm.contig |grep -v \">\" |wc -l"%(_settings.rundir, assembler, kmer), True)
                if int(numNs) > 0:

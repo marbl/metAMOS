@@ -1179,3 +1179,10 @@ def getVersion():
    wfs = workflow.getSupportedWorkflowNames("%s/Utilities/workflows"%(sys.path[0]), False)
 
    return version + " workflows: " + ",".join(wfs)
+
+def translateToSRAURL(settings, name):
+   command = "%s/cpp%s%s-%s%s/sra/bin"%(settings.METAMOS_UTILS, os.sep, settings.OSTYPE, settings.MACHINETYPE, os.sep)
+   result = getCommandOutput("%s/srapath %s"%(command, name), True)
+   if result == name:
+      result = ""
+   return result

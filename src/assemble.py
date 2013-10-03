@@ -30,6 +30,12 @@ def init(reads, skipsteps, asm, asmcontigs, autoPickKmer):
    _asmcontigs.extend(asmcontigs)
    _autoPickKmer = autoPickKmer
 
+   if _autoPickKmer:
+      if os.path.exists("%s/Assemble/out/%s.kmer"%(_settings.rundir, _settings.PREFIX)):
+         stats = open("%s/Assemble/out/%s.kmer"%(_settings.rundir, _settings.PREFIX), 'r')
+         _settings.kmer = stats.read().strip()
+         stats.close()
+
 def extractNewblerReads():
    run_process(_settings, "unlink %s/Preprocess/out/all.seq.mates"%(_settings.rundir), "Assemble")
    run_process(_settings, "touch %s/Preprocess/out/all.seq.mates"%(_settings.rundir), "Assemble")
@@ -257,6 +263,8 @@ def SplitAssemblers(input_file_name, output_files):
          # now we can pick
          run_process(_settings, "%s/kmergenie %s/Assemble/out/%s.kmergenie.in -t %d -k %s -o %s"%(_settings.KMERGENIE, _settings.rundir, _settings.PREFIX, _settings.threads, maxK, _settings.PREFIX), "Assemble")
          result = open("%s/Assemble/out/%s_report.html"%(_settings.rundir, _settings.PREFIX), 'r')
+         stats = open("%s/Assemble/out/%s.kmer"%(_settings.rundir, _settings.PREFIX), 'w')
+         genome = open("%s/Assemble/out/%s.genomesize"%(_settings.rundir, _settings.PREFIX), 'w')
          for line in result.xreadlines():
             if "Predicted best k:" in line:
                _settings.kmer = line.replace("<p><h2>Predicted best k:", "").replace("</h2></p>", "").strip() 
@@ -264,10 +272,14 @@ def SplitAssemblers(input_file_name, output_files):
                if int(_settings.kmer) % 2 == 0:
                   _settings.kmer = "%s"%(int(_settings.kmer) + 1)
                print "*** metAMOS: Selected kmer size %s"%(_settings.kmer)
+               stats.write("%s\n"%(_settings.kmer))
             elif "Predicted assembly size:" in line:
                genomeSize = line.replace("<p><h4>Predicted assembly size:", "").replace("</h4></p>", "").strip()
                print "*** metAMOS: Estimated genome size %s"%(genomeSize)
+               genome.write("%s\n"%(genomeSize))
          result.close() 
+         stats.close()
+         genome.close()
       else:
          print "Warning: could not auto-pick a kmer, KmerGenie not found. Defaulting to %s"%(_settings.kmer)
 
@@ -377,7 +389,7 @@ def Assemble(input,output):
          run_process(_settings, "%s/%s map -g %s/Assemble/out/%s.asm -p %d %s -s %s"%(binPath, soapEXE, _settings.rundir,_settings.PREFIX, _settings.threads, soapMapOptions, configName),"Assemble")#SOAPdenovo config.txt
          run_process(_settings, "%s/%s scaff -g %s/Assemble/out/%s.asm -p %d %s"%(binPath, soapEXE, _settings.rundir,_settings.PREFIX, _settings.threads, soapScaffOptions),"Assemble")#SOAPdenovo config.txt
 
-         if os.path.exists("%s/Assemble/out/%s.asm.scaffSeq"%(_settings.rundir, _settings.PREFIX)):
+         if os.path.exists("%s/Assemble/out/%s.asm.scafSeq"%(_settings.rundir, _settings.PREFIX)):
             if os.path.exists("%s/GapCloser"%(binPath)):
                run_process(_settings, "%s/GapCloser -b %s -o %s/Assemble/out/%s.linearize.scaffolds.final -a %s/Assemble/out/%s.asm.scafSeq -t %d"%(binPath, configName, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.threads), "Assemble")
             else:

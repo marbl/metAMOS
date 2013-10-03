@@ -306,6 +306,9 @@ def Validate (input_file_names, output_file_name):
          if assemblyVotes[assembly] > currMaxVote:
             bestAssembly = assembly
             currMaxVote = assemblyVotes[assembly]
+         elif assemblyVotes[assembly] == currMaxVote and getAsmName(assembly) != bestAssembler:
+            bestAssembly = assembly
+            currMaxVote = assemblyVotes[assembly]
       if getAsmName(bestAssembly) != bestAssembler:
          print "Error: inconsistent assembly and assembler chosen %s %s"%(bestAssembly, bestAssembler)
          raise(JobSignalledBreak)

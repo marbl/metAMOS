@@ -10,7 +10,7 @@ import java.util.HashMap;
 public class SplitFastaByLetter {  
    private String letter = "N";
  
-   private static final String[] FASTA_ENDS = {"fasta", "fa"}; 
+   private static final String[] FASTA_ENDS = {"contig", "final", "fasta", "fa"}; 
    private static final NumberFormat nf = new DecimalFormat("############.#");
    
    public SplitFastaByLetter() {

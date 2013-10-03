@@ -362,8 +362,13 @@ class GenericProgram:
          print "Parameters are %s\n"%(params)
 
       # lots of tools expect to be able to get themselves from path so add run dir to path
+      oldLDPath = ""
       oldPath = os.environ["PATH"]
+      if "LD_LIBRARY_PATH" in os.environ:
+         oldLDPath = os.environ["LD_LIBRARY_PATH"]
       os.environ["PATH"] = self.location + os.pathsep + oldPath
+      os.environ["LD_LIBRARY_PATH"] = self.location + os.pathsep + oldLDPath
+
       i = 0
       for param in params:
          for command in self.commandList:
@@ -417,6 +422,7 @@ class GenericProgram:
 
       # restore path
       os.environ["PATH"] = oldPath
+      os.environ["LD_LIBRARY_PATH"] = oldLDPath
       return listOfInput
 
 def getSupportedList(path, step):

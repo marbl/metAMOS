@@ -1164,6 +1164,22 @@ def getSelectedAssembler(settings):
    else:
       return getCommandOutput("cat %s/Validate/out/%s.asm.selected"%(settings.rundir, settings.PREFIX), False)
 
+def getSelectedKmer(settings):
+   kmer = 0
+   if os.path.exists("%s/Assemble/out/%s.kmer"%(settings.rundir, settings.PREFIX)):
+      stats = open("%s/Assemble/out/%s.kmer"%(settings.rundir, settings.PREFIX), 'r')
+      kmer = stats.read().strip()
+      stats.close()
+   return kmer
+
+def getEstimatedGenomeSize(settings):
+   genomeSize = 0
+   if os.path.exists("%s/Assemble/out/%s.genomesize"%(settings.rundir, settings.PREFIX)):
+      stats = open("%s/Assemble/out/%s.genomesize"%(settings.rundir, settings.PREFIX), 'r')
+      genomeSize  = int(stats.read().strip())
+      stats.close()
+   return genomeSize 
+
 def getVersion():
    #look for pattern like: MetAMOS [VERSION] README
    version = "UNKNOWN"

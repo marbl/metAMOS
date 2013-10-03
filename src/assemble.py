@@ -31,10 +31,9 @@ def init(reads, skipsteps, asm, asmcontigs, autoPickKmer):
    _autoPickKmer = autoPickKmer
 
    if _autoPickKmer:
-      if os.path.exists("%s/Assemble/out/%s.kmer"%(_settings.rundir, _settings.PREFIX)):
-         stats = open("%s/Assemble/out/%s.kmer"%(_settings.rundir, _settings.PREFIX), 'r')
-         _settings.kmer = stats.read().strip()
-         stats.close()
+      kmer = getSelectedKmer(_settings)
+      if kmer != 0:
+         _settings.kmer = kmer
 
 def extractNewblerReads():
    run_process(_settings, "unlink %s/Preprocess/out/all.seq.mates"%(_settings.rundir), "Assemble")
@@ -274,8 +273,8 @@ def SplitAssemblers(input_file_name, output_files):
                print "*** metAMOS: Selected kmer size %s"%(_settings.kmer)
                stats.write("%s\n"%(_settings.kmer))
             elif "Predicted assembly size:" in line:
-               genomeSize = line.replace("<p><h4>Predicted assembly size:", "").replace("</h4></p>", "").strip()
-               print "*** metAMOS: Estimated genome size %s"%(genomeSize)
+               genomeSize = line.replace("<p><h4>Predicted assembly size:", "").replace("</h4></p>", "").replace("bp", "").strip()
+               print "*** metAMOS: Estimated genome size %s bp"%(genomeSize)
                genome.write("%s\n"%(genomeSize))
          result.close() 
          stats.close()
@@ -284,7 +283,8 @@ def SplitAssemblers(input_file_name, output_files):
          print "Warning: could not auto-pick a kmer, KmerGenie not found. Defaulting to %s"%(_settings.kmer)
 
    for contigs in _asmcontigs:
-      run_process(_settings, "touch %s/Assemble/out/%s.run"%(_settings.rundir, os.path.splitext(contigs)[0]), "Assemble")
+      if not os.path.exists("%s/Assemble/out/%s.failed"%(_settings.rundir, os.path.splitext(contigs)[0])) and not os.path.exists("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, os.path.splitext(contigs)[0])):
+         run_process(_settings, "touch %s/Assemble/out/%s.run"%(_settings.rundir, os.path.splitext(contigs)[0]), "Assemble")
 
    if _asm == "none" or _asm == None:
       return 0
@@ -292,7 +292,8 @@ def SplitAssemblers(input_file_name, output_files):
    kmers = set(_settings.kmer.split(","))
    for assembler in assemblers:
       for kmer in kmers:
-         run_process(_settings, "touch %s/Assemble/out/%s.%s.run"%(_settings.rundir, assembler, kmer), "Assemble")
+         if not os.path.exists("%s/Assemble/out/%s.%s.failed"%(_settings.rundir, assembler, kmer)) and not os.path.exists("%s/Assemble/out/%s.%s.asm.contig"%(_settings.rundir, assembler, kmer)):
+            run_process(_settings, "touch %s/Assemble/out/%s.%s.run"%(_settings.rundir, assembler, kmer), "Assemble")
 
 # warning: this is not thread safe so cannot be run in parallel
 @transform(SplitAssemblers, suffix(".run"), ".asm.contig")
@@ -541,6 +542,7 @@ def CheckAsmResults (input_file_names, output_file_name):
                if _settings.VERBOSE:
                   print "*** MetAMOS Warning: %s assembler with kmer %s did not run successfully!"%(assembler, kmer)
                run_process(_settings, "rm %s/Assemble/out/%s.%s.asm.contig"%(_settings.rundir, assembler, kmer), "Assemble")
+               run_process(_settings, "rm %s/Assemble/out/%s.%s.run"%(_settings.rundir, assembler, kmer), "Assemble")
                run_process(_settings, "touch %s/Assemble/out/%s.%s.failed"%(_settings.rundir, assembler, kmer), "Assemble")
             else:
                # remove ambiguity codes
@@ -561,6 +563,7 @@ def CheckAsmResults (input_file_names, output_file_name):
          if not os.path.exists("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, contig)) or os.path.getsize("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, contig)) == 0:
             print "*** MetAMOS Warning: %s input contigs could not be processed!"%(contig)
             run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, contig), "Assemble")
+            run_process(_settings, "rm %s/Assemble/out/%s.run"%(_settings.rundir, contig), "Assemble")
             run_process(_settings, "touch %s/Assemble/out/%s.failed"%(_settings.rundir, contig), "Assemble")
          else:
             successfull+=1

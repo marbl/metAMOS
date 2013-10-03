@@ -62,7 +62,7 @@ def runQUAST(asmNames, asmFiles, min, max, genomeSize, reference):
 
    # quast cannot handle dots in names of the files
    asmNames = asmNames.replace(".", "_")
-   run_process(_settings, "cat %s |awk -F \"|\" '{if (match($1, \">\")) { if (NF >= 2) { line=$1\"_\"$2; for (i=3; i<= NF; i++) { line=line\"\t\"$i; } } else { line = $1; } print line; } else {print $0; }}' > %s/Validate/out/%s.ref.fastas"%(os.path.baspath(reference), _settings.rundir, _settings.PREFIX), "Validate")
+   run_process(_settings, "cat %s |awk -F \"|\" '{if (match($1, \">\")) { if (NF >= 2) { line=$1\"_\"$2; for (i=3; i<= NF; i++) { line=line\"\t\"$i; } } else { line = $1; } print line; } else {print $0; }}' > %s/Validate/out/%s.ref.fasta"%(reference, _settings.rundir, _settings.PREFIX), "Validate")
    #run_process(_settings, "ln %s %s/Validate/out/%s.ref.fasta"%(os.path.abspath(reference), _settings.rundir, _settings.PREFIX), "Validate")
    run_process(_settings, "%s/metaquast.py --est-ref-size %s -o %s/Validate/out/quast -R %s/Validate/out/%s.ref.fasta -T %d -l \"%s\" %s"%(_settings.QUAST, genomeSize, _settings.rundir, _settings.rundir, _settings.PREFIX, _settings.threads, asmNames, asmFiles), "Validate")
 
@@ -188,7 +188,7 @@ def Validate (input_file_names, output_file_name):
          numMapped = 0
          if os.path.exists("%s/samtools"%(_settings.SAMTOOLS)):
             numMapped = convertSamToBAM(inputSam)
-         genomeSize = 0
+         genomeSize = getEstimatedGenomeSize(_settings)
 
          if numMapped != 0:
             if asmNames == "":
@@ -294,7 +294,6 @@ def Validate (input_file_names, output_file_name):
             weight = 1
          assemblerVotes[bestAssemblers[type]] += weight
          assemblyVotes[bestAssemblies[type]] += weight
-         print "Votes for assembler %s is %s (type %s just voted)"%(bestAssemblers[type], assemblerVotes[bestAssemblers[type]], SCORE_TYPE.reverse_mapping[type])
      
       for assembler in assemblerVotes:
          if assemblerVotes[assembler] > currMaxVote:
@@ -306,7 +305,7 @@ def Validate (input_file_names, output_file_name):
          if assemblyVotes[assembly] > currMaxVote:
             bestAssembly = assembly
             currMaxVote = assemblyVotes[assembly]
-         elif assemblyVotes[assembly] == currMaxVote and getAsmName(assembly) != bestAssembler:
+         elif assemblyVotes[assembly] == currMaxVote and getAsmName(assembly) == bestAssembler:
             bestAssembly = assembly
             currMaxVote = assemblyVotes[assembly]
       if getAsmName(bestAssembly) != bestAssembler:

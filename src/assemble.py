@@ -348,8 +348,11 @@ def Assemble(input,output):
       soapw.close()
 
       specName = "soap.spec"
+      configName = "%s/soapconfig.txt"%(_settings.rundir)
       binPath = _settings.SOAPDENOVO
       if asmName == "soapdenovo2":
+         run_process(_settings, "cat %s |grep -v max_rd_name > %s/soap2config.txt"%(configName, _settings.rundir), "Assemble") 
+         configName = "%s/soap2config.txt"%(_settings.rundir)
          binPath = _settings.SOAPDENOVO2
          specName = "soap2.spec"
 
@@ -367,11 +370,11 @@ def Assemble(input,output):
       if _settings.kmer > 63:
          soapEXE="SOAPdenovo-127mer"
 
-      run_process(_settings, "%s/%s pregraph -p %d -K %d %s -s %s/soapconfig.txt -o %s/Assemble/out/%s.asm"%(binPath, soapEXE, _settings.threads, _settings.kmer, soapOptions, _settings.rundir,_settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
+      run_process(_settings, "%s/%s pregraph -p %d -K %d %s -s %s -o %s/Assemble/out/%s.asm"%(binPath, soapEXE, _settings.threads, _settings.kmer, soapOptions, configName,_settings.rundir,_settings.PREFIX),"Assemble")#SOAPdenovo config.txt
       run_process(_settings, "%s/%s contig -g %s/Assemble/out/%s.asm %s"%(binPath, soapEXE, _settings.rundir,_settings.PREFIX, soapContigOptions),"Assemble")#SOAPdenovo config.txt
 
       if _settings.doscaffolding and mated:
-         run_process(_settings, "%s/%s map -g %s/Assemble/out/%s.asm -p %d %s -s %s/soapconfig.txt"%(binPath, soapEXE, _settings.rundir,_settings.PREFIX, _settings.threads, soapMapOptions, _settings.rundir),"Assemble")#SOAPdenovo config.txt
+         run_process(_settings, "%s/%s map -g %s/Assemble/out/%s.asm -p %d %s -s %s"%(binPath, soapEXE, _settings.rundir,_settings.PREFIX, _settings.threads, soapMapOptions, configName),"Assemble")#SOAPdenovo config.txt
          run_process(_settings, "%s/%s scaff -g %s/Assemble/out/%s.asm -p %d %s"%(binPath, soapEXE, _settings.rundir,_settings.PREFIX, _settings.threads, soapScaffOptions),"Assemble")#SOAPdenovo config.txt
          run_process(_settings, "ln %s/Assemble/out/%s.asm.scafSeq %s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Assemble")
 

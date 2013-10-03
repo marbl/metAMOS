@@ -794,15 +794,15 @@ if "isolate" in enabledWorkflows or manual:
              print "SOAPdenovo2 binaries not found, optional for Assemble step, download now?"
              dl = raw_input("Enter Y/N: ")
           if dl == 'y' or dl == 'Y':
-             os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/soap2.tar.gz -o soap.tar.gz")
-             os.system("tar xvzf soap2.tar.gz")
-             os.chdir("SOAPdenovo2-src-r240")
-             os.system("make")
-             os.chdir("%s"%(METAMOS_ROOT))
+             if OSTYPE == "Darwin":
+                os.system("curl -L http://sourceforge.net/projects/soapdenovo2/files/SOAPdenovo2/bin/r223/SOAPdenovo2-bin-MACOS-generic-r223.tgz -o soap2.tar.gz")
+             else:
+                os.system("curl -L http://sourceforge.net/projects/soapdenovo2/files/SOAPdenovo2/bin/r223/SOAPdenovo2-bin-LINUX-generic-r223.tgz -o soap2.tar.gz")
              os.system("mkdir -p ./Utilities/cpp%s%s-%s%ssoap2/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-             os.system("mv SOAPdenovo2-src-r240/SOAPdenovo-* ./Utilities/cpp%s%s-%s%ssoap2/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-             os.system("rm -rf SOAPdenovo2-src-r240")
-             os.system("rm -rf soap2.tar.gz")
+             os.system("mv soap2.tar.gz ./Utilities/cpp%s%s-%s%ssoap2/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.chdir("./Utilities/cpp%s%s-%s%ssoap2/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("tar xvzf soap2.tar.gz")
+             os.chdir("%s"%(METAMOS_ROOT))
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        masurca = utils.getFromPath("runSRCA.pl", "MaSuRCA", False)

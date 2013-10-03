@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 public class RemoveIUPAC {  
-   private static final String[] FASTA_ENDS = {"fasta", "fa"}; 
+   private static final String[] FASTA_ENDS = {"contig", "final", "fasta", "fa"}; 
    private static final NumberFormat nf = new DecimalFormat("############.#");
    
    public RemoveIUPAC() {

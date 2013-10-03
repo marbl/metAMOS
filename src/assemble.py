@@ -349,9 +349,9 @@ def Assemble(input,output):
 
       specName = "soap.spec"
       configName = "%s/soapconfig.txt"%(_settings.rundir)
+      run_process(_settings, "cat %s |grep -v max_rd_len > %s/soap2config.txt"%(configName, _settings.rundir), "Assemble")
       binPath = _settings.SOAPDENOVO
       if asmName == "soapdenovo2":
-         run_process(_settings, "cat %s |grep -v max_rd_name > %s/soap2config.txt"%(configName, _settings.rundir), "Assemble") 
          configName = "%s/soap2config.txt"%(_settings.rundir)
          binPath = _settings.SOAPDENOVO2
          specName = "soap2.spec"
@@ -376,7 +376,13 @@ def Assemble(input,output):
       if _settings.doscaffolding and mated:
          run_process(_settings, "%s/%s map -g %s/Assemble/out/%s.asm -p %d %s -s %s"%(binPath, soapEXE, _settings.rundir,_settings.PREFIX, _settings.threads, soapMapOptions, configName),"Assemble")#SOAPdenovo config.txt
          run_process(_settings, "%s/%s scaff -g %s/Assemble/out/%s.asm -p %d %s"%(binPath, soapEXE, _settings.rundir,_settings.PREFIX, _settings.threads, soapScaffOptions),"Assemble")#SOAPdenovo config.txt
-         run_process(_settings, "ln %s/Assemble/out/%s.asm.scafSeq %s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Assemble")
+
+         if os.path.exists("%s/Assemble/out/%s.asm.scaffSeq"%(_settings.rundir, _settings.PREFIX)):
+            if os.path.exists("%s/GapCloser"%(binPath)):
+               run_process(_settings, "%s/GapCloser -b %s -o %s/Assemble/out/%s.linearize.scaffolds.final -a %s/Assemble/out/%s.asm.scafSeq -t %d"%(binPath, configName, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.threads), "Assemble")
+            else:
+               run_process(_settings, "ln %s/Assemble/out/%s.asm.scafSeq %s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Assemble")
+            run_process(_settings, "java -cp %s SplitFastaByLetter %s/Assemble/out/%s.linearize.scaffolds.final NNN > %s/Assemble/out/%s.asm.contig"%(_settings.METAMOS_JAVA, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Assemble")
 
       #if OK, convert output to AMOS
    elif asmName == "metaidba":

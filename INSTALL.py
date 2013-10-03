@@ -798,11 +798,20 @@ if "isolate" in enabledWorkflows or manual:
                 os.system("curl -L http://sourceforge.net/projects/soapdenovo2/files/SOAPdenovo2/bin/r223/SOAPdenovo2-bin-MACOS-generic-r223.tgz -o soap2.tar.gz")
              else:
                 os.system("curl -L http://sourceforge.net/projects/soapdenovo2/files/SOAPdenovo2/bin/r223/SOAPdenovo2-bin-LINUX-generic-r223.tgz -o soap2.tar.gz")
+             os.system("curl -L http://sourceforge.net/projects/soapdenovo2/files/GapCloser/src/r6/GapCloser-src-v1.12-r6.tgz -o gapcloser.tar.gz")
+             os.system("tar xvzf gapcloser.tar.gz")
+             os.chdir("v1.12-r6")
+             os.system("make")
+             os.chdir("%s"%(METAMOS_ROOT))
              os.system("mkdir -p ./Utilities/cpp%s%s-%s%ssoap2/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("mv soap2.tar.gz ./Utilities/cpp%s%s-%s%ssoap2/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.chdir("./Utilities/cpp%s%s-%s%ssoap2/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("tar xvzf soap2.tar.gz")
              os.chdir("%s"%(METAMOS_ROOT))
+             os.system("mv v1.12-r6/Release/* ./Utilities/cpp%s%s-%s%ssoap2/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("rm -rf soap2.tar.gz")
+             os.system("rm -rf v1.12-r6")
+             os.system("rm -rf gapcloser.tar.gz")
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        masurca = utils.getFromPath("runSRCA.pl", "MaSuRCA", False)

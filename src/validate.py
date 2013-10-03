@@ -62,7 +62,8 @@ def runQUAST(asmNames, asmFiles, min, max, genomeSize, reference):
 
    # quast cannot handle dots in names of the files
    asmNames = asmNames.replace(".", "_")
-   run_process(_settings, "ln %s %s/Validate/out/%s.ref.fasta"%(os.path.abspath(reference), _settings.rundir, _settings.PREFIX), "Validate")
+   run_process(_settings, "cat %s |awk -F \"|\" '{if (match($1, \">\")) { if (NF >= 2) { line=$1\"_\"$2; for (i=3; i<= NF; i++) { line=line\"\t\"$i; } } else { line = $1; } print line; } else {print $0; }}' > %s/Validate/out/%s.ref.fastas"%(os.path.baspath(reference), _settings.rundir, _settings.PREFIX), "Validate")
+   #run_process(_settings, "ln %s %s/Validate/out/%s.ref.fasta"%(os.path.abspath(reference), _settings.rundir, _settings.PREFIX), "Validate")
    run_process(_settings, "%s/metaquast.py --est-ref-size %s -o %s/Validate/out/quast -R %s/Validate/out/%s.ref.fasta -T %d -l \"%s\" %s"%(_settings.QUAST, genomeSize, _settings.rundir, _settings.rundir, _settings.PREFIX, _settings.threads, asmNames, asmFiles), "Validate")
 
    return 0
@@ -139,6 +140,8 @@ def Validate (input_file_names, output_file_name):
    selectedReferences = open("%s/Validate/out/%s.ref.selected"%(_settings.rundir, _settings.PREFIX), 'w')
    lapfile = open("%s/Validate/out/%s.lap"%(_settings.rundir,_settings.PREFIX),'w')
 
+   failedOutput = ""
+
    if "Validate" in _skipsteps or "validate" in _skipsteps:
       run_process(_settings, "touch %s/Logs/validate.skip"%(_settings.rundir), "Validate")
       bestAssembler = getAsmName(input_file_names[0])
@@ -181,7 +184,6 @@ def Validate (input_file_names, output_file_name):
          scores[SCORE_TYPE.LAP] = runLAP(assembler, assembly, pairedReads, unpairedReads, abundanceFile)
 
          scoreOutput = ""
-         failedOutput = ""
          inputSam = "%s/Validate/out/%s.sam_0"%(_settings.rundir, assembler)
          numMapped = 0
          if os.path.exists("%s/samtools"%(_settings.SAMTOOLS)):
@@ -311,9 +313,12 @@ def Validate (input_file_names, output_file_name):
    if "quast" in _validators:
       # recruit a reference
       references = recruitGenomes(_settings,bestAssembly,"%s/refseq"%(_settings.DB_DIR), "%s/Validate/out/recruit"%(_settings.rundir), "Validate", 1)
-      for g in references:
-          selectedReferences.write(os.path.splitext(os.path.basename(g))[0] + "\n")
-      runQUAST(asmNames, asmFiles, pairedMin, pairedMax, genomeSize, references[0])
+      if len(references) > 0:
+         for g in references:
+            selectedReferences.write(os.path.splitext(os.path.basename(g))[0] + "\n")
+         runQUAST(asmNames, asmFiles, pairedMin, pairedMax, genomeSize, references[0])
+      else:
+         print "Warning: could not recruit any references"
 
    if _settings.VERBOSE:
       print "*** metAMOS assembler %s selected."%(bestAssembler)  

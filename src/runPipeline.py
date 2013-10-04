@@ -745,7 +745,6 @@ asmfiles = []
 
 for lib in readlibs:
     if "MapReads" in forcesteps:
-     if "MapReads" in forcesteps:
         for a in selected_programs["assemble"].strip().split(","):
            if os.path.exists("%s/Assemble/out/%s.asm.contig"%(settings.rundir,a)):
               utils.run_process(settings, \
@@ -756,6 +755,7 @@ for lib in readlibs:
                 utils.run_process(settings, \
                    "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,os.path.splitext(a)[0]),\
                    "RunPipeline")
+        utils.run_process(settings, "rm %s/Logs/mapreads.ok"%(settings.rundir), "RunPipeline")
     if "Assemble" in forcesteps:
         utils.run_process(settings, \
            "touch %s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id),\
@@ -777,7 +777,7 @@ if "FindScaffoldORFS" in forcesteps:
 
 if "Scaffold" in forcesteps:
     utils.run_process(settings, \
-          "rm %s/Scaffold/out/%s.linearize.scaffolds.final"%(settings.rundir,settings.PREFIX),\
+          "rm %s/Logs/scaffold.ok"%(settings.rundir),\
           "RunPipeline")
 
 if "Abundance" in forcesteps:
@@ -801,6 +801,11 @@ if "FINDORFS" in forcesteps or "findorfs" in forcesteps or "FindORFS" in forcest
 if "Assemble" not in skipsteps and "Assemble" in forcesteps:
     utils.run_process(settings, \
           "rm %s/Logs/assemble.ok"%(settings.rundir),\
+          "RunPipeline")
+
+if "Classify" not in skipsteps and "Classify" in forcesteps:
+    utils.run_process(settings, \
+          "rm %s/Logs/classify.ok"%(settings.rundir), \
           "RunPipeline")
 
 if __name__ == "__main__":

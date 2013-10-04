@@ -203,10 +203,7 @@ foreach my $input (@ARGV)
                        }
 
                        my $parent = $taxID;
-                       while (1) {
-                          if ($parent == 1) {
-                             last;
-                          }
+                       while ($parent > 1) {
                           if (!defined($outputAnnot{$contigID}) && getTaxRank($parent) eq $taxonomicLevel) {
                              print ANNOTS "$contigID\t$parent\n";
                           }

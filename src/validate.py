@@ -5,6 +5,7 @@ from operator import itemgetter
 
 from utils import *
 from mapreads import MapReads 
+from mapreads import getMeanSD
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
 
@@ -31,7 +32,6 @@ def init(reads, skipsteps, validators, scoreType):
 
 def minScore():
    return -1 * (sys.maxint - 1)
-
 
 def getAsmName(input_file_name):
    asmName = input_file_name.replace("%s/Assemble/out/"%(_settings.rundir), "")
@@ -138,7 +138,17 @@ def Validate (input_file_names, output_file_name):
 
    selectedAsm = open("%s/Validate/out/%s.asm.selected"%(_settings.rundir, _settings.PREFIX), 'w')
    selectedReferences = open("%s/Validate/out/%s.ref.selected"%(_settings.rundir, _settings.PREFIX), 'w')
-   lapfile = open("%s/Validate/out/%s.lap"%(_settings.rundir,_settings.PREFIX),'w')
+
+   validatedAsms = dict()
+   if os.path.exists("%s/Validate/out/%s.lap"%(_settings.rundir,_settings.PREFIX)) and os.path.getsize("%s/Validate/out/%s.lap"%(_settings.rundir, _settings.PREFIX)):
+      lapfile = open("%s/Validate/out/%s.lap"%(_settings.rundir,_settings.PREFIX),'r')
+      for line in lapfile.xreadlines():
+         asm = line.split()[0].lower()
+         validatedAsms[asm] = True
+      lapfile.close()
+      lapfile = open("%s/Validate/out/%s.lap"%(_settings.rundir,_settings.PREFIX),'a')
+   else:
+      lapfile = open("%s/Validate/out/%s.lap"%(_settings.rundir,_settings.PREFIX),'w')
 
    failedOutput = ""
 
@@ -165,9 +175,8 @@ def Validate (input_file_names, output_file_name):
       unpairedReads = ""
       for lib in _readlibs:
          if lib.mated and pairedReads == "":
-            pairedReads="-1 %s/Preprocess/out/lib%d.1.fastq -2 %s/Preprocess/out/lib%d.2.fastq -m %d -t %d -I %d -X %d"%(_settings.rundir, lib.id, _settings.rundir, lib.id, lib.mean, lib.stdev, (lib.mean-5*lib.stdev), (lib.mean+5*lib.stdev))
-            pairedMin = lib.mmin
-            pairedMax = lib.mmax
+            (pairedMin, pairedMax, pairedMean, pairedSD) = getMeanSD(lib.id) 
+            pairedReads="-1 %s/Preprocess/out/lib%d.1.fastq -2 %s/Preprocess/out/lib%d.2.fastq -m %d -t %d -I %d -X %d"%(_settings.rundir, lib.id, _settings.rundir, lib.id, pairedMean, pairedSD, (pairedMean-5*pairedSD), (pairedMean+5*pairedSD))
          elif not lib.paired and unpairedReads == "":
             unpaired=" -i %s/Preprocess/out/lib%d.fastq"%(_settings.rundir, lib.id)
 
@@ -180,6 +189,9 @@ def Validate (input_file_names, output_file_name):
          abundanceFile = ""
          if os.path.exists("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, assembler)):
             abundanceFile = "%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, assembler)
+         if assembler.lower() in validatedAsms:
+            continue;
+
          scores = dict()
          scores[SCORE_TYPE.LAP] = runLAP(assembler, assembly, pairedReads, unpairedReads, abundanceFile)
 

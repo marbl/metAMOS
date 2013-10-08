@@ -474,11 +474,12 @@ def readConfigInfo(infile, filePrefix=""):
          workflow = wfc[1]
       elif "asmcontigs:" in line:
          asmc = line.replace("\n","").split("\t")
-         if len(asmc) < 2:
+         if len(asmc) < 2 or len(asmc[1]) == 0:
             continue
-         contigs = asmc[1].split(",")
+         contigs = asmc[1].strip().split(",")
          for contig in contigs:
-            asmcontigs.append(contig)
+            if (len(contig.strip()) > 0):
+               asmcontigs.append(contig)
       elif "format:" in line:
          if f1 and not libadded:
             nread1 = Read(format,f1,mated,interleaved)

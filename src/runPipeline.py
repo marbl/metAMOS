@@ -337,7 +337,8 @@ verbose = False
 bowtie_mapping = 1
 startat = None
 endat = None
-filter = False
+#turn on by default
+filter = True
 forcesteps = []
 
 run_fastqc = False

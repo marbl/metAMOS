@@ -631,13 +631,11 @@ if "isolate" in enabledWorkflows or manual:
              os.chdir("%s"%(METAMOS_ROOT))
              pathToCopy = utils.getCommandOutput("find Time-Piece-1.08/build -type d -name \"Time\" |grep -v auto", False)
              pathToCopy = os.path.dirname(pathToCopy)
-             print "Got time path %s"%(pathToCopy)
              os.system("mkdir -p ./Utilities/cpp%s%s-%s%sprokka/lib"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              # copy one at a time in case of conflicts
              for file in os.listdir("%s%s"%(pathToCopy, os.sep)):
                 toCopy = file
                 file = "%s%s%s"%(pathToCopy, os.sep, toCopy)
-                print "Processing file %s base is %s"%(file, toCopy)
                 if os.path.exists("./Utilities/cpp%s%s-%s%sprokka/lib/%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, toCopy)):
                    os.system("mv %s/* ./Utilities/cpp%s%s-%s%sprokka/lib/%s/"%(file, os.sep, OSTYPE, MACHINETYPE, os.sep, toCopy))
                 else:
@@ -654,12 +652,10 @@ if "isolate" in enabledWorkflows or manual:
              os.chdir("%s"%(METAMOS_ROOT))
              pathToCopy = utils.getCommandOutput("find XML-Simple-1.08/build -type d -name \"XML\" |grep -v auto", False)
              pathToCopy = os.path.dirname(pathToCopy)
-             print "Got time path %s"%(pathToCopy)
              os.system("mkdir -p ./Utilities/cpp%s%s-%s%sprokka/lib"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              for file in os.listdir("%s%s"%(pathToCopy, os.sep)):
                 toCopy = file
                 file = "%s%s%s"%(pathToCopy, os.sep, toCopy)
-                print "Processing file %s base is %s"%(file, toCopy)
                 if os.path.exists("./Utilities/cpp%s%s-%s%sprokka/lib/%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, toCopy)):
                    os.system("mv %s/* ./Utilities/cpp%s%s-%s%sprokka/lib/%s/"%(file, os.sep, OSTYPE, MACHINETYPE, os.sep, toCopy))
                 else:
@@ -1046,6 +1042,56 @@ if "isolate" in enabledWorkflows or manual:
             os.system("make")
             os.chdir("%s"%(METAMOS_ROOT))
             os.system("rm -rf cgal.tar")
+
+    if not os.path.exists("./Utilities/cpp%s%s-%s%sREAPR"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+       if "reapr" in packagesToInstall:
+          dl = 'y'
+       else:
+           print "REAPR tool not found, optional for Validate step, download now?"
+           dl = raw_input("Enter Y/N: ")
+       if dl == 'y' or dl == 'Y':
+          os.system("curl -L ftp://ftp.sanger.ac.uk/pub4/resources/software/reapr/Reapr_1.0.16.tar.gz -o reapr.tar.gz")
+          os.system("tar xvzf reapr.tar.gz")
+          os.system("mv Reapr_1.0.16 ./Utilities/cpp/%s%s-%s%sREAPR"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+
+          filespec = utils.getCommandOutput("perl -MFile::Spec::Link -e 0 && echo $?", True)
+          if filespec == "":
+             os.system("curl -L http://search.cpan.org/CPAN/authors/id/R/RM/RMBARKER/File-Copy-Link-0.113.tar.gz -o file.tar.gz")
+             os.system("tar xvzf file.tar.gz")
+             os.chdir("File-Copy-Link-0.113")
+             os.system("perl Makefile.PL PREFIX=`pwd`/build")
+             os.system("make install")
+             os.chdir("%s"%(METAMOS_ROOT))
+             pathToCopy = utils.getCommandOutput("find File-Copy-Link-0.113/build -type d -name \"File\" |grep -v auto", False)
+             pathToCopy = os.path.dirname(pathToCopy)
+             os.system("mkdir -p ./Utilities/cpp%s%s-%s%sREAPR/lib"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             # copy one at a time in case of conflicts
+             for file in os.listdir("%s%s"%(pathToCopy, os.sep)):
+                toCopy = file
+                file = "%s%s%s"%(pathToCopy, os.sep, toCopy)
+                if os.path.exists("./Utilities/cpp%s%s-%s%sREAPR/lib/%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, toCopy)):
+                   os.system("mv %s/* ./Utilities/cpp%s%s-%s%sREAPR/lib/%s/"%(file, os.sep, OSTYPE, MACHINETYPE, os.sep, toCopy))
+                else:
+                   os.system("mv %s ./Utilities/cpp%s%s-%s%sREAPR/lib/"%(file, os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("rm -rf file.tar.gz")
+             os.system("rm -rf File-Copy-Link-0.113")
+             os.environ["PERL5LIB"]+="%s/Utilities/cpp%s%s-%s%sREAPR/lib/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
+          os.chdir("./Utilities/cpp/%s%s-%s%sREAPR"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+          os.system("sh install.sh")
+          os.chdir("%s"%(METAMOS_ROOT))
+
+          if os.path.exists("./Utilities/cpp%s%s-%s%sREAPR/lib"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+             os.chdir("./Utilities/cpp%s%s-%s%sREAPR/"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("cp reapr reapr.original")
+             os.system("cat reapr.original |awk '{if (match($0, \"use strict\")) { print \"use lib \\\"%s/Utilities/cpp%s%s-%s%sREAPR/lib\\\";\"; print $0; } else { print $0}}' > reapr"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.chdir("%s"%(METAMOS_ROOT))
+
+          # REAPR has a bug where fasta headers with commas are not properly fixed, patch the bug
+          os.chdir("./Utilities/cpp%s%s-%s%sREAPR/src"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+          os.system("cp task_facheck.pl task_facheck.pl.original")
+          os.system("cat task_facheck.pl.original |awk -v comma=\"'\"  '{if (match($0, \"new_id =~\")) { print \"$new_id =~ s/[;|:,\"comma\"\\+\\-\\s\\(\\)\\{\\}\\[\\]]/_/g;\"; } else { print $0}}' > task_facheck.pl")
+          os.chdir("%s"%(METAMOS_ROOT))
+          os.system("rm -rf reapr.tar.gz")
     
     if not os.path.exists("./Utilities/cpp%s%s-%s%sFRCbam"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
         if "frcbam" in packagesToInstall:

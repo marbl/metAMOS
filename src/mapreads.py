@@ -32,6 +32,33 @@ def init(reads, skipsteps, mapper,savebtidx,ctgbpcov,lowmem):
    _savebtidx = savebtidx
    _ctgbpcov = ctgbpcov
    _lowmem = lowmem
+def getMeanSD(libid):
+   lmin = sys.maxint
+   lmax = 0
+   lmean = 0.0
+   lsd = 0.0
+   ltotal = 0.0
+
+   for file in os.listdir("%s/Assemble/out/"%(_settings.rundir)):
+      if not file.endswith("lib%d.meanstdev"%(libid)):
+         continue
+      fin = open("%s/Assemble/out/%s"%(_settings.rundir, file), 'r')
+      (lib, mean, stdev, min, max) = fin.read().split()
+      fin.close()
+      if (int(lib) != libid):
+         print "Error: library identifier %d doesn't match expected %d"%(int(lib), libid)
+         continue
+      if (int(min) < lmin):
+         lmin = int(min)
+      if (int(max) > lmax):
+         lmax = int(max)
+      lmean += float(mean)
+      lsd += float(stdev)
+      ltotal += 1
+
+   lmean = float(lmean) / float(ltotal)
+   lsd = float(lsd) / float(ltotal)
+   return (lmin, lmax, lmean, lsd)
 def meanstdv(x):
     n, mean, std = len(x), 0, 0
     for a in x:
@@ -390,6 +417,7 @@ def map2contig():
         new_matefile = open("%s/Assemble/out/%s.lib%d.mappedmates"%(_settings.rundir,_settings.PREFIX,lib.id),'w')
         badmatefile = open("%s/Assemble/out/%s.lib%d.badmates"%(_settings.rundir,_settings.PREFIX,lib.id),'w')
         ctgmatefile = open("%s/Assemble/out/%s.lib%d.mates_in_diff_contigs"%(_settings.rundir,_settings.PREFIX,lib.id),'w')
+        updatedinserts = open("%s/Assemble/out/%s.lib%d.meanstdev"%(_settings.rundir, _settings.PREFIX, lib.id), 'w')
 
         #    for lib in _readlibs:
         linked_contigs = {}
@@ -454,10 +482,12 @@ def map2contig():
         else:
            lmin = lib.mmin
            lmax = lib.mmax
+        updatedinserts.write("%d\t%f\t%f\t%d\t%d\n"%(lib.id, lib.mean, lib.stdev, lib.mmin, lib.mmax))
         mateheader.write("library\t%d\t%d\t%d\n"%(lib.id,lmin,lmax))
         new_matefile.close()
         badmatefile.close()
         mateheader.close()
+        updatedinserts.close()
         run_process(_settings, "cat %s/Assemble/out/%s.lib%d.mappedmates >> %s/Assemble/out/%s.lib%d.hdr "%(_settings.rundir,_settings.PREFIX, lib.id,_settings.rundir,_settings.PREFIX,lib.id),"MapReads")
         run_process(_settings, "cp %s/Assemble/out/%s.lib%d.hdr %s/Assemble/out/%s.lib%d.mappedmates "%(_settings.rundir,_settings.PREFIX, lib.id,_settings.rundir,_settings.PREFIX,lib.id),"MapReads")
     ctg_cvg_file.close()
@@ -475,6 +505,9 @@ def map2contig():
 def MapReads(input,output):
    if "MapReads" in _skipsteps or "mapreads" in _skipsteps:
       run_process(_settings, "touch %s/Logs/mapreads.skip"%(_settings.rundir), "MapReads")
+      return 0
+
+   if os.path.exists("%s/Assemble/out/mapreads.ok"%(_settings.rundir)):
       return 0
 
    originalPrefix = _settings.PREFIX

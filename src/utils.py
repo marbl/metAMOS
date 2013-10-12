@@ -474,11 +474,12 @@ def readConfigInfo(infile, filePrefix=""):
          workflow = wfc[1]
       elif "asmcontigs:" in line:
          asmc = line.replace("\n","").split("\t")
-         if len(asmc) < 2:
+         if len(asmc) < 2 or len(asmc[1]) == 0:
             continue
-         contigs = asmc[1].split(",")
+         contigs = asmc[1].strip().split(",")
          for contig in contigs:
-            asmcontigs.append(contig)
+            if (len(contig.strip()) > 0):
+               asmcontigs.append(contig)
       elif "format:" in line:
          if f1 and not libadded:
             nread1 = Read(format,f1,mated,interleaved)
@@ -1163,6 +1164,22 @@ def getSelectedAssembler(settings):
       raise (JobSignalledBreak)
    else:
       return getCommandOutput("cat %s/Validate/out/%s.asm.selected"%(settings.rundir, settings.PREFIX), False)
+
+def getSelectedKmer(settings):
+   kmer = 0
+   if os.path.exists("%s/Assemble/out/%s.kmer"%(settings.rundir, settings.PREFIX)):
+      stats = open("%s/Assemble/out/%s.kmer"%(settings.rundir, settings.PREFIX), 'r')
+      kmer = stats.read().strip()
+      stats.close()
+   return kmer
+
+def getEstimatedGenomeSize(settings):
+   genomeSize = 0
+   if os.path.exists("%s/Assemble/out/%s.genomesize"%(settings.rundir, settings.PREFIX)):
+      stats = open("%s/Assemble/out/%s.genomesize"%(settings.rundir, settings.PREFIX), 'r')
+      genomeSize  = int(stats.read().strip())
+      stats.close()
+   return genomeSize 
 
 def getVersion():
    #look for pattern like: MetAMOS [VERSION] README

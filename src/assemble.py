@@ -31,10 +31,10 @@ def init(reads, skipsteps, asm, asmcontigs, autoPickKmer):
    _autoPickKmer = autoPickKmer
 
    if _autoPickKmer:
-      if os.path.exists("%s/Assemble/out/%s.kmer"%(_settings.rundir, _settings.PREFIX)):
-         stats = open("%s/Assemble/out/%s.kmer"%(_settings.rundir, _settings.PREFIX), 'r')
-         _settings.kmer = stats.read().strip()
-         stats.close()
+      kmer = getSelectedKmer(_settings)
+      if kmer != 0:
+         _settings.kmer = kmer
+         _autoPickKmer = False
 
 def extractNewblerReads():
    run_process(_settings, "unlink %s/Preprocess/out/all.seq.mates"%(_settings.rundir), "Assemble")
@@ -257,7 +257,11 @@ def SplitAssemblers(input_file_name, output_files):
             run_process(_settings, "rm %s/Assemble/out/tmp.fastq"%(_settings.rundir), "Assemble")
             if int(readLen) > maxK:
                maxK = int(readLen)
-            fileList.write("%s/Preprocess/out/lib%d.fastq\n"%(_settings.rundir, lib.id))
+            if lib.mated:
+               fileList.write("%s/Preprocess/out/lib%d.1.fastq\n"%(_settings.rundir, lib.id))
+               fileList.write("%s/Preprocess/out/lib%d.2.fastq\n"%(_settings.rundir, lib.id))
+            else:
+               fileList.write("%s/Preprocess/out/lib%d.fastq\n"%(_settings.rundir, lib.id))
          fileList.close()
 
          # now we can pick
@@ -274,8 +278,8 @@ def SplitAssemblers(input_file_name, output_files):
                print "*** metAMOS: Selected kmer size %s"%(_settings.kmer)
                stats.write("%s\n"%(_settings.kmer))
             elif "Predicted assembly size:" in line:
-               genomeSize = line.replace("<p><h4>Predicted assembly size:", "").replace("</h4></p>", "").strip()
-               print "*** metAMOS: Estimated genome size %s"%(genomeSize)
+               genomeSize = line.replace("<p><h4>Predicted assembly size:", "").replace("</h4></p>", "").replace("bp", "").strip()
+               print "*** metAMOS: Estimated genome size %s bp"%(genomeSize)
                genome.write("%s\n"%(genomeSize))
          result.close() 
          stats.close()
@@ -284,7 +288,9 @@ def SplitAssemblers(input_file_name, output_files):
          print "Warning: could not auto-pick a kmer, KmerGenie not found. Defaulting to %s"%(_settings.kmer)
 
    for contigs in _asmcontigs:
-      run_process(_settings, "touch %s/Assemble/out/%s.run"%(_settings.rundir, os.path.splitext(contigs)[0]), "Assemble")
+      if len(contigs) != 0:
+         if not os.path.exists("%s/Assemble/out/%s.failed"%(_settings.rundir, os.path.splitext(contigs)[0])) and not os.path.exists("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, os.path.splitext(contigs)[0])):
+            run_process(_settings, "touch %s/Assemble/out/%s.run"%(_settings.rundir, os.path.splitext(contigs)[0]), "Assemble")
 
    if _asm == "none" or _asm == None:
       return 0
@@ -292,7 +298,8 @@ def SplitAssemblers(input_file_name, output_files):
    kmers = set(_settings.kmer.split(","))
    for assembler in assemblers:
       for kmer in kmers:
-         run_process(_settings, "touch %s/Assemble/out/%s.%s.run"%(_settings.rundir, assembler, kmer), "Assemble")
+         if not os.path.exists("%s/Assemble/out/%s.%s.failed"%(_settings.rundir, assembler, kmer)) and not os.path.exists("%s/Assemble/out/%s.%s.asm.contig"%(_settings.rundir, assembler, kmer)):
+            run_process(_settings, "touch %s/Assemble/out/%s.%s.run"%(_settings.rundir, assembler, kmer), "Assemble")
 
 # warning: this is not thread safe so cannot be run in parallel
 @transform(SplitAssemblers, suffix(".run"), ".asm.contig")
@@ -541,16 +548,18 @@ def CheckAsmResults (input_file_names, output_file_name):
                if _settings.VERBOSE:
                   print "*** MetAMOS Warning: %s assembler with kmer %s did not run successfully!"%(assembler, kmer)
                run_process(_settings, "rm %s/Assemble/out/%s.%s.asm.contig"%(_settings.rundir, assembler, kmer), "Assemble")
+               run_process(_settings, "rm %s/Assemble/out/%s.%s.run"%(_settings.rundir, assembler, kmer), "Assemble")
                run_process(_settings, "touch %s/Assemble/out/%s.%s.failed"%(_settings.rundir, assembler, kmer), "Assemble")
             else:
                # remove ambiguity codes
                run_process(_settings, "mv %s/Assemble/out/%s.%s.asm.contig %s/Assemble/out/%s.%s.asm.contigWIUPAC.fa"%(_settings.rundir, assembler, kmer, _settings.rundir, assembler, kmer), "Assemble")
-               run_process(_settings, "java -cp %s RemoveIUPAC %s/Assemble/out/%s.%s.asm.contigWIUPAC.fa >%s/Assemble/out/%s.%s.asm.contig"%(_settings.METAMOS_JAVA, _settings.rundir, assembler, kmer, _settings.rundir, assembler, kmer), "Assembler")
+               run_process(_settings, "java -cp %s RemoveIUPAC %s/Assemble/out/%s.%s.asm.contigWIUPAC.fa >%s/Assemble/out/%s.%s.asm.contig"%(_settings.METAMOS_JAVA, _settings.rundir, assembler, kmer, _settings.rundir, assembler, kmer), "Assemble")
                # split contigs if necessary
                numNs = getCommandOutput("grep NNN %s/Assemble/out/%s.%s.asm.contig |grep -v \">\" |wc -l"%(_settings.rundir, assembler, kmer), True)
                if int(numNs) > 0:
                   run_process(_settings, "mv %s/Assemble/out/%s.%s.asm.contig %s/Assemble/out/%s.%s.asm.contigWNs.fa"%(_settings.rundir, assembler, kmer, _settings.rundir, assembler, kmer), "Assemble")
                   run_process(_settings, "java -cp %s SplitFastaByLetter %s/Assemble/out/%s.%s.asm.contigWNs.fa NNN > %s/Assemble/out/%s.%s.asm.contig"%(_settings.METAMOS_JAVA, _settings.rundir, assembler, kmer, _settings.rundir, assembler, kmer), "Assemble")
+               run_process(_settings, "rm %s/Assemble/out/%s.%s.run"%(_settings.rundir, assembler, kmer), "Assemble")
                successfull+=1
                successAsm+=1
          if successAsm == 0:
@@ -561,8 +570,10 @@ def CheckAsmResults (input_file_names, output_file_name):
          if not os.path.exists("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, contig)) or os.path.getsize("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, contig)) == 0:
             print "*** MetAMOS Warning: %s input contigs could not be processed!"%(contig)
             run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, contig), "Assemble")
+            run_process(_settings, "rm %s/Assemble/out/%s.run"%(_settings.rundir, contig), "Assemble")
             run_process(_settings, "touch %s/Assemble/out/%s.failed"%(_settings.rundir, contig), "Assemble")
          else:
+            run_process(_settings, "rm %s/Assemble/out/%s.run"%(_settings.rundir, contig), "Assemble")
             successfull+=1
    if successfull == 0:
       print "** MetAMOS Error: no selected assembler ran successfully! Please check the logs in %s/Log/ASSEMBLE.log for details."%(_settings.rundir)

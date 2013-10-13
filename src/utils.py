@@ -59,7 +59,7 @@ STEP_NAMES = enum("ASSEMBLE", "ANNOTATE", "SCAFFOLD")
 STEP_OUTPUTS = enum(".asm.contig", ".hits", ".linearize.scaffolds.final")
 INPUT_TYPE = enum("FASTQ", "FASTA", "CONTIGS", "SCAFFOLDS", "ORF_FA", "ORF_AA")
 
-SCORE_TYPE = enum("ALL", "LAP", "ALE", "CGAL", "SNP", "FRCBAM")
+SCORE_TYPE = enum("ALL", "LAP", "ALE", "CGAL", "SNP", "FRCBAM", "ORF", "REAPR")
 SCORE_WEIGHTS = dict()
 
 _failFast = True
@@ -146,6 +146,7 @@ class Settings:
    FRCBAM = ""
    FREEBAYES = ""
    CGAL = ""
+   REAPR = ""
    QUAST = ""
 
    MPI = ""
@@ -292,6 +293,7 @@ class Settings:
       Settings.LAP	     = "%s%sLAP"%(Settings.METAMOSDIR, os.sep)
       Settings.ALE           = "%s%scpp%s%s-%s/ALE/src"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.CGAL          = "%s%scpp%s%s-%s/cgal"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.REAPR          = "%s%scpp%s%s-%s/REAPR"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.FRCBAM        = "%s%scpp%s%s-%s/FRCbam/bin"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.FREEBAYES     = "%s%scpp%s%s-%s/freebayes/bin"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.QUAST         = "%s%squast"%(Settings.METAMOSDIR, os.sep)
@@ -833,6 +835,11 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
     if not os.path.exists(Settings.CGAL + os.sep + "cgal"):
        Settings.CGAL = getFromPath("cgal", "CGAL")
     cgalMD5 = getMD5Sum(Settings.CGAL + os.sep + "cgal")
+
+    Settings.REAPR = "%s%scpp%s%s-%s/REAPR"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+    if not os.path.exists(Settings.REAPR + os.sep + "reapr"):
+       Settings.REAPR = getFromPath("reapr", "REAPR")
+    reaprMD5 = getMD5Sum(Settings.REAPR + os.sep + "reapr")
     
     Settings.FRCBAM = "%s%scpp%s%s-%s/FRCbam/bin"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
     if not os.path.exists(Settings.FRCBAM + os.sep + "FRC"):
@@ -922,11 +929,12 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
     conf.write("REPEATOIRE:\t\t%s\t%s\n"%(Settings.REPEATOIRE, repeatoireMD5))
     conf.write("KRONA:\t\t\t%s\t%s\n"%(Settings.KRONA, kronaMD5))
     conf.write("LAP:\t\t\t%s\t%s\n"%(Settings.LAP, lapMD5))
-    conf.write("ALE:\t\t\t%s\t%s\n"%(Settings.LAP, aleMD5))
-    conf.write("CGAL:\t\t\t%s\t%s\n"%(Settings.LAP, cgalMD5))
-    conf.write("FRCBAM:\t\t\t%s\t%s\n"%(Settings.LAP, frcMD5))
-    conf.write("FREEBAYES:\t\t\t%s\t%s\n"%(Settings.LAP, freebayesMD5))
-    conf.write("QUAST:\t\t\t%s\t%s\n"%(Settings.LAP, quastMD5))
+    conf.write("ALE:\t\t\t%s\t%s\n"%(Settings.ALE, aleMD5))
+    conf.write("CGAL:\t\t\t%s\t%s\n"%(Settings.CGAL, cgalMD5))
+    conf.write("REAPR:\t\t\t%s\t%s\n"%(Settings.REAPR, reaprMD5))
+    conf.write("FRCBAM:\t\t\t%s\t%s\n"%(Settings.FRCBAM, frcMD5))
+    conf.write("FREEBAYES:\t\t\t%s\t%s\n"%(Settings.FREEBAYES, freebayesMD5))
+    conf.write("QUAST:\t\t\t%s\t%s\n"%(Settings.QUAST, quastMD5))
     conf.close()
 
     return Settings

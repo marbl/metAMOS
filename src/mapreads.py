@@ -32,6 +32,7 @@ def init(reads, skipsteps, mapper,savebtidx,ctgbpcov,lowmem):
    _savebtidx = savebtidx
    _ctgbpcov = ctgbpcov
    _lowmem = lowmem
+
 def getMeanSD(libid):
    lmin = sys.maxint
    lmax = 0
@@ -499,15 +500,13 @@ def map2contig():
         contigdict = {}
 
 # warning: this is not thread safe so cannot be run in parallel
-@posttask(touch_file("%s/Logs/mapreads.ok"%(_settings.rundir)))
-@posttask(touch_file("%s/Assemble/out/mapreads.success"%(_settings.rundir)))
 @transform(SplitMappers, suffix(".asm.contig"), ".contig.cvg")
 def MapReads(input,output):
    if "MapReads" in _skipsteps or "mapreads" in _skipsteps:
       run_process(_settings, "touch %s/Logs/mapreads.skip"%(_settings.rundir), "MapReads")
       return 0
 
-   if os.path.exists("%s/Assemble/out/mapreads.ok"%(_settings.rundir)):
+   if os.path.exists("%s/Logs/mapreads.ok"%(_settings.rundir)):
       return 0
 
    originalPrefix = _settings.PREFIX
@@ -522,3 +521,26 @@ def MapReads(input,output):
    #stop here, for now
    #sys.exit(0)
    #check if sucessfully completed   
+   _settings.PREFIX = originalPrefix
+
+@posttask(touch_file("%s/Logs/mapreads.ok"%(_settings.rundir)))
+@posttask(touch_file("%s/Assemble/out/mapreads.success"%(_settings.rundir)))
+@merge(MapReads, ["%s/Logs/mapreads.ok"%(_settings.rundir)])
+def CheckMapResults (input_file_names, output_file_name):
+   if "MapReads" in _skipsteps or "mapreads" in _skipsteps:
+      run_process(_settings, "touch %s/Logs/mapreads.skip"%(_settings.rundir), "MapReads")
+      return 0
+   else:
+      i = 0
+      for inf in input_file_names:
+         if not os.path.exists(inf):
+            print "** metAMOS Error: could not align reads to assembly %s"%(inf)
+            raise(JobSignalledBreak)
+
+@follows(CheckMapResults)
+@split("%s/Assemble/out/*.contig.cvg"%(_settings.rundir), "%s/Assemble/out/*.contig.cvg"%(_settings.rundir))
+def SplitForORFs(input_file_name, output_files):
+   if "MapReads" in _skipsteps or "mapreads" in _skipsteps:
+      run_process(_settings, "touch %s/Logs/mapreads.skip"%(_settings.rundir), "MapReads")
+      return 0
+   pass

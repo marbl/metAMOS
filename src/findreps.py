@@ -4,7 +4,7 @@ import os, sys, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser
 from operator import itemgetter
 
 from utils import *
-from findorfs import FindORFS
+from validate import Validate
 
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
@@ -101,7 +101,7 @@ def getContigRepeats(contigFile,outFile):
         reppos.append([spos,epos])
 
 
-@follows(FindORFS)
+@follows(Validate)
 @posttask(touch_file("%s/Logs/findrepeats.ok"%(_settings.rundir)))
 @files("%s/FindRepeats/in/%s.fna"%(_settings.rundir,_settings.PREFIX),"%s/FindRepeats/out/%s.repeats"%(_settings.rundir,_settings.PREFIX))
 def FindRepeats(input,output):

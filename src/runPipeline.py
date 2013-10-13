@@ -294,7 +294,7 @@ supported_aligners = ["mgcat"]
 supported_classifiers = ["fcp","phylosift","phmmer","blast",\
                              "metaphyler", "phymm"]
 supported_classifiers.extend(generic.getSupportedList(utils.INITIAL_UTILS, utils.STEP_NAMES.ANNOTATE))
-supported_validators = ["lap", "ale", "quast", "frcbam", "freebayes", "cgal"]
+supported_validators = ["reapr", "orf", "lap", "ale", "quast", "frcbam", "freebayes", "cgal"]
 supported_fannotate = ["blast"]
 supported_scaffolders = ["bambus2"]
 supported_programs["findorfs"] = supported_genecallers
@@ -792,6 +792,12 @@ if "Abundance" in forcesteps:
 if "Annotate" in forcesteps:
    utils.run_process(settings, \
           "rm %s/Annotate/out/%s.hits"%(settings.rundir,settings.PREFIX),"RunPipeline")
+
+if "Validate" in forcesteps:
+   utils.run_process(settings, \
+          "rm %s/Log/validate.ok"%(settings.rundir), "RunPipeline")
+   utils.run_process(settings, \
+          "rm %s/Validate/out/%s.lap"%(settings.rundir, settings.PREFIX), "RunPipeline")
 
 if "FINDORFS" in forcesteps or "findorfs" in forcesteps or "FindORFS" in forcesteps:
    utils.run_process(settings, \

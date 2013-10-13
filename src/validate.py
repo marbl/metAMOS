@@ -129,7 +129,7 @@ def runCGAL(inputsam, prefix, assembly, min, max, genomeSize):
 
 def runORF(inputsam, prefix, assembly, min, max, genomeSize):
    orf_score = getCommandOutput("grep -c '>' %s |awk -F \":\" '{print $NF}'"%(assembly.replace(".asm.contig", ".faa")), False)
-   return float(orf_score)
+   return orf_score
 
 def runREAPR(pairedFiles, prefix, assembly, min, max, genomeSize):
    if not os.path.exists("%s/reapr"%(_settings.REAPR)):
@@ -151,7 +151,7 @@ def runREAPR(pairedFiles, prefix, assembly, min, max, genomeSize):
       reapr_score = getCommandOutput("cat %s/Validate/out/%s.reapr/05.summary.report.tsv |grep -v \"#\" | awk -F \"\t\" '{printf(\"%%.2f\",($38/$2)*100)}'"%(_settings.rundir, prefix), False)
    else:
       reapr_score = minScore()
-   return float(reapr_score)
+   return reapr_score
 
 @posttask(touch_file("%s/Logs/validate.ok"%(_settings.rundir)))
 @merge(FindORFS, ["%s/Logs/validate.ok"%(_settings.rundir)])

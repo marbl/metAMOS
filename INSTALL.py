@@ -1077,9 +1077,18 @@ if "isolate" in enabledWorkflows or manual:
                    os.system("mv %s ./Utilities/cpp%s%s-%s%sREAPR/lib/"%(file, os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("rm -rf file.tar.gz")
              os.system("rm -rf File-Copy-Link-0.113")
-             os.environ["PERL5LIB"]+="%s/Utilities/cpp%s%s-%s%sREAPR/lib/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
+             libUpdate = "%s/Utilities/cpp%s%s-%s%sREAPR/lib/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
+             if "PERL5LIB" in os.environ:
+                libUpdate = "%s%s%s"%(os.environ["PERL5LIB"], os.pathsep, libUpdate)
+             os.environ["PERL5LIB"]=libUpdate
+
+          if OSTYPE == "Darwin":
+             os.chdir("./Utilities/cpp/%s%s-%s%sREAPR/third_party/snpomatic/src"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("cp snpomatic.h snpomatic.original") 
+             os.system("cat snpomatic.original |awk '{if (match($0, \"#include <algorithm>\")) { print $0; print \"#define ulong u_long\"; } else { print $0} }' > snpomatic.h")
+             os.chdir("%s"%(METAMOS_ROOT))
           os.chdir("./Utilities/cpp/%s%s-%s%sREAPR"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-          os.system("sh install.sh")
+          os.system("sh install.sh force")
           os.chdir("%s"%(METAMOS_ROOT))
 
           if os.path.exists("./Utilities/cpp%s%s-%s%sREAPR/lib"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
@@ -1091,7 +1100,7 @@ if "isolate" in enabledWorkflows or manual:
           # REAPR has a bug where fasta headers with commas are not properly fixed, patch the bug
           os.chdir("./Utilities/cpp%s%s-%s%sREAPR/src"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
           os.system("cp task_facheck.pl task_facheck.pl.original")
-          os.system("cat task_facheck.pl.original |awk -v comma=\"'\"  '{if (match($0, \"new_id =~\")) { print \"$new_id =~ s/[;|:,\"comma\"\\+\\-\\s\\(\\)\\{\\}\\[\\]]/_/g;\"; } else { print $0}}' > task_facheck.pl")
+          os.system("cat task_facheck.pl.original |awk -v comma=\"'\"  '{if (match($0, \"new_id =~\")) { print \"$new_id =~ s/[;\"comma\"|:,\\\\+\\\\-\\\\s\\\\(\\\\)\\\\{\\\\}\\\\[\\\\]]/_/g;\"; } else { print $0}}' > task_facheck.pl")
           os.chdir("%s"%(METAMOS_ROOT))
           os.system("rm -rf reapr.tar.gz")
     

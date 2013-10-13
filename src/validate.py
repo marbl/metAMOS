@@ -138,13 +138,17 @@ def runREAPR(pairedFiles, prefix, assembly, min, max, genomeSize):
    # reapr has many reasons for failing, including inconsistent line lengths in fasta file or insufficient sequences mapped to estimate insert sizes
    # thus, if it fails, return min score
    setFailFast(False)
-   run_process("%s/reapr facheck %s %s/Validate/out/%s.reapr.fa"%(_settings.REAPR, assembly, _settings.rundir, prefix), "Validate")
-   run_process("%s/reapr smaltmap %s/Validate/out/%s.reapr.fa %s %s/Validate/out/%s.reapr.bam"%(_settings.REAPR, _settings.rundir, prefix, pairedFiles, _settings.rundir, prefix), "Validate")
-   run_process("%s/reapr pipeline %s/Validate/out/%s.reapr.fa %s/Validate/out/%s.reapr.bam %s/Validate/out/%s.reapr"%(_settings.REAPR, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix), "Validate")
+   libUpdate = "%s/../lib/"%(_settings.REAPR)
+   if "PERL5LIB" in os.environ:
+      libUpdate = "%s%s%s"%(os.environ["PERL5LIB"], os.pathsep, libUpdate)
+   os.environ["PERL5LIB"]=libUpdate
+   run_process(_settings, "%s/reapr facheck %s %s/Validate/out/%s.reapr"%(_settings.REAPR, assembly, _settings.rundir, prefix), "Validate")
+   run_process(_settings, "%s/reapr smaltmap %s/Validate/out/%s.reapr.fa %s %s/Validate/out/%s.reapr.bam"%(_settings.REAPR, _settings.rundir, prefix, pairedFiles, _settings.rundir, prefix), "Validate")
+   run_process(_settings, "%s/reapr pipeline %s/Validate/out/%s.reapr.fa %s/Validate/out/%s.reapr.bam %s/Validate/out/%s.reapr"%(_settings.REAPR, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix), "Validate")
    setFailFast(True)
 
    if os.path.exists("%s/Validate/out/%s.reapr/05.summary.report.tsv"%(_settings.rundir, prefix)):
-      reapr_score = getCommandOutput("cat %s/Validate/out/%s.reapr/05.summary.report.tsv |awk -F \"\t\" '{print $38}'"%(_settings.rundir, prefix), False)
+      reapr_score = getCommandOutput("cat %s/Validate/out/%s.reapr/05.summary.report.tsv |grep -v \"#\" | awk -F \"\t\" '{printf(\"%%.2f\",($38/$2)*100)}'"%(_settings.rundir, prefix), False)
    else:
       reapr_score = minScore()
    return float(reapr_score)

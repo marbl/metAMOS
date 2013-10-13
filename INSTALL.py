@@ -1100,7 +1100,7 @@ if "isolate" in enabledWorkflows or manual:
           # REAPR has a bug where fasta headers with commas are not properly fixed, patch the bug
           os.chdir("./Utilities/cpp%s%s-%s%sREAPR/src"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
           os.system("cp task_facheck.pl task_facheck.pl.original")
-          os.system("cat task_facheck.pl.original |awk -v comma=\"'\"  '{if (match($0, \"new_id =~\")) { print \"$new_id =~ s/[;\"comma\"|:,\\\\+\\\\-\\\\s\\\\(\\\\)\\\\{\\\\}\\\\[\\\\]]/_/g;\"; } else { print $0}}' > task_facheck.pl")
+          os.system("cat task_facheck.pl.original |awk -v quote=\"'\"  '{if (match($0, \"new_id =~\")) { print \"    $new_id =~ s/[;\"quote\"|:,\\\\+\\\\-\\\\s\\\\(\\\\)\\\\{\\\\}\\\\[\\\\]]/_/g;\"; } else { print $0}}' > task_facheck.pl")
           os.chdir("%s"%(METAMOS_ROOT))
           os.system("rm -rf reapr.tar.gz")
     

@@ -354,7 +354,6 @@ def Validate (input_file_names, output_file_name):
                      scores[SCORE_TYPE.REAPR] = runREAPR(pairedFiles, assembler, assembly, pairedMin, pairedMax, genomeSize)
                   else:
                      scores[SCORE_TYPE.REAPR] = minScore()
-                  print "Reapr score is %s"%(scores[SCORE_TYPE.REAPR])
                else:
                   print "Unknown validator %s requested, skipping"%(validator.lower())
 

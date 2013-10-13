@@ -194,6 +194,10 @@ def printConfiguration(fileName=None):
         configurationText.append("[" + type + "]\n")
         progs = set(selected_programs[type].split(","))
         for prog in progs:
+           # special case for validation, orf is a reference to selected orf finder
+           if type == "validate" and prog == "orf":
+              prog = selected_programs["findorfs"]
+
            if prog == None or prog == "none":
               configurationText.append("None\n\n")
            else:

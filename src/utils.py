@@ -408,14 +408,16 @@ class readLib:
         pass
 
 def getDefaultWeight(sa):
-   return 0.33 if sa == SCORE_TYPE.LAP or sa == SCORE_TYPE.ALE or sa == SCORE_TYPE.CGAL else 1
+   return 1 if sa == SCORE_TYPE.LAP or sa == SCORE_TYPE.ALE or sa == SCORE_TYPE.CGAL else 1
 
 def initValidationScores(weights = dict()):
    for score in SCORE_TYPE.reverse_mapping.keys():
       if score in weights:
          SCORE_WEIGHTS[score] = weights[score]
-      else:
+      elif len(weights) == 0:
          SCORE_WEIGHTS[score] = getDefaultWeight(score)
+      else:
+         SCORE_WEIGHTS[score] = 0
 
 def updateConfigCommands(infileName, opts):
    # build the list of commands

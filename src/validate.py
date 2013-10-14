@@ -437,10 +437,12 @@ def Validate (input_file_names, output_file_name):
          try:
             weight = SCORE_WEIGHTS[type]
          except KeyError:
-            print "Uknown Type %s using weight %d"%(SCORE_TYPE.reverse_mapping[type], weight)
+            print "Uknown Type %s using weight %f"%(SCORE_TYPE.reverse_mapping[type], weight)
             weight = 1
 
          # finally vote for this assembler
+         if _settings.VERBOSE:
+            print "*** metAMOS: Score %s voted for assembler %s, weight %f"%(SCORE_TYPE.reverse_mapping[type], bestAssemblers[type], weight) 
          assemblerVotes[bestAssemblers[type]] += weight
          assemblyVotes[bestAssemblies[type]] += weight
      

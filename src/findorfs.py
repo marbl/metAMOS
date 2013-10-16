@@ -16,6 +16,11 @@ _orf = None
 _min_ctg_len = 300
 _min_ctg_cvg = 3
 _read_orfs = False
+_run_fast = True
+
+def setRunFast(fast):
+   global _run_fast
+   _run_fast = fast
 
 def init(reads, skipsteps, orf, min_ctg_len, min_ctg_cvg,read_orfs):
    global _readlibs
@@ -323,7 +328,7 @@ def findFastaORFs(orf, contigs, outputFNA, outputFAA, outputCVG, outputMAP, min_
          prokkaOptions = prokkaOptions.replace("--gram", "")
 
       run_process(_settings, "rm -rf %s/FindORFS/out/%s.prokka"%(_settings.rundir, _settings.PREFIX))
-      run_process(_settings, "%s/prokka --outdir %s/FindORFS/out/%s.prokka --prefix %s --force %s"%(_settings.PROKKA, _settings.rundir, _settings.PREFIX, _settings.PREFIX, contigs), "FindORFS")
+      run_process(_settings, "%s/prokka %s --outdir %s/FindORFS/out/%s.prokka --prefix %s --force %s"%(_settings.PROKKA,"--fast" if _run_fast else "",  _settings.rundir, _settings.PREFIX, _settings.PREFIX, contigs), "FindORFS")
       parse_prokka("%s/FindORFS/out/prokka/%s.gff"%(_settings.rundir,_settings.PREFIX), 0, "FindORFS", min_len, min_cvg)
       run_process(_settings, "ln %s/FindORFS/out/%s.prokka/%s.ffn %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.PREFIX, _settings.rundir, outputFNA), "FindORFS")
       run_process(_settings, "ln %s/FindORFS/out/%s.prokka/%s.faa %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.PREFIX, _settings.rundir, outputFAA), "FindORFS")
@@ -390,6 +395,7 @@ def FindORFS(input,output):
    run_process(_settings, "cat %s/FindORFS/out/%s*.gene.map > %s/FindORFS/out/%s.gene.map"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "FindORFS")
 
    run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/Assemble/out/%s.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "FindORFS")
+   run_process(_settings, "ln %s/FindORFS/out/%s.fna %s/Assemble/out/%s.fna"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "FindORFS")
 
    _settings.PREFIX = originalPrefix
 

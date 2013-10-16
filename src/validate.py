@@ -4,7 +4,7 @@ import os, sys, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser
 from operator import itemgetter
 
 from utils import *
-from findorfs import FindORFS
+from findorfs import FindORFS,setRunFast
 from mapreads import getMeanSD
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
@@ -128,7 +128,7 @@ def runCGAL(inputsam, prefix, assembly, min, max, genomeSize):
    return cgal_score
 
 def runORF(inputsam, prefix, assembly, min, max, genomeSize):
-   orf_score = getCommandOutput("grep -c '>' %s |awk -F \":\" '{print $NF}'"%(assembly.replace(".asm.contig", ".faa")), False)
+   orf_score = getCommandOutput("grep -c '>' %s |awk -F \":\" '{print $NF}'"%(assembly.replace(".asm.contig", ".fna")), False)
    return orf_score
 
 def runREAPR(pairedFiles, prefix, assembly, min, max, genomeSize):
@@ -138,13 +138,28 @@ def runREAPR(pairedFiles, prefix, assembly, min, max, genomeSize):
    # reapr has many reasons for failing, including inconsistent line lengths in fasta file or insufficient sequences mapped to estimate insert sizes
    # thus, if it fails, return min score
    setFailFast(False)
-   libUpdate = "%s/../lib/"%(_settings.REAPR)
+   libUpdate = "%s/lib/"%(_settings.REAPR)
    if "PERL5LIB" in os.environ:
       libUpdate = "%s%s%s"%(os.environ["PERL5LIB"], os.pathsep, libUpdate)
    os.environ["PERL5LIB"]=libUpdate
    run_process(_settings, "%s/reapr facheck %s %s/Validate/out/%s.reapr"%(_settings.REAPR, assembly, _settings.rundir, prefix), "Validate")
-   run_process(_settings, "%s/reapr smaltmap %s/Validate/out/%s.reapr.fa %s %s/Validate/out/%s.reapr.bam"%(_settings.REAPR, _settings.rundir, prefix, pairedFiles, _settings.rundir, prefix), "Validate")
-   run_process(_settings, "%s/reapr pipeline %s/Validate/out/%s.reapr.fa %s/Validate/out/%s.reapr.bam %s/Validate/out/%s.reapr"%(_settings.REAPR, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix), "Validate")
+   # does not support multiple threads so runs slowly even for bacterial genomes, use same parameters for bowtie2
+   #run_process(_settings, "%s/reapr smaltmap -n %d %s/Validate/out/%s.reapr.fa %s %s/Validate/out/%s.reapr.bam"%(_settings.REAPR, _settings.threads, _settings.rundir, prefix, pairedFiles, _settings.rundir, prefix), "Validate")
+
+   paired = pairedFiles.split()
+   run_process(_settings, "%s/bowtie2-build %s/Validate/out/%s.reapr.fa %s/Validate/out/%s.reapr.index"%(_settings.BOWTIE2, _settings.rundir, prefix, _settings.rundir, prefix), "Validate")
+   run_process(_settings, "%s/bowtie2 -a -x %s/Validate/out/%s.reapr.index -1 %s -2 %s -p %d --very-sensitive -k 10000 --reorder --no-mixed --fr -I %s -X %s -S %s/Validate/out/%s.reapr.sam"%(_settings.BOWTIE2, _settings.rundir, prefix, paired[0], paired[1], _settings.threads, min, max, _settings.rundir, prefix), "Validate")
+   convertSamToBAM("%s/Validate/out/%s.reapr.sam"%(_settings.rundir, prefix))
+
+   run_process(_settings, "%s/reapr perfectmap %s/Validate/out/%s.reapr.fa %s %s %s/Validate/out/%s.reapr.perfect"%(_settings.REAPR, _settings.rundir, prefix, pairedFiles, (min+max)/2, _settings.rundir, prefix), "Validate")
+
+   # finally run reapr
+   perfectMapCount = getCommandOutput("cat %s/Validate/out/%s.reapr.perfect.hist | awk -v SUM=0 '{if ($1 == 0) { ZERO = $NF; } else { SUM+=$NF;} } END {print ZERO/SUM*100}'"%(_settings.rundir, prefix), False)
+
+   if perfectMapCount != "" and float(perfectMapCount) < 50:
+      run_process(_settings, "%s/reapr pipeline %s/Validate/out/%s.reapr.fa %s/Validate/out/%s.reapr.sam.sorted.bam %s/Validate/out/%s.reapr %s/Validate/out/%s.reapr.perfect"%(_settings.REAPR, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix), "Validate")
+      run_process(_settings, "%s/reapr pipeline %s/Validate/out/%s.reapr.fa %s/Validate/out/%s.reapr.sam.sorted.bam %s/Validate/out/%s.reapr"%(_settings.REAPR, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix), "Validate")
+
    setFailFast(True)
 
    if os.path.exists("%s/Validate/out/%s.reapr/05.summary.report.tsv"%(_settings.rundir, prefix)):
@@ -491,17 +506,24 @@ def Validate (input_file_names, output_file_name):
    run_process(_settings, "ln %s/Assemble/out/%s.contig.cvg %s/Assemble/out/%s.contig.cvg"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
    if os.path.exists("%s/Assemble/out/%s.afg"%(_settings.rundir, bestAssembler)):
       run_process(_settings, "ln %s/Assemble/out/%s.afg %s/Assemble/out/%s.afg"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/Assemble/out/%s.faa"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   run_process(_settings, "ln %s/FindORFS/out/%s.fna %s/FindRepeats/in/%s.fna"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/FindRepeats/in/%s.faa"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   run_process(_settings, "ln %s/FindORFS/out/%s.fna %s/Annotate/in/%s.fna"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/Annotate/in/%s.faa"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   run_process(_settings, "ln %s/FindORFS/out/%s.fna %s/FindORFS/out/%s.fna"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/FindORFS/out/%s.faa"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   run_process(_settings, "ln %s/FindORFS/out/%s.gene.cvg %s/FindORFS/out/%s.gene.cvg"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   run_process(_settings, "ln %s/FindORFS/out/%s.gene.map %s/FindORFS/out/%s.gene.map"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   run_process(_settings, "ln -s %s/FindORFS/out/%s.fna.bnk %s/FindORFS/out/%s.fna.bnk"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   run_process(_settings, "ln -s %s/FindORFS/out/%s.faa.bnk %s/FindORFS/out/%s.faa.bnk"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
+
+   # rather than linking orfs, we re-run orf finding without the --fast option
+   setRunFast(False)
+   run_process(_settings, "rm %s/Logs/findorfs.ok"%(_settings.rundir), "Validate")
+   FindORFS("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, _settings.PREFIX), "%s/Assemble/out/%s.faa"%(_settings.rundir, _settings.PREFIX))
+   setRunFast(True)
+   run_process(_settings, "touch %s/Logs/findorfs.ok"%(_settings.rundir), "Validate")
+   run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/Assemble/out/%s.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
+   run_process(_settings, "ln %s/FindORFS/out/%s.fna %s/FindRepeats/in/%s.fna"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
+   run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/FindRepeats/in/%s.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
+   run_process(_settings, "ln %s/FindORFS/out/%s.fna %s/Annotate/in/%s.fna"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
+   run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/Annotate/in/%s.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
+   #run_process(_settings, "ln %s/FindORFS/out/%s.fna %s/FindORFS/out/%s.fna"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
+   #run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/FindORFS/out/%s.faa"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
+   #run_process(_settings, "ln %s/FindORFS/out/%s.gene.cvg %s/FindORFS/out/%s.gene.cvg"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
+   #run_process(_settings, "ln %s/FindORFS/out/%s.gene.map %s/FindORFS/out/%s.gene.map"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
+   #run_process(_settings, "ln -s %s/FindORFS/out/%s.fna.bnk %s/FindORFS/out/%s.fna.bnk"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
+   #run_process(_settings, "ln -s %s/FindORFS/out/%s.faa.bnk %s/FindORFS/out/%s.faa.bnk"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
 
    for lib in _readlibs: 
       run_process(_settings, "ln %s/Assemble/out/%s.lib%d.badmates %s/Assemble/out/%s.lib%d.badmates"%(_settings.rundir, bestAssembler, lib.id, _settings.rundir, _settings.PREFIX, lib.id), "Validate")

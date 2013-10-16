@@ -154,7 +154,7 @@ def runREAPR(pairedFiles, prefix, assembly, min, max, genomeSize):
    run_process(_settings, "%s/reapr perfectmap %s/Validate/out/%s.reapr.fa %s %s %s/Validate/out/%s.reapr.perfect"%(_settings.REAPR, _settings.rundir, prefix, pairedFiles, (min+max)/2, _settings.rundir, prefix), "Validate")
 
    # finally run reapr
-   perfectMapCount = getCommandOutput("cat %s/Validate/out/%s.reapr.perfect.hist | awk -v SUM=0 '{if ($1 == 0) { ZERO = $NF; } else { SUM+=$NF;} } END {print ZERO/SUM*100}'"%(_settings.rundir, prefix), False)
+   perfectMapCount = getCommandOutput("cat %s/Validate/out/%s.reapr.perfect.hist | awk -v SUM=0 '{if ($1 == 0) { ZERO = $NF; }  SUM+=$NF; } END {print ZERO/SUM*100}'"%(_settings.rundir, prefix), False)
 
    if perfectMapCount != "" and float(perfectMapCount) < 50:
       run_process(_settings, "%s/reapr pipeline %s/Validate/out/%s.reapr.fa %s/Validate/out/%s.reapr.sam.sorted.bam %s/Validate/out/%s.reapr %s/Validate/out/%s.reapr.perfect"%(_settings.REAPR, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix), "Validate")

@@ -148,7 +148,7 @@ def runREAPR(pairedFiles, prefix, assembly, min, max, genomeSize):
    commandList = open("%s/Validate/out/%s.reapr.cmds"%(_settings.rundir, prefix), 'r') 
    for cmd in commandList.xreadlines():
       if "smalt map" in cmd and _settings.OSTYPE != "Darwin":
-         cmd = cmd.replace("map", "map -n %d"%(_settings.threads))
+         cmd = cmd.replace("smalt map", "smalt map -n %d"%(_settings.threads))
       run_process(_settings, "%s"%(cmd), "Validate")
    commandList.close()
 

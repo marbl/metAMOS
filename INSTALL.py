@@ -1087,6 +1087,20 @@ if "isolate" in enabledWorkflows or manual:
              os.system("cp snpomatic.h snpomatic.original") 
              os.system("cat snpomatic.original |awk '{if (match($0, \"#include <algorithm>\")) { print $0; print \"#define ulong u_long\"; } else { print $0} }' > snpomatic.h")
              os.chdir("%s"%(METAMOS_ROOT))
+
+             # also need smalt, the reapr distro comes with linux 64 bit only
+             os.chdir("./Utilities/cpp/%s%s-%s%sREAPR/third_party"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("curl -L http://sourceforge.net/projects/smalt/files/smalt-0.7.5.tar.gz -o smalt.tar.gz")
+             os.system("tar xvzf smalt.tar.gz")
+             os.chdir("./smalt-0.7.5")
+             os.system("./configure --prefix=`pwd`/build")
+             os.system("make install")
+             os.chdir("..")
+             os.system("rm smalt_x86_64")
+             os.system("rm -rf smalt.tar.gz")
+             os.system("ln -s smalt-0.7.5/build/bin/smalt smalt_x86_64")
+             os.chdir("%s"%(METAMOS_ROOT))
+              
           os.chdir("./Utilities/cpp/%s%s-%s%sREAPR"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
           os.system("sh install.sh force")
           os.chdir("%s"%(METAMOS_ROOT))

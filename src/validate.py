@@ -143,13 +143,14 @@ def runREAPR(pairedFiles, prefix, assembly, min, max, genomeSize):
       libUpdate = "%s%s%s"%(os.environ["PERL5LIB"], os.pathsep, libUpdate)
    os.environ["PERL5LIB"]=libUpdate
    run_process(_settings, "%s/reapr facheck %s %s/Validate/out/%s.reapr"%(_settings.REAPR, assembly, _settings.rundir, prefix), "Validate")
-   # does not support multiple threads so runs slowly even for bacterial genomes, use same parameters for bowtie2
-   #run_process(_settings, "%s/reapr smaltmap -n %d %s/Validate/out/%s.reapr.fa %s %s/Validate/out/%s.reapr.bam"%(_settings.REAPR, _settings.threads, _settings.rundir, prefix, pairedFiles, _settings.rundir, prefix), "Validate")
-
-   paired = pairedFiles.split()
-   run_process(_settings, "%s/bowtie2-build %s/Validate/out/%s.reapr.fa %s/Validate/out/%s.reapr.index"%(_settings.BOWTIE2, _settings.rundir, prefix, _settings.rundir, prefix), "Validate")
-   run_process(_settings, "%s/bowtie2 -a -x %s/Validate/out/%s.reapr.index -1 %s -2 %s -p %d --very-sensitive -k 10000 --reorder --no-mixed --fr -I %s -X %s -S %s/Validate/out/%s.reapr.sam"%(_settings.BOWTIE2, _settings.rundir, prefix, paired[0], paired[1], _settings.threads, min, max, _settings.rundir, prefix), "Validate")
-   convertSamToBAM("%s/Validate/out/%s.reapr.sam"%(_settings.rundir, prefix))
+   # does not support multiple threads so runs slowly even for bacterial genomes, run in parallel manually
+   run_process(_settings, "%s/reapr smaltmap -x %s/Validate/out/%s.reapr.fa %s %s/Validate/out/%s.reapr.bam > %s/Validate/out/%s.reapr.cmds"%(_settings.REAPR, _settings.rundir, prefix, pairedFiles, _settings.rundir, prefix, _settings.rundir, prefix), "Validate")
+   commandList = open("%s/Validate/out/%s.reapr.cmds"%(_settings.rundir, prefix), 'r') 
+   for cmd in commandList.xreadlines():
+      if "smalt map" in cmd and _settings.OSTYPE != "Darwin":
+         cmd = cmd.replace("map", "map -n %d"%(_settings.threads))
+      run_process(_settings, "%s"%(cmd), "Validate")
+   commandList.close()
 
    run_process(_settings, "%s/reapr perfectmap %s/Validate/out/%s.reapr.fa %s %s %s/Validate/out/%s.reapr.perfect"%(_settings.REAPR, _settings.rundir, prefix, pairedFiles, (min+max)/2, _settings.rundir, prefix), "Validate")
 
@@ -157,7 +158,8 @@ def runREAPR(pairedFiles, prefix, assembly, min, max, genomeSize):
    perfectMapCount = getCommandOutput("cat %s/Validate/out/%s.reapr.perfect.hist | awk -v SUM=0 '{if ($1 == 0) { ZERO = $NF; }  SUM+=$NF; } END {print ZERO/SUM*100}'"%(_settings.rundir, prefix), False)
 
    if perfectMapCount != "" and float(perfectMapCount) < 50:
-      run_process(_settings, "%s/reapr pipeline %s/Validate/out/%s.reapr.fa %s/Validate/out/%s.reapr.sam.sorted.bam %s/Validate/out/%s.reapr %s/Validate/out/%s.reapr.perfect"%(_settings.REAPR, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix), "Validate")
+      run_process(_settings, "%s/reapr pipeline %s/Validate/out/%s.reapr.fa %s/Validate/out/%s.reapr.bam %s/Validate/out/%s.reapr %s/Validate/out/%s.reapr.perfect"%(_settings.REAPR, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix), "Validate")
+   else:
       run_process(_settings, "%s/reapr pipeline %s/Validate/out/%s.reapr.fa %s/Validate/out/%s.reapr.sam.sorted.bam %s/Validate/out/%s.reapr"%(_settings.REAPR, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix), "Validate")
 
    setFailFast(True)

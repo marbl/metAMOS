@@ -11,13 +11,14 @@ from ruffus import *
 
 import generic
 
-CGAL_NUM_ALIGN = 100
+CGAL_NUM_ALIGN = 500
 
 _readlibs = []
 _skipsteps = []
 _settings = Settings()
 _scores = None
 _validators = []
+_tieBreakerType = SCORE_TYPE.LAP
 
 def init(reads, skipsteps, validators, scoreType):
    global _readlibs
@@ -55,6 +56,8 @@ def convertSamToBAM(inputsam):
    return getBAMMapped("%s.sorted.bam"%(inputsam))
 
 def runQUAST(asmNames, asmFiles, min, max, genomeSize, reference):
+   setFailFast(False)
+
    if not os.path.exists("%s/metaquast.py"%(_settings.QUAST)):
       return None
    if not os.path.exists(os.path.abspath(reference)):
@@ -66,6 +69,7 @@ def runQUAST(asmNames, asmFiles, min, max, genomeSize, reference):
    #run_process(_settings, "ln %s %s/Validate/out/%s.ref.fasta"%(os.path.abspath(reference), _settings.rundir, _settings.PREFIX), "Validate")
    run_process(_settings, "%s/metaquast.py --est-ref-size %s -o %s/Validate/out/quast -R %s/Validate/out/%s.ref.fasta -T %d -l \"%s\" %s"%(_settings.QUAST, genomeSize, _settings.rundir, _settings.rundir, _settings.PREFIX, _settings.threads, asmNames, asmFiles), "Validate")
 
+   setFailFast(True)
    return 0
 
 def runSNP(inputsam, prefix, assembly, min, max, genomeSize):
@@ -178,6 +182,8 @@ def Validate (input_file_names, output_file_name):
    bestAssemblies = dict()
    bestAssembler = ""
    bestAssembly = ""
+
+   tieBreakingScores = dict()
 
    selectedAsm = open("%s/Validate/out/%s.asm.selected"%(_settings.rundir, _settings.PREFIX), 'w')
    selectedReferences = open("%s/Validate/out/%s.ref.selected"%(_settings.rundir, _settings.PREFIX), 'w')
@@ -375,6 +381,7 @@ def Validate (input_file_names, output_file_name):
                   print "Unknown validator %s requested, skipping"%(validator.lower())
 
          debugString = "*** metAMOS assembler %s scores: "%(assembler)
+
          for type in scores.keys():
             outputScore = scores[type]
             if scores[type] != None and scores[type] == minScore():
@@ -391,10 +398,17 @@ def Validate (input_file_names, output_file_name):
                failedOutput = "%s\tNone"%(failedOutput)
                header = "%s\t%s"%(header, SCORE_TYPE.reverse_mapping[type])
 
-            if scores[type] == None:
+            # if a validator failed to run, skip it and dont record scores
+            if scores[type] == None or scores[type] == minScore():
                continue
 
+            # record for later if this is the tiebreaker
+            if type == _tieBreakerType:
+               tieBreakingScores[assembler] = float(scores[type])
+
             debugString = "%s %s:%s"%(debugString, SCORE_TYPE.reverse_mapping[type], scores[type])
+
+            # finally record the best assembly for this type 
             if type not in bestScores or float(scores[type]) > bestScores[type]:
                bestScores[type] = float(scores[type])
                bestAssemblers[type] = assembler
@@ -428,6 +442,7 @@ def Validate (input_file_names, output_file_name):
       assemblyVotes = dict()
       currMaxVote = 0
       processedType = dict()
+      ties = dict()
 
       # for each score, we will take the best assembly and vote for it, the one with the most votes after all scores wins
       for type in _scores:
@@ -438,8 +453,8 @@ def Validate (input_file_names, output_file_name):
          if type == SCORE_TYPE.ALL:
             continue
          if type not in bestAssemblers.keys() or bestAssemblers[type] == None or bestAssemblers[type] == minScore():
-            print "Warning: selected score %s was not available, defaulting to using LAP"%(SCORE_TYPE.reverse_mapping[type].upper())
-            type = SCORE_TYPE.LAP
+            print "Warning: selected score %s was not available, skipping it"%(SCORE_TYPE.reverse_mapping[type].upper())
+            continue
          if type in processedType.keys():
             continue
          processedType[type] = True
@@ -465,10 +480,25 @@ def Validate (input_file_names, output_file_name):
      
       # now that everyone has voted, the winner is the asm with the most weighted votes
       for assembler in assemblerVotes:
-         if assemblerVotes[assembler] > currMaxVote:
+         if float(assemblerVotes[assembler]) > currMaxVote:
             bestAssembler = assembler
-            currMaxVote = assemblerVotes[assembler]
+            currMaxVote = float(assemblerVotes[assembler])
 
+      # check for ties
+      for assembler in assemblerVotes:
+         if assemblerVotes[assembler] == currMaxVote:
+            ties[assembler] = tieBreakingScores[assembler]
+      if len(ties) > 1:
+         if _settings.VERBOSE:
+            print "*** metAMOS: Assemblers %s are tied after votes, tie breaking using %s."%(",".join(ties), SCORE_TYPE.reverse_mapping[_tieBreakerType])
+         currMaxVote = None
+         for asm in ties:            
+            if currMaxVote == None or float(ties[asm]) > float(currMaxVote):
+               bestAssembler = asm
+               currMaxVote = float(ties[asm])
+         if _settings.VERBOSE:
+            print "*** metAMOS: Tie broken in favor of %s"%(bestAssembler)
+            
       # sanity check, ensure we picked the same assembly file as assembler. This must always be true as we vote for both at the same time
       currMaxVote = 0
       for assembly in assemblyVotes:

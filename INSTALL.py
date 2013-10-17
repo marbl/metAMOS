@@ -709,6 +709,11 @@ if "isolate" in enabledWorkflows or manual:
              os.system("tar xvzf barrnap.tar.gz")
              os.system("mv barrnap-0.1/barrnap ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
              os.system("mv barrnap-0.1/db ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
+             if os.path.exists("./Utilities/cpp%s%s-%s%sprokka/lib"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+                os.chdir("./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
+                os.system("cp barrnap barrnap.original")
+                os.system("cat barrnap.original |awk '{if (match($0, \"use strict\")) { print \"use lib \\\"%s/Utilities/cpp%s%s-%s%sprokka/lib\\\";\"; print $0; } else { print $0}}' > barrnap"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep))
+                os.chdir("%s"%(METAMOS_ROOT))
              os.system("rm -rf barrnap-0.1")
              os.system("rm barrnap.tar.gz")
 
@@ -882,6 +887,7 @@ if "isolate" in enabledWorkflows or manual:
              os.system("./configure")
              os.system("make")
              os.chdir("%s"%(METAMOS_ROOT))
+             os.system("rm -rf idba.tar.gz")
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%sabyss"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        abyss = utils.getFromPath("ABYSS", "ABySS", False)
@@ -1103,6 +1109,7 @@ if "isolate" in enabledWorkflows or manual:
               
           os.chdir("./Utilities/cpp/%s%s-%s%sREAPR"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
           os.system("sh install.sh force")
+          os.system("chmod ug+x third_party/smalt_x86_64")
           os.chdir("%s"%(METAMOS_ROOT))
 
           if os.path.exists("./Utilities/cpp%s%s-%s%sREAPR/lib"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):

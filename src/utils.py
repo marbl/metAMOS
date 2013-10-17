@@ -118,6 +118,7 @@ class Settings:
    SPARSEASSEMBLER = ""
 
    KMERGENIE = ""
+   R         = ""
 
    MGCAT = ""
 
@@ -256,6 +257,7 @@ class Settings:
       Settings.METAVELVET    = "%s%scpp%s%s-%s%sMetaVelvet"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
       Settings.SPARSEASSEMBLER = "%s%scpp%s%s-%s%sSparseAssembler"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
       Settings.KMERGENIE = "%s%scpp%s%s-%s%skmergenie"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
+      Settings.R = "%s%scpp%s%s-%s%sR"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
       Settings.PHYMM = "%s%sperl%sphymm%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, os.sep)
 
       Settings.METAPHYLER        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
@@ -821,6 +823,11 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
     if not os.path.exists(Settings.KMERGENIE + os.sep + "kmergenie"):
        Settings.KMERGENIE = getFromPath("kmergenie", "KmerGenie")
     kmergenieMD5 = getMD5Sum(Settings.KMERGENIE + os.sep + "kmergenie")
+
+    Settings.R = "%s%scpp%s%s-%s%sR"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
+    if not os.path.exists(Settings.R + os.sep + "R"):
+       Settings.R = getFromPath("R", "R package")
+    rMD5 = getMD5Sum(Settings.R + os.sep + "R")
 
     # now for the validators
     Settings.LAP = "%s%sLAP"%(Settings.METAMOSDIR, os.sep)

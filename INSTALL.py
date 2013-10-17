@@ -991,6 +991,22 @@ if "isolate" in enabledWorkflows or manual:
              os.system("rm -rf bwa.tar.gz")
              os.system("rm -rf bwa-0.7.5.a")
 
+    if not os.path.exists("./Utilities/cpp%s%s-%s%sedena"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+       edena = utils.getFromPath("edena", "EDENA", False)
+       if "edena" in packagesToInstall:
+          dl = 'y'
+       else:
+          print "Edena binaries not found, optional for Assemble step, download now?"
+          dl = raw_input("Enter Y/N: ")
+       if dl == 'y' or dl == 'Y':
+          os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/EdenaV3_130110.tar.gz -o edena.tar.gz")
+          os.system("tar xvzf edena.tar.gz")
+          os.system("mv EdenaV3.130110 ./Utilities/cpp%s%s-%s%sedena"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+          os.chdir("./Utilities/cpp%s%s-%s%sedena"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+          os.system("make")
+          os.chdir("%s"%(METAMOS_ROOT))
+          os.system("rm -rf edena.tar.gz")
+
     if not os.path.exists("./quast"):
         if "quast" in packagesToInstall:
            dl = 'y'

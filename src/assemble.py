@@ -97,7 +97,7 @@ def getVelvetGCommand(velvetPath):
 def runVelvet(velvetPath, name):
    if not os.path.exists(velvetPath + os.sep + "velvetg"):
       print "Error: %s not found in %s. Please check your path and try again.\n"%(name, velvetPath)
-      raise(JobSignalledBreak)
+      return
 
    CATEGORIES = 0.0;
    p = subprocess.Popen("%s/velveth | grep CATEGORIES"%(velvetPath), shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -159,7 +159,7 @@ def runVelvet(velvetPath, name):
 def runSparseAssembler(sparsePath, name):
    if not os.path.exists(sparsePath + os.sep + "SparseAssembler"):
       print "Error: %s not found in %s. Please check your path and try again.\n"%(name, sparsePath)
-      raise(JobSignalledBreak)
+      return
 
    sparseLibLine = ""
    libsAdded = 0
@@ -184,7 +184,7 @@ def runSparseAssembler(sparsePath, name):
 
    if libsAdded == 0:
       print "Error: SparseAssembler was selected but no libraries are in fastq format. Cannot run assembly\n"
-      raise(JobSignalledBreak)
+      return
  
    # now we can run the program, we start with a two-step correction
    run_process(_settings, "%s/ReadsDenoiser %s %s"%(sparsePath, getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(name), "ReadDenoiser", ""), sparseLibLine), "Assemble")
@@ -203,7 +203,7 @@ def runMetaVelvet(velvetPath, metavelvetPath, name):
    # check for metavelvet
    if not os.path.exists(metavelvetPath + os.sep + "meta-velvetg"):
       print "Error: %s not found in %s. Please check your path and try again.\n"%(name, velvetPath)
-      raise(JobSignalledBreak)
+      return
 
    # run velvet first
    runVelvet(velvetPath, name)
@@ -248,7 +248,7 @@ def SplitAssemblers(input_file_name, output_files):
       return 0
 
    if _autoPickKmer:
-      if os.path.exists("%s%skmergenie"%(_settings.KMERGENIE, os.sep)):
+      if os.path.exists("%s%skmergenie"%(_settings.KMERGENIE, os.sep)) and os.path.exists("%s%sR"%(_settings.R, os.sep)):
          fileList = open("%s/Assemble/out/%s.kmergenie.in"%(_settings.rundir, _settings.PREFIX),'w')
          maxK = 71
          for lib in _readlibs:
@@ -377,7 +377,7 @@ def Assemble(input,output):
 
       if not os.path.exists(binPath + os.sep + "SOAPdenovo-63mer"):
          print "Error: %s not found in %s. Please check your path and try again.\n"%(asmName.title(), binPath)
-         raise(JobSignalledBreak)
+         return
 
       soapOptions = getProgramParams(_settings.METAMOS_UTILS, specName, "pregraph", "-") 
       soapContigOptions = getProgramParams(_settings.METAMOS_UTILS, specName, "contig", "-")
@@ -419,7 +419,7 @@ def Assemble(input,output):
    elif asmName == "newbler":
       if not os.path.exists(_settings.NEWBLER + os.sep + "newAssembly"):
          print "Error: Newbler not found in %s. Please check your path and try again.\n"%(_settings.NEWBLER)
-         raise(JobSignalledBreak)
+         return
 
       run_process(_settings, "%s/newAssembly -force %s/Assemble/out"%(_settings.NEWBLER, _settings.rundir),"Assemble")
 
@@ -438,14 +438,11 @@ def Assemble(input,output):
              run_process(_settings, "%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(_settings.NEWBLER, _settings.rundir, _settings.rundir,lib.id),"Assemble")
          elif lib.format == "sff":
              run_process(_settings, "%s/addRun %s %s/Assemble/out %s/Preprocess/out/lib%d.sff"%(_settings.NEWBLER, ("-p" if lib.mated else ""), _settings.rundir, _settings.rundir, lib.id), "Assemble")
-         elif lib.format == "fastq" and lib.interleaved:
+         elif lib.format == "fastq":
              if (NEWBLER_VERSION < 2.6):
                 print "Error: FASTQ + Newbler only supported in Newbler version 2.6+. You are using version %s."%(_settings.NEWBLER_VERSION)
-                raise(JobSignalledBreak)
-             run_process(_settings, "%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.seq"%(_settings.NEWBLER, _settings.rundir, _settings.rundir, lib.id),"Assemble")
-         elif not lib.interleaved:
-             print "Error: Only interleaved fastq files are supported for Newbler"
-             raise(JobSignalledBreak)
+                return
+             run_process(_settings, "%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.fastq"%(_settings.NEWBLER, _settings.rundir, _settings.rundir, lib.id),"Assemble")
 
       newblerCmd = "%s%srunProject "%(_settings.NEWBLER, os.sep)
       # read spec file to input to newbler parameters
@@ -519,7 +516,6 @@ def Assemble(input,output):
        generic.execute(STEP_NAMES.ASSEMBLE, asmName.lower(), _settings)
    else:  
       print "Error: %s is an unknown assembler. No valid assembler specified."%(asmName)
-      raise(JobSignalledBreak)
 
    if not os.path.exists("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX)):
       run_process(_settings, "touch %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "Assemble")

@@ -92,7 +92,7 @@ def outputValidate(headerArray, dataArray, outputHeader, best, results):
       return
 
    isBest = False
-   if best == assembler:
+   if best.lower() == assembler.lower():
       isBest = True
 
    row = []
@@ -150,6 +150,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     steps.append("Assemble")
     steps.append("MapReads")
     steps.append("Validate")
+    #steps.append("MultiAlign")
     steps.append("FindORFS")
     steps.append("FindRepeats")
     steps.append("Scaffold")
@@ -166,6 +167,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     step_status["Assemble"] = "OK"
     step_status["MapReads"] = "OK"
     step_status["Validate"] = "OK"
+    #step_status["MultiAlign"] = "SKIP"
     step_status["FindORFS"] = "OK"
     step_status["FindRepeats"] = "OK"
     step_status["Scaffold"] = "OK"
@@ -389,7 +391,72 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
        validate.iframe(id_="quast", src_="%s/Postprocess/out/quast/report.html"%(MA_dir), width="800", height="1000")
     validate_out.write(validate.__str__())
     validate_out.close()
-    
+
+    # multialign step
+    treeScripts= {} 
+    treeScripts["http://www.jsphylosvg.com/js/jquery/jquery-1.4.2.min.js"] = "javascript"
+    treeScripts["http://www.jsphylosvg.com/js/jquery/jquery.simplemodal.1.4.1.min.js"] = "javascript"
+    treeScripts["http://www.jsphylosvg.com/js/raphael/raphael-min.js"] = "javascript"
+    treeScripts["http://www.jsphylosvg.com/js/jsphylosvg-min.js?1.29"] = "javascript"
+    treeScripts["http://www.jsphylosvg.com/js/unitip/js/unitip.js"] = "javascript"
+
+    treeScript = [] 
+    treeScript.append("<script type=\"text/javascript\">")
+    treeScript.append("   var dataObject = { newick: '(M_canettii_CIPT_d:0.059437,(M_canettii_CIPT_e:0.07845,((((M_africanum_GM04118:0.00646,(M_bovis_AF2122_97:0.00269,(M_bovis_BCG_Tokyo_1:0.00013,((M_bovis_BCG_Korea_1:0.0,M_bovis_BCG_Pasteur:0.0):0.00014,M_bovis_BCG_Mexico:0.00013):0.00014):0.00294):0.00514):0.00207,(((MTBC_Beijing_NITR20:0.00914,(MTBC_CCDC5180:0.00102,(MTBC_CCDC5079:0.00423,MTBC_CCDC5079:0.00014):0.00078):0.00016):0.00368,((((MTBC_Erdman_ATCC_35:0.00075,MTBC:0.00123):0.00129,(MTBC_CDC1551:0.00245,MTBC_Haarlem3_NITR2:0.01398):0.00093):0.00065,((((MTBC_CTRI_2:0.001,(MTBC_KZN_4207:0.00014,(MTBC_KZN_605:0.00012,MTBC_KZN_1435:0.00014):0.00012):0.00071):0.00061,(MTBC_RGTB327:0.00462,MTBC_UT205:0.0012):0.00037):0.00014,MTBC_F11:0.00158):0.00109,(MTBC_H37Ra:0.00016,(MTBC_H37Rv:0.00028,MTBC_H37Rv:0.00014):0.00014):0.00281):0.00047):0.00112,MTBC_CAS_NITR204:0.009827):0.00022):0.00247,((MTBC_EAI5:0.0023,MTBC_EAI5_NITR206:0.00933):0.0035,(MTBC_RGTB423:0.00868,spades.45.asm.contig:0.0035):0.00066):0.00289):0.00015):0.07224,(M_canettii_CIPT_a:0.01891,M_canettii_CIPT_b:0.05096):0.03720):0.03909,M_canettii_CIPT_c:0.056869):0.00469):0.02099);' };")
+    treeScript.append("   function load() {")
+    treeScript.append("      var divVal = $('#svgCanvas').empty();")
+    treeScript.append("      var isCircular = $('#circularize-value')[0].value;")
+    treeScript.append("      Smits.PhyloCanvas.Render.Parameters.Rectangular.bufferX = 150;")
+    treeScript.append("      Smits.PhyloCanvas.Render.Parameters.Circular.bufferRadius = 0.35;")
+    treeScript.append("      Smits.PhyloCanvas.Render.Style.line.stroke = 'rgb(0,0,255)';")
+    treeScript.append("      Smits.PhyloCanvas.Render.Style.text[\"font-size\"] = 10;")
+    treeScript.append("      if (isCircular.toLowerCase() == 'true') {")
+    treeScript.append("         phylocanvas = new Smits.PhyloCanvas(")
+    treeScript.append("                                         dataObject,")
+    treeScript.append("                                         'svgCanvas',")
+    treeScript.append("                                          1000, 1000, 'circular'")
+    treeScript.append("                                         );")
+    treeScript.append("         $('#circularize-value')[0].value = 'false';")
+    treeScript.append("      } else {")
+    treeScript.append("         phylocanvas = new Smits.PhyloCanvas(")
+    treeScript.append("                                         dataObject,")
+    treeScript.append("                                         'svgCanvas',")
+    treeScript.append("                                          500, 500")
+    treeScript.append("                                         );")
+    treeScript.append("         $('#circularize-value')[0].value = 'true';")
+    treeScript.append("      }")
+    treeScript.append("      init();")
+    treeScript.append("   }")
+    treeScript.append("function snapshot() {")
+    treeScript.append("      var svgSource = phylocanvas.getSvgSource();")
+    treeScript.append("      if(svgSource) {")
+    treeScript.append("         var url = 'data:image/svg+xml,' + svgSource")
+    treeScript.append("         window.open(url);")
+    treeScript.append("      }")
+    treeScript.append("   }")
+    treeScript.append("</script>")
+    treeBody = {}
+    treeBody["onload"] = "load()"
+
+    maStep = markup.page()
+    maStep.add("\n".join(treeScript))
+    maStep.init(
+                css=("http://www.jsphylosvg.com//js/yui/build/cssfonts/fonts-min.css", "http://www.jsphylosvg.com/js/unitip/css/unitip.css"),
+                script=treeScripts, 
+                bodyattrs=treeBody)
+    maStep.div()
+    maStep.add("<input type=\"button\" id=\"download-link\" onclick=\"snapshot()\" value=\"Snapshot\" />")
+    maStep.div.close()
+    maStep.div()
+    maStep.add("<input type=\"button\" id=\"circularize-link\" onclick=\"load()\" value=\"Toggle Circular\" />")
+    maStep.add("<input type=\"hidden\" id=\"circularize-value\" value=\"false\">")
+    maStep.div.close()
+    maStep.div(id_="svgCanvas")
+    maStep.div.close()
+    maStep_out = open("%s/MultiAlign.html"%(html_prefix), 'w')
+    maStep_out.write(maStep.__str__())
+    maStep_out.close()
+
     # todo, need to add report for MapReads including # reads mapped (%), contig coverage histogram, and % reads between contigs and number of links histogram. Also re-estimated insert sizes for each lib
     #mapreads = markup.page()
     #mapreads.init(bodyattrs={'style':"margin:0px"})

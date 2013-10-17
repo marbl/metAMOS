@@ -1151,7 +1151,10 @@ if "isolate" in enabledWorkflows or manual:
                if os.path.exists("%s/build/lib/libboost_system-mt.a"%(os.getcwd())):
                   ldflags = "-L%s/build/lib -lboost_system-mt"%(os.getcwd())
                os.environ["LDFLAGS"]=ldflags
-               os.environ["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"] + os.pathsep + "%s/build/lib"%(os.getcwd())
+               try:
+                   os.environ["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"] + os.pathsep + "%s/build/lib"%(os.getcwd())
+               except KeyError:
+                   os.environ["LD_LIBRARY_PATH"] = "%s/build/lib"%(os.getcwd())
                boostFlags = "--with-boost=%s/build/ --disable-shared --enable-static-boost --enable-static-FRC"%(os.getcwd())
                os.chdir("..")
                os.system("rm -rf boost.tar.gz")

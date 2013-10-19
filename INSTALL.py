@@ -524,24 +524,27 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%ssra"%(os.sep, OSTYPE, MACHINETYPE
 
 if "isolate" in enabledWorkflows or manual:
     # check for cmake
-    cmake = utils.getFromPath("cmake", "CMAKE", False)
-    if cmake == "":
-       if "cmake" in packagesToInstall:
-          dl = 'y'
-       else:
-          print "SRA binaries not found, optional for initPipeline step, download now?"
-          dl = raw_input("Enter Y/N: ")
-       if dl == 'y' or dl == 'Y':
-          os.system("curl -L http://www.cmake.org/files/v2.8/cmake-2.8.12.tar.gz -o cmake.tar.gz")
-          os.system("tar xvzf cmake.tar.gz")
-          os.system("mv cmake-2.8.12 ./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-          os.chdir("./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-          os.system("./bootstrap --prefix=`pwd`/build;make;make install")
-          pathUpdate = "%s/Utilities/cpp%s%s-%s%scmake/build/bin"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
-          if "PATH" in os.environ:
-             pathUpdate = "%s%s%s"%(os.environ["PATH"], os.pathsep, pathUpdate)
-          os.environ["PATH"]=pathUpdate
-          os.chdir("%s"%(METAMOS_ROOT))
+
+    if not os.path.exists("./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+       cmake = utils.getFromPath("cmake", "CMAKE", False)
+       if cmake == "":
+          if "cmake" in packagesToInstall:
+            dl = 'y'
+          else:
+             print "cmake binaries not found, optional for initPipeline step, download now?"
+             dl = raw_input("Enter Y/N: ")
+          if dl == 'y' or dl == 'Y':
+             os.system("curl -L http://www.cmake.org/files/v2.8/cmake-2.8.12.tar.gz -o cmake.tar.gz")
+             os.system("tar xvzf cmake.tar.gz")
+             os.system("mv cmake-2.8.12 ./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.chdir("./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("./bootstrap --prefix=`pwd`/build;make;make install")
+             pathUpdate = "%s/Utilities/cpp%s%s-%s%scmake/build/bin"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
+    if os.path.exists("./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+       if "PATH" in os.environ:
+          pathUpdate = "%s%s%s"%(os.environ["PATH"], os.pathsep, pathUpdate)
+       os.environ["PATH"]=pathUpdate
+       os.chdir("%s"%(METAMOS_ROOT))
 
     if not os.path.exists("./CA") or 0:
       if "ca" in packagesToInstall:

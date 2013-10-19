@@ -367,14 +367,14 @@ def FindORFS(input,output):
        #run_process(_settings, "cp %s/Assemble/out/%s.asm.contig  %s/FindORFS/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")
    #else:
    run_process(_settings, "unlink %s/FindORFS/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"FindORFS")
-   run_process(_settings, "ln -s %s/Assemble/out/%s.asm.contig %s/FindORFS/in/"%(_settings.rundir,_settings.PREFIX,_settings.rundir),"FindORFS")
+   run_process(_settings, "ln %s/Assemble/out/%s.asm.contig %s/FindORFS/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX),"FindORFS")
 
    findFastaORFs(_orf, "%s/FindORFS/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "%s.ctg.fna"%(_settings.PREFIX), "%s.ctg.faa"%(_settings.PREFIX), "%s.ctg.gene.cvg"%(_settings.PREFIX), "%s.ctg.gene.map"%(_settings.PREFIX), _min_ctg_len, _min_ctg_cvg)
    
    #don't call ORFs on unassembled reads? flag?
    if _read_orfs:
        for lib in _readlibs:
-           run_process(_settings, "ln -s %s/Assemble/out/%s.lib%d.unaligned.fasta %s/FindORFS/in/"%(_settings.rundir,_settings.PREFIX,lib.id,_settings.rundir),"FindORFS")
+           run_process(_settings, "ln %s/Assemble/out/%s.lib%d.unaligned.fasta %s/FindORFS/in/%s.lib%d.unaligned.fasta"%(_settings.rundir,_settings.PREFIX,lib.id,_settings.rundir, _settings.PREFIX, lib.id),"FindORFS")
            findFastaORFs(_orf, "%s/FindORFS/in/%s.lib%d.unaligned.fasta"%(_settings.rundir, _settings.PREFIX, lib.id), "%s.lib%d.fna"%(_settings.PREFIX, lib.id), "%s.lib%d.faa"%(_settings.PREFIX, lib.id), "%s.lib%d.gene.cvg"%(_settings.PREFIX, lib.id), "%s.lib%d.gene.map"%(_settings.PREFIX, lib.id), 0, 1)
 
    # merge results

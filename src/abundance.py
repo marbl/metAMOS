@@ -64,7 +64,7 @@ def Abundance(input,output):
    blastfile = _settings.PREFIX+".blastx"
    blastc = _settings.BLAST + os.sep + "blastall"
    formatc = _settings.BLAST + os.sep + "formatdb"
-   run_process(_settings, "ln %s/markers.pfasta %s/Abundance/out/markers.pfasta"%(_settings.DB_DIR, _settings.rundir), "Abundance")
+   run_process(_settings, "ln -s %s/markers.pfasta %s/Abundance/out/markers.pfasta"%(_settings.DB_DIR, _settings.rundir), "Abundance")
    run_process(_settings, "%s  -p T -i %s/Abundance/out/markers.pfasta"%(formatc,_settings.rundir),"Abundance")
    #update to MetaPhyler 1.25
    run_process(_settings, "%s -p blastp -i %s/FindORFS/out/%s.faa -d %s/Abundance/out/markers.pfasta -m 8 -b 10 -v 10 -a %s -o %s/Abundance/out/%s.blastp"%(blastc, _settings.rundir,_settings.PREFIX,_settings.rundir,_settings.threads,_settings.rundir,_settings.PREFIX),"Abundance")

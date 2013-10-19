@@ -523,6 +523,32 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%ssra"%(os.sep, OSTYPE, MACHINETYPE
            os.system("rm -rf sra.tar.gz")
 
 if "isolate" in enabledWorkflows or manual:
+    # check for cmake
+
+    if not os.path.exists("./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+       cmake = utils.getFromPath("cmake", "CMAKE", False)
+       if cmake == "":
+          if "cmake" in packagesToInstall:
+            dl = 'y'
+          else:
+             print "cmake binaries not found, optional for initPipeline step, download now?"
+             dl = raw_input("Enter Y/N: ")
+          if dl == 'y' or dl == 'Y':
+             os.system("curl -L http://www.cmake.org/files/v2.8/cmake-2.8.12.tar.gz -o cmake.tar.gz")
+             os.system("tar xvzf cmake.tar.gz")
+             os.system("mv cmake-2.8.12 ./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.chdir("./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("./bootstrap --prefix=`pwd`/build;make;make install")
+             os.chdir("%s"%(METAMOS_ROOT))
+             os.system("rm cmake.tar.gz")
+    if os.path.exists("./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+       pathUpdate = "%s/Utilities/cpp%s%s-%s%scmake/build/bin"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
+
+       if "PATH" in os.environ:
+          pathUpdate = "%s%s%s"%(os.environ["PATH"], os.pathsep, pathUpdate)
+       os.environ["PATH"]=pathUpdate
+    os.chdir("%s"%(METAMOS_ROOT))
+
     if not os.path.exists("./CA") or 0:
       if "ca" in packagesToInstall:
          dl = 'y'
@@ -847,6 +873,7 @@ if "isolate" in enabledWorkflows or manual:
                 if not HAVE_QUIET_HEAD:
                    os.system("cd SuperReads-0.3.2/src && cp runSRCA.pl runSRCA.original")
                    os.system("cd SuperReads-0.3.2/src && cat runSRCA.original |sed s/head\ \-q/head/g > runSRCA.pl")
+                os.system("rm CA/kmer/makepath")
                 os.system("bash install.sh")
                 os.chdir("%s"%(METAMOS_ROOT))
                 os.system("rm -rf ./MaSuRCA-2.0.3.1")
@@ -862,9 +889,9 @@ if "isolate" in enabledWorkflows or manual:
              dl = raw_input("Enter Y/N: ")
           if dl == 'y' or dl == 'Y':
              if OSTYPE == "Darwin":
-	        os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc2_darwin12.5.0_x86_64_static.tar.bz2 -o mira.tar.bz2")
+	        os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc4_darwin12.5.0_x86_64_static.tar.bz2 -o mira.tar.bz2")
              else:
-                os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc2_linux-gnu_x86_64_static.tar.bz2 -o mira.tar.bz2")
+                os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc4_linux-gnu_x86_64_static.tar.bz2 -o mira.tar.bz2")
              os.system("tar xvjf mira.tar.bz2")
              os.system("rm -f mira.tar.bz2")
              os.system("mv `ls -d mira*` ./Utilities/cpp%s%s-%s%smira"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
@@ -904,15 +931,24 @@ if "isolate" in enabledWorkflows or manual:
              os.system("./configure --prefix=`pwd`")
              os.system("make install")
              os.chdir("%s"%(METAMOS_ROOT))
-             os.system("curl -L http://sourceforge.net/projects/boost/files/boost/1.49.0/boost_1_49_0.tar.gz -o boost.tar.gz")
+             os.system("curl -L http://sourceforge.net/projects/boost/files/boost/1.54.0/boost_1_54_0.tar.gz -o boost.tar.gz")
              os.system("tar xvzf boost.tar.gz")
              os.system("curl -L http://www.bcgsc.ca/platform/bioinfo/software/abyss/releases/1.3.6/abyss-1.3.6.tar.gz -o abyss.tar.gz")
              os.system("tar xvzf abyss.tar.gz")
              os.chdir("abyss-1.3.6")
-             os.system("ln -s %s/boost_1_49_0/boost boost"%(METAMOS_ROOT))
+             os.system("ln -s %s/boost_1_54_0/boost boost"%(METAMOS_ROOT))
              os.environ["CFLAGS"] = "-I%s/sparsehash-2.0.2/include"%(METAMOS_ROOT)
              os.environ["CPPFLAGS"] = "-I%s/sparsehash-2.0.2/include"%(METAMOS_ROOT)
              os.environ["CXXFLAGS"] = "-I%s/sparsehash-2.0.2/include"%(METAMOS_ROOT)
+
+             # sparse hash library has unused variables which cause warnings with gcc 4.8 so disable -Werror
+             gccVersion = utils.getCommandOutput("gcc --version|grep gcc|awk '{print $NF}' |awk -F \".\" '{print $1\".\"$2}'", False)
+             print "GCC version is %s"%(gccVersion)
+             if float(gccVersion) >= 4.8:
+                os.system("mv configure configure.original")
+                os.system("cat configure.original |sed s/\-Werror//g > configure")
+                os.system("chmod ug+x configure")
+
              os.system("./configure --enable-maxk=96 --prefix=`pwd`/build")
              os.system("make install")
              os.chdir("%s"%(METAMOS_ROOT))
@@ -939,7 +975,7 @@ if "isolate" in enabledWorkflows or manual:
              os.system("rm -rf sparse.tar.gz")
              os.system("rm -rf abyss-1.3.6")
              os.system("rm -rf abyss.tar.gz")
-             os.system("rm -rf boost_1_49_0")
+             os.system("rm -rf boost_1_54_0")
              os.system("rm -rf boost.tar.gz")
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%ssga"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
@@ -957,17 +993,17 @@ if "isolate" in enabledWorkflows or manual:
              os.system("./configure --prefix=`pwd`")
              os.system("make install")
              os.chdir("%s"%(METAMOS_ROOT))
-             os.system("curl -L https://github.com/pezmaster31/bamtools/archive/master.zip -o bamtools.tar.gz")
-             os.system("unzip bamtools.tar.gz")
+             os.system("curl -L https://github.com/pezmaster31/bamtools/archive/v2.3.0.tar.gz -o bamtools.tar.gz")
+             os.system("tar xvzf bamtools.tar.gz")
              os.system("curl -L http://sourceforge.net/projects/bio-bwa/files/bwa-0.7.5a.tar.bz2 -o bwa.tar.bz2")
              os.system("tar xvjf bwa.tar.bz2")
              os.chdir("bwa-0.7.5a")
              os.system("make")
              os.chdir("%s"%(METAMOS_ROOT))
-             os.system("curl -L https://github.com/jts/sga/archive/master.zip -o sga.tar.gz")
-             os.system("unzip sga.tar.gz")
-             os.system("mv sga-master ./Utilities/cpp%s%s-%s%ssga"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-             os.system("mv bamtools-master ./Utilities/cpp%s%s-%s%ssga/bamtools"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("curl -L https://github.com/jts/sga/archive/v0.10.10.tar.gz -o sga.tar.gz")
+             os.system("tar xvzf sga.tar.gz")
+             os.system("mv sga-0.10.10 ./Utilities/cpp%s%s-%s%ssga"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("mv bamtools-2.3.0 ./Utilities/cpp%s%s-%s%ssga/bamtools"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("mv sparsehash-2.0.2 ./Utilities/cpp%s%s-%s%ssga/sparsehash"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.chdir("./Utilities/cpp%s%s-%s%ssga/bamtools"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("mkdir build")
@@ -976,6 +1012,12 @@ if "isolate" in enabledWorkflows or manual:
              os.system("make")
              os.chdir("%s"%(METAMOS_ROOT))
              os.chdir("./Utilities/cpp%s%s-%s%ssga/src"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             # sparse hash library has unused variables which cause warnings with gcc 4.8 so disable -Werror
+             gccVersion = utils.getCommandOutput("gcc --version|grep gcc|awk '{print $NF}' |awk -F \".\" '{print $1\".\"$2}'", False)
+             print "GCC version is %s"%(gccVersion)
+             if float(gccVersion) >= 4.8:
+                os.system("mv configure.ac configure.original")
+                os.system("cat configure.original |sed s/\-Werror//g > configure.ac")
              os.system("sh ./autogen.sh")
              os.system("./configure --with-sparsehash=`pwd`/../sparsehash --with-bamtools=`pwd`/../bamtools --prefix=`pwd`/../")
              os.system("make install")
@@ -984,12 +1026,12 @@ if "isolate" in enabledWorkflows or manual:
              os.system("ln %s/Utilities/cpp%s%s-%s%ssamtools %s/Utilities/cpp%s%s-%s%ssga/bin%ssamtools"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep, METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep))
              os.system("rm -rf sparsehash-2.0.2")
              os.system("rm -rf sparse.tar.gz")
-             os.system("rm -rf bamtools-master")
+             os.system("rm -rf bamtools-2.3.0")
              os.system("rm -rf bamtools.tar.gz")
-             os.system("rm -rf sga-master")
+             os.system("rm -rf sga-0.10.10")
              os.system("rm -rf sga.tar.gz")
-             os.system("rm -rf bwa.tar.gz")
-             os.system("rm -rf bwa-0.7.5.a")
+             os.system("rm -rf bwa.tar.bz2")
+             os.system("rm -rf bwa-0.7.5a")
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%sedena"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        edena = utils.getFromPath("edena", "EDENA", False)
@@ -1124,6 +1166,14 @@ if "isolate" in enabledWorkflows or manual:
              os.chdir("%s"%(METAMOS_ROOT))
               
           os.chdir("./Utilities/cpp/%s%s-%s%sREAPR"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+          # samtools which reapr includes uses curses lib which is optional so disable it if not found
+          os.system("echo \"#include <curses.h>\" > .test.h")
+          HAVE_CURSES=utils.getCommandOutput("gcc .test.h && echo $?", True)
+          if HAVE_CURSES == "":
+             os.chdir("third_party/samtools")
+             os.system("mv Makefile Makefile.original")
+             os.system("cat Makefile.original | sed s/\-lcurses//g |sed s/\-D_CURSES_LIB=1//g > Makefile")
+             os.chdir("../../")
           os.system("sh install.sh force")
           os.system("chmod ug+x third_party/smalt_x86_64")
           os.chdir("%s"%(METAMOS_ROOT))
@@ -1152,6 +1202,12 @@ if "isolate" in enabledWorkflows or manual:
             os.system("unzip frcbam.zip")
             os.system("mv FRC_align-master ./Utilities/cpp/%s%s-%s%sFRCbam"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
             os.chdir("./Utilities/cpp/%s%s-%s%sFRCbam/src/samtools"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+            # samtools which frcbam includes uses curses lib which is optional so disable it if not found
+            os.system("echo \"#include <curses.h>\" > .test.h")
+            HAVE_CURSES=utils.getCommandOutput("gcc .test.h && echo $?", True)
+            if HAVE_CURSES == "":
+               os.system("mv Makefile Makefile.original")
+               os.system("cat Makefile.original | sed s/\-lcurses//g |sed s/\-D_CURSES_LIB=1//g > Makefile")
             os.system("make")
             os.chdir("%s/Utilities/cpp/%s%s-%s%sFRCbam"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep))
             boostFlags = ""
@@ -1165,9 +1221,9 @@ if "isolate" in enabledWorkflows or manual:
                os.environ["LDFLAGS"]="-L/usr/lib -lboost_system"
             else:
                # install boost ourselves
-               os.system("curl -L http://sourceforge.net/projects/boost/files/boost/1.49.0/boost_1_49_0.tar.gz -o boost.tar.gz")
+               os.system("curl -L http://sourceforge.net/projects/boost/files/boost/1.54.0/boost_1_54_0.tar.gz -o boost.tar.gz")
                os.system("tar xvzf boost.tar.gz")
-               os.chdir("boost_1_49_0")
+               os.chdir("boost_1_54_0")
                os.system("sh bootstrap.sh")
                os.system("./b2 install --prefix=`pwd`/build threading=multi")
                ldflags = "-L%s/build/lib -lboost_system"%(os.getcwd())
@@ -1185,7 +1241,7 @@ if "isolate" in enabledWorkflows or manual:
             os.system("./configure --prefix=%s/Utilities/cpp/%s%s-%s%sFRCbam/ %s"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep, boostFlags))
             os.system("make install")
             if boostFlags != "":
-               os.system("cp boost_1_49_0/build/lib/* ./bin")
+               os.system("cp boost_1_54_0/build/lib/* ./bin")
 
             os.chdir("%s"%(METAMOS_ROOT))
             os.system("rm -rf frcbam.zip")

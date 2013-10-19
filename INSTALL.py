@@ -523,6 +523,26 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%ssra"%(os.sep, OSTYPE, MACHINETYPE
            os.system("rm -rf sra.tar.gz")
 
 if "isolate" in enabledWorkflows or manual:
+    # check for cmake
+    cmake = utils.getFromPath("cmake", "CMAKE", False)
+    if cmake == "":
+       if "cmake" in packagesToInstall:
+          dl = 'y'
+       else:
+          print "SRA binaries not found, optional for initPipeline step, download now?"
+          dl = raw_input("Enter Y/N: ")
+       if dl == 'y' or dl == 'Y':
+          os.system("curl -L http://www.cmake.org/files/v2.8/cmake-2.8.12.tar.gz -o cmake.tar.gz")
+          os.system("tar xvzf cmake.tar.gz")
+          os.system("mv cmake-2.8.12 ./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+          os.chdir("./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+          os.system("./bootstrap --prefix=`pwd`/build;make;make install")
+          pathUpdate = "%s/Utilities/cpp%s%s-%s%scmake/build/bin"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
+          if "PATH" in os.environ:
+             pathUpdate = "%s%s%s"%(os.environ["PATH"], os.pathsep, pathUpdate)
+          os.environ["PATH"]=pathUpdate
+          os.chdir("%s"%(METAMOS_ROOT))
+
     if not os.path.exists("./CA") or 0:
       if "ca" in packagesToInstall:
          dl = 'y'
@@ -847,6 +867,7 @@ if "isolate" in enabledWorkflows or manual:
                 if not HAVE_QUIET_HEAD:
                    os.system("cd SuperReads-0.3.2/src && cp runSRCA.pl runSRCA.original")
                    os.system("cd SuperReads-0.3.2/src && cat runSRCA.original |sed s/head\ \-q/head/g > runSRCA.pl")
+                os.system("rm CA/kmer/makepath")
                 os.system("bash install.sh")
                 os.chdir("%s"%(METAMOS_ROOT))
                 os.system("rm -rf ./MaSuRCA-2.0.3.1")
@@ -862,9 +883,9 @@ if "isolate" in enabledWorkflows or manual:
              dl = raw_input("Enter Y/N: ")
           if dl == 'y' or dl == 'Y':
              if OSTYPE == "Darwin":
-	        os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc2_darwin12.5.0_x86_64_static.tar.bz2 -o mira.tar.bz2")
+	        os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc4_darwin12.5.0_x86_64_static.tar.bz2 -o mira.tar.bz2")
              else:
-                os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc2_linux-gnu_x86_64_static.tar.bz2 -o mira.tar.bz2")
+                os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc4_linux-gnu_x86_64_static.tar.bz2 -o mira.tar.bz2")
              os.system("tar xvjf mira.tar.bz2")
              os.system("rm -f mira.tar.bz2")
              os.system("mv `ls -d mira*` ./Utilities/cpp%s%s-%s%smira"%(os.sep, OSTYPE, MACHINETYPE, os.sep))

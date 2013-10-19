@@ -1153,7 +1153,7 @@ if "isolate" in enabledWorkflows or manual:
           os.system("cat > .test.h <<'EOM'")
           os.system("#include <curses.h>")
           os.system("EOM")
-          HAVE_CURSES=utils.getCommandOutput("gcc .test.h", True)
+          HAVE_CURSES=utils.getCommandOutput("gcc .test.h && echo $?", True)
           if HAVE_CURSES == "":
              os.chdir("third_party/samtools")
              os.system("mv Makefile Makefile.original")

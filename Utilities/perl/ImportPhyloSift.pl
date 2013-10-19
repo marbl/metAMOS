@@ -218,12 +218,14 @@ foreach my $input (@ARGV)
 		my
 		(
                         $contigID,
+			$coordinate,
 			$taxID,
                         $taxLevel,
 			$taxaName,
 			$score
 
 		) = split /\t/, $line; #split /\t/, $line;
+                $contigID = (split(/\s/, $contigID))[0];
                 if (!defined($contigID) || (defined($currCtg) && !($currCtg eq $contigID))) {
                    my $magnitude = 1;
                    if (defined($magnitudes{$currCtg})) {
@@ -235,7 +237,6 @@ foreach my $input (@ARGV)
                     my $printed = 0;
 
                     foreach my $taxa (keys %bestScores) {
-                       print "$taxa\n";
                        if ($printed == 0 && $taxa eq $taxonomicLevel)
                        {
                            $printed = 1;
@@ -257,6 +258,7 @@ foreach my $input (@ARGV)
                     }
                     $classified{$currCtg} = 0;
                     addByTaxID(\%tree, $set, $bestTaxon, $currCtg, $magnitude, $bestScores{$bestName});
+
 
                     $totalMagnitude += $magnitude;
                     %bestScores = ();

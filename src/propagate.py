@@ -7,10 +7,11 @@ from utils import *
 from annotate import Annotate
 from scaffold import Scaffold
 from findscforfs import FindScaffoldORFS
+from abundance import Abundance
 
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
-
+from create_mapping import *
 _readlibs = []
 _skipsteps = []
 _cls = None
@@ -31,12 +32,13 @@ def init(reads, skipsteps, cls):
          _mated = True
          break
 
-@follows(FindScaffoldORFS)
+@follows(Abundance)
 @posttask(touch_file("%s/Logs/propagate.ok"%(_settings.rundir)))
 @files("%s/Annotate/out/%s.annots"%(_settings.rundir, _settings.PREFIX),"%s/Logs/propagate.ok"%(_settings.rundir))
 def Propagate(input,output):
    if _cls == "metaphyler":
-       run_process(_settings, "python %s/python/create_mapping.py %s/DB/class_key.tab %s/Abundance/out/%s.classify.txt %s/Propagate/in/%s.annots"%(_settings.METAMOS_UTILS,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Propagate")
+       #run_process(_settings, "python %s/python/create_mapping.py %s/class_key.tab %s/Abundance/out/%s.classify.txt %s/Propagate/in/%s.annots"%(_settings.METAMOS_UTILS,_settings.DB_DIR,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Propagate")
+       create_mapping("%s/class_key.tab"%(_settings.DB_DIR),"%s/Abundance/out/%s.classify.txt"%(_settings.rundir,_settings.PREFIX),"%s/Propagate/in/%s.annots"%(_settings.rundir,_settings.PREFIX))
    else:
        run_process(_settings, "ln %s/Annotate/out/%s.annots %s/Propagate/in/%s.annots"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Propagate")
 
@@ -70,15 +72,23 @@ def Propagate(input,output):
      ctgfile.close()
 
    read_annots = {}
+   known_annots = {}
+   annotsfile = open("%s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
+   for line in annotsfile.xreadlines():
+      line = line.replace("\n", "")
+      ctg, annot = line.split()
+      known_annots[ctg] = annot
+   annotsfile.close()
+
    annotsfile = open("%s/Propagate/in/%s.annots"%(_settings.rundir, _settings.PREFIX), "r")
    for line in annotsfile.xreadlines():
      line = line.replace("\n", "")
      ctg, annot = line.split()
-     if ctg not in readctg_dict.keys():
+     if ctg not in readctg_dict.keys() and ctg not in known_annots.keys():
         read_annots[ctg] = annot
    annotsfile.close()
 
-   if "Propagate" not in _skipsteps and _cls == None:
+   if "Propagate" not in _skipsteps:
       annotsfile = open("%s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), 'a')
       for ctg in read_annots:
           annotsfile.write("%s\t%s\n"%(ctg, read_annots[ctg]))

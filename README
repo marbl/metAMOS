@@ -1,38 +1,69 @@
-MetAMOS v1.1 README
-Last updated: December 14th 2012
+# MetAMOS v1.3 "Candied Bacon" README
+Last updated: September 18th, 2013
+***********************************************************************************
+We are happy to announce version 1.3, a.k.a. Candied Bacon
 
-NEWS:
+## NEWS
+       1. Updated 64-bit frozen Linux binary now available (fixed taxonomy dir issue)
+       2. Generic module support officialy supported for Assemble and Annotate step
+       3. Spades & Kraken added
+       4. Added prelim support for program workflows (core, optional, deprecated).
+       5. Added prelim support for new MultiAlign step
+       6. Numerous bug fixes
 
-*HTML report vastly improved
-*FunctionalAnnotation step added
-*Added Bowtie2 support
-*Updated to ruffus version 2.3b
-*Fixed Issues #69,71
-*Various other minor bug fixes
+*on deck: kmher, MaSuRCA, Ray Meta, and Viritas
 
-> SUMMARY
-        * A/ HARDWARE REQUIREMENTS
-        * B/ SOFTWARE REQUIREMENTS
-        * C/ INSTALLING MetAMOS
-        * D/ QUICK START
-        * E/ TEST SUITE
-        * F/ EXAMPLE OUTPUT
-        * G/ CONTACT
-        * H/ CITING
+-----------------------------------------------------------------------------------
+## **MetAMOS single file binary**
+
+In attempt to further simplify the MetAMOS installation process, we are happy to announce the availability of a 'frozen' MetAMOS binary for Linux-x68_64 platforms. Along with this binary comes a significantly reduced list of prerequisites:
+
+* Java 1.5 (or newer)
+* Perl 5.8.8 (or newer)
+* 64-bit *nix OS
+
+You can download a frozen binary with all BLAST DBs [here](http://www.cbcb.umd.edu/confcour/temp/metAMOS_binary.tar.gz) 
+
+*Note: this is a big file to download and will take awhile to finish (~13GB compressed, 27GB unzipped)
+
+Alternatively, you can download a frozen binary with NO BLAST DBs [here](http://www.cbcb.umd.edu/confcour/temp/metAMOS_binary_noblastdbs.tar.gz) 
+
+*Note: ~2GB compressed, 4GB unzipped
+
+The revised installation procedure is simply:
+
+1. Download tarball
+2. Extract
+3. Run a test script or two
+4. have fun!
+
+Mac OSX equivalent will be soon appearing [here](http://www.cbcb.umd.edu/confcour/temp/metAMOS_binary_noblastdbs_osx.tar.gz) 
 
 ----------------------------------------------------------------------------------
-A/ HARDWARE REQUIREMENTS
+
+## SUMMARY
+        A) HARDWARE REQUIREMENTS
+        B) SOFTWARE REQUIREMENTS
+        C) INSTALLING MetAMOS
+        D) QUICK START
+        E) TEST SUITE
+        F) EXAMPLE OUTPUT
+        G) CONTACT
+        H) CITING
+
+----------------------------------------------------------------------------------
+### A) HARDWARE REQUIREMENTS
 
 MetAMOS was designed to work on any standard 64bit Linx
 environment. To use MetAMOS for tutorial/teaching purposes, a minimum
 of 8 GB RAM is required. To get started on real data sets a minimum of
-32 GB of RAM is recommened, and anywhere from 64-512 GB may be
+32 GB of RAM is recommened, and anywhere from 64-1000 GB may be
 necessary for larger datasets. In our experience, for most 50-100
-million read datasets, 64 GB is a good place to start (128 GB of memory
-available on High Memory Instance at Amazon Elastic Compute Cloud ).
+million read datasets, 64 GB is a good place to start (128 GB of memory now
+available on High Memory Instance at Amazon Elastic Compute Cloud ). 
 
 ----------------------------------------------------------------------------------
-B/ SOFTWARE REQUIREMENTS
+### B) SOFTWARE REQUIREMENTS
 
 The main prequisite software is python2.6+ and AMOS (available from
 http://amos.sf.net). Once python2.6+ and AMOS are installed, there
@@ -41,15 +72,15 @@ needed is distributed with MetAMOS inside of the /Utilities
 directory. Depending on your platform/Linux distribution, you might need to download and install the following BEFORE running INSTALL.py:
 
 1) git
-2) wget
-3) gcc
-4) automake
-5) python-tools
-6) python-devel
-7) zlib-devel
-8) numpy
-9) freetype, freetype-devel
-10) libpng-devel
+2) gcc
+3) automake
+4) python-tools
+5) python-devel
+6) zlib-devel
+7) numpy
+8) freetype, freetype-devel
+9) libpng-devel
+10) matplotlib
 
 Additionally, there is some software that MetAMOS can
 incorporate into its pipeline that we are not allowed to distribute,
@@ -57,7 +88,7 @@ such as MetaGeneMark. To get a license to use MetaGeneMark, plesae
 visit: http://exon.gatech.edu/license_download.cgi.
 
 ----------------------------------------------------------------------------------
-C/ INSTALLING MetAMOS
+### C) INSTALLING MetAMOS
 
 To download the software, go to https://github.com/treangen/MetAMOS
 and click on Downloads. Once downloaded, simply unpack the files and
@@ -72,7 +103,7 @@ downloaded (including optional ones), this will take quite awhile to
 complete (plan on a few hours to 2 days).
 
 ----------------------------------------------------------------------------------
-D/ QUICK START
+### D) QUICK START
 
 Before you get started using MetAMOS a brief review of its design will
 help clarify its intended use. MetAMOS gas two main components:
@@ -159,6 +190,8 @@ For each step you can fine-tune the execution as follows
    -q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)
 [Assemble]
    -a = <string>: genome assembler to use (default = SOAPdenovo)
+		  this can also be a comma-separated list of assembler (for example: soap,velvet)
+		  in this case, all selected assemblers will be run and the best selected for subsequent analysis
    -k = <kmer size>: k-mer size to be used for assembly (default = 31)
    -o = <int>:    min overlap length
 [MapReads]
@@ -220,7 +253,7 @@ comparative plots.
 
 
 ----------------------------------------------------------------------------------
-E/ Test suite
+### E) Test suite
 
 We have developed a set of scripts for testing the various features of
 MetAMOS. All of these regression test scripts are available inside the
@@ -266,13 +299,19 @@ is a brief listing of the test scripts we currently include:
 *Test FCP
 ./Test/test_fcp.sh
 
+*Test Spades
+./Test/test_spades.sh
+
+#Test BLAST
+./Test/test_blast.sh
+
 ..more on the way!
 
 ----------------------------------------------------------------------------------
-F/ Example output
+### F) Example output
 
 MetAMOS generates an interactive webpage once a run successfully completes:
-http://www.cbcb.umd.edu/software/metamos/summary.html
+http://treangen.github.io/metAMOS/example/html/summary.html
 
 This includes summary statistics and taxonomic information based on Krona
 Krona publication: Ondov BD, Bergman NH, Phillippy AM.. Interactive
@@ -283,7 +322,7 @@ Additionally, since MetAMOS stores all of its results in an AMOS bank,
 the assemblies can be visualized with Hawkeye.
 
 ----------------------------------------------------------------------------------
-G/ BUGS
+### G) BUGS
 
 If you encounter any problems/bugs, please check the wiki page:
 https://github.com/treangen/MetAMOS/wiki
@@ -296,7 +335,7 @@ by submitting a new issue online. Please include information on your run,
 any output produced by runPipeline, as well as the pipeline.* files and the 
 Log/<LAST_STEP> file (if not too large).
 
-H/ CONTACT
+### H) CONTACT
 
 Who to contact to report bugs, forward complaints, feature requests:
 
@@ -304,7 +343,7 @@ Todd Treangen: treangen@gmail.com
 Sergey Koren: sergek@umd.edu
 
 ----------------------------------------------------------------------------------
-I/ CITE
+### I) CITE
 
 Treangen TJ*, Koren S*, Sommer DD, Liu B, Astrovskaya I, Ondov B,
 Darling AE, Phillippy AM, Pop M.  MetAMOS: a modular and open source

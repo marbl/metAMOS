@@ -8,7 +8,7 @@ from classify import Classify
 
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
-
+from create_summary import *
 _readlibs = []
 _skipsteps = []
 _cls = None
@@ -67,15 +67,19 @@ def Postprocess(input,output):
    #linearize
    #call KronaReports
    if _cls == 'phmmer':
-       if not os.path.exists(_settings.KRONA + os.sep + "ImportPHMMER.pl"):
+       if not os.path.exists(_settings.KRONA + os.sep + "ktImportPHMMER"):
           print "Error: Krona importer for PHMMER not found in %s. Please check your path and try again.\n"%()
           raise(JobSignalledBreak)
-       run_process(_settings, "perl %s/ImportPHMMER.pl -c -v -i %s/Postprocess/in/%s.hits"%(_settings.KRONA,_settings.rundir,_settings.PREFIX),"Postprocess")
+       run_process(_settings, "perl %s/ktImportPHMMER %s -c -v -i %s/Postprocess/in/%s.hits"%(_settings.KRONA,"-l" if _settings.local_krona else "",_settings.rundir,_settings.PREFIX),"Postprocess")
    elif _cls == 'blast' or _cls == 'metaphyler' or _cls == None:
-       if not os.path.exists(_settings.KRONA + os.sep + "ImportBLAST.pl"):
-          print "Error: Krona importer for BLAST not found in %s. Please check your path and try again.\n"%()
+       if not os.path.exists(_settings.KRONA + os.sep + "ktImportBLAST"):
+          print "Error: Krona importer for BLAST not found in %s. Please check your path and try again.\n"%(_settings.KRONA)
           raise(JobSignalledBreak)
-       run_process(_settings, "perl %s/ImportBLAST.pl -c -v -i %s/Postprocess/in/%s.hits"%(_settings.KRONA,_settings.rundir,_settings.PREFIX),"Postprocess")
+       run_process(_settings, "%s/ktImportBLAST %s -c -i %s/Postprocess/in/%s.hits:%s/FindORFS/out/%s.ctg.gene.cvg"%(_settings.KRONA,"-l" if _settings.local_krona else "",_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Postprocess")
+       run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")
+       run_process(_settings, "ln %s/Postprocess/out/blast.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
+       #run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")
+       #run_process(_settings, "ln %s/Annotate/out/phymmbl.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
    elif _cls == 'fcp':
        # now ran in Annotate step
        pass
@@ -101,6 +105,9 @@ def Postprocess(input,output):
        #run_process(_settings, "perl %s/ImportPhyloSift.pl -c -v -i %s/Postprocess/in/%s.hits:%s/Assemble/out/%s.contig.cvg"%(_settings.KRONA,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX), "Postprocess") 
        run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")
        run_process(_settings, "ln %s/Annotate/out/report.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
+   else:
+       run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")
+       run_process(_settings, "ln %s/Annotate/out/report.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
 
    # create sym links
    run_process(_settings, "unlink %s/Postprocess/out/abundance.krona.html"%(_settings.rundir), "Postprocess")
@@ -108,6 +115,23 @@ def Postprocess(input,output):
 
    run_process(_settings, "unlink %s/Postprocess/out/%s.classified"%(_settings.rundir, _settings.taxa_level), "Postprocess")
    run_process(_settings, "ln -s %s/Classify/out %s/Postprocess/out/%s.classified"%(_settings.rundir, _settings.rundir, _settings.taxa_level), "Postprocess")
+
+   run_process(_settings, "unlink %s/Postporocess/out/lap.scores"%(_settings.rundir), "Postprocess")
+   run_process(_settings, "ln %s/Validate/out/%s.lap %s/Postprocess/out/lap.scores"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
+   run_process(_settings, "unlink %s/Postporocess/out/best.asm"%(_settings.rundir), "Postprocess")
+   run_process(_settings, "ln %s/Validate/out/%s.asm.selected %s/Postprocess/out/best.asm"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
+
+   if os.path.exists("%s/Validate/out/%s.ref.selected"%(_settings.rundir, _settings.PREFIX)):
+      run_process(_settings, "unlink %s/Postporocess/out/ref.asm"%(_settings.rundir), "Postprocess")
+      run_process(_settings, "ln %s/Validate/out/%s.ref.selected %s/Postprocess/out/ref.asm"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
+      run_process(_settings, "unlink %s/Postporocess/out/quast"%(_settings.rundir), "Postprocess")
+      run_process(_settings, "ln -s %s/Validate/out/quast/combined_quast_output %s/Postprocess/out/quast"%(_settings.rundir,  _settings.rundir), "Postprocess")
+   else:
+      run_process(_settings, "touch %s/Postprocess/out/ref.asm"%(_settings.rundir), "Postprocess")
+
+   if os.path.exists("%s/Assemble/out/%s_report.html"%(_settings.rundir, _settings.PREFIX)):
+      run_process(_settings, "unlink %s/Postprocess/out/kmergenie_report.html"%(_settings.rundir), "Postprocess")
+      run_process(_settings, "ln %s/Assemble/out/%s_report.html %s/Postprocess/out/kmergenie_report.html"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
 
    #command to open webbrowser?
    #try to open Krona output
@@ -220,6 +244,7 @@ def Postprocess(input,output):
    run_process(_settings, "unlink %s/Postprocess/out/%s.ctg.cvg"%(_settings.rundir, _settings.PREFIX), "Postprocess")
    run_process(_settings, "ln %s/Assemble/out/%s.contig.cvg %s/Postprocess/out/%s.ctg.cvg"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess") 
 
+
 #   print "python %s/python/create_report.py %s/Abundance/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/ %s/Postprocess/out/%s.scf.fa %s %s %d"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.AMOS, len(_readlibs))
 
    # create html report
@@ -242,13 +267,27 @@ def Postprocess(input,output):
    run_process(_settings, "ln %s/Propagate/out/%s.clusters %s/Postprocess/out/html/propagate.out.clusters"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
 
    run_process(_settings, "unlink %s/Postprocess/out/html/FunctionalAnnotation.html"%(_settings.rundir), "Postprocess")
-   run_process(_settings, "ln %s/ec.krona.html %s/Postprocess/out/html/FunctionalAnnotation.html"%(os.getcwd(), _settings.rundir), "Postprocess")
-
-   
-   run_process(_settings, "python %s/python/create_summary.py %s/Abundance/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/html/ %s/Postprocess/out/%s.scf.fa %s %s/img %s %d %s"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.METAMOSDIR,_settings.AMOS, len(_readlibs), _settings.taxa_level),"Postprocess")
+   run_process(_settings, "ln %s/FunctionalAnnotation/out/ec.krona.html %s/Postprocess/out/html/FunctionalAnnotation.html"%(_settings.rundir, _settings.rundir), "Postprocess")
+ 
+   #run_process(_settings, "python %s/python/create_summary.py %s/Abundance/out/%s.taxprof.pct.txt  %s/Postprocess/out/%s.bnk %s/Postprocess/out/html/ %s/Postprocess/out/%s.scf.fa %s %s/img %s %d %s"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.rundir,_settings.PREFIX,_settings.METAMOS_UTILS,_settings.METAMOSDIR,_settings.AMOS, len(_readlibs), _settings.taxa_level),"Postprocess")
+   create_summary("%s/Abundance/out/%s.taxprof.pct.txt"%(_settings.rundir,_settings.PREFIX),"%s/Postprocess/out/%s.bnk"%(_settings.rundir,_settings.PREFIX),"%s/Postprocess/out/html/"%(_settings.rundir),"%s/Postprocess/out/%s.scf.fa"%(_settings.rundir,_settings.PREFIX),"%s"%(_settings.METAMOS_UTILS),"%s/img"%(_settings.METAMOSDIR),"%s"%(_settings.AMOS),len(_readlibs),"%s"%(_settings.taxa_level),"%s"%(_settings.DB_DIR))
    #webbrowser.open_new_tab(createreport.html)
    if openbrowser:
-       if os.path.exists("%s/Postprocess/out/html/summary.html"%(_settings.rundir)):
-           webbrowser.open_new_tab("file://%s/Postprocess/out/html/summary.html"%(_settings.rundir))
+       html_results = "%s/Postprocess/out/html/summary.html"%(_settings.rundir)
+       url = "file://%s"%(html_results)
+       print "url is %s\n"%(url)
+       if os.path.exists(html_results):
+          try:
+             client = webbrowser.get("firefox")
+             client.open_new_tab(url)
+             return
+          except:
+             try:
+                if "Darwin" in Settings.OSTYPE:
+                   webbrowser.get('safari').open_new_tab(url)
+                else:
+                   webbrowser.open_new_tab(url)
+             except:
+                print("Please open %s in your browser\n"%(url))
        else:
            print "ERROR: No Summary html file available! skipping"

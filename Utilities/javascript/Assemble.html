@@ -1,19 +1,95 @@
-<head>
+<!DOCTYPE html>
+<meta charset="utf-8">
 <style>
 
-#bigPicture
-{
-	width:100%;
-	height:100%;
-	background:url(ContigSizes.png);
-	background-size:contain;
-	background-repeat:no-repeat;
-	background-position:center;
+body {
+  font: 10px sans-serif;
 }
-</style>
-</head>
 
-<body style="margin:0px">
-	<div id="bigPicture">
-	</div>
-</body>
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.js"></script>
+<script>
+
+var margin = {top: 20, right: 20, bottom: 30, left: 50},
+    width = 960 - margin.left - margin.right,
+    height = 700 - margin.top - margin.bottom;
+
+var parseDate = d3.time.format("%d-%b-%y").parse;
+
+var x = d3.scale.linear()
+    .range([width, 0]);
+
+var y = d3.scale.linear()
+    .range([height,0]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var line = d3.svg.line()
+    .x(function(d) { return x(d.contig); })
+    .y(function(d) { return y(d.total); });
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+d3.tsv("assemble.tsv", function(error, data) {
+  data.forEach(function(d) {
+    d.total = +d.total;
+    d.contig = +d.contig;
+  });
+
+  x.domain(d3.extent(data, function(d) { return d.contig; }));
+  y.domain(d3.extent(data, function(d) { return d.total; }));
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+    .append("text")
+      .attr("x", 450)
+      .attr("y", 28)
+      .attr("dx", ".71em")
+      .style("text-anchor", "end")
+      .text("Contig Size (bp)");
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("x", -110)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Cumulative Contig Size (bp)");
+
+  svg.append("path")
+      .datum(data)
+      .attr("class", "line")
+      .attr("d", line);
+});
+
+</script>

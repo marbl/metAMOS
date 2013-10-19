@@ -4,32 +4,33 @@ import os, sys, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser
 from operator import itemgetter
 
 from utils import *
-from assemble import Assemble
-from mapreads import MapReads
+from mapreads import SplitForORFs
 
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
 
 _readlibs = []
 _skipsteps = []
-_asm = None
 _settings = Settings()
 _orf = None 
 _min_ctg_len = 300
 _min_ctg_cvg = 3
 _read_orfs = False
+_run_fast = True
 
-def init(reads, skipsteps, asm, orf, min_ctg_len, min_ctg_cvg,read_orfs):
+def setRunFast(fast):
+   global _run_fast
+   _run_fast = fast
+
+def init(reads, skipsteps, orf, min_ctg_len, min_ctg_cvg,read_orfs):
    global _readlibs
    global _skipsteps
-   global _asm
    global _orf
    global _min_ctg_cvg
    global _min_ctg_len
    global _read_orfs
    _readlibs = reads
    _skipsteps = skipsteps
-   _asm = asm
    _orf = orf
    _min_ctg_cvg = min_ctg_cvg
    _min_ctg_len = min_ctg_len
@@ -259,6 +260,41 @@ def parse_fraggenescanout(orf_file,is_scaff=False, error_stream="FindORFS",min_l
     #    genecnt +=1
     #cvgg.close()
 
+def parse_prokka(orf_file,is_scaff=False, error_stream="FindORFS",min_len=_min_ctg_len,min_cvg=_min_ctg_cvg):
+    coverageFile = open("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, _settings.PREFIX), 'r')
+    cvg_dict = {}
+    len_dict = {}
+
+    for line in coverageFile:
+        data = line.split()
+        cvg_dict[data[0]] = float(data[1])
+    coverageFile.close()
+    genefile = ""
+    if is_scaff:
+        genefile = open("%s/FindScaffoldORFS/out/prokka/%s.gff"%(_settings.rundir,_settings.PREFIX),'r')
+        genectg = open("%s/FindScaffoldORFS/out/%s.gene.map"%(_settings.rundir, _settings.PREFIX), 'w')
+        cvgg = open("%s/FindScaffoldORFS/out/%s.gene.cvg"%(_settings.rundir,_settings.PREFIX),'w')
+    else:
+        genefile = open("%s/FindORFS/out/%s.prokka/%s.gff"%(_settings.rundir,_settings.PREFIX,_settings.PREFIX),'r')
+        genectg = open("%s/FindORFS/out/%s.gene.map"%(_settings.rundir, _settings.PREFIX), 'w')
+        cvgg = open("%s/FindORFS/out/%s.gene.cvg"%(_settings.rundir,_settings.PREFIX),'w')
+
+    for line in genefile.xreadlines():
+       if "#" in line:
+          continue
+       elif line.startswith(">"):
+          break
+       (ctgID, geneA, geneB, start, end, index, geneori, geneC, id) = line.strip().split("\t", 9)
+       id = id.split(";")[0].replace("ID=", "")
+       genectg.write("%s\t%s\n"%(ctgID, id))
+       try:
+          cvgg.write("%s\t%s\n"%(id, cvg_dict[ctgID]))
+       except KeyError:
+          cvgg.write("%s\t%s\n"%(id, 1))
+    genectg.close()
+    cvgg.close()
+    genefile.close()
+
 def findFastaORFs(orf, contigs, outputFNA, outputFAA, outputCVG, outputMAP, min_len, min_cvg):
    if orf == "metagenemark":
        if not os.path.exists(_settings.METAGENEMARK + os.sep + "gmhmmp"):
@@ -281,20 +317,44 @@ def findFastaORFs(orf, contigs, outputFNA, outputFAA, outputCVG, outputMAP, min_
        run_process(_settings,"mv %s/FindORFS/out/%s.orfs.faa %s/FindORFS/out/%s"%(_settings.rundir,_settings.PREFIX,_settings.rundir,outputFAA), "FindORFS")
        run_process(_settings,"mv %s/FindORFS/out/%s.gene.cvg %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputCVG), "FindORFS")
        run_process(_settings,"mv %s/FindORFS/out/%s.gene.map %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputMAP), "FindORFS")
+   elif orf == "prokka":
+      if not os.path.exists(_settings.PROKKA + os.sep + "prokka"):
+         print "Error: Prokka not found in %s. Please check your paths and try again"%(_settings.PROKKA)
+         raise(JobSignalledBreak)
+
+      prokkaOptions = getProgramParams(_settings.METAMOS_UTILS, "prokka.spec", "", "-")
+      if "--gram" in prokkaOptions and not os.path.exists(_settings.SIGNALP + os.sep + "signalp"):
+         print "Warning: Prokka option --gram requires SignalP which is not found. Disabling"
+         prokkaOptions = prokkaOptions.replace("--gram", "")
+
+      run_process(_settings, "rm -rf %s/FindORFS/out/%s.prokka"%(_settings.rundir, _settings.PREFIX))
+      run_process(_settings, "%s/prokka %s --outdir %s/FindORFS/out/%s.prokka --prefix %s --force %s"%(_settings.PROKKA,"--fast" if _run_fast else "",  _settings.rundir, _settings.PREFIX, _settings.PREFIX, contigs), "FindORFS")
+      parse_prokka("%s/FindORFS/out/prokka/%s.gff"%(_settings.rundir,_settings.PREFIX), 0, "FindORFS", min_len, min_cvg)
+      run_process(_settings, "ln %s/FindORFS/out/%s.prokka/%s.ffn %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.PREFIX, _settings.rundir, outputFNA), "FindORFS")
+      run_process(_settings, "ln %s/FindORFS/out/%s.prokka/%s.faa %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.PREFIX, _settings.rundir, outputFAA), "FindORFS")
+      run_process(_settings,"mv %s/FindORFS/out/%s.gene.cvg %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputCVG), "FindORFS")
+      run_process(_settings,"mv %s/FindORFS/out/%s.gene.map %s/FindORFS/out/%s"%(_settings.rundir, _settings.PREFIX, _settings.rundir, outputMAP), "FindORFS")
+
    else:
        #not recognized
        return 1
 
-@follows(MapReads)
+# warning: this is not thread safe so cannot be run in parallel
 @posttask(touch_file("%s/Logs/findorfs.ok"%(_settings.rundir)))
-@files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.PREFIX))
+@transform(SplitForORFs, suffix(".contig.cvg"), ".faa")
 def FindORFS(input,output):
    if "FindORFS" in _skipsteps:
       run_process(_settings, "touch %s/Logs/findorfs.skip"%(_settings.rundir), "FindORFS")
-      run_process(_settings, "touch %s/FindRepeats/in/%s.fna"%(_settings.rundir, _settings.PREFIX),"FindORFS")
-      run_process(_settings, "touch %s/FindORFS/out/%s.faa"%(_settings.rundir, _settings.PREFIX),"FindORFS")
-      run_process(_settings, "ln -s %s/FindORFS/out/%s.faa %s/Annotate/in"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "FindORFS")
+      run_process(_settings, "touch %s/Annotate/in/%s.faa"%(_settings.rundir, _settings.PREFIX), "FindORFS")
+      run_process(_settings, "touch %s/FindRepeats/in/%s.fna"%(_settings.rundir, _settings.PREFIX), "FindORFS")
       return 0
+
+   if os.path.exists("%s/Logs/findorfs.ok"%(_settings.rundir)):
+      return 0
+
+   originalPrefix = _settings.PREFIX
+   _settings.PREFIX = output.replace("%s/Assemble/out/"%(_settings.rundir), "")
+   _settings.PREFIX = _settings.PREFIX.replace(".faa", "")
 
    #if _asm == "soapdenovo":
        #if not os.path.exists("%s/Assemble/out/%s.asm.scafSeq.contigs"%(_settings.rundir,_settings.PREFIX)):
@@ -307,15 +367,15 @@ def FindORFS(input,output):
        #run_process(_settings, "cp %s/Assemble/out/%s.asm.contig  %s/FindORFS/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"FindORFS")
    #else:
    run_process(_settings, "unlink %s/FindORFS/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"FindORFS")
-   run_process(_settings, "ln -s %s/Assemble/out/%s.asm.contig %s/FindORFS/in/"%(_settings.rundir,_settings.PREFIX,_settings.rundir),"FindORFS")
+   run_process(_settings, "ln %s/Assemble/out/%s.asm.contig %s/FindORFS/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX),"FindORFS")
 
    findFastaORFs(_orf, "%s/FindORFS/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "%s.ctg.fna"%(_settings.PREFIX), "%s.ctg.faa"%(_settings.PREFIX), "%s.ctg.gene.cvg"%(_settings.PREFIX), "%s.ctg.gene.map"%(_settings.PREFIX), _min_ctg_len, _min_ctg_cvg)
    
    #don't call ORFs on unassembled reads? flag?
    if _read_orfs:
        for lib in _readlibs:
-           run_process(_settings, "ln -s %s/Assemble/out/lib%d.unaligned.fasta %s/FindORFS/in/"%(_settings.rundir,lib.id,_settings.rundir),"FindORFS")
-           findFastaORFs(_orf, "%s/FindORFS/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id), "%s.lib%d.fna"%(_settings.PREFIX, lib.id), "%s.lib%d.faa"%(_settings.PREFIX, lib.id), "%s.lib%d.gene.cvg"%(_settings.PREFIX, lib.id), "%s.lib%d.gene.map"%(_settings.PREFIX, lib.id), 0, 1)
+           run_process(_settings, "ln %s/Assemble/out/%s.lib%d.unaligned.fasta %s/FindORFS/in/%s.lib%d.unaligned.fasta"%(_settings.rundir,_settings.PREFIX,lib.id,_settings.rundir, _settings.PREFIX, lib.id),"FindORFS")
+           findFastaORFs(_orf, "%s/FindORFS/in/%s.lib%d.unaligned.fasta"%(_settings.rundir, _settings.PREFIX, lib.id), "%s.lib%d.fna"%(_settings.PREFIX, lib.id), "%s.lib%d.faa"%(_settings.PREFIX, lib.id), "%s.lib%d.gene.cvg"%(_settings.PREFIX, lib.id), "%s.lib%d.gene.map"%(_settings.PREFIX, lib.id), 0, 1)
 
    # merge results
    run_process(_settings, "rm -r %s/FindORFS/out/%s.fna"%(_settings.rundir, _settings.PREFIX), "FindORFS")
@@ -334,11 +394,8 @@ def FindORFS(input,output):
    run_process(_settings, "rm -r %s/FindORFS/out/%s.gene.map"%(_settings.rundir, _settings.PREFIX), "FindORFS")
    run_process(_settings, "cat %s/FindORFS/out/%s*.gene.map > %s/FindORFS/out/%s.gene.map"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "FindORFS")
 
-   run_process(_settings, "unlink %s/Annotate/in/%s.faa"%(_settings.rundir,_settings.PREFIX),"FindORFS")
-   run_process(_settings, "unlink %s/Annotate/in/%s.fna"%(_settings.rundir,_settings.PREFIX),"FindORFS")
-   run_process(_settings, "unlink %s/FindRepeats/in/%s.fna"%(_settings.rundir,_settings.PREFIX),"FindORFS")
-   run_process(_settings, "ln -s %s/FindORFS/out/%s.faa %s/Annotate/in/"%(_settings.rundir,_settings.PREFIX,_settings.rundir),"FindORFS")
-   run_process(_settings, "ln -s %s/FindORFS/out/%s.fna %s/Annotate/in/"%(_settings.rundir,_settings.PREFIX,_settings.rundir),"FindORFS")
-   run_process(_settings, "ln -s %s/FindORFS/out/%s.faa %s/FindRepeats/in/"%(_settings.rundir,_settings.PREFIX,_settings.rundir),"FindORFS")
-   run_process(_settings, "ln -s %s/FindORFS/out/%s.fna %s/FindRepeats/in/"%(_settings.rundir,_settings.PREFIX,_settings.rundir),"FindORFS")
+   run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/Assemble/out/%s.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "FindORFS")
+   run_process(_settings, "ln %s/FindORFS/out/%s.fna %s/Assemble/out/%s.fna"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "FindORFS")
+
+   _settings.PREFIX = originalPrefix
 

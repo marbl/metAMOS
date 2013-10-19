@@ -2,20 +2,25 @@ import sys, os, string, locale
 ROOT = os.path.dirname(os.path.abspath(__file__))
 #sys.path.insert(0, os.path.join(ROOT, '..'))
 #sys.path.append(ROOT+"/lib")
-import  markup, datetime
+import  markup
 from pygooglechart import StackedVerticalBarChart
 from pygooglechart import PieChart2D
 from pygooglechart import PieChart3D
 from pygooglechart import Axis
 from pygooglechart import StackedHorizontalBarChart, StackedVerticalBarChart, \
          GroupedHorizontalBarChart, GroupedVerticalBarChart
-from datetime import datetime, date, time
+
 
 
 import settings
+from utils import *
 import helper
-
+from create_plots import *
+from get_classify_stats import *
 #let system set locale from available ones
+_settings = Settings()
+
+from datetime import datetime, date, time
 locale.setlocale(locale.LC_ALL, '')
 
 def intOrZero(string):
@@ -24,57 +29,98 @@ def intOrZero(string):
     else:
         return '0'
 
-def outputLibraryInfo(html_prefix, markupFile, outputHeader, libcnt, format, mated, interleaved, mmin, mmax, outputFastQC):
-   if outputHeader:
-      markupFile.table(border="1")
-      markupFile.tr()
-      markupFile.th("Library #")
-      markupFile.th("Format")
-      markupFile.th("Mated?")
-      markupFile.th("Min Insert Size")
-      markupFile.th("Max Insert Size")
-      if outputFastQC:
-         markupFile.th("First FastQC Report")
-         markupFile.th("Second FastQC Report") 
-      markupFile.tr.close()
+def getTable(header, content):
+  result = "<div class=\"datagrid\"><table><thead><tr>"
+  for (h, align) in header:
+     result = "%s<th align=\"%s\">%s</th>"%(result, align, h)
+  result = "%s</tr></thead><tbody>"%(result)
+  
+  i = 0
+  for row in content:
+     if i % 2 == 0:
+        result = "%s<tr>"%(result)
+     else:
+        result = "%s<tr class=\"alt\">"%(result)
+     for (col, align) in row:
+        result = "%s<td align=\"%s\">%s</td>"%(result, align, col)
+     result = "%s</tr>"%(result)
+     i += 1
+  result = "%s</tbody></table></div>"%(result)
+  return result
 
-   markupFile.tr()
-   markupFile.add("<td align=\"left\">%d</td>"%(libcnt))
-   markupFile.add("<td align=\"left\">%s</td>"%(format))
-   markupFile.add("<td align=\"left\">%s</td>"%(mated))
-   markupFile.add("<td align=\"right\">%d</td>"%(mmin))
-   markupFile.add("<td align=\"right\">%d</td>"%(mmax))
+def outputLibraryInfo(headerArray, dataArray, outputHeader, libcnt, format, mated, interleaved, mmin, mmax, outputFastQC):
+   if outputHeader:
+      headerArray.append(["Library #", "left"])
+      headerArray.append(["Format", "left"])
+      headerArray.append(["Mated?", "left"])
+      headerArray.append(["Min Insert Size", "right"])
+      headerArray.append(["Max Insert Size", "right"])
+      if outputFastQC:
+         headerArray.append(["First FastQC Report", "left"])
+         headerArray.append(["Second FastQC Report", "left"]) 
+
+   row = []
+   row.append([libcnt, "left"])
+   row.append([format, "left"])
+   row.append([mated, "left"])
+   row.append([mmin, "right"])
+   row.append([mmax, "right"])
 
    if outputFastQC and os.path.exists("lib%d.1.fastqc/fastqc_report.html"%(libcnt)):
       if mated.lower() == "true":
          if interleaved.lower() == "true":
-            markupFile.td('<a target="_blank" href="lib%d.1.fastqc/fastqc_report.html">interleaved</a>'%(libcnt))
-            markupFile.td("NA")
+            row.append(["<a target=\"_blank\" href=\"lib%d.1.fastqc/fastqc_report.html\">interleaved</a>"%(libcnt), "left"])
+            row.append(["NA", "left"])
          else:
-            markupFile.td('<a target="_blank" href="lib%d.1.fastqc/fastqc_report.html">left</a>'%(libcnt))
-            markupFile.td('<a target="_blank" href="lib%d.2.fastqc/fastqc_report.html">right</a>'%(libcnt))
+            row.append(['<a target="_blank" href="lib%d.1.fastqc/fastqc_report.html">left</a>'%(libcnt), "left"])
+            row.append(['<a target="_blank" href="lib%d.2.fastqc/fastqc_report.html">right</a>'%(libcnt), "left"])
       else:
-         markupFile.td('<a target="_blank" href="lib%d.1.fastqc/fastqc_report.html">unmated</a>'%(libcnt))
-         markupFile.td("NA")
-   markupFile.tr.close()
+         row.append(['<a target="_blank" href="lib%d.1.fastqc/fastqc_report.html">unmated</a>'%(libcnt), "left"])
+         row.append(["NA", "left"])
+   dataArray.append(row)
 
-if __name__ == "__main__":
-    if len(sys.argv) < 5:
-        print "usage: create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm> <Utils dir> <run dir> <# of libs> <taxa level of classifications>"
-        sys.exit(0)
-    rund = sys.argv[7]
-    utils = sys.argv[5]
-    img = sys.argv[6]
+def outputValidate(headerArray, dataArray, outputHeader, best, results):
+   assembler = results[0]
+   isFirst = True
+   if outputHeader:
+      for r in results:
+         if isFirst:
+            headerArray.append([r.title(), "left"])
+            isFirst = False
+         else:
+            headerArray.append([r.title(), "right"])
+      return
 
-    prefix = sys.argv[3]
+   isBest = False
+   if best.lower() == assembler.lower():
+      isBest = True
+
+   row = []
+   isFirst = True
+   for r in results:
+      if isFirst:
+         row.append(["%s%s%s"%("<b>" if isBest else "", r, "</b>" if isBest else ""), "left"])
+         isFirst = False
+      else:
+         score = ""
+         if r == None or r.lower() == "none":
+            score = "N/A"
+         else:
+            score = "%.4f"%(float(r))
+         row.append(["%s%s%s"%("<b>" if isBest else "", score, "</b>" if isBest else ""), "right"])
+   dataArray.append(row)
+
+def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,dbdir):
+#if __name__ == "__main__":
+#    if len(sys.argv) < 5:
+#        print "usage: create_report.py <metaphyler tab file> <AMOS bnk> <output prefix> <ref_asm> <Utils dir> <run dir> <# of libs> <taxa level of classifications>"
+#        sys.exit(0)
+    
     html_prefix = prefix
     prefix = prefix.replace("/html/", "")
     MA_dir = prefix
     MA_dir = MA_dir.replace("/Postprocess/out","")
-    ref_asm = sys.argv[4]
-    mp = open(sys.argv[1],'r')
-    nLibs = int(sys.argv[8])
-    taxa_level = sys.argv[9]
+    mp = open(first,'r')
     #mp2 = open(sys.argv[1].replace("s12","s3"),'r')    
 
     # set working dir
@@ -82,16 +128,29 @@ if __name__ == "__main__":
 
     if not os.path.exists(html_prefix+"asmstats.out"):
         libPath = rund.replace("bin", "lib")
-        print "perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,sys.argv[4],html_prefix)
-        os.system("perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,sys.argv[4],html_prefix))
+        #print "perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,ref_asm,html_prefix)
+        run_process(_settings,"perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,ref_asm,html_prefix),"Classify")
     report = open(html_prefix+"asmstats.out",'r')
 
-    initialStep = "Browse Results"
+    initialStep = "Annotate"
+
+    # get metamos version
+    version = "1.0"
+    summary = open("%s/pipeline.run"%(MA_dir), 'r')
+    for line in summary:
+       line = line.replace("\n","")
+       if "#" in line:
+          continue
+       elif "metAMOS Version:" in line:
+          version = line.replace("\n","").split("\t")[-1]
+    summary.close()
 
     steps = []
     steps.append("Preprocess")
     steps.append("Assemble")
     steps.append("MapReads")
+    steps.append("Validate")
+    #steps.append("MultiAlign")
     steps.append("FindORFS")
     steps.append("FindRepeats")
     steps.append("Scaffold")
@@ -107,6 +166,8 @@ if __name__ == "__main__":
     step_status["Preprocess"] = "OK"
     step_status["Assemble"] = "OK"
     step_status["MapReads"] = "OK"
+    step_status["Validate"] = "OK"
+    #step_status["MultiAlign"] = "SKIP"
     step_status["FindORFS"] = "OK"
     step_status["FindRepeats"] = "OK"
     step_status["Scaffold"] = "OK"
@@ -147,7 +208,8 @@ if __name__ == "__main__":
     cpfile = open("%s/plot.tab"%(html_prefix),'w')
     cpfile.write("+sample1\t%s\tproba\tb-\tmetaphyler=1\n"%(MA_dir))
     cpfile.close()
-    os.system("python %s/python/create_plots.py %s/plot.tab proba1"%(utils,html_prefix))
+    #os.system("python %s/python/create_plots.py %s/plot.tab proba1"%(utils,html_prefix))
+    create_plots("%s/plot.tab"%(html_prefix),"%s"%("proba1"))
 
     ##update counts
     #count reads
@@ -182,7 +244,7 @@ if __name__ == "__main__":
             os.system("cp %s/javascript/%s.html %s/"%(utils,step,html_prefix))
     os.system("cp %s/Logs/COMMANDS.log %s/pipeline.commands"%(MA_dir,html_prefix))
     os.system("cp %s/pipeline.run %s/pipeline.summary"%(MA_dir,html_prefix))
-    os.system("ln -sf %s/javascript/style.css %s/"%(utils,html_prefix)) # TEMP: change back to cp
+    os.system("cp %s/javascript/style.css %s/"%(utils,html_prefix)) # TEMP: change back to cp
     os.system("cp -r %s/../KronaTools/src %s/../KronaTools/img %s/"%(utils, utils, html_prefix)) # TODO: unhack KronaTools path
 #    os.system("cp %s/blocks.jpg %s/"%(img,html_prefix))
 #    os.system("cp %s/blocks_small.jpg %s/"%(img,html_prefix))
@@ -191,11 +253,12 @@ if __name__ == "__main__":
 
     # generate dynamic java scripts
     # first classify and propagate
-    os.system("python %s/python/get_classify_stats.py %s/propagate.in.clusters %s/propagate.out.clusters %s/DB/tax_key.tab %s Classify.html Propagate.html %s"%(utils, html_prefix, html_prefix, utils, html_prefix, taxa_level)) 
+    #os.system("python %s/python/get_classify_stats.py %s/propagate.in.clusters %s/propagate.out.clusters %s/DB/tax_key.tab %s Classify.html Propagate.html %s"%(utils, html_prefix, html_prefix, utils, html_prefix, taxa_level)) 
+    get_classify_stats("%s/propagate.in.clusters"%(html_prefix),"%s/propagate.out.clusters"%(html_prefix),"%s/tax_key.tab"%(dbdir),"%s"%(html_prefix),"Classify.html","Propagate.html","%s"%(taxa_level))
 
     # generate preprocess
     preprocess = markup.page()
-    preprocess.init()#bodyattrs={'style':"margin:0px"})
+    preprocess.init(css="style.css")#bodyattrs={'style':"margin:0px"})
     preprocess.p()
 
     nQC = 0
@@ -214,6 +277,8 @@ if __name__ == "__main__":
     linkerType = ""
     libadded = False
     firstLib = True
+    headerArray = []
+    dataArray = []
     for line in summary:
        line = line.replace("\n","")
        if "#" in line:
@@ -222,11 +287,11 @@ if __name__ == "__main__":
           asmc = line.replace("\n","").split("\t")[-1]
           if len(asmc) <= 2:
              continue
-          preprocess.add("Supplied assembly: %s"%(asmc))
+          preprocess.add("<div class=\"datagrid\">Pre-assembled contigs input: %s</div>"%(asmc))
           preprocess.br()
        elif "format:" in line:
           if format and not libadded:
-             outputLibraryInfo(html_prefix, preprocess, firstLib, libcnt, format, mated, interleaved, mmin, mmax, nQC > 0)
+             outputLibraryInfo(headerArray, dataArray, firstLib, libcnt, format, mated, interleaved, mmin, mmax, nQC > 0)
              libcnt += 1
           libadded = False
           format = line.replace("\n","").split("\t")[-1]
@@ -257,20 +322,147 @@ if __name__ == "__main__":
           mated = False
           libadded = True
     if format and not libadded:
-       outputLibraryInfo(html_prefix, preprocess, firstLib, libcnt, format, mated, interleaved, mmin, mmax, nQC > 0)
-    preprocess.table.close()
+       outputLibraryInfo(headerArray, dataArray, firstLib, libcnt, format, mated, interleaved, mmin, mmax, nQC > 0)
+    preprocess.add(getTable(headerArray, dataArray))
     summary.close()
+
+    if os.path.exists("%s/Postprocess/out/kmergenie_report.html"%(MA_dir)):
+       preprocess.iframe(id_="KmerGenie", src_="%s/Postprocess/out/kmergenie_report.html"%(MA_dir), width="800", height="5000")
 
     preprocess_out = open("%s/Preprocess.html"%(html_prefix), 'w')
     preprocess_out.write(preprocess.__str__())
     preprocess_out.close()
-    
+
+    validate_out = open("%s/Validate.html"%(html_prefix), 'w')
+    headerArray = []
+    dataArray = []
+    firstScore = True
+    bestAsm = ""
+    refs = [] 
+    if os.path.exists("%s/Postprocess/out/lap.scores"%(MA_dir)):
+       best = open("%s/Postprocess/out/best.asm"%(MA_dir), 'r')
+       bestAsm = best.read()
+       best.close()
+       laps = open("%s/Postprocess/out/lap.scores"%(MA_dir), 'r')
+       validate = markup.page()
+       validate.init(css="style.css")
+       validate.p()
+       validate.add("<div class=\"datagrid\">")
+       validate.add("Selected assembler: %s"%(bestAsm))
+       ref = open("%s/Postprocess/out/ref.asm"%(MA_dir), 'r')
+       first = True
+       for r in ref.xreadlines():
+           refs.append(r)
+           if first:
+              validate.br()
+              first = False
+           validate.add("Selected reference: %s"%(r))
+       validate.br()
+       ref.close()
+       for line in laps:
+          line = line.replace("\n","")
+          if "#" in line:
+             continue
+          else:
+             res = line.split("\t")
+             outputValidate(headerArray, dataArray, firstScore, bestAsm, res)
+             firstScore = False
+       validate.add(getTable(headerArray, dataArray))
+       validate.add("</div>")
+       laps.close()
+
+    # when we have quast, we will add our table to their report, otherwise write standalone report
+    if os.path.exists("%s/Postprocess/out/quast/report.html"%(MA_dir)):
+       os.system("cp %s/Postprocess/out/quast/report.html %s/Postprocess/out/quast/~report.html"%(MA_dir, MA_dir))
+       quastIn = open("%s/Postprocess/out/quast/~report.html"%(MA_dir), 'r')
+       quastOut = open("%s/Postprocess/out/quast/report.html"%(MA_dir), 'w')
+       skip = False
+       for line in quastIn.xreadlines():
+          if not skip:
+             quastOut.write(line + "\n")
+          else:
+             quastOut.write("margin-left: 10px;")
+             skip = False
+
+          if ".content" in line:
+             skip = True
+       quastIn.close()
+       quastOut.close()
+       validate.iframe(id_="quast", src_="%s/Postprocess/out/quast/report.html"%(MA_dir), width="800", height="1000")
+    validate_out.write(validate.__str__())
+    validate_out.close()
+
+    # multialign step
+    treeScripts= {} 
+    treeScripts["http://www.jsphylosvg.com/js/jquery/jquery-1.4.2.min.js"] = "javascript"
+    treeScripts["http://www.jsphylosvg.com/js/jquery/jquery.simplemodal.1.4.1.min.js"] = "javascript"
+    treeScripts["http://www.jsphylosvg.com/js/raphael/raphael-min.js"] = "javascript"
+    treeScripts["http://www.jsphylosvg.com/js/jsphylosvg-min.js?1.29"] = "javascript"
+    treeScripts["http://www.jsphylosvg.com/js/unitip/js/unitip.js"] = "javascript"
+
+    treeScript = [] 
+    treeScript.append("<script type=\"text/javascript\">")
+    treeScript.append("   var dataObject = { newick: '(M_canettii_CIPT_d:0.059437,(M_canettii_CIPT_e:0.07845,((((M_africanum_GM04118:0.00646,(M_bovis_AF2122_97:0.00269,(M_bovis_BCG_Tokyo_1:0.00013,((M_bovis_BCG_Korea_1:0.0,M_bovis_BCG_Pasteur:0.0):0.00014,M_bovis_BCG_Mexico:0.00013):0.00014):0.00294):0.00514):0.00207,(((MTBC_Beijing_NITR20:0.00914,(MTBC_CCDC5180:0.00102,(MTBC_CCDC5079:0.00423,MTBC_CCDC5079:0.00014):0.00078):0.00016):0.00368,((((MTBC_Erdman_ATCC_35:0.00075,MTBC:0.00123):0.00129,(MTBC_CDC1551:0.00245,MTBC_Haarlem3_NITR2:0.01398):0.00093):0.00065,((((MTBC_CTRI_2:0.001,(MTBC_KZN_4207:0.00014,(MTBC_KZN_605:0.00012,MTBC_KZN_1435:0.00014):0.00012):0.00071):0.00061,(MTBC_RGTB327:0.00462,MTBC_UT205:0.0012):0.00037):0.00014,MTBC_F11:0.00158):0.00109,(MTBC_H37Ra:0.00016,(MTBC_H37Rv:0.00028,MTBC_H37Rv:0.00014):0.00014):0.00281):0.00047):0.00112,MTBC_CAS_NITR204:0.009827):0.00022):0.00247,((MTBC_EAI5:0.0023,MTBC_EAI5_NITR206:0.00933):0.0035,(MTBC_RGTB423:0.00868,spades.45.asm.contig:0.0035):0.00066):0.00289):0.00015):0.07224,(M_canettii_CIPT_a:0.01891,M_canettii_CIPT_b:0.05096):0.03720):0.03909,M_canettii_CIPT_c:0.056869):0.00469):0.02099);' };")
+    treeScript.append("   function load() {")
+    treeScript.append("      var divVal = $('#svgCanvas').empty();")
+    treeScript.append("      var isCircular = $('#circularize-value')[0].value;")
+    treeScript.append("      Smits.PhyloCanvas.Render.Parameters.Rectangular.bufferX = 150;")
+    treeScript.append("      Smits.PhyloCanvas.Render.Parameters.Circular.bufferRadius = 0.35;")
+    treeScript.append("      Smits.PhyloCanvas.Render.Style.line.stroke = 'rgb(0,0,255)';")
+    treeScript.append("      Smits.PhyloCanvas.Render.Style.text[\"font-size\"] = 10;")
+    treeScript.append("      if (isCircular.toLowerCase() == 'true') {")
+    treeScript.append("         phylocanvas = new Smits.PhyloCanvas(")
+    treeScript.append("                                         dataObject,")
+    treeScript.append("                                         'svgCanvas',")
+    treeScript.append("                                          1000, 1000, 'circular'")
+    treeScript.append("                                         );")
+    treeScript.append("         $('#circularize-value')[0].value = 'false';")
+    treeScript.append("      } else {")
+    treeScript.append("         phylocanvas = new Smits.PhyloCanvas(")
+    treeScript.append("                                         dataObject,")
+    treeScript.append("                                         'svgCanvas',")
+    treeScript.append("                                          500, 500")
+    treeScript.append("                                         );")
+    treeScript.append("         $('#circularize-value')[0].value = 'true';")
+    treeScript.append("      }")
+    treeScript.append("      init();")
+    treeScript.append("   }")
+    treeScript.append("function snapshot() {")
+    treeScript.append("      var svgSource = phylocanvas.getSvgSource();")
+    treeScript.append("      if(svgSource) {")
+    treeScript.append("         var url = 'data:image/svg+xml,' + svgSource")
+    treeScript.append("         window.open(url);")
+    treeScript.append("      }")
+    treeScript.append("   }")
+    treeScript.append("</script>")
+    treeBody = {}
+    treeBody["onload"] = "load()"
+
+    maStep = markup.page()
+    maStep.add("\n".join(treeScript))
+    maStep.init(
+                css=("http://www.jsphylosvg.com//js/yui/build/cssfonts/fonts-min.css", "http://www.jsphylosvg.com/js/unitip/css/unitip.css"),
+                script=treeScripts, 
+                bodyattrs=treeBody)
+    maStep.div()
+    maStep.add("<input type=\"button\" id=\"download-link\" onclick=\"snapshot()\" value=\"Snapshot\" />")
+    maStep.div.close()
+    maStep.div()
+    maStep.add("<input type=\"button\" id=\"circularize-link\" onclick=\"load()\" value=\"Toggle Circular\" />")
+    maStep.add("<input type=\"hidden\" id=\"circularize-value\" value=\"false\">")
+    maStep.div.close()
+    maStep.div(id_="svgCanvas")
+    maStep.div.close()
+    maStep_out = open("%s/MultiAlign.html"%(html_prefix), 'w')
+    maStep_out.write(maStep.__str__())
+    maStep_out.close()
+
     # todo, need to add report for MapReads including # reads mapped (%), contig coverage histogram, and % reads between contigs and number of links histogram. Also re-estimated insert sizes for each lib
-    mapreads = markup.page()
-    mapreads.init(bodyattrs={'style':"margin:0px"})
-    mapreads.img(src_="hist_ctgcvg.png",height_="100%",width_="100%")
-    mapreads_out = open("%s/MapReads.html"%(html_prefix), 'w')
-    mapreads_out.write(mapreads.__str__())
+    #mapreads = markup.page()
+    #mapreads.init(bodyattrs={'style':"margin:0px"})
+    #mapreads.img(src_="hist_ctgcvg.png",height_="100%",width_="100%")
+    #mapreads_out = open("%s/MapReads.html"%(html_prefix), 'w')
+    #mapreads_out.write(mapreads.__str__())
 
     ##This will create ScaffoldSizes.png,ContigSizes.png
     
@@ -283,7 +475,7 @@ if __name__ == "__main__":
         rdata.append(line)
        
     if not os.path.exists(html_prefix+"covstats.out"):
-        os.system("%s/analyze-read-depth -x 2 %s > %scovstats.out"%(rund,sys.argv[2],html_prefix))
+        run_process(_settings,"%s/analyze-read-depth -x 2 %s > %scovstats.out"%(rund,amosbnk,html_prefix),"Classify")
     ff = open(html_prefix+"covstats.out",'r')
     covdata = []
     #covdata = ff.readlines()
@@ -292,7 +484,8 @@ if __name__ == "__main__":
         covdata.append(line)
     
     if not os.path.exists(html_prefix+"stats.out"):
-        os.system("%s/astats %s > %sstats.out"%(rund,sys.argv[2],html_prefix))
+        #os.system("%s/astats %s > %sstats.out"%(rund,amosbnk,html_prefix))
+        run_process(_settings,"%s/astats %s > %sstats.out"%(rund,amosbnk,html_prefix),"Classify")
     dd = open(html_prefix+"stats.out",'r')
     ddata = dd.readlines()
 
@@ -400,6 +593,11 @@ if __name__ == "__main__":
     script.append("<script type=\"text/javascript\">")
     script.append("var steps = ['%s'];"%("','".join(steps)))
     script.append("function load(step) {")
+    for step in steps:
+       if step_status[step] != "OK":
+          script.append("   if (step.toLowerCase() == \"%s\".toLowerCase()) {"%(step))
+          script.append("      return;")
+          script.append("   }")
     script.append("   for (var i = 0; i < steps.length; i++) {")
     script.append("      var current = steps[i].toLowerCase();")
     script.append("      if (current == step) {")
@@ -512,7 +710,7 @@ if __name__ == "__main__":
     page.add("<a target=\"_blank\" href=\"https://github.com/treangen/metAMOS/wiki\"><img style=\"padding-top:5px;\" src=\"name.png\"/>")
     page.add("<img src=\"blocks_dark_tiny.png\"/></a>")
 #    page.add("<img src=\"blocks_tiny2.jpg\"/>")
-    page.add("<div style=\"padding:2px;font-size:12px;\"><a target=\"_blank\" href=\"https://github.com/treangen/metAMOS/wiki\">Treangen TJ, Koren S, Sommer DD, Liu B, Astrovskaya I, Ondov B, Darling AE, Phillippy AM, Pop M.  MetAMOS: a modular and open source metagenomic assembly and analysis pipeline. Genome Biol. 2013 Jan 15;14(1):R2. PMID: 23320958.</a></div>")
+    page.add("<div style=\"padding:2px;font-size:12px;\"><a target=\"_blank\" href=\"http://genomebiology.com/2013/14/1/R2\">Treangen TJ, Koren S, et. al.  Genome Biol. 2013 Jan 15;14(1):R2. PMID: 23320958.</a></div>")
     page.add("<br/>")
 #    page.div.close()
 #    page.td.close()
@@ -557,7 +755,7 @@ if __name__ == "__main__":
     page.add("<a target=\"_blank\" href=\"pipeline.commands\">Run commands</a><br/><br/></div>")
     tableHTML = []
     tableHTML.append("<table style=\"font-size:12px\"><tr>")
-    tableHTML.append("<tr><td>Version:</td><td>1.0</td></tr>")
+    tableHTML.append("<tr><td>Version:</td><td>%s</td></tr>"%(version))
     tableHTML.append("<tr><td>Created:<br/>&nbsp;</td><td>%s</td></tr>"%(ds))
     tableHTML.append("</table>")
     page.add("\n".join(tableHTML))

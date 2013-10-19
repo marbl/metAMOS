@@ -54,12 +54,14 @@ my $opt_help = 0;
 my $opt_passive = 1;
 my $opt_timeout = 120;
 my $opt_showall = 0;
+my $opt_getnumvolumes = 0;
 my $result = GetOptions("verbose+"  =>  \$opt_verbose,
                         "quiet"     =>  \$opt_quiet,
                         "force"     =>  \$opt_force_download,
                         "passive"   =>  \$opt_passive,
                         "timeout=i" =>  \$opt_timeout,
                         "showall"   =>  \$opt_showall,
+			"numpartitions" =>  \$opt_getnumvolumes,
                         "help"      =>  \$opt_help);
 $opt_verbose = 0 if $opt_quiet;
 die "Failed to parse command line options\n" unless $result;
@@ -73,7 +75,21 @@ if ($opt_showall) {
     print "$_\n" foreach (sort(&get_available_databases()));
 } else {
     my @files = sort(&get_files_to_download());
-    &download(@files);
+    if ($opt_getnumvolumes) {
+       my %processedDB;
+       for my $file (@files) {
+            my $nvol = 0;
+            my $db_name = &extract_db_name($file);
+            if (defined($processedDB{$db_name})) { next; }
+            if (&is_multivolume_db($file)) {
+               $nvol = &get_num_volumes($db_name, @files);
+            }
+            $processedDB{$db_name}=$nvol;
+            print "$db_name\t$nvol\n";
+       }
+    } else {
+       &download(@files);
+    }
 }
 $ftp->quit();
 

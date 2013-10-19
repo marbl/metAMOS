@@ -1,2 +1,7 @@
+[pregraph]
+#d
 D
-d
+R
+[contig]
+R
+M 3

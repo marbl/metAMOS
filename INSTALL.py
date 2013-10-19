@@ -545,7 +545,7 @@ if "isolate" in enabledWorkflows or manual:
        if "PATH" in os.environ:
           pathUpdate = "%s%s%s"%(os.environ["PATH"], os.pathsep, pathUpdate)
        os.environ["PATH"]=pathUpdate
-       os.chdir("%s"%(METAMOS_ROOT))
+    os.chdir("%s"%(METAMOS_ROOT))
 
     if not os.path.exists("./CA") or 0:
       if "ca" in packagesToInstall:

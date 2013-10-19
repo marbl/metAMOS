@@ -539,6 +539,8 @@ if "isolate" in enabledWorkflows or manual:
              os.system("mv cmake-2.8.12 ./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.chdir("./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("./bootstrap --prefix=`pwd`/build;make;make install")
+             os.chdir("%s"%(METAMOS_ROOT))
+             os.system("rm cmake.tar.gz")
     if os.path.exists("./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        pathUpdate = "%s/Utilities/cpp%s%s-%s%scmake/build/bin"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
 
@@ -1150,9 +1152,7 @@ if "isolate" in enabledWorkflows or manual:
               
           os.chdir("./Utilities/cpp/%s%s-%s%sREAPR"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
           # samtools which reapr includes uses curses lib which is optional so disable it if not found
-          os.system("cat > .test.h <<'EOM'")
-          os.system("#include <curses.h>")
-          os.system("EOM")
+          os.system("echo \"#include <curses.h>\" > .test.h")
           HAVE_CURSES=utils.getCommandOutput("gcc .test.h && echo $?", True)
           if HAVE_CURSES == "":
              os.chdir("third_party/samtools")

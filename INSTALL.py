@@ -539,8 +539,9 @@ if "isolate" in enabledWorkflows or manual:
              os.system("mv cmake-2.8.12 ./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.chdir("./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("./bootstrap --prefix=`pwd`/build;make;make install")
-             pathUpdate = "%s/Utilities/cpp%s%s-%s%scmake/build/bin"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
     if os.path.exists("./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+       pathUpdate = "%s/Utilities/cpp%s%s-%s%scmake/build/bin"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
+
        if "PATH" in os.environ:
           pathUpdate = "%s%s%s"%(os.environ["PATH"], os.pathsep, pathUpdate)
        os.environ["PATH"]=pathUpdate
@@ -1148,6 +1149,16 @@ if "isolate" in enabledWorkflows or manual:
              os.chdir("%s"%(METAMOS_ROOT))
               
           os.chdir("./Utilities/cpp/%s%s-%s%sREAPR"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+          # samtools which reapr includes uses curses lib which is optional so disable it if not found
+          os.system("cat > .test.h <<'EOM'")
+          os.system("#include <curses.h>")
+          os.system("EOM")
+          HAVE_CURSES=utils.getCommandOutput("gcc .test.h", True)
+          if HAVE_CURSES == "":
+             os.chdir("third_party/samtools")
+             os.system("mv Makefile Makefile.original")
+             os.system("cat Makefile.original | sed s/\-lcurses//g |sed s/\-D_CURSES_LIB=1//g > Makefile")
+             os.chdir("../../")
           os.system("sh install.sh force")
           os.system("chmod ug+x third_party/smalt_x86_64")
           os.chdir("%s"%(METAMOS_ROOT))

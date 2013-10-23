@@ -164,7 +164,7 @@ def runREAPR(pairedFiles, prefix, assembly, min, max, genomeSize):
    if perfectMapCount != "" and float(perfectMapCount) < 50:
       run_process(_settings, "%s/reapr pipeline %s/Validate/out/%s.reapr.fa %s/Validate/out/%s.reapr.bam %s/Validate/out/%s.reapr %s/Validate/out/%s.reapr.perfect"%(_settings.REAPR, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix), "Validate")
    else:
-      run_process(_settings, "%s/reapr pipeline %s/Validate/out/%s.reapr.fa %s/Validate/out/%s.reapr.sam.sorted.bam %s/Validate/out/%s.reapr"%(_settings.REAPR, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix), "Validate")
+      run_process(_settings, "%s/reapr pipeline %s/Validate/out/%s.reapr.fa %s/Validate/out/%s.reapr.bam %s/Validate/out/%s.reapr"%(_settings.REAPR, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix), "Validate")
 
    setFailFast(True)
 

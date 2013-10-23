@@ -67,8 +67,7 @@ available on High Memory Instance at Amazon Elastic Compute Cloud ).
 ----------------------------------------------------------------------------------
 ### B) SOFTWARE REQUIREMENTS
 
-The main prequisite software is python2.6+ and AMOS (available from
-http://amos.sf.net). Once python2.6+ and AMOS are installed, there
+The main prequisite software is python2.6+. Once python2.6+ is installed, there
 should not be any other major prerequisites as most everything that is
 needed is distributed with MetAMOS inside of the /Utilities
 directory. Depending on your platform/Linux distribution, you might need to download and install the following BEFORE running INSTALL.py:
@@ -83,10 +82,11 @@ directory. Depending on your platform/Linux distribution, you might need to down
 8. freetype, freetype-devel
 9. libpng-devel
 10. matplotlib
+11. R
 
 Additionally, there is some software that MetAMOS can
 incorporate into its pipeline that we are not allowed to distribute,
-such as MetaGeneMark. To get a license to use MetaGeneMark, plesae
+such as MetaGeneMark. To get a license to use MetaGeneMark, please
 visit: http://exon.gatech.edu/license_download.cgi.
 
 ----------------------------------------------------------------------------------

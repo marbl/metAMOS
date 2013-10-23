@@ -245,7 +245,7 @@ def Annotate(input,output):
    # clean up any existing files
    run_process(_settings, "touch %s/Annotate/out/%s.annots"%(_settings.rundir, _settings.PREFIX), "Annotate")
    run_process(_settings, "unlink %s/Annotate/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "Annotate")
-   run_process(_settings, "ln -s %s/Assemble/out/%s.asm.contig %s/Annotate/in/"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Annotate")
+   run_process(_settings, "ln %s/Assemble/out/%s.asm.contig %s/Annotate/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Annotate")
    run_process(_settings, "unlink %s/Annotate/out/%s.hits"%(_settings.rundir, _settings.PREFIX), "Annotate")
    run_process(_settings, "rm -f %s/Annotate/out/*.hits"%(_settings.rundir), "Annotate")
    run_process(_settings, "rm -f %s/Annotate/out/*.epsilon-nb_results.txt"%(_settings.rundir), "Annotate")

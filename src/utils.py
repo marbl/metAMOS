@@ -630,7 +630,7 @@ def getFromPath(theCommand, theName, printWarning = True):
        print "Warning: %s is not found, some functionality will not be available"%(theName)
        return ""
     else:
-       return result.replace(theCommand, "").strip()
+       return os.path.dirname(result.strip())
 
 def cmdExists(cmd):
     result = False

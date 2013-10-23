@@ -410,7 +410,10 @@ while i < len(readlibs):
         filen = os.path.basename(f1)
         cf.write("lib%dmated:\tFalse\n"%(i+1))
         cf.write("lib%dinterleaved:\tFalse\n"%(i+1))
-        cf.write("lib%dfrg:\t%s\n"%(i+1,getBaseFileName(f1)))
+        if isSRAID(f1):
+           cf.write("lib%dfrg:\t%s.fastq\n"%(i+1,getBaseFileName(f1)))
+        else:
+           cf.write("lib%dfrg:\t%s\n"%(i+1,getBaseFileName(f1)))
         getFile("%s"%(f1), "%s/Preprocess/in/%s"%(id,getBaseFileName(f1)))
         if checkFileExists("%s"%(f1)):
             getFile("%s.qual"%(f1), "%s/Preprocess/in/%s"%(id,getBaseFileName(f1)))

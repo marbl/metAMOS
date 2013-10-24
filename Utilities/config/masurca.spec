@@ -2,7 +2,8 @@
 input FASTQ
 name MaSuRCA
 output CA/10-gapclose/genome.ctg.fasta
-scaffoldOutput cA/10-gapclose/genome.scf.fasta
+scaffoldOutput CA/10-gapclose/genome.scf.fasta
+backupOutput CA/9-terminator/genome.ctg.fasta
 location cpp/[MACHINE]/MaSuRCA/bin
 config config/masurca.template
 paired PE=p[LIB] [MEAN] [SD] [FIRST] [SECOND]

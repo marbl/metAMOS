@@ -52,6 +52,7 @@ class GenericProgram:
    name = ""
    output = ""
    scaffoldOutput = ""
+   backupOutput = ""
    location = ""
    threads = ""
    threadsSupportedOn = []
@@ -74,6 +75,7 @@ class GenericProgram:
       self.stepName = step
       self.output = ""
       self.scaffoldOutput = ""
+      self.backupOutput = ""
       self.location = ""
       self.threads = ""
       self.threadsSupportedOn = []
@@ -133,6 +135,8 @@ class GenericProgram:
             self.output = value
          elif (defn == "scaffoldOutput"):
             self.scaffoldOutput = value
+         elif (defn == "backupOutput"):
+            self.backupOutput = value
          elif (defn == "location"):
            # get the location path
             self.location = value
@@ -409,8 +413,12 @@ class GenericProgram:
       stepOut = "%s/%s/out/%s%s"%(_settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), _settings.PREFIX, STEP_OUTPUTS.reverse_mapping[self.stepName])
 
       if programOut != stepOut:
-         run_process(_settings, "unlink  %s"%(stepOut), STEP_NAMES.reverse_mapping[self.stepName])
-         symlinkCmd = "ln %s %s"%(programOut, stepOut)
+         symlinkCmd = "ln %s %s"%(programOut, stepOut) 
+         run_process(_settings, "unlink %s"%(stepOut), STEP_NAMES.reverse_mapping[self.stepName])
+         if not os.path.exists(programOut) and self.backupOutput != "" and self.stepName == STEP_NAMES.ASSEMBLE:
+            unpairedOut = "%s/%s/out/%s"%(_settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), self.backupOutput.replace("[PREFIX]", _settings.PREFIX))
+            symlinkCmd = "ln %s %s"%(unpairedOut, stepOut)
+
          run_process(_settings, symlinkCmd, STEP_NAMES.reverse_mapping[self.stepName].title())
 
       if _settings.doscaffolding and self.scaffoldOutput != "" and self.stepName == STEP_NAMES.ASSEMBLE:

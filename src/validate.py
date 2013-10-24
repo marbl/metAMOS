@@ -211,6 +211,8 @@ def Validate (input_file_names, output_file_name):
             for score in scores:
                if i in scoreOrder:
                    asmScores[scoreOrder[i]] = minScore() if score.lower() == "none" else float(score)
+                   if (scoreOrder[i] == SCORE_TYPE.FRCBAM or scoreOrder[i] == SCORE_TYPE.SNP):
+                      asmScores[scoreOrder[i]] = -1 * asmScores[scoreOrder[i]]
                i += 1 
             validatedAsms[scores[0].lower()] = asmScores
       lapfile.close()
@@ -218,7 +220,14 @@ def Validate (input_file_names, output_file_name):
    else:
       lapfile = open("%s/Validate/out/%s.lap"%(_settings.rundir,_settings.PREFIX),'w')
 
+   if os.path.exists("%s/Validate/out/%s.asm.selected"%(_settings.rundir, _settings.PREFIX)):
+      selectedAsm = open("%s/Validate/out/%s.asm.selected"%(_settings.rundir, _settings.PREFIX), 'r')
+      bestAssembler = selectedAsm.read().strip()
+      bestAssembly = "%s/Assemble/out/%s.asm.contig"%(_settings.rundir, bestAssembler)
+      selectedAsm.close()
+
    failedOutput = ""
+   totalRun = 0
 
    if "Validate" in _skipsteps or "validate" in _skipsteps:
       run_process(_settings, "touch %s/Logs/validate.skip"%(_settings.rundir), "Validate")
@@ -253,7 +262,7 @@ def Validate (input_file_names, output_file_name):
       asmNames = ""
       asmFiles = ""
       firstLine = True
-      totalRun = 0
+      needToOutput = False
 
       for input_file_name in input_file_names:
          assembler = getAsmName(input_file_name)
@@ -266,8 +275,8 @@ def Validate (input_file_names, output_file_name):
          if assembler == _settings.PREFIX:
             continue
 
+         scoreOutput = ""
          needToRun = True
-
          # if we already had a score for an assembler,we dont need to revalidate it
          if assembler.lower() in validatedAsms:
             asmScores = validatedAsms[assembler.lower()]
@@ -338,16 +347,27 @@ def Validate (input_file_names, output_file_name):
                   else:
                      scores[SCORE_TYPE.REAPR] = asmScores[SCORE_TYPE.REAPR]
 
+            for type in asmScores:
+               if scoreOutput == "":
+                  scoreOutput = "%s"%(asmScores[type])
+               else:
+                  scoreOutput = "%s\t%s"%(scoreOutput, asmScores[type])
+
             if needToRun == True:
-               totalRun += 1
+               # as soon as one assembler fails, we truncate the file so we need to output all those that could be resumed as well
+               needToOutput = True
+               scoreOutput = ""
+
+               del validatedAsms[assembler.lower()]
                print "*** metAMOS Warning: validation resume for assembler %s not possible, missing scores %s"%(assembler.upper(), missingScores.strip())
                asmNames = ""
                firstLine = True
                lapfile.seek(0)
                lapfile.truncate()
 
-         scoreOutput = ""
+         header = ""
          if needToRun:
+            totalRun += 1
             scores[SCORE_TYPE.LAP] = runLAP(assembler, assembly, pairedReads, unpairedReads, abundanceFile)
 
             inputSam = "%s/Validate/out/%s.sam"%(_settings.rundir, assembler)
@@ -432,12 +452,30 @@ def Validate (input_file_names, output_file_name):
             lapfile.write("%s\t%s\n"%(asmName, scoreOutput))
             lapfile.flush()
 
+   # output list of previously validated assemblers that could be resumed if needed
+   if needToOutput:
+      for assembler in validatedAsms:
+         scoreOutput = ""
+         asmScores = validatedAsms[assembler.lower()]
+         for type in asmScores.keys():
+            outputScore = asmScores[type]
+            if asmScores[type] != None and scores[type] == minScore():
+               outputScore = "None"
+            elif asmScores[type] != None and (type == SCORE_TYPE.FRCBAM or type == SCORE_TYPE.SNP):
+               outputScore = -1 * asmScores[type]
+
+            if scoreOutput == "":
+               scoreOutput = "%s"%(outputScore)
+            else:
+               scoreOutput = "%s\t%s"%(scoreOutput, outputScore)
+         lapfile.write("%s\t%s\n"%(assembler.upper(), scoreOutput))
+
    # output failed assemblers
-   if totalRun != 0:
-      for file in os.listdir("%s/Assemble/out/"%(_settings.rundir)): 
-         if (file.endswith(".failed")):
-             assembler = os.path.splitext(os.path.basename(file))[0]
-             asmName = getAssemblerName(assembler)
+   for file in os.listdir("%s/Assemble/out/"%(_settings.rundir)): 
+      if (file.endswith(".failed")):
+          assembler = os.path.splitext(os.path.basename(file))[0]
+          asmName = getAssemblerName(assembler)
+          if asmName.lower() not in validatedAsms:
              lapfile.write("%s\t%s\n"%(asmName, failedOutput))
              lapfile.flush()
 
@@ -521,7 +559,7 @@ def Validate (input_file_names, output_file_name):
          print "Error: inconsistent assembly and assembler chosen %s %s"%(bestAssembly, bestAssembler)
          raise(JobSignalledBreak)
 
-   # finally run quqast
+   # finally run quast
    if totalRun != 0:
       selectedReferences = open("%s/Validate/out/%s.ref.selected"%(_settings.rundir, _settings.PREFIX), 'w')
       if "quast" in _validators:
@@ -542,6 +580,7 @@ def Validate (input_file_names, output_file_name):
       selectedAsm.write("%s"%(bestAssembler))
       selectedAsm.close()
 
+   if totalRun != 0 or not os.path.exists("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX)):
       # link the files for subsequent steps to the best assembler
       # this includes assemble/mapreads/validate results
       run_process(_settings, "ln %s %s/Assemble/out/%s.asm.contig"%(bestAssembly, _settings.rundir, _settings.PREFIX), "Validate")

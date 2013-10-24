@@ -7,8 +7,10 @@ scaffoldOutput [PREFIX]-scaffolds.fa
 location cpp/[MACHINE]/sga/bin
 threads -t
 threadsSupport	LINUX
-paired --pe-mode 1 [FIRST] [SECOND] -o [PREFIX].pp.fastq
-commands sga preprocess [INPUT] && \
+paired --pe-mode 1 [FIRST] [SECOND]
+paired_interleaved --pe-mode 2 [FIRST]
+unpaired --pe-mode 0 [FIRST]
+commands sga preprocess [INPUT] -o [PREFIX].pp.fastq && \
          sga index -a ropebwt [THREADS] --no-reverse [PREFIX].pp.fastq && \
          sga correct -k 21 --learn [THREADS] -o [PREFIX].ec.fastq [PREFIX].pp.fastq && \
          sga index -a ropebwt [THREADS] [PREFIX].ec.fastq && \
@@ -25,4 +27,3 @@ commands sga preprocess [INPUT] && \
 #         sga-astat.py -m 200 [PREFIX].bam > [PREFIX].astat && \
 #         sga scaffold -m 200 -a [PREFIX].asta -o [PREFIX].scaf --pe [PREFIX].de [PREFIX]-contigs.fa && \
 #         sga scaffold2fasta --use-overlap --write-unplaced -m 200 [PREFIX]-graph.asqg.gz -o [PREFIX]-scaffolds.fa [PREFIX].scaf
-required PAIRED

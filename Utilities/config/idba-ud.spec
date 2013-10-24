@@ -1,5 +1,6 @@
 [CONFIG]
 input FASTA
+required PAIRED
 name IDBA-UD
 output [PREFIX].asm/contig.fa
 location cpp/[MACHINE]/idba/bin

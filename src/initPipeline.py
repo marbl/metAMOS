@@ -470,10 +470,10 @@ while i < len(readlibs):
             soaplib += "q1=LIB%dQ1REPLACE\n"%(i+1)
             soaplib += "q2=LIB%dQ2REPLACE\n"%(i+1)
         elif mylib.format == "fasta" and mylib.mated and not mylib.interleaved:
-            soaplib += "f1=LIB%dQ1REPLACE\n"%(i+1)
-            soaplib += "f2=LIB%dQ2REPLACE\n"%(i+1)
+            soaplib += "q1=LIB%dQ1REPLACE\n"%(i+1)
+            soaplib += "q2=LIB%dQ2REPLACE\n"%(i+1)
         elif mylib.format == "fasta" and not mylib.mated:
-            soaplib += "f=LIB%dQ1REPLACE\n"%(i+1)
+            soaplib += "q=LIB%dQ1REPLACE\n"%(i+1)
         elif mylib.format == "fastq" and not mylib.mated:
             soaplib += "q=LIB%dQ1REPLACE\n"%(i+1)
         elif mylib.format == "fasta" and mylib.mated and mylib.interleaved:

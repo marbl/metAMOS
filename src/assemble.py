@@ -344,11 +344,11 @@ def Assemble(input,output):
       cnt = 1
       libno = 1
       #print libs
+
       for lib in _readlibs:
          if (lib.format == "fastq" or lib.format == "fasta")  and lib.mated and not lib.interleaved:
-             soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(_settings.rundir,lib.f1.fname))
-             soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(_settings.rundir,lib.f2.fname))
-
+             soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/lib%d.1.fastq"%(_settings.rundir,lib.id))
+             soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir,lib.id))
          elif lib.format == "fastq"  and lib.mated and lib.interleaved:
              #this is NOT supported by SOAP, make sure files are split into two..
              #need to update lib.f2 path
@@ -359,7 +359,7 @@ def Assemble(input,output):
              soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/lib%d.1.fastq"%(_settings.rundir,lib.id))
              soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir,lib.id))
          else:
-             soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(_settings.rundir,lib.f1.fname))
+             soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/lib%d.fastq"%(_settings.rundir,lib.id))
 
       #cnt +=1
       soapw = open("%s/soapconfig.txt"%(_settings.rundir),'w')

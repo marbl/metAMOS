@@ -179,7 +179,7 @@ def runSparseAssembler(sparsePath, name):
  lib.id, _settings.rundir, lib.id), "Assemble")
             sparseLibLine += "p1 lib%d.1.fastq p2 lib%d.2.fastq"%(lib.id, lib.id)
          else:
-            run_process(_settings, "ln %s/Preprocess/out/lib%d.seq %s/Assemble/out/lib%d.seq"%(_settings,rundir, lib.id, settings_rundir, lib.id), "Assemble")
+            run_process(_settings, "ln %s/Preprocess/out/lib%d.fastq %s/Assemble/out/lib%d.fastq"%(_settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
             sparseLibLine += "f lib%d.fastq"%(lib.id)
 
    if libsAdded == 0:

@@ -11,4 +11,4 @@ mated -matePairs [FIRST]  [SECOND]
 commands \
 	 edena -p [PREFIX] [THREADS] [INPUT] -minOverlap [KMER] && \
          edena -p [PREFIX] -e [PREFIX].ovl
-unpaired singleEnd [FIRST]
+unpaired -singleEnd [FIRST]

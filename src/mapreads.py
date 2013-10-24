@@ -506,12 +506,12 @@ def MapReads(input,output):
       run_process(_settings, "touch %s/Logs/mapreads.skip"%(_settings.rundir), "MapReads")
       return 0
 
-   if os.path.exists("%s/Logs/mapreads.ok"%(_settings.rundir)):
-      return 0
-
    originalPrefix = _settings.PREFIX
    _settings.PREFIX = output.replace("%s/Assemble/out/"%(_settings.rundir), "")
    _settings.PREFIX = _settings.PREFIX.replace(".contig.cvg", "")
+
+   if _settings.PREFIX == originalPrefix:
+      return 0
 
    if _mapper == "bowtie" or _mapper == "bowtie2":
        map2contig()

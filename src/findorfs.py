@@ -349,9 +349,6 @@ def FindORFS(input,output):
       run_process(_settings, "touch %s/FindRepeats/in/%s.fna"%(_settings.rundir, _settings.PREFIX), "FindORFS")
       return 0
 
-   if os.path.exists("%s/Logs/findorfs.ok"%(_settings.rundir)):
-      return 0
-
    originalPrefix = _settings.PREFIX
    _settings.PREFIX = output.replace("%s/Assemble/out/"%(_settings.rundir), "")
    _settings.PREFIX = _settings.PREFIX.replace(".faa", "")

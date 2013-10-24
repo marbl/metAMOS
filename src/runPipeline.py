@@ -899,7 +899,7 @@ if __name__ == "__main__":
     scaffold.init(readlibs, skipsteps, retainBank)
     findscforfs.init(readlibs, skipsteps, selected_programs["findorfs"])
     propagate.init(readlibs, skipsteps, selected_programs["annotate"])
-    classify.init(readlibs, skipsteps, selected_programs["annotate"], lowmem)
+    classify.init(readlibs, skipsteps, selected_programs["annotate"], lowmem, 0 if not isolate_genome else 100)
     postprocess.init(readlibs, skipsteps, selected_programs["annotate"])
     generic.init(skipsteps, readlibs)
 

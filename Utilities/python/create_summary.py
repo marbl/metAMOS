@@ -357,8 +357,14 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
               validate.br()
               first = False
            validate.add("Selected reference: %s"%(r))
-       validate.br()
        ref.close()
+       if os.path.exists("%s/Classify/out/contaminant.true"%(MA_dir)):
+          cont = open("%s/Classify/out/contaminant.true"%(MA_dir), 'r')
+          contPercent = cont.read().split()
+          cont.close()
+          validate.br()
+          validate.add("<b>Sample may have contaminants, only %s%% assigned to %s. Check Annotate output</b>"%(contPercent[0], contPercent[1]))
+       validate.br()
        for line in laps:
           line = line.replace("\n","")
           if "#" in line:

@@ -213,7 +213,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
 
     ##update counts
     #count reads
-    os.system("cat %s/Preprocess/out/*.*.fasta | grep -c \">\" > readcount.txt"%(MA_dir))
+    os.system("cat `ls %s/Preprocess/out/* |egrep 'lib[0-9]*\.fasta'` | grep -c \">\" > readcount.txt"%(MA_dir))
     readcount = open("readcount.txt",'r').read().replace("\n","")  
     #print readcount
     os.system("rm readcount.txt")

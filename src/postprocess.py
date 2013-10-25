@@ -151,6 +151,9 @@ def Postprocess(input,output):
    run_process(_settings, "unlink %s/Postprocess/out/%s.original.reads.annots"%(_settings.rundir, _settings.taxa_level), "Postprocess")
    run_process(_settings, "ln %s/Annotate/out/%s.reads.annots %s/Postprocess/out/%s.original.reads.annots"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.taxa_level), "Postprocess")
 
+   #unlink to krona taxonomy files to avoid clobber in binary dist
+   if _settings.BINARY_DIST:
+       os.system("unlink %s%sKronaTools%staxonomy"%(Settings.METAMOSDIR,os.sep,os.sep)
    annotatedCtgs = {}
    nopropagate = False
    annotsfiledata = []

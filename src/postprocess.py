@@ -153,7 +153,7 @@ def Postprocess(input,output):
 
    #unlink to krona taxonomy files to avoid clobber in binary dist
    if _settings.BINARY_DIST:
-       os.system("unlink %s%sKronaTools%staxonomy"%(Settings.METAMOSDIR,os.sep,os.sep)
+       os.system("unlink %s%sKronaTools%staxonomy"%(Settings.METAMOSDIR,os.sep,os.sep))
    annotatedCtgs = {}
    nopropagate = False
    annotsfiledata = []

@@ -72,10 +72,10 @@ def outputLibraryInfo(headerArray, dataArray, outputHeader, libcnt, format, mate
             row.append(["<a target=\"_blank\" href=\"lib%d.1.fastqc/fastqc_report.html\">interleaved</a>"%(libcnt), "left"])
             row.append(["NA", "left"])
          else:
-            row.append(['<a target="_blank" href="lib%d.1.fastqc/fastqc_report.html">left</a>'%(libcnt), "left"])
-            row.append(['<a target="_blank" href="lib%d.2.fastqc/fastqc_report.html">right</a>'%(libcnt), "left"])
+            row.append(["<a target=\"_blank\" href=\"lib%d.1.fastqc/fastqc_report.html\">left</a>"%(libcnt), "left"])
+            row.append(["<a target=\"_blank\" href=\"lib%d.2.fastqc/fastqc_report.html\">right</a>"%(libcnt), "left"])
       else:
-         row.append(['<a target="_blank" href="lib%d.1.fastqc/fastqc_report.html">unmated</a>'%(libcnt), "left"])
+         row.append(["<a target=\"_blank\" href=\"lib%d.1.fastqc/fastqc_report.html\">unmated</a>"%(libcnt), "left"])
          row.append(["NA", "left"])
    dataArray.append(row)
 
@@ -167,7 +167,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     step_status["Assemble"] = "OK"
     step_status["MapReads"] = "OK"
     step_status["Validate"] = "OK"
-    #step_status["MultiAlign"] = "SKIP"
+    #step_status["MultiAlign"] = "OK"
     step_status["FindORFS"] = "OK"
     step_status["FindRepeats"] = "OK"
     step_status["Scaffold"] = "OK"
@@ -316,11 +316,8 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
           mmin = int(inf[1])
           mmax = int(inf[2])
 
-          libadded = True
        elif "frg" in line:
           data = line.split("\t")
-          mated = False
-          libadded = True
     if format and not libadded:
        outputLibraryInfo(headerArray, dataArray, firstLib, libcnt, format, mated, interleaved, mmin, mmax, nQC > 0)
     preprocess.add(getTable(headerArray, dataArray))

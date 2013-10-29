@@ -92,7 +92,7 @@ visit: http://exon.gatech.edu/license_download.cgi.
 ----------------------------------------------------------------------------------
 ### C) INSTALLING MetAMOS
 
-To download the software, go [here](https://github.com/treangen/metAMOS/archive/Release1.3.zip)
+To download the software, go [here](https://github.com/treangen/metAMOS/archive/Release1.3.zip).
 You can also browse the [repository](https://github.com/treangen/MetAMOS/tree/Release1.3)
 and click on Downloads. Once downloaded, simply unpack the files and
 open the MetAMOS directory. Once inside the MetAMOS directory, run:

@@ -79,10 +79,15 @@ def runSNP(inputsam, prefix, assembly, min, max, genomeSize):
    if getBAMMapped("%s.sorted.bam"%(inputsam)) == 0:
       return minScore()
 
+   setFailFast(False)
    freebayesOptions = getProgramParams(_settings.METAMOS_UTILS, "freebayes.spec", "", "-")
 
    run_process(_settings, "%s/freebayes %s -E 0 -X -u -p 1 -b %s.sorted.bam -v %s/Validate/out/%s.vcf -f %s"%(_settings.FREEBAYES, freebayesOptions, inputsam, _settings.rundir, prefix, assembly), "Validate")
    num_snps = getCommandOutput("cat %s/Validate/out/%s.vcf |grep -v \"#\" |wc -l"%(_settings.rundir, prefix), False)
+   setFailFast(True)
+
+   if num_snps == "":
+      num_snps = minScore()
    return -1 * int(num_snps)
 
 def runLAP(prefix, assembly, pairedReads, unpairedReads, abundanceFile = ""):
@@ -119,8 +124,13 @@ def runALE(inputsam, prefix, assembly, min, max, genomeSize):
    if not os.path.exists("%s/ALE"%(_settings.ALE)):
       return None
 
+   setFailFast(False)
    run_process(_settings, "%s/ALE %s %s %s.ale"%(_settings.ALE, inputsam, assembly, prefix), "Validate")
    ale_score = getCommandOutput("cat %s/Validate/out/%s.ale |head -n 1 |awk '{print $NF}'"%(_settings.rundir, prefix), False)
+   setFailFast(True)
+   if ale_score == "":
+      ale_score = minScore()
+
    return ale_score 
 
 def runCGAL(inputsam, prefix, assembly, min, max, genomeSize):
@@ -194,6 +204,7 @@ def Validate (input_file_names, output_file_name):
    validatedAsms = dict()
    scoreOrder = dict()
    genomeSize = getEstimatedGenomeSize(_settings)
+   needToOutput = False
 
    if os.path.exists("%s/Validate/out/%s.lap"%(_settings.rundir,_settings.PREFIX)) and os.path.getsize("%s/Validate/out/%s.lap"%(_settings.rundir, _settings.PREFIX)):
       lapfile = open("%s/Validate/out/%s.lap"%(_settings.rundir,_settings.PREFIX),'r')
@@ -254,7 +265,7 @@ def Validate (input_file_names, output_file_name):
       for lib in _readlibs:
          if lib.mated and pairedReads == "" and lib.innie:
             (pairedMin, pairedMax, pairedMean, pairedSD) = getMeanSD(lib.id) 
-            pairedReads="-1 %s/Preprocess/out/lib%d.1.fastq -2 %s/Preprocess/out/lib%d.2.fastq -m %d -t %d -I %d -X %d"%(_settings.rundir, lib.id, _settings.rundir, lib.id, pairedMean, pairedSD, (pairedMean-5*pairedSD), (pairedMean+5*pairedSD))
+            pairedReads="-1 %s/Preprocess/out/lib%d.1.fastq -2 %s/Preprocess/out/lib%d.2.fastq -m %d -t %d -I %d -X %d"%(_settings.rundir, lib.id, _settings.rundir, lib.id, pairedMean, pairedSD, 0 if pairedMean < 5*pairedSD else (pairedMean-5*pairedSD), (pairedMean+5*pairedSD))
             pairedFiles="%s/Preprocess/out/lib%d.1.fastq %s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir, lib.id, _settings.rundir, lib.id)
          elif not lib.mated and unpairedReads == "":
             unpairedReads = "-i %s/Preprocess/out/lib%d.fastq"%(_settings.rundir, lib.id)
@@ -262,7 +273,6 @@ def Validate (input_file_names, output_file_name):
       asmNames = ""
       asmFiles = ""
       firstLine = True
-      needToOutput = False
 
       for input_file_name in input_file_names:
          assembler = getAsmName(input_file_name)

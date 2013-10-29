@@ -345,9 +345,7 @@ the assemblies can be visualized with Hawkeye.
 ----------------------------------------------------------------------------------
 ### G) BUGS
 
-If you encounter any problems/bugs, please check the wiki page:
-https://github.com/treangen/MetAMOS/wiki
-and the known issues pages:
+If you encounter any problems/bugs, please check the known issues pages:
 https://github.com/treangen/MetAMOS/issues?direction=desc&sort=created&state=open
 to see if it has already been documented.
 

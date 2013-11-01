@@ -12,15 +12,41 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipEntry;
 
 public class SizeFasta {  
-  private static final NumberFormat nf = new DecimalFormat("############");
+   private static final NumberFormat nf = new DecimalFormat("############");
    private static final String[] suffix = {"seq", "contig", "contigs", "scaftig", "scafSeq", "fa", "fna", "fasta", "final"}; 
    private static final String[] suffixFQ = {"fastq", "fq", "txt"};
+   private static final int MAX_DEFAULT_STRING = 4000000;
 
    private double totalLen = 0;
    private boolean totalOnly = false;
    private boolean ungapped = false;
 
    public SizeFasta() {
+   }
+
+  public int sizeSingleRecord(String inputFile) throws Exception {
+      BufferedReader bf = Utils.getFile(inputFile, suffix);
+
+      String line = null;
+      StringBuffer fastaSeq = new StringBuffer(MAX_DEFAULT_STRING);
+      String header = "";
+      int totalLen = 0;
+
+      while ((line = bf.readLine()) != null) {
+         if (line.startsWith(">")) {
+            if (header.length() > 0) totalLen+=fastaSeq.length();
+            header = line.substring(1);
+            fastaSeq.setLength(0); // =new StringBuffer();
+         }
+         else {
+            fastaSeq.append(line);
+         }
+      }
+
+      if (fastaSeq.length() != 0) { totalLen+=fastaSeq.length();}
+
+      bf.close();
+      return totalLen;
    }
 
    private int getFastaStringLength(StringBuffer fastaSeq) {
@@ -31,7 +57,7 @@ public class SizeFasta {
       BufferedReader bf = Utils.getFile(inputFile, suffix);
       
       String line = null;
-      StringBuffer fastaSeq = new StringBuffer();
+      StringBuffer fastaSeq = new StringBuffer(MAX_DEFAULT_STRING);
       String header = "";
       
       while ((line = bf.readLine()) != null) {
@@ -41,7 +67,7 @@ public class SizeFasta {
                else { System.out.println(header + "\t" + getFastaStringLength(fastaSeq)); }
             }
             header = line.substring(1);
-            fastaSeq = new StringBuffer();
+            fastaSeq.setLength(0); // = new StringBuffer();
          }
          else {
             fastaSeq.append(line);
@@ -82,7 +108,7 @@ System.err.println("Zip entry is " + ze);
       if (bf == null) { return; }
 
       String line = null;
-      StringBuffer fastaSeq = new StringBuffer();
+      StringBuffer fastaSeq = new StringBuffer(MAX_DEFAULT_STRING);
       String header = "";
 
       while ((line = bf.readLine()) != null) {

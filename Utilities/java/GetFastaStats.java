@@ -269,7 +269,7 @@ if (splitLetter == null) {
       
       if (oldStyle == true) {
           if (n50only == true) {
-             st.append(title + "\t" + largeInts.format(n50));
+             st.append(title + "\t" + n50);
           } else {
              st.append("GenomeSize: " + genomeSize + "\n");
              st.append("NumReads: " + totalCount + "\n");

@@ -20,11 +20,8 @@ public class convertFastqToFasta {
    }
 
    public void processFasta(String inputFile, String outputFasta, String outputQual) throws Exception {
-      BufferedReader bf = null;
-      for (int i = 0; i < FILE_SUFFIX.length; i++) {
-         bf = Utils.getFile(inputFile, FILE_SUFFIX[i]);
-         if (bf != null ) { break; }
-      }
+      BufferedReader bf = Utils.getFile(inputFile, FILE_SUFFIX);
+      if (bf == null) { return; }
       PrintStream fastaOut = new PrintStream(new File(outputFasta));
       PrintStream qualOut = new PrintStream(new File(outputQual));
 

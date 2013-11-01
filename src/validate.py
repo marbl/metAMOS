@@ -240,12 +240,6 @@ def Validate (input_file_names, output_file_name):
    else:
       lapfile = open("%s/Validate/out/%s.lap"%(_settings.rundir,_settings.PREFIX),'w')
 
-   if os.path.exists("%s/Validate/out/%s.asm.selected"%(_settings.rundir, _settings.PREFIX)):
-      selectedAsm = open("%s/Validate/out/%s.asm.selected"%(_settings.rundir, _settings.PREFIX), 'r')
-      bestAssembler = selectedAsm.read().strip()
-      bestAssembly = "%s/Assemble/out/%s.asm.contig"%(_settings.rundir, bestAssembler)
-      selectedAsm.close()
-
    failedOutput = ""
    totalRun = 0
 
@@ -262,6 +256,11 @@ def Validate (input_file_names, output_file_name):
       print "Warning! LAP is not available, cannot select best assembly, chosing first available: %s!"%(getAsmName(input_file_names[0]))
       bestAssembler = getAsmName(input_file_names[0])
       bestAssembly = input_file_names[0].replace(".contig.cvg", ".asm.contig") 
+   elif os.path.exists("%s/Validate/out/%s.asm.selected"%(_settings.rundir, _settings.PREFIX)):
+      selectedAsm = open("%s/Validate/out/%s.asm.selected"%(_settings.rundir, _settings.PREFIX), 'r')
+      bestAssembler = selectedAsm.read().strip()
+      bestAssembly = "%s/Assemble/out/%s.asm.contig"%(_settings.rundir, bestAssembler)
+      selectedAsm.close()
    else:
       # build string of files to use for validation
       os.environ["BT2_HOME"]=_settings.BOWTIE2
@@ -631,10 +630,6 @@ def Validate (input_file_names, output_file_name):
 
       if _settings.VERBOSE:
          print "*** metAMOS assembler %s selected."%(bestAssembler)   
-
-      selectedAsm = open("%s/Validate/out/%s.asm.selected"%(_settings.rundir, _settings.PREFIX), 'w')
-      selectedAsm.write("%s"%(bestAssembler))
-      selectedAsm.close()
       run_process(_settings, "unlink %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "Validate") 
 
    # finally run quast
@@ -652,6 +647,10 @@ def Validate (input_file_names, output_file_name):
       selectedReferences.close()
 
    if not os.path.exists("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX)):
+      selectedAsm = open("%s/Validate/out/%s.asm.selected"%(_settings.rundir, _settings.PREFIX), 'w')
+      selectedAsm.write("%s"%(bestAssembler))
+      selectedAsm.close()
+
       # link the files for subsequent steps to the best assembler
       # this includes assemble/mapreads/validate results
       run_process(_settings, "unlink %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "Validate")

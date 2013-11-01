@@ -59,7 +59,7 @@ STEP_NAMES = enum("ASSEMBLE", "ANNOTATE", "SCAFFOLD")
 STEP_OUTPUTS = enum(".asm.contig", ".hits", ".linearize.scaffolds.final")
 INPUT_TYPE = enum("FASTQ", "FASTA", "CONTIGS", "SCAFFOLDS", "ORF_FA", "ORF_AA")
 
-SCORE_TYPE = enum("ALL", "LAP", "ALE", "CGAL", "SNP", "FRCBAM", "ORF", "REAPR")
+SCORE_TYPE = enum("ALL", "LAP", "ALE", "CGAL", "SNP", "FRCBAM", "ORF", "REAPR", "N50")
 SCORE_WEIGHTS = dict()
 
 _failFast = True
@@ -410,7 +410,12 @@ class readLib:
         pass
 
 def getDefaultWeight(sa):
-   return 1 if sa == SCORE_TYPE.LAP or sa == SCORE_TYPE.ALE or sa == SCORE_TYPE.CGAL else 1
+    if sa == SCORE_TYPE.LAP or sa == SCORE_TYPE.ALE or sa == SCORE_TYPE.CGAL:
+       return 0.33
+    elif sa == SCORE_TYPE.ORF:
+       return 0
+    else:
+       return 1
 
 def initValidationScores(weights = dict()):
    for score in SCORE_TYPE.reverse_mapping.keys():

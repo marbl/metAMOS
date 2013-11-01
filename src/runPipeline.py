@@ -194,7 +194,9 @@ def printConfiguration(fileName=None):
         configurationText.append("[" + type + "]\n")
         progs = set(selected_programs[type].split(","))
         for prog in progs:
-           # special case for validation, orf is a reference to selected orf finder
+           # special case for validation, orf is a reference to selected orf finder, n50 is nothing
+           if type == "validate" and prog == "n50":
+              continue
            if type == "validate" and prog == "orf":
               prog = selected_programs["findorfs"]
 
@@ -298,7 +300,7 @@ supported_aligners = ["mgcat"]
 supported_classifiers = ["fcp","phylosift","phmmer","blast",\
                              "metaphyler", "phymm"]
 supported_classifiers.extend(generic.getSupportedList(utils.INITIAL_UTILS, utils.STEP_NAMES.ANNOTATE))
-supported_validators = ["reapr", "orf", "lap", "ale", "quast", "frcbam", "freebayes", "cgal"]
+supported_validators = ["reapr", "orf", "lap", "ale", "quast", "frcbam", "freebayes", "cgal", "n50"]
 supported_fannotate = ["blast"]
 supported_scaffolders = ["bambus2"]
 supported_programs["findorfs"] = supported_genecallers
@@ -799,9 +801,9 @@ if "Annotate" in forcesteps:
 
 if "Validate" in forcesteps:
    utils.run_process(settings, \
-          "rm %s/Log/validate.ok"%(settings.rundir), "RunPipeline")
+          "rm %s/Logs/validate.ok"%(settings.rundir), "RunPipeline")
    utils.run_process(settings, \
-          "rm %s/Validate/out/%s.lap"%(settings.rundir, settings.PREFIX), "RunPipeline")
+          "rm %s/Validate/out/%s.asm.selected"%(settings.rundir, settings.PREFIX), "RunPipeline")
 
 if "FINDORFS" in forcesteps or "findorfs" in forcesteps or "FindORFS" in forcesteps:
    utils.run_process(settings, \

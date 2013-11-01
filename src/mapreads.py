@@ -463,7 +463,7 @@ def map2contig():
             ctgmatefile.flush()
             continue
 
-        if len(insertlens) > 0:
+        if len(insertlens) > 1:
            lmin = min(insertlens)
            lmax = max(insertlens)
            lavg = sum(insertlens)/len(insertlens)

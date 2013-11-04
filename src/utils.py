@@ -407,7 +407,9 @@ def readConfigInfo(infile, filePrefix=""):
             continue
          contigs = asmc[1].split(",")
          for contig in contigs:
-            asmcontigs.append(contig)
+            #in case empty asm list
+            if (len(contig.strip()) > 0):
+                asmcontigs.append(contig)
       elif "format:" in line:
          if f1 and not libadded:
             nread1 = Read(format,f1,mated,interleaved)

@@ -186,7 +186,7 @@ Each of these steps can be referred to by the following options:
 
 For each step you can fine-tune the execution as follows
 [Preprocess]
-   -t = <bool>:   filter input reads? (default = NO)
+   -t = <bool>:   turn OFF read filtration? (default = NO)
    -q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)
 [Assemble]
    -a = <string>: genome assembler to use (default = SOAPdenovo)
@@ -213,17 +213,13 @@ For each step you can fine-tune the execution as follows
    -p = <int>:    number of threads to use (be greedy!) (default=1)
    -4 = <bool>:   454 data? (default = NO)
 
-For example, to enable read filtering:
-
--t
-
-and to enable meta-IDBA as the assembler:
+For example, to enable meta-IDBA as the assembler:
 
 -a metaidba
 
-And to use PhyloSift to annotate:
+And to use Kraken to perform taxonomic classification:
 
--c phylosift
+-c kraken
 
 Any single step in the pipeline can be skipped by passing the
 following parameter to runPipeline:

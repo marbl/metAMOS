@@ -120,7 +120,7 @@ def usage():
 
     print "\nFor each step you can fine-tune the execution as follows"
     print "[Preprocess]"
-    print "   -t = <bool>:   filter input reads? (default = NO)"
+    print "   -t = <bool>:   turn off read filtration? (default = NO)"
     print "   -q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)"
     print "[Assemble]"
     print "   -a = <string>: genome assembler to use (default = SOAPdenovo)"
@@ -313,7 +313,8 @@ verbose = False
 bowtie_mapping = 1
 startat = None
 endat = None
-filter = False
+# turn filtration on by default
+filter = True
 forcesteps = []
 
 run_fastqc = False

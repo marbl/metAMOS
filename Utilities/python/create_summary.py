@@ -96,6 +96,7 @@ def outputValidate(headerArray, dataArray, outputHeader, best, results):
       isBest = True
 
    row = []
+   counter = 0
    isFirst = True
    for r in results:
       if isFirst:
@@ -106,8 +107,21 @@ def outputValidate(headerArray, dataArray, outputHeader, best, results):
          if r == None or r.lower() == "none":
             score = "N/A"
          else:
-            score = "%.4f"%(float(r))
+            print "Processing counter %s score %s and header array size is %s elements are %s %s"%(counter, r, len(headerArray), headerArray[counter][0], headerArray[counter][1])
+            if headerArray[counter][0].upper() in SCORE_TYPE.mapping:
+               scoreNum = SCORE_TYPE.mapping[headerArray[counter][0].upper()]
+               if scoreNum == SCORE_TYPE.LAP or scoreNum == SCORE_TYPE.ALE or scoreNum == SCORE_TYPE.CGAL:
+                  score = "%.6f"%(float(r)) 
+               elif scoreNum == SCORE_TYPE.SNP or scoreNum == SCORE_TYPE.FRCBAM or scoreNum == SCORE_TYPE.ORF:
+                  score = "%d"%(int(r))
+               elif scoreNum == SCORE_TYPE.REAPR:
+                  score = "%.2f"%(float(r))
+               elif scoreNum == SCORE_TYPE.N50:
+                  score = "{:,}".format(int(r))
+            else:
+               score = "%.4f"%(float(r))
          row.append(["%s%s%s"%("<b>" if isBest else "", score, "</b>" if isBest else ""), "right"])
+      counter += 1
    dataArray.append(row)
 
 def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,dbdir):

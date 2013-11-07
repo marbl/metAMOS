@@ -124,7 +124,7 @@ def usage():
 
     print "\nFor each step you can fine-tune the execution as follows"
     print "[Preprocess]"
-    print "   -t = <bool>:   filter input reads? (default = NO)"
+    print "   -t = <string>:   filter input reads? (default = %s, supported = %s)"%(selected_programs["preprocess"], ",".join(supported_programs["preprocess"]))
     print "   -q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)"
     print "[Assemble]"
     print "   -a = <string>: genome assembler to use (default = %s, supported = %s)"%(selected_programs["assemble"], ",".join(supported_programs["assemble"]))
@@ -191,14 +191,20 @@ def printConfiguration(fileName=None):
     configurationText.append("\n")
     configurationText.append("Step-specific configuration:\n")
     for type in selected_programs.keys():
-        configurationText.append("[" + type + "]\n")
         progs = set(selected_programs[type].split(","))
+        configurationText.append("[" + type + "]\n")
         for prog in progs:
            # special case for validation, orf is a reference to selected orf finder, n50 is nothing
            if type == "validate" and prog == "n50":
               continue
            if type == "validate" and prog == "orf":
               prog = selected_programs["findorfs"]
+           if type == "preprocess" and prog == "none":
+              configurationText.append(prog.upper() + "\n\tN/A\n\n")
+              continue
+           if type == "preprocess" and prog == "metamos":
+              configurationText.append("metAMOS built-in filtering\n\tN/A\n\n") 
+              continue
 
            if prog == None or prog == "none":
               configurationText.append("None\n\n")
@@ -239,7 +245,7 @@ def printConfiguration(fileName=None):
         conf.write(''.join(configurationText))
         conf.close()
 
-shortOptions = "hM:IR:rjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iu1l:x:yz:LBVX:S:"
+shortOptions = "hM:IR:rjwbd:s:e:o:k:c:a:n:p:qt:f:vm:4g:iu1l:x:yz:LBVX:S:"
 longOptions = ["help", \
                                         "multialigner",\
                                         "isolate",\
@@ -289,6 +295,7 @@ settings = utils.Settings(DEFAULT_KMER, multiprocessing.cpu_count() - 1, "", DEF
 import generic
 
 supported_programs = {}
+supported_preprocessors = ["none", "metamos", "eautils"]
 supported_genecallers = ["fraggenescan","metagenemark","glimmermg"]
 supported_assemblers = ["newbler", "soapdenovo","soapdenovo2","ca","velvet","velvet-sc","metavelvet",\
                             "metaidba","sparseassembler","minimus"]
@@ -316,6 +323,7 @@ supported_programs["validate"] = supported_validators
 supported_taxonomic = ["kingdom", "phylum", "class", "order", "family", "genus", "species"]
 
 selected_programs = {}
+selected_programs["preprocess"] = "metamos"
 selected_programs["assemble"] = "soapdenovo"
 selected_programs["findorfs"] = "fraggenescan"
 selected_programs["mapreads"] = "bowtie"
@@ -344,7 +352,6 @@ bowtie_mapping = 1
 startat = None
 endat = None
 #turn on by default
-filter = True
 forcesteps = []
 
 run_fastqc = False
@@ -501,7 +508,16 @@ for o, a in opts:
     elif o in ("-q", "--fastqc"):
         run_fastqc = True
     elif o in ("-t", "--filter"):
-        filter = True
+        selected_programs["preprocess"] = a.lower()
+        found = False
+        for sa in supported_preprocessors:
+           if selected_programs["preprocess"] in sa:
+              found = True
+              selected_programs["preprocess"] = sa
+              break
+        if not found:
+           print "Warning: invalid preprocessor %s specified, supported: %s"%(a.lower(), ",".join(supported_preprocessors))
+           selected_programs["preprocess"] = "metamos"
     elif o in ("-I", "--isolate"):
         isolate_genome = True
     elif o in ("-R", "--refgenomes"):
@@ -888,7 +904,7 @@ if __name__ == "__main__":
     import postprocess
 
     # initialize submodules
-    preprocess.init(readlibs, asmcontigs, skipsteps, selected_programs["assemble"], run_fastqc,filter)
+    preprocess.init(readlibs, asmcontigs, skipsteps, selected_programs["assemble"], run_fastqc,selected_programs["preprocess"])
     assemble.init(readlibs, skipsteps, selected_programs["assemble"], asmcontigs, userKmerSupplied == False)
     mapreads.init(readlibs, skipsteps, selected_programs["mapreads"], savebtidx,ctgbpcov,lowmem)
     validate.init(readlibs, skipsteps, selected_programs["validate"], asmScores)

@@ -324,10 +324,10 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINET
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         archive = "kraken.tar.gz"
-        os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -o %s" %(archive, archive))
+        os.system("curl -L http://ccb.jhu.edu/software/kraken/dl/kraken-0.10.1-beta.tgz -o %s"%(archive))
         os.system("rm -rf ./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.system("tar -xvzf %s"%(archive))
-        os.system("mv kraken-0.9.1b ./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        os.system("mv kraken-0.10.0-beta ./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.chdir("./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.system("./install_kraken.sh `pwd`/bin")
         os.chdir("%s"%(METAMOS_ROOT))
@@ -915,6 +915,35 @@ if "isolate" in enabledWorkflows or manual:
              os.system("make")
              os.chdir("%s"%(METAMOS_ROOT))
              os.system("rm -rf idba.tar.gz")
+
+    if not os.path.exists("./Utilities/cpp%s%s-%s%seautils"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+       eautils = utils.getFromPath("fastq-mcf", "EA-UTILS", False)
+       if eautils == "":
+          if "eautils" in packagesToInstall:
+             dl = 'y'
+          else:
+             print "EA-UTILS binaries not found, optional for Assemble step, download now?"
+             dl = raw_input("Enter Y/N: ")
+          if dl == 'y' or dl == 'Y':
+             os.system("curl -L https://ea-utils.googlecode.com/files/ea-utils.1.1.2-537.tar.gz -o eautils.tar.gz")
+             os.system("curl -L ftp://ftp.gnu.org/gnu/gsl/gsl-1.16.tar.gz -o gsl.tar.gz")
+             os.system("tar xvzf eautils.tar.gz")
+             os.system("tar xvzf gsl.tar.gz")
+             os.system("mv gsl-1.16 ea-utils.1.1.2-537/gsl")
+             os.system("mv ea-utils.1.1.2-537 ./Utilities/cpp%s%s-%s%seautils"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.chdir("./Utilities/cpp%s%s-%s%seautils/gsl"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("./configure --prefix=`pwd`/build")
+             os.system("make")
+             os.system("make install")
+             os.chdir("..")
+             os.system("mv Makefile Makefile.orig")
+             os.system("cat Makefile.orig |sed s/CFLAGS?=/CFLAGS+=/g |sed s/CPPFLAGS?=/CPPFLAGS+=/g > Makefile")
+             os.environ["CFLAGS"] = "-L%s/Utilities/cpp%s%s-%s%seautils/gsl/build/lib/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
+             os.environ["CPPFLAGS"] = "-L%s/Utilities/cpp%s%s-%s%seautils/gsl/build/lib/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
+             os.system("make")
+             os.chdir("%s"%(METAMOS_ROOT))
+             os.system("rm -rf eautils.tar.gz")
+             os.system("rm -rf gsl.tar.gz")
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%sabyss"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        abyss = utils.getFromPath("ABYSS", "ABySS", False)

@@ -43,4 +43,5 @@ kmergenie	KmerGenie	Chikhi, R, Medvedev, P. Informed and Automated k-Mer Size Se
 idba-ud	IDBA-UD	Peng, Y., Leung, H. C., Yiu, S. M., & Chin, F. Y. IDBA-UD: a de novo assembler for single-cell and metagenomic sequencing data with highly uneven depth. Bioinformatics, 28(11), 1420-1428, 2012.
 reapr	REAPR	Hunt, M, Kikuchi, T, Sanders, M, Newbold, C, Berriman, M, & Otto, TD. REAPR: a universal tool for genome assembly evaluation. Genome biology, 14(5), R47, 2013.
 edena	Edena	David Hernandez, Ryan Tewhey, Jean-Baptiste Veyrieras, Laurent Farinelli, Magne Østerås, Patrice François, and Jacques Schrenzel. De novo finished 2.8 Mbp Staphylococcus aureus genome assembly from 100 bp short and long range paired-end reads. Bioinformatics, btt590, 2013.
+eautils	EA-UTILS	Erik Aronesty. TOBioiJ : "Comparison of Sequencing Utility Programs", DOI:10.2174/1875036201307010001, 2013.
 metamos	MetAMOS	Treangen, TJ ⇔  Koren, S, Sommer, DD, Liu, B, Astrovskaya, I, Ondov, B, Darling AE, Phillippy AM, Pop, M. MetAMOS: a modular and open source metagenomic assembly and analysis pipeline. Genome biology, 14(1), R2, 2013.

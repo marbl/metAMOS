@@ -107,7 +107,6 @@ def outputValidate(headerArray, dataArray, outputHeader, best, results):
          if r == None or r.lower() == "none":
             score = "N/A"
          else:
-            print "Processing counter %s score %s and header array size is %s elements are %s %s"%(counter, r, len(headerArray), headerArray[counter][0], headerArray[counter][1])
             if headerArray[counter][0].upper() in SCORE_TYPE.mapping:
                scoreNum = SCORE_TYPE.mapping[headerArray[counter][0].upper()]
                if scoreNum == SCORE_TYPE.LAP or scoreNum == SCORE_TYPE.ALE or scoreNum == SCORE_TYPE.CGAL:

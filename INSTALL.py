@@ -562,29 +562,25 @@ if "isolate" in enabledWorkflows or manual:
          print "Celera Assembler binaries not found, optional for Assemble step, download now?"
          dl = raw_input("Enter Y/N: ")
       if dl == 'y' or dl == 'Y':
-          if OSTYPE == 'Linux' and MACHINETYPE == "x86_64":
-             #hard coded, will fail if moved
-             os.system("curl -L https://downloads.sourceforge.net/project/wgs-assembler/wgs-assembler/wgs-8.0/wgs-8.0-Linux-amd64.tar.bz2 -o wgs-8.0-PacBio-Linux-amd64.tar.bz2")
-             os.system("tar xvjf wgs-8.0-PacBio-Linux-amd64.tar.bz2")
-             os.system("mv wgs-8.0 CA")
-             os.system("rm -rf wgs-7.0-PacBio-Linux-amd64.tar.bz2")
-          else:
-             os.system("curl -L https://downloads.sourceforge.net/project/wgs-assembler/wgs-assembler/wgs-8.0/wgs-8.0.tar.bz2 -o wgs-8.0.tar.bz2")
-             os.system("tar xvjf wgs-8.0.tar.bz2")
-             os.system("rm -rf wgs-8.0.tar.bz2")
-             # patch CA to support PacBio sequences and non-apple compilers on OSX
-             if not ALLOW_FAST:
-                os.system("cd wgs-8.0/kmer/ && cp configure.sh configure.original")
-                os.system("cd wgs-8.0/kmer/ && cat configure.original |sed s/\-fast//g > configure.sh")
-                os.system("cd wgs-8.0/src/ && cp c_make.as c_make.original")
-                os.system("cd wgs-8.0/src/ && cat c_make.original |sed s/\-fast//g > c_make.as")
-             print "HAVE GCC IS SET TO %s"%(HAVE_GCC42)
-             if not HAVE_GCC42:
-                os.system("cd wgs-8.0/src/ && cp c_make.as c_make.original")
-                os.system("cd wgs-8.0/src/ && cat c_make.original |sed s/\-4.2//g > c_make.as")
-             os.system("cd wgs-8.0/kmer && ./configure.sh && gmake install")
-             os.system("cd wgs-8.0/src && gmake")
+          os.system("curl -L https://downloads.sourceforge.net/project/wgs-assembler/wgs-assembler/wgs-8.0/wgs-8.0.tar.bz2 -o wgs-8.0.tar.bz2")
+          os.system("curl -L https://github.com/samtools/samtools/archive/0.1.19.tar.gz -o samtools.tar.gz")
+          os.system("tar xvzf samtools.tar.gz")
+          os.system("tar xvjf wgs-8.0.tar.bz2")
+          os.system("rm -rf wgs-8.0.tar.bz2")
           os.system("mv wgs-8.0 CA")
+          os.system("mv samtools-0.1.19 CA/samtools")
+          # patch CA to support PacBio sequences and non-apple compilers on OSX
+          if not ALLOW_FAST:
+             os.system("cd CA/kmer/ && cp configure.sh configure.original")
+             os.system("cd CA/kmer/ && cat configure.original |sed s/\-fast//g > configure.sh")
+             os.system("cd CA/src/ && cp c_make.as c_make.original")
+             os.system("cd CA/src/ && cat c_make.original |sed s/\-fast//g > c_make.as")
+          if not HAVE_GCC42:
+             os.system("cd CA/src/ && cp c_make.as c_make.original")
+             os.system("cd CA/src/ && cat c_make.original |sed s/\-4.2//g > c_make.as")
+          os.system("cd CA/samtools && make")
+          os.system("cd CA/kmer && ./configure.sh && gmake install")
+          os.system("cd CA/src && gmake")
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%sRay"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        if "ray" in packagesToInstall:

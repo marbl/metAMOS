@@ -10,6 +10,8 @@ from ruffus import *
 
 import generic
 
+MAX_KMER = 151
+
 _readlibs = []
 _skipsteps = []
 _settings = Settings()
@@ -257,6 +259,8 @@ def SplitAssemblers(input_file_name, output_files):
             run_process(_settings, "rm %s/Assemble/out/tmp.fastq"%(_settings.rundir), "Assemble")
             if int(readLen) > maxK:
                maxK = int(readLen)
+            if maxK > MAX_KMER:
+               maxK = int(MAX_KMER)
             if lib.mated:
                fileList.write("%s/Preprocess/out/lib%d.1.fastq\n"%(_settings.rundir, lib.id))
                fileList.write("%s/Preprocess/out/lib%d.2.fastq\n"%(_settings.rundir, lib.id))

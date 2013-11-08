@@ -54,6 +54,7 @@ if not os.path.exists("%s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os
     os.system("mkdir %s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
 
 ALLOW_FAST=True
+HAVE_GCC42=False
 HAVE_RT=False
 HAVE_QUIET_HEAD=False
 
@@ -89,6 +90,11 @@ if OSTYPE == "Darwin":
    (checkStdout, checkStderr) = p.communicate()
    if "Apple" not in checkStdout:
       ALLOW_FAST=False
+   gcc42 = utils.getCommandOutput("which g++-4.2", False)
+   if gcc42 == "":
+      HAVE_GCC42=False
+   else:
+      HAVE_GCC42=True
 
 libPaths = [ "/usr/lib", "/usr/lib64", "/usr/local/lib/", "/usr/local/lib64/", "/opt/local/lib/", "/opt/local/lib64/"] 
 for libPath in libPaths:
@@ -558,24 +564,27 @@ if "isolate" in enabledWorkflows or manual:
       if dl == 'y' or dl == 'Y':
           if OSTYPE == 'Linux' and MACHINETYPE == "x86_64":
              #hard coded, will fail if moved
-             os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/wgs-7.0-PacBio-Linux-amd64.tar.bz2 -o wgs-7.0-PacBio-Linux-amd64.tar.bz2")
-             os.system("bunzip2 wgs-7.0-PacBio-Linux-amd64.tar.bz2")
-             os.system("tar xvf wgs-7.0-PacBio-Linux-amd64.tar")
-             os.system("rm -rf wgs-7.0-PacBio-Linux-amd64.tar")
+             os.system("curl -L https://downloads.sourceforge.net/project/wgs-assembler/wgs-assembler/wgs-8.0/wgs-8.0-Linux-amd64.tar.bz2 -o wgs-8.0-PacBio-Linux-amd64.tar.bz2")
+             os.system("tar xvjf wgs-8.0-PacBio-Linux-amd64.tar.bz2")
+             os.system("mv wgs-8.0 CA")
+             os.system("rm -rf wgs-7.0-PacBio-Linux-amd64.tar.bz2")
           else:
-             os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/wgs-7.0.tar.bz2 -o wgs-7.0.tar.bz2")
-             os.system("bunzip2 wgs-7.0.tar.bz2")
-             os.system("tar xvf wgs-7.0.tar")
-             os.system("rm -rf wgs-7.0.tar")
+             os.system("curl -L https://downloads.sourceforge.net/project/wgs-assembler/wgs-assembler/wgs-8.0/wgs-8.0.tar.bz2 -o wgs-8.0.tar.bz2")
+             os.system("tar xvjf wgs-8.0.tar.bz2")
+             os.system("rm -rf wgs-8.0.tar.bz2")
              # patch CA to support PacBio sequences and non-apple compilers on OSX
              if not ALLOW_FAST:
-                os.system("cd wgs-7.0/kmer/ && cp configure.sh configure.original")
-                os.system("cd wgs-7.0/kmer/ && cat configure.original |sed s/\-fast//g > configure.sh")
-             os.system("cd wgs-7.0/src/ && cp AS_global.h AS_global.original")
-             os.system("cd wgs-7.0/src/ && cat AS_global.original | sed 's/AS_READ_MAX_NORMAL_LEN_BITS.*11/AS_READ_MAX_NORMAL_LEN_BITS      15/g' > AS_global.h")
-             os.system("cd wgs-7.0/kmer && ./configure.sh && gmake install")
-             os.system("cd wgs-7.0/src && gmake")
-          os.system("mv wgs-7.0 CA")
+                os.system("cd wgs-8.0/kmer/ && cp configure.sh configure.original")
+                os.system("cd wgs-8.0/kmer/ && cat configure.original |sed s/\-fast//g > configure.sh")
+                os.system("cd wgs-8.0/src/ && cp c_make.as c_make.original")
+                os.system("cd wgs-8.0/src/ && cat c_make.original |sed s/\-fast//g > c_make.as")
+             print "HAVE GCC IS SET TO %s"%(HAVE_GCC42)
+             if not HAVE_GCC42:
+                os.system("cd wgs-8.0/src/ && cp c_make.as c_make.original")
+                os.system("cd wgs-8.0/src/ && cat c_make.original |sed s/\-4.2//g > c_make.as")
+             os.system("cd wgs-8.0/kmer && ./configure.sh && gmake install")
+             os.system("cd wgs-8.0/src && gmake")
+          os.system("mv wgs-8.0 CA")
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%sRay"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        if "ray" in packagesToInstall:

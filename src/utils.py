@@ -111,6 +111,7 @@ class Settings:
    SOAPDENOVO2 = ""
    METAIDBA = ""
    CA = ""
+   BLASR = ""
    NEWBLER = ""
    VELVET = ""
    VELVET_SC = ""
@@ -700,6 +701,12 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
     if not os.path.exists(Settings.CA + os.sep + "gatekeeper"):
        Settings.CA = getFromPath("gatekeeper", "Celera Assembler") 
     CAMD5 = getMD5Sum(Settings.CA + os.sep + "gatekeeper")
+
+    # BLASR goes with CA
+    Settings.BLASR = "%s/../../../smrtanalysis/current/analysis/bin"%(Settings.CA)
+    if not os.path.exists(Settings.BLASR + os.sep + "blasr"):
+       Settings.BLASR = getFromPath("blasr", "BLASR")
+    blasrMD5 = getMD5Sum(Settings.BLASR + os.sep + "blasr")
 
     # 4. Newbler
     Settings.NEWBLER = "%s%snewbler%s%s-%s"%(Settings.METAMOSDIR, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)

@@ -615,7 +615,9 @@ def Preprocess(input,output):
          elif lib.mated:
                lib.f2.fname = secondName
                lib.f2.path = "%s%s%s"%(os.path.dirname(lib.f2.path.replace("/in/","/out/")), os.sep, secondName)
-            
+         # update the library info in our config file as well, otherwise restarts won't realize reads are fastq now
+         updateLibInfo(_settings.rundir + os.sep + "pipeline.ini", lib)
+
       # done now run EA-UTILS
       run_process(_settings, "%s/fastq-mcf -q 10 -t 0.01 -P %d %s/adapter.fna %s"%(_settings.EAUTILS, 33 if offset.lower() == "sanger" else 64, _settings.DB_DIR, commandOptions), "Preprocess")
 

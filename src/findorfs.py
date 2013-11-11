@@ -284,6 +284,8 @@ def parse_prokka(orf_file,is_scaff=False, error_stream="FindORFS",min_len=_min_c
           continue
        elif line.startswith(">"):
           break
+       elif len(line.strip().split("\t")) < 9:
+          continue
        (ctgID, geneA, geneB, start, end, index, geneori, geneC, id) = line.strip().split("\t", 9)
        id = id.split(";")[0].replace("ID=", "")
        genectg.write("%s\t%s\n"%(ctgID, id))

@@ -35,7 +35,7 @@ def init(reads, skipsteps, asm, asmcontigs, autoPickKmer):
 
    if _autoPickKmer:
       kmer = getSelectedKmer(_settings)
-      if kmer != 0:
+      if len(kmer) != 0:
          _settings.kmer = kmer
          _autoPickKmer = False
 
@@ -272,7 +272,6 @@ def SplitAssemblers(input_file_name, output_files):
          # now we can pick
          run_process(_settings, "%s/kmergenie %s/Assemble/out/%s.kmergenie.in -t %d -k %s -o %s"%(_settings.KMERGENIE, _settings.rundir, _settings.PREFIX, _settings.threads, maxK, _settings.PREFIX), "Assemble")
          result = open("%s/Assemble/out/%s_report.html"%(_settings.rundir, _settings.PREFIX), 'r')
-         stats = open("%s/Assemble/out/%s.kmer"%(_settings.rundir, _settings.PREFIX), 'w')
          genome = open("%s/Assemble/out/%s.genomesize"%(_settings.rundir, _settings.PREFIX), 'w')
          for line in result.xreadlines():
             if "Predicted best k:" in line:
@@ -283,16 +282,17 @@ def SplitAssemblers(input_file_name, output_files):
                if int(_settings.kmer) > MAX_ASM_KMER:
                   _settings.kmer = "%s"%(MAX_ASM_KMER)
                print "*** metAMOS: Selected kmer size %s"%(_settings.kmer)
-               stats.write("%s\n"%(_settings.kmer))
             elif "Predicted assembly size:" in line:
                genomeSize = line.replace("<p><h4>Predicted assembly size:", "").replace("</h4></p>", "").replace("bp", "").strip()
                print "*** metAMOS: Estimated genome size %s bp"%(genomeSize)
                genome.write("%s\n"%(genomeSize))
          result.close() 
-         stats.close()
          genome.close()
       else:
          print "Warning: could not auto-pick a kmer, KmerGenie not found. Defaulting to %s"%(_settings.kmer)
+   stats = open("%s/Assemble/out/%s.kmer"%(_settings.rundir, _settings.PREFIX), 'w')
+   stats.write("%s\n"%(_settings.kmer))
+   stats.close()
 
    for contigs in _asmcontigs:
       if len(contigs) != 0:

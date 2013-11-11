@@ -84,6 +84,8 @@ class Workflow:
          lastPos = workflow_file.tell()
          line = workflow_file.readline()
          (line, sep, commentLine) = line.partition(comment)
+         if len(commentLine) != 0:
+            continue
 
          if "programs:" in line:
             splitLine = line.replace("programs:", "").strip().split()

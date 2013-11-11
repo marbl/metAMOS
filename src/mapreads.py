@@ -87,6 +87,7 @@ def map2contig():
     contigdict = {}
     dictcnt = 0
     if _lowmem:
+        run_process(_settings, "rm -f %s/Assemble/out/%s.contigdict"%(_settings.rundir, _settings.PREFIX))
         contigdict = shelve.open("%s/Assemble/out/%s.contigdict"%(_settings.rundir,_settings.PREFIX),'c', writeback=True)
     contigdict2 = {}
     readdict = {}
@@ -201,7 +202,6 @@ def map2contig():
                     dictcnt+=1
                     #print contig
                     seqdict[read] = read_seq
-                    print "Recording read %s in dictionary as %s"%(read, read_seq)
                     seqfile.write(">%s\n%s\n"%(read,read_seq))
                     seqfile.flush()
                 readctgfile.close()

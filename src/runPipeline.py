@@ -428,7 +428,7 @@ if wfName != "":
        sys.exit(2)
 
 # finally reload any commands we had
-pip = workflows.Workflow("pipeline", settings.rundir + os.sep)
+pip = workflow.Workflow("pipeline", settings.rundir + os.sep)
 pip.read()
 if len(pip.commandList.strip()) > 0:
    try:

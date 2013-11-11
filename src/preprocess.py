@@ -625,8 +625,8 @@ def Preprocess(input,output):
       for lib in _readlibs:
          if lib.format != "fastq":
             continue
-         counter = 1
          for read in lib.reads:
+            counter = 1
             rq = open(read.path, 'r')
             wq = open(read.path.replace("fastq", "renamed.fastq"),'w')
             lines = rq.xreadlines()

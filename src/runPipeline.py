@@ -433,8 +433,10 @@ pip.read()
 if len(pip.commandList.strip()) > 0:
    try:
       wfopts, wfargs = getopt.getopt(pip.commandList.strip().split(), shortOptions, longOptions)
-      opts.extend(wfopts)
-      args.extend(wfargs)
+      wfopts.extend(opts)
+      wfargs.extend(args)
+      opts = wfopts
+      args = wfargs
    except getopt.GetoptError, err:
       # print help information and exit:
        print str(err) # will print something like "option -a not recognized"

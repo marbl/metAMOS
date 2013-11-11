@@ -732,6 +732,11 @@ if len(readlibs) > 1 and "metaidba" in selected_programs["assemble"]:
 if "scaffold" in skipsteps or "Scaffold" in skipsteps:
    skipsteps.append("Propagate")
 
+#if we have pacbio reads use bowtie 2 (since bowtie 1 expects 1024bp sequences) and run CA
+if selected_programs["preprocess"] == "pbcr":
+   selected_programs["mapreads"] = "bowtie2"
+   selected_programs["assemble"] = selected_programs["assemble"] + ",ca"
+
 if userKmerSupplied == False:
    always_run_programs.append("kmergenie")
 

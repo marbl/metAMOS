@@ -15,7 +15,8 @@ _cls = None
 _lowmem = False
 _checkForContaminant = False
 _minContaminantTrustedLen = 0
-_minPercentageInOne = 0.95
+_minPercentageInOne = 0.98
+_maxAsm = 1.2
 _settings = Settings()
 
 def init(reads, skipsteps, cls, low, mintrust):
@@ -87,7 +88,14 @@ def Classify(input,output):
             isContaminant = False 
       
       if isContaminant:
-         name = getCommandOutput("cat %s/tax_key.tab |awk -F \"\\t\" '{if ($1 == %s) print $NF}'"%(_settings.DB_DIR, classID), False)
-         contaminant = open("%s/Classify/out/contaminant.true"%(_settings.rundir), 'w')
-         contaminant.write("%s\t%s\n"%(majority*100, name))
-         contaminant.close()
+         if os.path.exists("%s/Validate/out/%s.ref.fasta"%(_settings.rundir, _settings.PREFIX)):
+            asmSize=getCommandOutput("java -cp %s SizeFasta %s/Assemble/out/%s.asm.contig |awk '{SUM+=$NF; print SUM}' |tail -n 1"%(_settings.METAMOS_JAVA, _settings.rundir, _settings.PREFIX), False)
+            expectedSize=getCommandOutput("java -cp %s SizeFasta %s/Validate/out/%s.ref.fasta |awk '{SUM+=$NF; print SUM}' |tail -n 1"%(_settings.METAMOS_JAVA, _settings.rundir, _settings.PREFIX), False)
+            if int(float(expectedSize) * _maxAsmSize) >= int(asmSize):
+                isContaminant = False
+
+         if isContaminant:
+            name = getCommandOutput("cat %s/tax_key.tab |awk -F \"\\t\" '{if ($1 == %s) print $NF}'"%(_settings.DB_DIR, classID), False)
+            contaminant = open("%s/Classify/out/contaminant.true"%(_settings.rundir), 'w')
+            contaminant.write("%s\t%s\n"%(majority*100, name))
+            contaminant.close()

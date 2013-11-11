@@ -286,7 +286,7 @@ def Validate (input_file_names, output_file_name):
          assembler = getAsmName(input_file_name)
          assembly = input_file_name.replace(".faa", ".asm.contig")
          abundanceFile = ""
-         if os.path.exists("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, assembler)):
+         if os.path.exists("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, assembler)) and os.path.getsize("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, assembler)) > 0:
             abundanceFile = "%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, assembler)
          scores = dict()
 

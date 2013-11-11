@@ -353,10 +353,11 @@ class GenericProgram:
          if _settings.annotate_unmapped:
             outputs.append("%s/Annotate/out/%s.intermediate.ctg"%(_settings.rundir,_settings.PREFIX))
             for lib in _readlibs:
-               listOfInput += ":%s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id)
-               run_process(_settings, "ln %s/Assemble/out/lib%d.unaligned.fasta %s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id, _settings.rundir, lib.id), STEP_NAMES.reverse_mapping[self.stepName].title())
-               params.append("%s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id))
-               outputs.append("%s/Annotate/out/%s.intermediate.lib%d"%(_settings.rundir, _settings.PREFIX, lib.id))
+               if os.path.exists("%s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id)) and os.path.getsize("%s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id)) > 0: 
+                  listOfInput += ":%s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id)
+                  run_process(_settings, "ln %s/Assemble/out/lib%d.unaligned.fasta %s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id, _settings.rundir, lib.id), STEP_NAMES.reverse_mapping[self.stepName].title())
+                  params.append("%s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id))
+                  outputs.append("%s/Annotate/out/%s.intermediate.lib%d"%(_settings.rundir, _settings.PREFIX, lib.id))
       elif self.inputType == INPUT_TYPE.ORF_FA:
          params.append("%s/Annotate/in/%s.fna"%(_settings.rundir, _settings.PREFIX))
          listOfInput += ":%s/Annotate/in/%s.fna"%(_settings.rundir, _settings.PREFIX)

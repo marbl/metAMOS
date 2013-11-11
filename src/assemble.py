@@ -10,7 +10,8 @@ from ruffus import *
 
 import generic
 
-MAX_KMER = 151
+MAX_AUTO_KMER = 151
+MAX_ASM_KMER = 127
 
 _readlibs = []
 _skipsteps = []
@@ -259,8 +260,8 @@ def SplitAssemblers(input_file_name, output_files):
             run_process(_settings, "rm %s/Assemble/out/tmp.fastq"%(_settings.rundir), "Assemble")
             if int(readLen) > maxK:
                maxK = int(readLen)
-            if maxK > MAX_KMER:
-               maxK = int(MAX_KMER)
+            if maxK > MAX_AUTO_KMER:
+               maxK = int(MAX_AUTO_KMER)
             if lib.mated:
                fileList.write("%s/Preprocess/out/lib%d.1.fastq\n"%(_settings.rundir, lib.id))
                fileList.write("%s/Preprocess/out/lib%d.2.fastq\n"%(_settings.rundir, lib.id))
@@ -279,6 +280,8 @@ def SplitAssemblers(input_file_name, output_files):
                # if we got an even kmer, update to odd since most assemblers require this
                if int(_settings.kmer) % 2 == 0:
                   _settings.kmer = "%s"%(int(_settings.kmer) + 1)
+               if int(_settings.kmer) > MAX_ASM_KMER:
+                  _settings.kmer = "%s"%(MAX_ASM_KMER)
                print "*** metAMOS: Selected kmer size %s"%(_settings.kmer)
                stats.write("%s\n"%(_settings.kmer))
             elif "Predicted assembly size:" in line:

@@ -15,7 +15,7 @@ _cls = None
 _lowmem = False
 _checkForContaminant = False
 _minContaminantTrustedLen = 0
-_minPercentageInOne = 0.98
+_minPercentageInOne = 0.99
 _maxAsm = 1.2
 _settings = Settings()
 

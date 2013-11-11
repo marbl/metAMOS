@@ -246,16 +246,16 @@ def Validate (input_file_names, output_file_name):
    if "Validate" in _skipsteps or "validate" in _skipsteps:
       run_process(_settings, "touch %s/Logs/validate.skip"%(_settings.rundir), "Validate")
       bestAssembler = getAsmName(input_file_names[0])
-      bestAssembly = input_file_names[0].replace(".contig.cvg", ".asm.contig") 
+      bestAssembly = "%s/Assemble/out/%s.asm.contig"%(_settings.rundir, bestAssembler)
    elif len(input_file_names) == 1 and len(_validators) == 1:
       run_process(_settings, "touch %s/Logs/validate.skip"%(_settings.rundir), "Validate")
       bestAssembler = getAsmName(input_file_names[0])
-      bestAssembly = input_file_names[0].replace(".contig.cvg", ".asm.contig") 
+      bestAssembly = "%s/Assemble/out/%s.asm.contig"%(_settings.rundir, bestAssembler)
    elif not os.path.exists("%s/bowtie2"%(_settings.BOWTIE2)) or not os.path.exists("%s/aligner/calc_prob.py"%(_settings.LAP)):
       run_process(_settings, "touch %s/Logs/validate.skip"%(_settings.rundir), "Validate")
       print "Warning! LAP is not available, cannot select best assembly, chosing first available: %s!"%(getAsmName(input_file_names[0]))
       bestAssembler = getAsmName(input_file_names[0])
-      bestAssembly = input_file_names[0].replace(".contig.cvg", ".asm.contig") 
+      bestAssembly = "%s/Assemble/out/%s.asm.contig"%(_settings.rundir, bestAssembler)
    elif os.path.exists("%s/Validate/out/%s.asm.selected"%(_settings.rundir, _settings.PREFIX)):
       selectedAsm = open("%s/Validate/out/%s.asm.selected"%(_settings.rundir, _settings.PREFIX), 'r')
       bestAssembler = selectedAsm.read().strip()

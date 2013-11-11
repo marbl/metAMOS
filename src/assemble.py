@@ -486,19 +486,20 @@ def Assemble(input,output):
       frglist = ""
       matedString = ""
       for lib in _readlibs:
-         if lib.format == "fastq":
-            if lib.mated:
-               matedString = "-insertsize %d %d -%s -mates"%(lib.mean, lib.stdev, "innie" if lib.innie else "outtie") 
-            else:
-               matedString = "-reads"
-            run_process(_settings, "%s/fastqToCA -libraryname %s -technology illumina %s %s/Preprocess/out/lib%d.seq > %s/Preprocess/out/lib%d.frg"%(_settings.CA, lib.sid, matedString, _settings.rundir, lib.id, _settings.rundir, lib.id),"Assemble")
-         elif lib.format == "fasta":
-            if lib.mated:
-               matedString = "-mean %d -stddev %d -m %s/Preprocess/out/lib%d.seq.mates"%(lib.mean, lib.stdev, _settings.rundir, lib.id)
-            run_process(_settings, "%s/convert-fasta-to-v2.pl -l %s %s -s %s/Preprocess/out/lib%d.seq -q %s/Preprocess/out/lib%d.seq.qual > %s/Preprocess/out/lib%d.frg"%(_settings.CA, lib.sid, matedString, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id),"Assemble")
+         if not os.path.exists("%s/Preproces/out/lib%d.frg"%(_settings.rundir, lib.id)):
+            if lib.format == "fastq":
+               if lib.mated:
+                  matedString = "-insertsize %d %d -%s -mates"%(lib.mean, lib.stdev, "innie" if lib.innie else "outtie") 
+               else:
+                  matedString = "-reads"
+               run_process(_settings, "%s/fastqToCA -libraryname %s -technology illumina-long %s %s/Preprocess/out/lib%d.seq > %s/Preprocess/out/lib%d.frg"%(_settings.CA, lib.sid, matedString, _settings.rundir, lib.id, _settings.rundir, lib.id),"Assemble")
+            elif lib.format == "fasta":
+               if lib.mated:
+                  matedString = "-mean %d -stddev %d -m %s/Preprocess/out/lib%d.seq.mates"%(lib.mean, lib.stdev, _settings.rundir, lib.id)
+               run_process(_settings, "%s/convert-fasta-to-v2.pl -l %s %s -s %s/Preprocess/out/lib%d.seq -q %s/Preprocess/out/lib%d.seq.qual > %s/Preprocess/out/lib%d.frg"%(_settings.CA, lib.sid, matedString, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id),"Assemble")
          frglist += "%s/Preprocess/out/lib%d.frg "%(_settings.rundir, lib.id)
 
-      run_process(_settings, "%s/runCA -p %s -d %s/Assemble/out/ -s %s/config/asm.spec %s %s"%(_settings.CA,_settings.PREFIX,_settings.rundir,_settings.METAMOS_UTILS,"stopAfter=terminator" if _settings.doscaffolding else "", frglist),"Assemble")
+      run_process(_settings, "%s/runCA -p %s -d %s/Assemble/out/ -s %s/config/asm.spec %s %s"%(_settings.CA,_settings.PREFIX,_settings.rundir,_settings.METAMOS_UTILS,"stopAfter=terminator" if _settings.doscaffolding else "stopAfter=utgcns", frglist),"Assemble")
       #convert CA to AMOS
       run_process(_settings, "%s/gatekeeper -dumpfrg -allreads %s.gkpStore > %s.frg"%(_settings.CA, _settings.PREFIX, _settings.PREFIX),"Assemble")
       if _settings.doscaffolding: 

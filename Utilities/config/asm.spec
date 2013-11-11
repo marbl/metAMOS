@@ -5,7 +5,7 @@ cnsErrorRate=0.10
 cgwErrorRate=0.10
 ovlErrorRate=0.10
 
-unitigger=bog
+unitigger=bogart
 
 # caused seg fault
 utgBubblePopping=0
@@ -17,7 +17,7 @@ merylMemory=128000
 merylThreads=12
 
 #ovlMemory=8GB --hashload 0.7
-ovlHashBits=25
+ovlHashBits=24
 ovlThreads=2
 ovlHashBlockLength=20000000
 ovlRefBlockSize=50000

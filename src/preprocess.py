@@ -649,12 +649,52 @@ def Preprocess(input,output):
             read.path = read.path.replace("fastq", "renamed.fastq")
 
    elif _filter == "pbcr":
-      print "*** metAMOS: Not supported yet, stay tuned"
+      # correct the sequences using self-correction
+      # for now, we do not support correction using other libraries, we should in the future though
+
+      if not os.path.exists("%s/pacBioToCA"%(_settings.CA)) or not os.path.exists("%s/blasr"%(_settings.BLASR)):
+         print "*** metAMOS: Error: cannot correct without Celera Assembler and BLASR"
+         raise(JobSignalledBreak)
+
       for lib in _readlibs:
-          for read in lib.reads:
-              run_process(_settings, "ln %s/Preprocess/in/%s %s/Preprocess/out/"%(_settings.rundir,read.fname,_settings.rundir),"Preprocess")
-              if (lib.format == "fasta"):
-                 run_process(_settings, "ln %s/Preprocess/in/%s.qual %s/Preprocess/out/"%(_settings.rundir,read.fname,_settings.rundir),"Preprocess")
+         if lib.format != "fastq":
+            print "*** metAMOS: Warning: can only correct fastq libraries"
+            continue
+         else:
+            if lib.mated:
+               print "*** metAMOS: Warning can only correct unpaired libraries"
+               continue
+
+            # first estimate genome size
+            genomeSize = 5000000
+            if os.path.exists("%s%skmergenie"%(_settings.KMERGENIE, os.sep)) and os.path.exists("%s%sR"%(_settings.R, os.sep)):
+               run_process(_settings, "%s/kmergenie --one-pass -l 5 -k 20 -t %d -s 5 -o kmergenie %s"%(_settings.KMERGENIE, _settings.threads, lib.f1.path), "Preprocess")
+               result = open("%s/Preprocess/out/%s_report.html"%(_settings.rundir, "kmergenie"), 'r')
+               for line in result.xreadlines():
+                  if "Predicted assembly size:" in line:
+                     genomeSize = int(line.replace("<p><h4>Predicted assembly size:", "").replace("</h4></p>", "").replace("bp", "").strip())
+
+            if _settings.VERBOSE:
+               print "*** metAMOS: Correcting library %d with genome size estimate %s"%(lib.id, genomeSize)
+
+            # run correction
+            availableMem = getAvailableMemory(_settings)
+            if availableMem == 0:
+               availableMem = 8192
+            else:
+               availableMem *= 1024
+            
+            oldPath = os.environ["PATH"]
+            os.environ["PATH"] = _settings.AMOS + os.pathsep + _settings.BLASR + os.pathsep + oldPath
+
+            run_process(_settings, "%s/pacBioToCA -l lib%d -s %s/config/pacbio.blasr.spec -t %d -partitions 100 fastqFile=%s genomeSize=%s longReads=1 ovlThreads=%d merylThreads=%d cnsConcurrency=%d merylMemory=%s ovlStoreMemory=%s"%(_settings.CA, lib.id, _settings.METAMOS_UTILS, _settings.threads, lib.f1.path, genomeSize, _settings.threads, _settings.threads, _settings.threads, availableMem, availableMem), "Preprocess")
+            # subset longest 25X?
+            # update library format and file names
+            lib.f1.path = "%s/Preprocess/out/lib%d.fastq"%(_settings.rundir, lib.id)
+            lib.f1.fname = os.path.basename(lib.f1.path)
+            lib.format = "fastq"
+            lib.offset = "sanger"
+            
    elif _filter == "khmer":
       print "*** metAMOS: Not supported yet, stay tuned"
       for lib in _readlibs:

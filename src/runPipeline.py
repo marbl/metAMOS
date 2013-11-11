@@ -295,7 +295,7 @@ settings = utils.Settings(DEFAULT_KMER, multiprocessing.cpu_count() - 1, "", DEF
 import generic
 
 supported_programs = {}
-supported_preprocessors = ["none", "metamos", "eautils"]
+supported_preprocessors = ["none", "metamos", "eautils", "pbcr"]
 supported_genecallers = ["fraggenescan","metagenemark","glimmermg"]
 supported_assemblers = ["newbler", "soapdenovo","soapdenovo2","ca","velvet","velvet-sc","metavelvet",\
                             "metaidba","sparseassembler","minimus"]

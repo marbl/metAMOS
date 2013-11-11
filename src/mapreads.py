@@ -119,10 +119,10 @@ def map2contig():
     if bowtie_mapping == 1:
         if _mapper == "bowtie":
            if "bowtie" not in _skipsteps and not _savebtidx:# and not os.path.exists("%s/Assemble/out/IDX.1.ebwt"%(_settings.rundir)):
-               run_process(_settings, "%s/bowtie-build -o 2 %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir),"MapReads")
+               run_process(_settings, "%s/bowtie-build -o 2 %s/Assemble/out/%s.asm.contig %s/Assemble/out/%s.IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX),"MapReads")
         elif _mapper == "bowtie2":
-           if not os.path.exists("%s/Assemble/out/IDX.1.bt2"%(_settings.rundir)):
-               run_process(_settings, "%s/bowtie2-build -o 2 %s/Assemble/out/%s.asm.contig %s/Assemble/out/IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir),"MapReads")
+           if not os.path.exists("%s/Assemble/out/%s.IDX.1.bt2"%(_settings.rundir, _settings.PREFIX)):
+               run_process(_settings, "%s/bowtie2-build -o 2 %s/Assemble/out/%s.asm.contig %s/Assemble/out/%s.IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX),"MapReads")
         for lib in _readlibs:
             seqfile = open("%s/Preprocess/out/lib%d.seq.btfilt"%(_settings.rundir,lib.id),'w')
 
@@ -144,14 +144,14 @@ def map2contig():
             if _mapper == "bowtie":
                 if "bowtie" not in _skipsteps and (lib.format == "fasta" or lib.format == "sff"):
                     if trim:
-                        run_process(_settings, "%s/bowtie -p %d -f -v 1 -M 2 --un %s/Assemble/out/%s.lib%d.unaligned.fasta %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.PREFIX,lib.id_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                        run_process(_settings, "%s/bowtie -p %d -f -v 1 -M 2 --un %s/Assemble/out/%s.lib%d.unaligned.fasta %s/Assemble/out/%s.IDX %s/Preprocess/out/lib%d.seq.trim > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.PREFIX,lib.id, _settings.rundir, _settings.PREFIX, _settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                     else:
-                        run_process(_settings, "%s/bowtie -p %d -f -l 25 -e 140 --best --strata -m 10 -k 1 --un %s/Assemble/out/%s.lib%d.unaligned.fasta %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.PREFIX,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                        run_process(_settings, "%s/bowtie -p %d -f -l 25 -e 140 --best --strata -m 10 -k 1 --un %s/Assemble/out/%s.lib%d.unaligned.fasta %s/Assemble/out/%s.IDX %s/Preprocess/out/lib%d.seq > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.PREFIX,lib.id,_settings.rundir,_settings.PREFIX,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                 elif "bowtie" not in _skipsteps and lib.format != "fasta":
                     if trim:
-                        run_process(_settings, "%s/bowtie  -p %d -v 1 -M 2 --un %s/Assemble/out/%s.lib%d.unaligned.seq %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq.trim > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.PREFIX,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                        run_process(_settings, "%s/bowtie  -p %d -v 1 -M 2 --un %s/Assemble/out/%s.lib%d.unaligned.seq %s/Assemble/out/%s.IDX %s/Preprocess/out/lib%d.seq.trim > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.PREFIX,lib.id,_settings.rundir,_settings.PREFIX,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                     else:
-                        run_process(_settings, "%s/bowtie  -p %d -l 25 -e 140 --best --strata -m 10 -k 1 --un %s/Assemble/out/%s.lib%d.unaligned.seq %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.PREFIX,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                        run_process(_settings, "%s/bowtie  -p %d -l 25 -e 140 --best --strata -m 10 -k 1 --un %s/Assemble/out/%s.lib%d.unaligned.seq %s/Assemble/out/%s.IDX %s/Preprocess/out/lib%d.seq > %s/Assemble/out/lib%d.bout"%(_settings.BOWTIE,_settings.threads,_settings.rundir,_settings.PREFIX,lib.id,_settings.rundir,_settings.PREFIX,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                     run_process(_settings, "java -cp %s convertFastqToFasta %s/Assemble/out/%s.lib%d.unaligned.seq %s/Assemble/out/%s.lib%d.unaligned.fasta %s/Assemble/out/%s.lib%d.unaligned.fasta.qual"%(_settings.METAMOS_JAVA, _settings.rundir, _settings.PREFIX,lib.id, _settings.rundir, _settings.PREFIX, lib.id, _settings.rundir, _settings.PREFIX, lib.id), "MapReads")
 
                 infile = open("%s/Assemble/out/lib%d.bout"%(_settings.rundir,lib.id),'r')
@@ -201,14 +201,15 @@ def map2contig():
                     dictcnt+=1
                     #print contig
                     seqdict[read] = read_seq
+                    print "Recording read %s in dictionary as %s"%(read, read_seq)
                     seqfile.write(">%s\n%s\n"%(read,read_seq))
                     seqfile.flush()
                 readctgfile.close()
             elif _mapper == "bowtie2":
                 if "bowtie" not in _skipsteps and (lib.format == "fasta" or lib.format == "sff"):
-                    run_process(_settings, "%s/bowtie2 -p %d -f -D 15 -R 2 -N 0 -L 20 -i S,1,1.10 --un %s/Assemble/out/%s.lib%d.unaligned.fasta %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq -S %s/Assemble/out/lib%d.sam"%(_settings.BOWTIE2,_settings.threads,_settings.rundir,_settings.PREFIX,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
+                    run_process(_settings, "%s/bowtie2 -p %d -f -D 15 -R 2 -N 0 -L 20 -i S,1,1.10 --un %s/Assemble/out/%s.lib%d.unaligned.fasta %s/Assemble/out/%s.IDX %s/Preprocess/out/lib%d.seq -S %s/Assemble/out/lib%d.sam"%(_settings.BOWTIE2,_settings.threads,_settings.rundir,_settings.PREFIX,lib.id,_settings.rundir,_settings.PREFIX,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads")
                 elif "bowtie" not in _skipsteps and lib.format != "fasta":
-                    run_process(_settings, "%s/bowtie2 -p %d -D 15 -R 2 -N 0 -L 20 -i S,1,1.10 --un %s/Assemble/out/%s.lib%d.unaligned.seq %s/Assemble/out/IDX %s/Preprocess/out/lib%d.seq -S %s/Assemble/out/lib%d.sam"%(_settings.BOWTIE2,_settings.threads,_settings.rundir,_settings.PREFIX,lib.id,_settings.rundir,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads") 
+                    run_process(_settings, "%s/bowtie2 -p %d -D 15 -R 2 -N 0 -L 20 -i S,1,1.10 --un %s/Assemble/out/%s.lib%d.unaligned.seq %s/Assemble/out/%s.IDX %s/Preprocess/out/lib%d.seq -S %s/Assemble/out/lib%d.sam"%(_settings.BOWTIE2,_settings.threads,_settings.rundir,_settings.PREFIX,lib.id,_settings.rundir,_settings.PREFIX,_settings.rundir,lib.id,_settings.rundir,lib.id),"MapReads") 
                     run_process(_settings, "java -cp %s convertFastqToFasta %s/Assemble/out/%s.lib%d.unaligned.seq %s/Assemble/out/%s.lib%d.unaligned.fasta %s/Assemble/out/%s.lib%d.unaligned.fasta.qual"%(_settings.METAMOS_JAVA, _settings.rundir, _settings.PREFIX, lib.id, _settings.rundir, _settings.PREFIX, lib.id, _settings.rundir, _settings.PREFIX, lib.id), "MapReads") 
 
                 if not os.path.exists("%s/Assemble/out/lib%d.sam"%(_settings.rundir,lib.id)):
@@ -263,8 +264,6 @@ def map2contig():
                        seqdict[readname] = read_seq
                        seqfile.write(">%s\n%s\n"%(readname,read_seq))
                        seqfile.flush()
-                       print readname, "end"
-                   print "close sam"
                    samfile.close()
                    readctgfile.close()
                    #pileup_columns = samfile.pileup( refg,spos,epos)

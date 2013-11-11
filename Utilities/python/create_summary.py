@@ -117,7 +117,7 @@ def outputValidate(headerArray, dataArray, outputHeader, best, results):
                   score = "%.2f"%(float(r))
                elif scoreNum == SCORE_TYPE.N50:
                   score = "{:,}".format(int(r))
-            else:
+            elif len(r) != 0:
                score = "%.4f"%(float(r))
          row.append(["%s%s%s"%("<b>" if isBest else "", score, "</b>" if isBest else ""), "right"])
       counter += 1

@@ -433,6 +433,8 @@ def updateConfigCommands(infileName, opts):
    # build the list of commands
    commands = ""
    for o, a in opts:
+      if o == "-f" or o == "--force":
+         continue
       if "--" in o:
          commands = "%s %s=%s"%(commands, o, a)
       else:
@@ -444,6 +446,33 @@ def updateConfigCommands(infileName, opts):
    for line in infile.xreadlines():
       if "command:" in line:
           tempFile.write("command:\t%s\n"%(commands.strip()))
+      else:
+          tempFile.write(line)
+   infile.close()
+   tempFile.close()
+   os.system("mv %s %s"%(tempFileName, infileName))
+
+def updateLibInfo(infileName, lib):
+   tempFileName = "%s.tmp"%(infileName)
+   tempFile = open(tempFileName, 'w')
+   infile = open(infileName, 'r')
+   written = False
+   for line in infile.xreadlines():
+      if "lib%d"%(lib.id) in line:
+         if written == False:
+            written = True
+            tempFile.write("lib%dformat:\t%s\n"%(lib.id, lib.format))
+            tempFile.write("lib%dmated:\t%s\n"%(lib.id, lib.mated))
+            tempFile.write("lib%dinnie:\t%s\n"%(lib.id, lib.innie))
+            tempFile.write("lib%dinterleaved\t%s\n"%(lib.id, lib.interleaved))
+            if lib.mated:
+               if lib.interleaved:
+                  tempFile.write("lib%df1:\t%s,%d,%d,%d,%d\n"%(lib.id, lib.f1.fname, lib.mmin, lib.mmax, lib.mean, lib.stdev))
+               else:
+                  tempFile.write("lib%df1:\t%s,%d,%d,%d,%d\n"%(lib.id, lib.f1.fname, lib.mmin, lib.mmax, lib.mean, lib.stdev))
+                  tempFile.write("lib%df2:\t%s,%d,%d,%d,%d\n"%(lib.id, lib.f2.fname, lib.mmin, lib.mmax, lib.mean, lib.stdev))
+            else:
+               tempFile.write("lib%dfrg:\t%s\n"%(lib.id, lib.f1.fname))
       else:
           tempFile.write(line)
    infile.close()
@@ -1202,7 +1231,7 @@ def getSelectedAssembler(settings):
       return getCommandOutput("cat %s/Validate/out/%s.asm.selected"%(settings.rundir, settings.PREFIX), False)
 
 def getSelectedKmer(settings):
-   kmer = 0
+   kmer = settings.kmer
    if os.path.exists("%s/Assemble/out/%s.kmer"%(settings.rundir, settings.PREFIX)):
       stats = open("%s/Assemble/out/%s.kmer"%(settings.rundir, settings.PREFIX), 'r')
       kmer = stats.read().strip()

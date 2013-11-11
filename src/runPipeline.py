@@ -427,6 +427,20 @@ if wfName != "":
        usage()
        sys.exit(2)
 
+# finally reload any commands we had
+pip = workflows.Workflow("pipeline", settings.rundir + os.sep)
+pip.read()
+if len(pip.commandList.strip()) > 0:
+   try:
+      wfopts, wfargs = getopt.getopt(pip.commandList.strip().split(), shortOptions, longOptions)
+      opts.extend(wfopts)
+      args.extend(wfargs)
+   except getopt.GetoptError, err:
+      # print help information and exit:
+       print str(err) # will print something like "option -a not recognized"
+       usage()
+       sys.exit(2)
+
 # update the list of options we have
 utils.updateConfigCommands(inifile, opts)
 
@@ -772,24 +786,15 @@ utils.Settings.readpaths = readpaths
 asmfiles = []
 
 for lib in readlibs:
-    if "MapReads" in forcesteps:
-        for a in selected_programs["assemble"].strip().split(","):
-           if os.path.exists("%s/Assemble/out/%s.asm.contig"%(settings.rundir,a)):
-              utils.run_process(settings, \
-              "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,a),\
-              "RunPipeline")
-        for a in asmcontigs:
-           if os.path.exists("%s/Assemble/out/%s.asm.contig"%(settings.rundir,os.path.splitext(a)[0])):
-                utils.run_process(settings, \
-                   "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,os.path.splitext(a)[0]),\
-                   "RunPipeline")
-        utils.run_process(settings, "rm %s/Logs/mapreads.ok"%(settings.rundir), "RunPipeline")
     if "Assemble" in forcesteps:
         utils.run_process(settings, \
            "touch %s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id),\
            "RunPipeline")
     asmfiles.append("%s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id))
 
+if "MapReads" in forcesteps:
+    utils.run_process(settings, "rm %s/Assemble/out/*.contig.cvg"%(settings.rundir), "RunPipeline")
+    utils.run_process(settings, "rm %s/Logs/mapreads.ok"%(settings.rundir), "RunPipeline")
 
 utils.Settings.asmfiles = asmfiles
 
@@ -828,14 +833,21 @@ if "Validate" in forcesteps:
 
 if "FINDORFS" in forcesteps or "findorfs" in forcesteps or "FindORFS" in forcesteps:
    utils.run_process(settings, \
-          "rm %s/FindORFS/out/%s.faa"%(settings.rundir,settings.PREFIX),"RunPipeline")
+          "rm %s/Assemble/out/*.faa"%(settings.rundir),"RunPipeline")
    utils.run_process(settings, \
-          "rm %s/FindORFS/out/%s.fna"%(settings.rundir,settings.PREFIX),"RunPipeline")
+          "rm %s/Assemble/out/*.fna"%(settings.rundir),"RunPipeline")
+   utils.run_process(settings, \
+          "rm %s/FindORFS/out/*.faa"%(settings.rundir),"RunPipeline")
+   utils.run_process(settings, \
+          "rm %s/FindORFS/out/*.fna"%(settings.rundir),"RunPipeline")
 
 if "Assemble" not in skipsteps and "Assemble" in forcesteps:
     utils.run_process(settings, \
           "rm %s/Logs/assemble.ok"%(settings.rundir),\
           "RunPipeline")
+    utils.run_process(settings, \
+          "rm %s/Assemble/out/*.asm.contig"%(settings.rundir),\
+           "RunPipeline")
 
 if "Classify" not in skipsteps and "Classify" in forcesteps:
     utils.run_process(settings, \

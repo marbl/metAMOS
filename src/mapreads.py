@@ -510,9 +510,6 @@ def MapReads(input,output):
    _settings.PREFIX = output.replace("%s/Assemble/out/"%(_settings.rundir), "")
    _settings.PREFIX = _settings.PREFIX.replace(".contig.cvg", "")
 
-   if _settings.PREFIX == originalPrefix:
-      return 0
-
    if _mapper == "bowtie" or _mapper == "bowtie2":
        map2contig()
    else:

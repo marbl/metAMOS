@@ -435,6 +435,8 @@ def updateConfigCommands(infileName, opts):
    for o, a in opts:
       if o == "-f" or o == "--force":
          continue
+      if o == "-d" or o == "--projectdir":
+         continue
       if "--" in o:
          commands = "%s %s=%s"%(commands, o, a)
       else:

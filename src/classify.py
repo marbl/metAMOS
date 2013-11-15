@@ -15,7 +15,8 @@ _cls = None
 _lowmem = False
 _checkForContaminant = False
 _minContaminantTrustedLen = 0
-_minPercentageInOne = 0.99
+_minPercentageInOne = 0.9751
+_minPercentageWithAsmSize = 0.99
 _maxAsm = 1.2
 _settings = Settings()
 
@@ -76,26 +77,28 @@ def Classify(input,output):
       filein.close()
 
       run_process(_settings, "unlink %s/Classify/out/contaminant.true"%(_settings.rundir), "Classify")
-      isContaminant = True
       majority = 0
       classID = 1
+      isContaminant = False
       for annot in counts:
          percentage = float(counts[annot]) / float(total)
          if percentage > majority:
             majority = percentage
             classID = annot
-         if percentage >= _minPercentageInOne:
-            isContaminant = False 
       
-      if isContaminant:
+      if majority < _minPercentageInOne:
+         isContaminant = True
+      elif majority < _minPercentageWithAsmSize:
+         isContaminant = True
+
          if os.path.exists("%s/Validate/out/%s.ref.fasta"%(_settings.rundir, _settings.PREFIX)):
             asmSize=getCommandOutput("java -cp %s SizeFasta %s/Assemble/out/%s.asm.contig |awk '{SUM+=$NF; print SUM}' |tail -n 1"%(_settings.METAMOS_JAVA, _settings.rundir, _settings.PREFIX), False)
             expectedSize=getCommandOutput("java -cp %s SizeFasta %s/Validate/out/%s.ref.fasta |awk '{SUM+=$NF; print SUM}' |tail -n 1"%(_settings.METAMOS_JAVA, _settings.rundir, _settings.PREFIX), False)
             if int(float(expectedSize) * _maxAsmSize) >= int(asmSize):
                 isContaminant = False
 
-         if isContaminant:
-            name = getCommandOutput("cat %s/tax_key.tab |awk -F \"\\t\" '{if ($1 == %s) print $NF}'"%(_settings.DB_DIR, classID), False)
-            contaminant = open("%s/Classify/out/contaminant.true"%(_settings.rundir), 'w')
-            contaminant.write("%s\t%s\n"%(majority*100, name))
-            contaminant.close()
+      if isContaminant:
+         name = getCommandOutput("cat %s/tax_key.tab |awk -F \"\\t\" '{if ($1 == %s) print $NF}'"%(_settings.DB_DIR, classID), False)
+         contaminant = open("%s/Classify/out/contaminant.true"%(_settings.rundir), 'w')
+         contaminant.write("%s\t%s\n"%(majority*100, name))
+         contaminant.close()

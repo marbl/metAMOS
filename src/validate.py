@@ -144,10 +144,14 @@ def runCGAL(inputsam, prefix, assembly, min, max, genomeSize):
    if getBAMMapped("%s.sorted.bam"%(inputsam)) == 0:
       return minScore()
 
+   setFailFast(False)
    run_process(_settings, "%s/bowtie2convert %s"%(_settings.CGAL, inputsam), "Validate")
    run_process(_settings, "%s/align %s %d %d"%(_settings.CGAL, assembly, CGAL_NUM_ALIGN, _settings.threads), "Validate")
    run_process(_settings, "%s/cgal %s > %s/Validate/out/%s.cgal"%(_settings.CGAL, assembly, _settings.rundir, prefix), "Validate")
    cgal_score = getCommandOutput("cat %s/Validate/out/%s.cgal"%(_settings.rundir, prefix), False)
+   setFailFast(True)
+   if cgal_score == "":
+      cgal_score = minScore()
 
    return cgal_score
 

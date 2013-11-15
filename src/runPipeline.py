@@ -183,10 +183,10 @@ def printConfiguration(fileName=None):
     (progName, citation) = utils.getProgramCitations(settings, "metamos")
     configurationText.append(progName + "\n")
     configurationText.append("\t" + citation + "\n\n")
-    if isolate_genome == True:
-       (progName, citation) = utils.getProgramCitations(settings, "metamos_isolate")
-       configurationText.append(progName + "\n")
-       configurationText.append("\t" + citation + "\n\n") 
+    #if isolate_genome == True:
+    #   (progName, citation) = utils.getProgramCitations(settings, "metamos_isolate")
+    #   configurationText.append(progName + "\n")
+    #   configurationText.append("\t" + citation + "\n\n") 
 
     configurationText.append("\n")
     configurationText.append("Step-specific configuration:\n")

@@ -1233,7 +1233,7 @@ def getSelectedAssembler(settings):
       return getCommandOutput("cat %s/Validate/out/%s.asm.selected"%(settings.rundir, settings.PREFIX), False)
 
 def getSelectedKmer(settings):
-   kmer = settings.kmer
+   kmer = ""
    if os.path.exists("%s/Assemble/out/%s.kmer"%(settings.rundir, settings.PREFIX)):
       stats = open("%s/Assemble/out/%s.kmer"%(settings.rundir, settings.PREFIX), 'r')
       kmer = stats.read().strip()

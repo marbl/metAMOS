@@ -355,7 +355,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
        best.close()
        laps = open("%s/Postprocess/out/lap.scores"%(MA_dir), 'r')
        validate = markup.page()
-       validate.init(css="style.css")
+       validate.init(css="style.css", bodyattrs={'style':"background-color:#FFFFFF;"})
        validate.p()
        validate.add("<div class=\"datagrid\">")
        validate.add("Selected assembler: %s"%(bestAsm))
@@ -393,15 +393,23 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
        quastIn = open("%s/Postprocess/out/quast/~report.html"%(MA_dir), 'r')
        quastOut = open("%s/Postprocess/out/quast/report.html"%(MA_dir), 'w')
        skip = False
+       output = False
        for line in quastIn.xreadlines():
           if not skip:
-             quastOut.write(line + "\n")
-          else:
-             quastOut.write("margin-left: 10px;")
-             skip = False
+             quastOut.write(line.strip().replace("<br>", "") + "\n")
+          elif output:
+             quastOut.write("margin-left: 50px;\n")
+             quastOut.write("padding-top: 10px;\n")
+             quastOut.write("background: #ffffff;\n")
+             output = False
 
           if ".content" in line:
              skip = True
+             output = True
+          elif "clear:" in line:
+             quastOut.write(line.strip() + "\n")
+             skip = False
+             output = False
        quastIn.close()
        quastOut.close()
        validate.iframe(id_="quast", src_="%s/Postprocess/out/quast/report.html"%(MA_dir), width="800", height="1000")

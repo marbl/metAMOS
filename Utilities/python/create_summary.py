@@ -336,8 +336,8 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     preprocess.add(getTable(headerArray, dataArray))
     summary.close()
 
-    if os.path.exists("%s/Postprocess/out/kmergenie_report.html"%(MA_dir)):
-       preprocess.iframe(id_="KmerGenie", src_="%s/Postprocess/out/kmergenie_report.html"%(MA_dir), width="800", height="5000")
+    if os.path.exists("%s/Postprocess/out/html/kmergenie_report.html"%(MA_dir)):
+       preprocess.iframe(id_="KmerGenie", src_="kmergenie_report.html", width="800", height="5000")
 
     preprocess_out = open("%s/Preprocess.html"%(html_prefix), 'w')
     preprocess_out.write(preprocess.__str__())
@@ -388,10 +388,10 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
        laps.close()
 
     # when we have quast, we will add our table to their report, otherwise write standalone report
-    if os.path.exists("%s/Postprocess/out/quast/report.html"%(MA_dir)):
-       os.system("cp %s/Postprocess/out/quast/report.html %s/Postprocess/out/quast/~report.html"%(MA_dir, MA_dir))
-       quastIn = open("%s/Postprocess/out/quast/~report.html"%(MA_dir), 'r')
-       quastOut = open("%s/Postprocess/out/quast/report.html"%(MA_dir), 'w')
+    if os.path.exists("%s/Postprocess/out/html/quast/combined_quast_output/report.html"%(MA_dir)):
+       os.system("cp %s/Postprocess/out/html/quast/combined_quast_output/report.html %s/Postprocess/out/html/quast/combined_quast_output/~report.html"%(MA_dir, MA_dir))
+       quastIn = open("%s/Postprocess/out/html/quast/combined_quast_output/~report.html"%(MA_dir), 'r')
+       quastOut = open("%s/Postprocess/out/html/quast/combined_quast_output/report.html"%(MA_dir), 'w')
        skip = False
        output = False
        for line in quastIn.xreadlines():
@@ -412,7 +412,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
              output = False
        quastIn.close()
        quastOut.close()
-       validate.iframe(id_="quast", src_="%s/Postprocess/out/quast/report.html"%(MA_dir), width="800", height="1000")
+       validate.iframe(id_="quast", src_="quast/combined_quast_output/report.html", width="800", height="1000")
     validate_out.write(validate.__str__())
     validate_out.close()
 

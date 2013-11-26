@@ -357,6 +357,25 @@ if not os.path.exists("./Utilities/DB/kraken"):
           os.system("mv minikraken_* ./Utilities/DB/kraken")
           os.system("rm %s"%(archive))
        else:
+          # first we need jellyfish which is used to build DB
+          # kraken needs jellyfish, if we don't find it build it and add to path
+          jellyfish = utils.getFromPath("jellyfish", "Jellyfish", False)
+          if jellyfish == "":
+             archive = jellyfish.tar.gz
+             os.system("curl -L http://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.11.tar.gz -o %s"%(archive, archive))
+             os.system("tar xvzf %s"%(archive))
+             os.system("mv jellyfish-1.1.11 ./Utilities/cpp%s%s-%s%s/jellyfish"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.chdir("./Utilities/cpp%s%s-%s%s/jellyfish"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("./configure --prefix=`pwd`")
+             os.system("make")
+             os.system("make install")
+             os.chdir("%s"%(METAMOS_ROOT))
+
+             pathUpdate = "%s/Utilities/cpp%s%s-%s%sjellyfish/bin/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
+             if "PATH" in os.environ:
+                pathUpdate = "%s%s%s"%(os.environ["PATH"], os.pathsep, pathUpdate)
+             os.environ["PATH"]=pathUpdate
+
           os.chdir("./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
           os.system("./bin/kraken-build --standard --threads %d --db %s/Utilities/DB/kraken"%(multiprocessing.cpu_count() - 1, METAMOS_ROOT)) 
           os.chdir("%s"%(METAMOS_ROOT))

@@ -86,8 +86,9 @@ directory. Depending on your platform/Linux distribution, you might need to down
 
 Additionally, there is some software that MetAMOS can
 incorporate into its pipeline that we are not allowed to distribute,
-such as MetaGeneMark. To get a license to use MetaGeneMark, please
-visit: http://exon.gatech.edu/license_download.cgi.
+such as MetaGeneMark and Newbler. To get a license to use MetaGeneMark, plesae
+visit: http://exon.gatech.edu/license_download.cgi. Once the tool is installed,
+add it to your PATH variable and metAMOS will then enable its use in the pipeline.
 
 ----------------------------------------------------------------------------------
 ### C) INSTALLING MetAMOS

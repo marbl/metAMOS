@@ -254,7 +254,8 @@ def Postprocess(input,output):
       run_process(_settings, "unlink %s/Postprocess/out/ref.asm"%(_settings.rundir), "Postprocess")
       run_process(_settings, "ln %s/Validate/out/%s.ref.selected %s/Postprocess/out/ref.asm"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
       run_process(_settings, "unlink %s/Postporocess/out/html/quast"%(_settings.rundir), "Postprocess")
-      run_process(_settings, "cp -r %s/Validate/out/quast %s/Postprocess/out/html/quast"%(_settings.rundir,  _settings.rundir), "Postprocess")
+      if os.path.exists("%s/Validate/out/quast"%(_settings.rundir)):
+         run_process(_settings, "cp -r %s/Validate/out/quast %s/Postprocess/out/html/quast"%(_settings.rundir,  _settings.rundir), "Postprocess")
    else:
       run_process(_settings, "touch %s/Postprocess/out/ref.asm"%(_settings.rundir), "Postprocess")
 

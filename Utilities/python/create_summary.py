@@ -15,7 +15,15 @@ from pygooglechart import StackedHorizontalBarChart, StackedVerticalBarChart, \
 import settings
 from utils import *
 import helper
-from create_plots import *
+
+_havePlots = False
+try:
+   import matplotlib,numpy
+   from create_plots import *
+   _havePlots = True
+except ImportError:
+   pass
+
 from get_classify_stats import *
 #let system set locale from available ones
 _settings = Settings()
@@ -222,7 +230,8 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     cpfile.write("+sample1\t%s\tproba\tb-\tmetaphyler=1\n"%(MA_dir))
     cpfile.close()
     #os.system("python %s/python/create_plots.py %s/plot.tab proba1"%(utils,html_prefix))
-    create_plots("%s/plot.tab"%(html_prefix),"%s"%("proba1"))
+    if _havePlots:
+       create_plots("%s/plot.tab"%(html_prefix),"%s"%("proba1"))
 
     ##update counts
     #count reads

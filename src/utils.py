@@ -43,6 +43,7 @@ ENDC = CSI+'0m'
 
 _METAMOSDIR    = resource_path(sys.path[0])
 INITIAL_UTILS = "%s%sUtilities"%(_METAMOSDIR, os.sep)
+INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
 _NUM_LINES    = 10
 _PROG_NAME_DICT = {}
 _PUB_DICT = {}
@@ -76,6 +77,7 @@ class AtomicCounter(object):
          return origVal
 
 _atomicCounter = AtomicCounter(0)
+_envCounter = AtomicCounter(0)
 
 class Settings:
    asmfiles = []
@@ -160,6 +162,8 @@ class Settings:
    nopysam = False
 
    def __init__(self, kmer = None, threads = None, rundir = None, taxa_level = "", localKrona = False, annotateUnmapped = False, doScaffolding = False, verbose = False, outputOnly = False, update = False):
+
+      configureEnvironment(INITIAL_UTILS)
 
       if (Settings.rundir != "" and update == False):
          return
@@ -1220,6 +1224,7 @@ def getAvailableMemory(settings):
    percentfree = float(memusage[3].split("percent=")[-1].split(")")[0])
    avram = (freemem/1000000000)
 
+   print "The mem info is %s %s %s"%(freemem, memusage, avram)
    return avram
 
 def getSelectedAssembler(settings):
@@ -1263,6 +1268,64 @@ def getVersion():
    wfs = workflow.getSupportedWorkflowNames("%s/Utilities/workflows"%(sys.path[0]), False)
 
    return version + " workflows: " + ",".join(wfs)
+
+def configureEnvironment(utilPath):
+   global _envCounter
+   if _envCounter.increment() == 0:
+      print "The intial source is %s and dir is %s\n"%(INITIAL_SRC, utilPath)
+      if "PYTHONPATH" not in os.environ:
+         os.environ["PYTHONPATH"] = ""
+      else:
+         ppath = os.environ["PYTHONPATH"]
+         #os.environ["PYTHONPATH"] = ""
+      os.environ["PYTHONPATH"]+=utilPath+os.sep+"python"+os.pathsep
+      os.environ["PYTHONPATH"]+=utilPath+os.sep+"ruffus"+os.pathsep
+      os.environ["PYTHONPATH"] += utilPath+os.sep+"python"+os.sep+"lib"+os.pathsep
+      os.environ["PYTHONPATH"] += utilPath+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.pathsep
+      os.environ["PYTHONPATH"] += utilPath+os.sep+"python"+os.sep+"lib64"+os.pathsep
+      os.environ["PYTHONPATH"] += utilPath+os.sep+"python"+os.sep+"lib64"+os.sep+"python"+os.pathsep
+      os.environ["PYTHONPATH"] += utilPath+os.pathsep
+
+      if "PERL5LIB" not in os.environ:
+         os.environ["PERL5LIB"] =  INITIAL_SRC+os.sep+"phylosift"+os.sep+"lib"+os.sep
+      else:
+         os.environ["PERL5LIB"] =  INITIAL_SRC+os.sep+"phylosift"+os.sep+"lib"+os.sep + os.pathsep + os.environ["PERL5LIB"]
+      try:
+         os.environ["PYTHONPATH"] += sys._MEIPASS + os.pathsep
+         os.environ["PYTHONHOME"] = sys._MEIPASS + os.pathsep
+      except Exception:
+         pass
+
+      try:
+         sys._MEIPASS
+         #if we are here, frozen binary
+      except Exception:
+         #else normal mode, add site dir
+         import site
+         site.addsitedir(utilPath+os.sep+"python"+os.sep+"lib"+os.sep+"python")
+         site.addsitedir(utilPath+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
+
+         sys.path.append(utilPath)
+         sys.path.append(utilPath+os.sep+"python")
+         sys.path.append(utilPath+os.sep+"ruffus")
+         sys.path.append(utilPath+os.sep+"python"+os.sep+"lib"+os.sep+"python")
+         sys.path.append(utilPath+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
+         try:
+            sys.path.append(sys._MEIPASS)
+         except Exception:
+            pass
+         sys.path.append("/usr/lib/python")
+
+         #remove imports from pth file, if exists
+         nf = []
+         if 'bash' in shellv or cmdExists('export'):
+            os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utilPath+os.sep+"python"))
+            os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utilPath+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
+         elif cmdExists('setenv'):
+            os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utilPath+os.sep+"python"))
+            os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utilPath+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
+         else:
+            print "Warning: could not set PYTHONPATH. Unknown shell %s, some functionality may not work\n"%(shellv)
 
 def translateToSRAURL(settings, name):
    command = "%s/cpp%s%s-%s%s/sra/bin"%(settings.METAMOS_UTILS, os.sep, settings.OSTYPE, settings.MACHINETYPE, os.sep)

@@ -1272,7 +1272,6 @@ def getVersion():
 def configureEnvironment(utilPath):
    global _envCounter
    if _envCounter.increment() == 0:
-      print "The intial source is %s and dir is %s\n"%(INITIAL_SRC, utilPath)
       if "PYTHONPATH" not in os.environ:
          os.environ["PYTHONPATH"] = ""
       else:

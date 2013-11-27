@@ -98,11 +98,24 @@ open the MetAMOS directory. Once inside the MetAMOS directory, run:
 
 python INSTALL.py
 
-This will download and install any external dependencies (or they can
-be refused by answering NO), which may take minutes or hours to
-download depending on your connection speed. If all dependencies are
-downloaded (including optional ones), this will take quite awhile to
-complete (plan on a few hours to 2 days).
+This will download and install the  external dependencies which may 
+take minutes or hours to download depending on your connection speed. 
+metAMOS supports workflows to install subsets of tools for faster installation.
+By default only the core dependencies are installed. You can run
+python INSTALL.py -h
+
+to get a listing of available workflows and programs. You can specify either
+workflows or programs as arguments to INSTALL.py. For example, to install the 
+core workflow plus PhyloSift, run
+
+python INSTALL.py core phylosift
+
+To install the programs which are part of the optional workflow run
+
+python INSTALL.py optional
+
+If all dependencies are downloaded (including optional/deprecated ones), this will take 
+quite awhile to complete (plan on a few hours to 2 days).
 
 ----------------------------------------------------------------------------------
 ### D) QUICK START

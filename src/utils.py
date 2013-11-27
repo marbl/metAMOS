@@ -1224,7 +1224,6 @@ def getAvailableMemory(settings):
    percentfree = float(memusage[3].split("percent=")[-1].split(")")[0])
    avram = (freemem/1000000000)
 
-   print "The mem info is %s %s %s"%(freemem, memusage, avram)
    return avram
 
 def getSelectedAssembler(settings):

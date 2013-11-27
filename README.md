@@ -100,11 +100,25 @@ open the MetAMOS directory. Once inside the MetAMOS directory, run:
 
 python INSTALL.py
 
-This will download and install any external dependencies (or they can
-be refused by answering NO), which may take minutes or hours to
-download depending on your connection speed. If all dependencies are
-downloaded (including optional ones), this will take quite awhile to
-complete (plan on a few hours to 2 days).
+This will download and install the external dependencies which may 
+take minutes or hours to download depending on your connection speed. 
+metAMOS supports workflows to install subsets of tools for faster installation.
+By default only the core dependencies are installed. You can run
+
+python INSTALL.py -h
+
+to get a listing of available workflows and programs. You can specify either
+workflows or programs as arguments to INSTALL.py. For example, to install the 
+core workflow plus PhyloSift, run
+
+python INSTALL.py core phylosift
+
+To install the programs which are part of the optional workflow run
+
+python INSTALL.py optional
+
+If all dependencies are downloaded (including optional/deprecated ones), this will take 
+quite awhile to complete (plan on a few hours to 2 days).
 
 ----------------------------------------------------------------------------------
 ### D) QUICK START
@@ -185,7 +199,7 @@ usage: runPipeline [options] -d projectdir
 
 Pipeline consists of the following steps:
 
-  Preprocess, Assemble, FindORFS, MapReads, Abundance, Annotate,
+  Preprocess, Assemble, FindORFS, MapReads, Validate, Abundance, Annotate,
   Scaffold, Propagate, Classify, Postprocess
 
 Each of these steps can be referred to by the following options:
@@ -199,8 +213,8 @@ For each step you can fine-tune the execution as follows
 
 [Preprocess]
 
-*   -t = <bool>:   filter input reads? (default = NO)
-*   -q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)
+*   -t = <bool>:   turn on filter input reads (default = NO)
+*   -q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff) (default = NO)
 
 
 [Assemble]
@@ -215,7 +229,7 @@ For each step you can fine-tune the execution as follows
 [MapReads]
 
 *   -m = <string>: read mapper to use? (default = bowtie)
-*   -i = <bool>:   save bowtie (i)ndex? (default = NO)
+*   -i = <bool>:   save bowtie (i)ndex (default = NO)
 *   -b = <bool>:   create library specific per bp coverage of assembled contigs (default = NO)
 
 
@@ -229,7 +243,7 @@ For each step you can fine-tune the execution as follows
 [Annotate]
 
 *   -c = <string>: classifier to use for annotation (default = FCP)
-*   -u = <bool>:   annotate unassembled reads? (default = NO)
+*   -u = <bool>:   annotate unassembled reads (default = NO)
 
 
 [Classify]
@@ -238,9 +252,9 @@ For each step you can fine-tune the execution as follows
 
 [misc_opts]: Miscellaneous options
 
-*   -r = <bool>:   retain the AMOS bank?  (default = NO)
+*   -r = <bool>:   retain the AMOS bank  (default = NO)
 *   -p = <int>:    number of threads to use (be greedy!) (default=1)
-*   -4 = <bool>:   454 data? (default = NO)
+*   -4 = <bool>:   454 data (default = NO)
 
 For example, to enable read filtering:
 

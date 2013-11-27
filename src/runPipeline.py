@@ -26,60 +26,8 @@ if validate_install:
 
 import utils
 import workflow
-ppath = ""
-if "PYTHONPATH" not in os.environ:
-   os.environ["PYTHONPATH"] = ""
-else:
-   ppath = os.environ["PYTHONPATH"] 
-   #os.environ["PYTHONPATH"] = ""
-os.environ["PYTHONPATH"]+=utils.INITIAL_UTILS+os.sep+"python"+os.pathsep
-os.environ["PYTHONPATH"]+=utils.INITIAL_UTILS+os.sep+"ruffus"+os.pathsep
-os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.pathsep
-os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.pathsep
-os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.pathsep
-os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python"+os.pathsep
-os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.pathsep
+utils.configureEnvironment(utils.INITIAL_UTILS)
 
-if "PERL5LIB" not in os.environ:
-    os.environ["PERL5LIB"] =  INITIAL_SRC+os.sep+"phylosift"+os.sep+"lib"+os.sep
-else:
-    os.environ["PERL5LIB"] =  INITIAL_SRC+os.sep+"phylosift"+os.sep+"lib"+os.sep + os.pathsep + os.environ["PERL5LIB"]
-try:
-    os.environ["PYTHONPATH"] += sys._MEIPASS + os.pathsep
-    os.environ["PYTHONHOME"] = sys._MEIPASS + os.pathsep
-except Exception:
-    pass
-
-try:
-    sys._MEIPASS
-    #if we are here, frozen binary
-except Exception:
-    #else normal mode, add site dir
-    import site
-    site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
-    site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
-
-sys.path.append(utils.INITIAL_UTILS)
-sys.path.append(utils.INITIAL_UTILS+os.sep+"python")
-sys.path.append(utils.INITIAL_UTILS+os.sep+"ruffus")
-sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
-sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
-try:
-    sys.path.append(sys._MEIPASS)
-except Exception:
-    pass
-sys.path.append("/usr/lib/python")
-
-#remove imports from pth file, if exists
-nf = []
-if 'bash' in shellv or utils.cmdExists('export'):
-   os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
-   os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
-elif utils.cmdExists('setenv'):
-   os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
-   os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
-else:
-   print "Warning: could not set PYTHONPATH. Unknown shell %s, some functionality may not work\n"%(shellv)
 ## The usual library dependencies
 import string
 import time
@@ -310,6 +258,7 @@ supported_classifiers.extend(generic.getSupportedList(utils.INITIAL_UTILS, utils
 supported_validators = ["reapr", "orf", "lap", "ale", "quast", "frcbam", "freebayes", "cgal", "n50"]
 supported_fannotate = ["blast"]
 supported_scaffolders = ["bambus2"]
+supported_programs["preprocess"] = supported_preprocessors
 supported_programs["findorfs"] = supported_genecallers
 supported_programs["assemble"] = supported_assemblers
 supported_programs["mapreads"] = supported_mappers

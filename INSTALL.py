@@ -1,4 +1,4 @@
-import os, sys, string, subprocess, distutils.util, check_install, site, glob
+import os, sys, string, subprocess, distutils.util, check_install, site, glob, multiprocessing
 
 user_home = os.environ["HOME"]
 print "<<Welcome to metAMOS install>>"
@@ -349,6 +349,7 @@ if not os.path.exists("./Utilities/DB/kraken"):
        settings = utils.Settings(1, 1, "", "")
        settings.OSTYPE = OSTYPE
        mem = utils.getAvailableMemory(settings)
+
        if (mem < 100):
           print "Insufficient memory to build full Kraken database. Requires at least 100GB of memory, using mini DB"
           archive = "minikraken.tgz"
@@ -473,7 +474,7 @@ if "optional" in enabledWorkflows or manual:
             os.system("tar -C ./Utilities/ -xvf %s" % archive)
             os.system("rm %s"%archive)
 
-    if not os.path.exists("./phylosift") or not os.path.exists("./phylosift/legacy/version.pm") or not os.path.exists("./phylosift/lib/Params"):
+    if not os.path.exists("./phylosift") or not os.path.exists("./phylosift/lib/version.pm") or not os.path.exists("./phylosift/lib/Params"):
        if "phylosift" in packagesToInstall:
           dl = 'y'
        else:

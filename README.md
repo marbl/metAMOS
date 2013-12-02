@@ -1,20 +1,16 @@
 [![githalytics.com alpha](https://cruel-carlota.pagodabox.com/50642308f8120a4dd17e617e46cc21b1 "githalytics.com")](http://githalytics.com/treangen/metAMOS)
-# MetAMOS v1.3 "Candied Bacon"
-
-Last updated: September 18th, 2013
-
+# MetAMOS v1.4-pre "Papanasi v1.4 pre-release" README
+Last updated: Dec 2nd, 2013
 ***********************************************************************************
-We are happy to announce version 1.3, a.k.a. Candied Bacon
+We are happy to announce pre-release of 1.4, a.k.a. Papanasi
 
 ## NEWS
-       1. Updated 64-bit frozen Linux binary now available (fixed taxonomy dir issue)
-       2. Generic module support officialy supported for Assemble and Annotate step
-       3. Spades & Kraken added
-       4. Added prelim support for program workflows (core, optional, deprecated).
-       5. Added prelim support for new MultiAlign step
-       6. Numerous bug fixes
-
-*on deck: kmher, MaSuRCA, Ray Meta, and Viritas
+       1. Added IDBA-UD
+       2. Added PacbioToCA
+       3. Added kmergenie support
+       4. Added ea-utils support
+       5. *Filtering now enabled by default
+       5. Numerous bug fixes
 
 -----------------------------------------------------------------------------------
 ## **MetAMOS single file binary**

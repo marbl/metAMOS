@@ -1,5 +1,5 @@
 [![githalytics.com alpha](https://cruel-carlota.pagodabox.com/50642308f8120a4dd17e617e46cc21b1 "githalytics.com")](http://githalytics.com/treangen/metAMOS)
-# MetAMOS v1.4-pre "Papanasi v1.4 pre-release" README
+# MetAMOS v1.4-pre "v1.4 pre-release" README
 Last updated: Dec 2nd, 2013
 ***********************************************************************************
 We are happy to announce pre-release of 1.4, a.k.a. Papanasi

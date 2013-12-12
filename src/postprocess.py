@@ -158,7 +158,7 @@ def Postprocess(input,output):
 
       try:
          if int(annot) > maxClassID:
-            maxClassID = int(annot)
+            maxClassID = int(annot) + 1
          annotatedCtgs[ctg] = annot
       except ValueError:
          maxClassID = maxClassID
@@ -170,12 +170,10 @@ def Postprocess(input,output):
    annotsout = ""
    try:
        annotsfile = open("%s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
-       annotsfile = open("%s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
        annotsout = open("%s/Postprocess/out/%s.propagated.annots"%(_settings.rundir, _settings.taxa_level), 'w')
        annotsfiledata = annotsfile.readlines()
    except IOError:
        nopropagate = True
-
 
    for line in annotsfiledata:#.xreadlines():
       line = line.replace("\n", "")

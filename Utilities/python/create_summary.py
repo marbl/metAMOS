@@ -15,7 +15,15 @@ from pygooglechart import StackedHorizontalBarChart, StackedVerticalBarChart, \
 import settings
 from utils import *
 import helper
-from create_plots import *
+
+_havePlots = False
+try:
+   import matplotlib,numpy
+   from create_plots import *
+   _havePlots = True
+except ImportError:
+   pass
+
 from get_classify_stats import *
 #let system set locale from available ones
 _settings = Settings()
@@ -72,10 +80,10 @@ def outputLibraryInfo(headerArray, dataArray, outputHeader, libcnt, format, mate
             row.append(["<a target=\"_blank\" href=\"lib%d.1.fastqc/fastqc_report.html\">interleaved</a>"%(libcnt), "left"])
             row.append(["NA", "left"])
          else:
-            row.append(['<a target="_blank" href="lib%d.1.fastqc/fastqc_report.html">left</a>'%(libcnt), "left"])
-            row.append(['<a target="_blank" href="lib%d.2.fastqc/fastqc_report.html">right</a>'%(libcnt), "left"])
+            row.append(["<a target=\"_blank\" href=\"lib%d.1.fastqc/fastqc_report.html\">left</a>"%(libcnt), "left"])
+            row.append(["<a target=\"_blank\" href=\"lib%d.2.fastqc/fastqc_report.html\">right</a>"%(libcnt), "left"])
       else:
-         row.append(['<a target="_blank" href="lib%d.1.fastqc/fastqc_report.html">unmated</a>'%(libcnt), "left"])
+         row.append(["<a target=\"_blank\" href=\"lib%d.1.fastqc/fastqc_report.html\">unmated</a>"%(libcnt), "left"])
          row.append(["NA", "left"])
    dataArray.append(row)
 
@@ -96,6 +104,7 @@ def outputValidate(headerArray, dataArray, outputHeader, best, results):
       isBest = True
 
    row = []
+   counter = 0
    isFirst = True
    for r in results:
       if isFirst:
@@ -106,8 +115,20 @@ def outputValidate(headerArray, dataArray, outputHeader, best, results):
          if r == None or r.lower() == "none":
             score = "N/A"
          else:
-            score = "%.4f"%(float(r))
+            if headerArray[counter][0].upper() in SCORE_TYPE.mapping:
+               scoreNum = SCORE_TYPE.mapping[headerArray[counter][0].upper()]
+               if scoreNum == SCORE_TYPE.LAP or scoreNum == SCORE_TYPE.ALE or scoreNum == SCORE_TYPE.CGAL:
+                  score = "%.6f"%(float(r)) 
+               elif scoreNum == SCORE_TYPE.SNP or scoreNum == SCORE_TYPE.FRCBAM or scoreNum == SCORE_TYPE.ORF:
+                  score = "%d"%(int(r))
+               elif scoreNum == SCORE_TYPE.REAPR:
+                  score = "%.2f"%(float(r))
+               elif scoreNum == SCORE_TYPE.N50:
+                  score = "{:,}".format(int(r))
+            elif len(r) != 0:
+               score = "%.4f"%(float(r))
          row.append(["%s%s%s"%("<b>" if isBest else "", score, "</b>" if isBest else ""), "right"])
+      counter += 1
    dataArray.append(row)
 
 def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,dbdir):
@@ -167,7 +188,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     step_status["Assemble"] = "OK"
     step_status["MapReads"] = "OK"
     step_status["Validate"] = "OK"
-    #step_status["MultiAlign"] = "SKIP"
+    #step_status["MultiAlign"] = "OK"
     step_status["FindORFS"] = "OK"
     step_status["FindRepeats"] = "OK"
     step_status["Scaffold"] = "OK"
@@ -209,11 +230,12 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     cpfile.write("+sample1\t%s\tproba\tb-\tmetaphyler=1\n"%(MA_dir))
     cpfile.close()
     #os.system("python %s/python/create_plots.py %s/plot.tab proba1"%(utils,html_prefix))
-    create_plots("%s/plot.tab"%(html_prefix),"%s"%("proba1"))
+    if _havePlots:
+       create_plots("%s/plot.tab"%(html_prefix),"%s"%("proba1"))
 
     ##update counts
     #count reads
-    os.system("cat %s/Preprocess/out/*.*.fasta | grep -c \">\" > readcount.txt"%(MA_dir))
+    os.system("cat `ls %s/Preprocess/out/* |egrep 'lib[0-9]*\.fasta$'` | grep -c \">\" > readcount.txt"%(MA_dir))
     readcount = open("readcount.txt",'r').read().replace("\n","")  
     #print readcount
     os.system("rm readcount.txt")
@@ -316,18 +338,15 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
           mmin = int(inf[1])
           mmax = int(inf[2])
 
-          libadded = True
        elif "frg" in line:
           data = line.split("\t")
-          mated = False
-          libadded = True
     if format and not libadded:
        outputLibraryInfo(headerArray, dataArray, firstLib, libcnt, format, mated, interleaved, mmin, mmax, nQC > 0)
     preprocess.add(getTable(headerArray, dataArray))
     summary.close()
 
-    if os.path.exists("%s/Postprocess/out/kmergenie_report.html"%(MA_dir)):
-       preprocess.iframe(id_="KmerGenie", src_="%s/Postprocess/out/kmergenie_report.html"%(MA_dir), width="800", height="5000")
+    if os.path.exists("%s/Postprocess/out/html/kmergenie_report.html"%(MA_dir)):
+       preprocess.iframe(id_="KmerGenie", src_="kmergenie_report.html", width="800", height="5000")
 
     preprocess_out = open("%s/Preprocess.html"%(html_prefix), 'w')
     preprocess_out.write(preprocess.__str__())
@@ -345,7 +364,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
        best.close()
        laps = open("%s/Postprocess/out/lap.scores"%(MA_dir), 'r')
        validate = markup.page()
-       validate.init(css="style.css")
+       validate.init(css="style.css", bodyattrs={'style':"background-color:#FFFFFF;"})
        validate.p()
        validate.add("<div class=\"datagrid\">")
        validate.add("Selected assembler: %s"%(bestAsm))
@@ -357,8 +376,14 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
               validate.br()
               first = False
            validate.add("Selected reference: %s"%(r))
-       validate.br()
        ref.close()
+       if os.path.exists("%s/Classify/out/contaminant.true"%(MA_dir)):
+          cont = open("%s/Classify/out/contaminant.true"%(MA_dir), 'r')
+          contPercent = cont.read().split()
+          cont.close()
+          validate.br()
+          validate.add("<b>Sample may have contaminants, only %s%% assigned to %s. Check Annotate output</b>"%(contPercent[0], contPercent[1]))
+       validate.br()
        for line in laps:
           line = line.replace("\n","")
           if "#" in line:
@@ -372,23 +397,31 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
        laps.close()
 
     # when we have quast, we will add our table to their report, otherwise write standalone report
-    if os.path.exists("%s/Postprocess/out/quast/report.html"%(MA_dir)):
-       os.system("cp %s/Postprocess/out/quast/report.html %s/Postprocess/out/quast/~report.html"%(MA_dir, MA_dir))
-       quastIn = open("%s/Postprocess/out/quast/~report.html"%(MA_dir), 'r')
-       quastOut = open("%s/Postprocess/out/quast/report.html"%(MA_dir), 'w')
+    if os.path.exists("%s/Postprocess/out/html/quast/combined_quast_output/report.html"%(MA_dir)):
+       os.system("cp %s/Postprocess/out/html/quast/combined_quast_output/report.html %s/Postprocess/out/html/quast/combined_quast_output/~report.html"%(MA_dir, MA_dir))
+       quastIn = open("%s/Postprocess/out/html/quast/combined_quast_output/~report.html"%(MA_dir), 'r')
+       quastOut = open("%s/Postprocess/out/html/quast/combined_quast_output/report.html"%(MA_dir), 'w')
        skip = False
+       output = False
        for line in quastIn.xreadlines():
           if not skip:
-             quastOut.write(line + "\n")
-          else:
-             quastOut.write("margin-left: 10px;")
-             skip = False
+             quastOut.write(line.strip().replace("<br>", "") + "\n")
+          elif output:
+             quastOut.write("margin-left: 50px;\n")
+             quastOut.write("padding-top: 10px;\n")
+             quastOut.write("background: #ffffff;\n")
+             output = False
 
           if ".content" in line:
              skip = True
+             output = True
+          elif "clear:" in line:
+             quastOut.write(line.strip() + "\n")
+             skip = False
+             output = False
        quastIn.close()
        quastOut.close()
-       validate.iframe(id_="quast", src_="%s/Postprocess/out/quast/report.html"%(MA_dir), width="800", height="1000")
+       validate.iframe(id_="quast", src_="quast/combined_quast_output/report.html", width="800", height="1000")
     validate_out.write(validate.__str__())
     validate_out.close()
 

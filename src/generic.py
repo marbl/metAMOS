@@ -52,6 +52,7 @@ class GenericProgram:
    name = ""
    output = ""
    scaffoldOutput = ""
+   backupOutput = ""
    location = ""
    threads = ""
    threadsSupportedOn = []
@@ -74,6 +75,7 @@ class GenericProgram:
       self.stepName = step
       self.output = ""
       self.scaffoldOutput = ""
+      self.backupOutput = ""
       self.location = ""
       self.threads = ""
       self.threadsSupportedOn = []
@@ -133,6 +135,8 @@ class GenericProgram:
             self.output = value
          elif (defn == "scaffoldOutput"):
             self.scaffoldOutput = value
+         elif (defn == "backupOutput"):
+            self.backupOutput = value
          elif (defn == "location"):
            # get the location path
             self.location = value
@@ -349,10 +353,11 @@ class GenericProgram:
          if _settings.annotate_unmapped:
             outputs.append("%s/Annotate/out/%s.intermediate.ctg"%(_settings.rundir,_settings.PREFIX))
             for lib in _readlibs:
-               listOfInput += ":%s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id)
-               run_process(_settings, "ln %s/Assemble/out/lib%d.unaligned.fasta %s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id, _settings.rundir, lib.id), STEP_NAMES.reverse_mapping[self.stepName].title())
-               params.append("%s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id))
-               outputs.append("%s/Annotate/out/%s.intermediate.lib%d"%(_settings.rundir, _settings.PREFIX, lib.id))
+               if os.path.exists("%s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id)) and os.path.getsize("%s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id)) > 0: 
+                  listOfInput += ":%s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id)
+                  run_process(_settings, "ln %s/Assemble/out/lib%d.unaligned.fasta %s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id, _settings.rundir, lib.id), STEP_NAMES.reverse_mapping[self.stepName].title())
+                  params.append("%s/Annotate/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id))
+                  outputs.append("%s/Annotate/out/%s.intermediate.lib%d"%(_settings.rundir, _settings.PREFIX, lib.id))
       elif self.inputType == INPUT_TYPE.ORF_FA:
          params.append("%s/Annotate/in/%s.fna"%(_settings.rundir, _settings.PREFIX))
          listOfInput += ":%s/Annotate/in/%s.fna"%(_settings.rundir, _settings.PREFIX)
@@ -409,8 +414,12 @@ class GenericProgram:
       stepOut = "%s/%s/out/%s%s"%(_settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), _settings.PREFIX, STEP_OUTPUTS.reverse_mapping[self.stepName])
 
       if programOut != stepOut:
-         run_process(_settings, "unlink  %s"%(stepOut), STEP_NAMES.reverse_mapping[self.stepName])
-         symlinkCmd = "ln %s %s"%(programOut, stepOut)
+         symlinkCmd = "ln %s %s"%(programOut, stepOut) 
+         run_process(_settings, "unlink %s"%(stepOut), STEP_NAMES.reverse_mapping[self.stepName])
+         if not os.path.exists(programOut) and self.backupOutput != "" and self.stepName == STEP_NAMES.ASSEMBLE:
+            unpairedOut = "%s/%s/out/%s"%(_settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), self.backupOutput.replace("[PREFIX]", _settings.PREFIX))
+            symlinkCmd = "ln %s %s"%(unpairedOut, stepOut)
+
          run_process(_settings, symlinkCmd, STEP_NAMES.reverse_mapping[self.stepName].title())
 
       if _settings.doscaffolding and self.scaffoldOutput != "" and self.stepName == STEP_NAMES.ASSEMBLE:

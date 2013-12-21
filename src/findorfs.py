@@ -284,6 +284,8 @@ def parse_prokka(orf_file,is_scaff=False, error_stream="FindORFS",min_len=_min_c
           continue
        elif line.startswith(">"):
           break
+       elif len(line.strip().split("\t")) < 9:
+          continue
        (ctgID, geneA, geneB, start, end, index, geneori, geneC, id) = line.strip().split("\t", 9)
        id = id.split(";")[0].replace("ID=", "")
        genectg.write("%s\t%s\n"%(ctgID, id))
@@ -347,9 +349,6 @@ def FindORFS(input,output):
       run_process(_settings, "touch %s/Logs/findorfs.skip"%(_settings.rundir), "FindORFS")
       run_process(_settings, "touch %s/Annotate/in/%s.faa"%(_settings.rundir, _settings.PREFIX), "FindORFS")
       run_process(_settings, "touch %s/FindRepeats/in/%s.fna"%(_settings.rundir, _settings.PREFIX), "FindORFS")
-      return 0
-
-   if os.path.exists("%s/Logs/findorfs.ok"%(_settings.rundir)):
       return 0
 
    originalPrefix = _settings.PREFIX

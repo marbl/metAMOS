@@ -5,6 +5,7 @@ input FASTQ
 name SPAdes
 output [PREFIX]/contigs.fasta
 scaffoldOutput [PREFIX]/scaffolds.fasta
+backupOutput [PREFIX]/before_rr.fasta
 location cpp/[MACHINE]/spades/bin
 threads -t
 paired_interleaved --pe[LIB]-12 [FIRST]

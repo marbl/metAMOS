@@ -377,8 +377,8 @@ def Annotate(input,output):
       annotateSeq(_cls, "%s/Annotate/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "%s/Annotate/in/%s.faa"%(_settings.rundir, _settings.PREFIX), "%s/Annotate/in/%s.fna"%(_settings.rundir, _settings.PREFIX), "%s.ctg"%(_settings.PREFIX))
 
    # annotate all the unmapped sequences using FCP
-   if _cls == "blast" or _cls == "phmmer" or not _settings.annotate_unmapped:
-      #print "Warning: blast and PHMMER is not supported for annotating unmapped sequences"
+   if _cls == "blast" or _cls == "phmmer" or _cls == "metaphyler" or not _settings.annotate_unmapped:
+      #print "Warning: blast, PHMMER, and metaphyler is not supported for annotating unmapped sequences"
       #print "Warning: unmapped/unaligned sequences will not be annotated!"
       pass
    else:

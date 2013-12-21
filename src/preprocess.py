@@ -11,7 +11,7 @@ from ruffus import *
 from extract_mates_from_fasta import *
 from extract_mates_from_fastq import *
 
-_filter = True
+_filter = None
 _readlibs = []
 _asmcontigs = []
 _skipsteps = []
@@ -183,12 +183,14 @@ def Preprocess(input,output):
 
          if lib.format == "fasta" and not os.path.isfile("%s/Preprocess/in/%s.qual"%(_settings.rundir, read.fname)):
             run_process(_settings, "java -cp %s:. outputDefaultQuality %s/Preprocess/in/%s > %s/Preprocess/in/%s.qual"%(_settings.METAMOS_JAVA, _settings.rundir, read.fname, _settings.rundir, read.fname), "Preprocess")
+            read.qformat = "sanger"
             if lib.mated and not lib.interleaved:
                 readpair = lib.getPair(read.id)
                 if readpair == -1:
                     #not interleaved and mated, yet do not have 2nd file..
                     continue
                 run_process(_settings, "java -cp %s:. outputDefaultQuality %s/Preprocess/in/%s > %s/Preprocess/in/%s.qual"%(_settings.METAMOS_JAVA, _settings.rundir, readpair.fname, _settings.rundir, readpair.fname), "Preprocess")
+                readpair.qformat = "sanger"
 
    #move input files into Preprocess ./in dir
    #output will either be split fastq files in out, or AMOS bank
@@ -199,7 +201,7 @@ def Preprocess(input,output):
        return 0
    run_process(_settings, "rm %s/Preprocess/out/all.seq.mates"%(_settings.rundir), "Preprocess")
 
-   if _filter == True:
+   if _filter == "metamos":
        #print "filtering.."
      
        #for reads+libs
@@ -545,12 +547,164 @@ def Preprocess(input,output):
                    wf.close()
                    wq.close()
            cnt +=1
+   elif _filter == "eautils":
+      offset = ""
+      commandOptions = ""
+      for lib in _readlibs:
+         firstName = ""
+         secondName = ""
+         for read in lib.reads:
+            if offset == "":
+               offset = read.qformat
+            elif not offset == read.qformat:
+               print "Error: inconsistent PHRED offsets in libraries. Previous library had %s and current library %d has %s\n"%(offset, lib.id, read.qformat)
+               raise(JobSignalledBreak)
+
+         if lib.format == "fasta":
+            # convert to fastq uninterleaved
+            if lib.mated:
+               if lib.interleaved:
+                  firstName = "%s.1.fastq"%(os.path.splitext(lib.f1.fname)[0])
+                  secondName = "%s.2.fastq"%(os.path.splitext(lib.f1.fname)[0])
+                  convertFastaToFastq("%s/Preprocess/in/%s"%(_settings.rundir, lib.f1.fname), "%s/Preprocess/in/%s.qual"%(_settings.rundir, lib.f1.fname), "%s/Preprocess/in/%s.fastq"%(_settings.rundir, os.path.splitext(lib.f1.fname)[0]), "Preprocess")
+                  run_process(_settings, "perl %s/perl/split_fastq.pl %s/Preprocess/in/%s.fastq %s/Preprocess/in/%s %s/Preprocess/in/%s"%(_settings.METAMOS_UTILS,_settings.rundir,os.path.splitext(lib.f1.fname)[0],_settings.rundir,firstName,_settings.rundir, secondName) ,"Preprocess")
+               else:
+                  firstName = "%s.fastq"%(os.path.splitext(lib.f1.fname)[0])
+                  secondName = "%s.fastq"%(os.path.splitext(lib.f2.fname)[0])
+                  convertFastaToFastq("%s/Preprocess/in/%s"%(_settings.rundir, lib.f1.fname), "%s/Preprocess/in/%s.qual"%(_settings.rundir, lib.f1.fname), "%s/Preprocess/in/%s"%(_settings.rundir, firstName), "Preprocess")
+                  convertFastaToFastq("%s/Preprocess/in/%s"%(_settings.rundir, lib.f2.fname), "%s/Preprocess/in/%s.qual"%(_settings.rundir, lib.f2.fname), "%s/Preprocess/in/%s"%(_settings.rundir, secondName), "Preprocess")
+               commandOptions += " -o %s/Preprocess/out/%s -o %s/Preprocess/out/%s %s/Preprocess/in/%s %s/Preprocess/in/%s"%(_settings.rundir, firstName, _settings.rundir, secondName, _settings.rundir, firstName, _settings.rundir, secondName)
+            else:
+               firstName = "%s.fastq"%(os.path.splitext(lib.f1.fname)[0])
+               secondName = ""
+               convertFastaToFastq("%s/Preprocess/in/%s"%(_settings.rundir, lib.f1.fname), "%s/Preprocess/in/%s.qual"%(_settings.rundir, lib.f1.fname), "%s/Preprocess/in/%s"%(_settings.rundir, firstName), "Preprocess")
+               commandOptions += " -o %s/Preprocess/out/%s %s/Preprocess/in/%s"%(_settings.rundir, firstName, _settings.rundir, firstName)
+         elif lib.format == "fastq":
+            if lib.mated:
+               if lib.interleaved:
+                  firstName = "%s.1.fastq"%(os.path.splitext(lib.f1.fname)[0])
+                  secondName = "%s.2.fastq"%(os.path.splitext(lib.f1.fname)[0])
+                  run_process(_settings, "perl %s/perl/split_fastq.pl %s/Preprocess/in/%s %s/Preprocess/in/%s %s/Preprocess/in/%s"%(_settings.METAMOS_UTILS,_settings.rundir,lib.f1.fname,_settings.rundir,firstName,_settings.rundir,secondName),"Preprocess")
+               else:
+                  firstName = lib.f1.fname
+                  secondName = lib.f2.fname
+               commandOptions += " -o %s/Preprocess/out/%s -o %s/Preprocess/out/%s %s/Preprocess/in/%s %s/Preprocess/in/%s"%(_settings.rundir, firstName, _settings.rundir, secondName, _settings.rundir, firstName, _settings.rundir, secondName)
+            else:
+               firstName = lib.f1.fname
+               secondName = ""
+               commandOptions += " -o %s/Preprocess/out/firstName %s/Preprocess/out/%s"%(_settings.rundir, firstName, _settings.rundir, firstName)
+         else:
+            print "*** metAMOS: EA-UTILS filtering does not currently support non fasta/fastq files, will not filter library %d"%(lib.id) 
+            for read in lib.reads:
+               run_process(_settings, "ln %s/Preprocess/in/%s %s/Preprocess/out/"%(_settings.rundir,read.fname,_settings.rundir),"Preprocess")
+            continue
+
+         lib.format = "fastq"
+         lib.f1.fname = firstName
+         lib.f1.path = "%s%s%s"%(os.path.dirname(lib.f1.path.replace("/in/","/out/")), os.sep, firstName)
+         if lib.mated and lib.interleaved:
+            lib.interleaved = False
+            lib.f2 = Read("fastq","%s%s%s"%(os.path.dirname(lib.f1.path), os.sep,secondName), lib.mated,lib.interleaved)
+            lib.reads.append(lib.f2)
+         elif lib.mated:
+               lib.f2.fname = secondName
+               lib.f2.path = "%s%s%s"%(os.path.dirname(lib.f2.path.replace("/in/","/out/")), os.sep, secondName)
+         # update the library info in our config file as well, otherwise restarts won't realize reads are fastq now
+         updateLibInfo(_settings.rundir + os.sep + "pipeline.ini", lib)
+
+      # done now run EA-UTILS
+      run_process(_settings, "%s/fastq-mcf -q 10 -t 0.01 -P %d %s/adapter.fna %s"%(_settings.EAUTILS, 33 if offset.lower() == "sanger" else 64, _settings.DB_DIR, commandOptions), "Preprocess")
+
+      # finally rename reads
+      for lib in _readlibs:
+         if lib.format != "fastq":
+            continue
+         for read in lib.reads:
+            counter = 1
+            rq = open(read.path, 'r')
+            wq = open(read.path.replace("fastq", "renamed.fastq"),'w')
+            lines = rq.xreadlines()
+            for line in lines:
+               seq = lines.next()
+               qltheader = lines.next()
+               qlt = lines.next()
+               header = ""
+               if lib.mated:
+                  header = "lib%dr%d/%d"%(lib.id, counter, 1 if "1.fastq" in read.path else 2)
+               else:
+                  header = "lib%dr%d"%(lib.id, counter)
+               
+               wq.write("@%s\n"%(header))
+               wq.write("%s"%(seq))
+               wq.write("+%s\n"%(header))
+               wq.write("%s"%(qlt))
+               counter += 1
+            rq.close()
+            wq.close()
+            read.fname = read.fname.replace("fastq", "renamed.fastq")
+            read.path = read.path.replace("fastq", "renamed.fastq")
+
+   elif _filter == "pbcr":
+      # correct the sequences using self-correction
+      # for now, we do not support correction using other libraries, we should in the future though
+
+      if not os.path.exists("%s/pacBioToCA"%(_settings.CA)) or not os.path.exists("%s/blasr"%(_settings.BLASR)):
+         print "*** metAMOS: Error: cannot correct without Celera Assembler and BLASR"
+         raise(JobSignalledBreak)
+
+      for lib in _readlibs:
+         if lib.format != "fastq":
+            print "*** metAMOS: Warning: can only correct fastq libraries"
+            continue
+         else:
+            if lib.mated:
+               print "*** metAMOS: Warning can only correct unpaired libraries"
+               continue
+
+            # first estimate genome size
+            genomeSize = 5000000
+            if os.path.exists("%s%skmergenie"%(_settings.KMERGENIE, os.sep)) and os.path.exists("%s%sR"%(_settings.R, os.sep)):
+               run_process(_settings, "%s/kmergenie --one-pass -l 5 -k 20 -t %d -s 5 -o kmergenie %s"%(_settings.KMERGENIE, _settings.threads, lib.f1.path), "Preprocess")
+               result = open("%s/Preprocess/out/%s_report.html"%(_settings.rundir, "kmergenie"), 'r')
+               for line in result.xreadlines():
+                  if "Predicted assembly size:" in line:
+                     genomeSize = int(line.replace("<p><h4>Predicted assembly size:", "").replace("</h4></p>", "").replace("bp", "").strip())
+
+            if _settings.VERBOSE:
+               print "*** metAMOS: Correcting library %d with genome size estimate %s"%(lib.id, genomeSize)
+
+            # run correction
+            availableMem = getAvailableMemory(_settings)
+            if availableMem == 0:
+               availableMem = 8192
+            else:
+               availableMem *= 1024
+            
+            oldPath = os.environ["PATH"]
+            os.environ["PATH"] = _settings.AMOS + os.pathsep + _settings.BLASR + os.pathsep + oldPath
+
+            run_process(_settings, "%s/pacBioToCA -l lib%d -s %s/config/pacbio.blasr.spec -t %d -partitions 100 fastqFile=%s genomeSize=%s longReads=1 ovlThreads=%d merylThreads=%d cnsConcurrency=%d merylMemory=%s ovlStoreMemory=%s"%(_settings.CA, lib.id, _settings.METAMOS_UTILS, _settings.threads, lib.f1.path, genomeSize, _settings.threads, _settings.threads, _settings.threads, availableMem, availableMem), "Preprocess")
+            # subset longest 25X?
+            # update library format and file names
+            lib.f1.path = "%s/Preprocess/out/lib%d.fastq"%(_settings.rundir, lib.id)
+            lib.f1.fname = os.path.basename(lib.f1.path)
+            lib.format = "fastq"
+            lib.offset = "sanger"
+            
+   elif _filter == "khmer":
+      print "*** metAMOS: Not supported yet, stay tuned"
+      for lib in _readlibs:
+          for read in lib.reads:
+              run_process(_settings, "ln %s/Preprocess/in/%s %s/Preprocess/out/"%(_settings.rundir,read.fname,_settings.rundir),"Preprocess")
+              if (lib.format == "fasta"):
+                 run_process(_settings, "ln %s/Preprocess/in/%s.qual %s/Preprocess/out/"%(_settings.rundir,read.fname,_settings.rundir),"Preprocess")
    else:
        for lib in _readlibs:
            for read in lib.reads:
                run_process(_settings, "ln %s/Preprocess/in/%s %s/Preprocess/out/"%(_settings.rundir,read.fname,_settings.rundir),"Preprocess")
                if (lib.format == "fasta"): 
                   run_process(_settings, "ln %s/Preprocess/in/%s.qual %s/Preprocess/out/"%(_settings.rundir,read.fname,_settings.rundir),"Preprocess")
+
    #PUNT HERE
    for lib in _readlibs:
       if 1:

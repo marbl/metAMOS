@@ -10,6 +10,9 @@ from ruffus import *
 
 import generic
 
+MAX_AUTO_KMER = 151
+MAX_ASM_KMER = 127
+
 _readlibs = []
 _skipsteps = []
 _settings = Settings()
@@ -32,7 +35,7 @@ def init(reads, skipsteps, asm, asmcontigs, autoPickKmer):
 
    if _autoPickKmer:
       kmer = getSelectedKmer(_settings)
-      if kmer != 0:
+      if len(kmer) != 0:
          _settings.kmer = kmer
          _autoPickKmer = False
 
@@ -179,7 +182,7 @@ def runSparseAssembler(sparsePath, name):
  lib.id, _settings.rundir, lib.id), "Assemble")
             sparseLibLine += "p1 lib%d.1.fastq p2 lib%d.2.fastq"%(lib.id, lib.id)
          else:
-            run_process(_settings, "ln %s/Preprocess/out/lib%d.seq %s/Assemble/out/lib%d.seq"%(_settings,rundir, lib.id, settings_rundir, lib.id), "Assemble")
+            run_process(_settings, "ln %s/Preprocess/out/lib%d.fastq %s/Assemble/out/lib%d.fastq"%(_settings.rundir, lib.id, _settings.rundir, lib.id), "Assemble")
             sparseLibLine += "f lib%d.fastq"%(lib.id)
 
    if libsAdded == 0:
@@ -257,6 +260,8 @@ def SplitAssemblers(input_file_name, output_files):
             run_process(_settings, "rm %s/Assemble/out/tmp.fastq"%(_settings.rundir), "Assemble")
             if int(readLen) > maxK:
                maxK = int(readLen)
+            if maxK > MAX_AUTO_KMER:
+               maxK = int(MAX_AUTO_KMER)
             if lib.mated:
                fileList.write("%s/Preprocess/out/lib%d.1.fastq\n"%(_settings.rundir, lib.id))
                fileList.write("%s/Preprocess/out/lib%d.2.fastq\n"%(_settings.rundir, lib.id))
@@ -267,7 +272,6 @@ def SplitAssemblers(input_file_name, output_files):
          # now we can pick
          run_process(_settings, "%s/kmergenie %s/Assemble/out/%s.kmergenie.in -t %d -k %s -o %s"%(_settings.KMERGENIE, _settings.rundir, _settings.PREFIX, _settings.threads, maxK, _settings.PREFIX), "Assemble")
          result = open("%s/Assemble/out/%s_report.html"%(_settings.rundir, _settings.PREFIX), 'r')
-         stats = open("%s/Assemble/out/%s.kmer"%(_settings.rundir, _settings.PREFIX), 'w')
          genome = open("%s/Assemble/out/%s.genomesize"%(_settings.rundir, _settings.PREFIX), 'w')
          for line in result.xreadlines():
             if "Predicted best k:" in line:
@@ -275,17 +279,20 @@ def SplitAssemblers(input_file_name, output_files):
                # if we got an even kmer, update to odd since most assemblers require this
                if int(_settings.kmer) % 2 == 0:
                   _settings.kmer = "%s"%(int(_settings.kmer) + 1)
+               if int(_settings.kmer) > MAX_ASM_KMER:
+                  _settings.kmer = "%s"%(MAX_ASM_KMER)
                print "*** metAMOS: Selected kmer size %s"%(_settings.kmer)
-               stats.write("%s\n"%(_settings.kmer))
             elif "Predicted assembly size:" in line:
                genomeSize = line.replace("<p><h4>Predicted assembly size:", "").replace("</h4></p>", "").replace("bp", "").strip()
                print "*** metAMOS: Estimated genome size %s bp"%(genomeSize)
                genome.write("%s\n"%(genomeSize))
          result.close() 
-         stats.close()
          genome.close()
       else:
          print "Warning: could not auto-pick a kmer, KmerGenie not found. Defaulting to %s"%(_settings.kmer)
+   stats = open("%s/Assemble/out/%s.kmer"%(_settings.rundir, _settings.PREFIX), 'w')
+   stats.write("%s\n"%(_settings.kmer))
+   stats.close()
 
    for contigs in _asmcontigs:
       if len(contigs) != 0:
@@ -344,11 +351,11 @@ def Assemble(input,output):
       cnt = 1
       libno = 1
       #print libs
+
       for lib in _readlibs:
          if (lib.format == "fastq" or lib.format == "fasta")  and lib.mated and not lib.interleaved:
-             soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(_settings.rundir,lib.f1.fname))
-             soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(_settings.rundir,lib.f2.fname))
-
+             soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/lib%d.1.fastq"%(_settings.rundir,lib.id))
+             soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir,lib.id))
          elif lib.format == "fastq"  and lib.mated and lib.interleaved:
              #this is NOT supported by SOAP, make sure files are split into two..
              #need to update lib.f2 path
@@ -359,7 +366,7 @@ def Assemble(input,output):
              soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/lib%d.1.fastq"%(_settings.rundir,lib.id))
              soapd = soapd.replace("LIB%dQ2REPLACE"%(lib.id),"%s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir,lib.id))
          else:
-             soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/%s"%(_settings.rundir,lib.f1.fname))
+             soapd = soapd.replace("LIB%dQ1REPLACE"%(lib.id),"%s/Preprocess/out/lib%d.fastq"%(_settings.rundir,lib.id))
 
       #cnt +=1
       soapw = open("%s/soapconfig.txt"%(_settings.rundir),'w')
@@ -482,19 +489,20 @@ def Assemble(input,output):
       frglist = ""
       matedString = ""
       for lib in _readlibs:
-         if lib.format == "fastq":
-            if lib.mated:
-               matedString = "-insertsize %d %d -%s -mates"%(lib.mean, lib.stdev, "innie" if lib.innie else "outtie") 
-            else:
-               matedString = "-reads"
-            run_process(_settings, "%s/fastqToCA -libraryname %s -technology illumina %s %s/Preprocess/out/lib%d.seq > %s/Preprocess/out/lib%d.frg"%(_settings.CA, lib.sid, matedString, _settings.rundir, lib.id, _settings.rundir, lib.id),"Assemble")
-         elif lib.format == "fasta":
-            if lib.mated:
-               matedString = "-mean %d -stddev %d -m %s/Preprocess/out/lib%d.seq.mates"%(lib.mean, lib.stdev, _settings.rundir, lib.id)
-            run_process(_settings, "%s/convert-fasta-to-v2.pl -l %s %s -s %s/Preprocess/out/lib%d.seq -q %s/Preprocess/out/lib%d.seq.qual > %s/Preprocess/out/lib%d.frg"%(_settings.CA, lib.sid, matedString, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id),"Assemble")
+         if not os.path.exists("%s/Preproces/out/lib%d.frg"%(_settings.rundir, lib.id)):
+            if lib.format == "fastq":
+               if lib.mated:
+                  matedString = "-insertsize %d %d -%s -mates"%(lib.mean, lib.stdev, "innie" if lib.innie else "outtie") 
+               else:
+                  matedString = "-reads"
+               run_process(_settings, "%s/fastqToCA -libraryname %s -technology illumina-long %s %s/Preprocess/out/lib%d.seq > %s/Preprocess/out/lib%d.frg"%(_settings.CA, lib.sid, matedString, _settings.rundir, lib.id, _settings.rundir, lib.id),"Assemble")
+            elif lib.format == "fasta":
+               if lib.mated:
+                  matedString = "-mean %d -stddev %d -m %s/Preprocess/out/lib%d.seq.mates"%(lib.mean, lib.stdev, _settings.rundir, lib.id)
+               run_process(_settings, "%s/convert-fasta-to-v2.pl -l %s %s -s %s/Preprocess/out/lib%d.seq -q %s/Preprocess/out/lib%d.seq.qual > %s/Preprocess/out/lib%d.frg"%(_settings.CA, lib.sid, matedString, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id),"Assemble")
          frglist += "%s/Preprocess/out/lib%d.frg "%(_settings.rundir, lib.id)
 
-      run_process(_settings, "%s/runCA -p %s -d %s/Assemble/out/ -s %s/config/asm.spec %s %s"%(_settings.CA,_settings.PREFIX,_settings.rundir,_settings.METAMOS_UTILS,"stopAfter=terminator" if _settings.doscaffolding else "", frglist),"Assemble")
+      run_process(_settings, "%s/runCA -p %s -d %s/Assemble/out/ -s %s/config/asm.spec %s %s"%(_settings.CA,_settings.PREFIX,_settings.rundir,_settings.METAMOS_UTILS,"stopAfter=terminator" if _settings.doscaffolding else "stopAfter=utgcns", frglist),"Assemble")
       #convert CA to AMOS
       run_process(_settings, "%s/gatekeeper -dumpfrg -allreads %s.gkpStore > %s.frg"%(_settings.CA, _settings.PREFIX, _settings.PREFIX),"Assemble")
       if _settings.doscaffolding: 

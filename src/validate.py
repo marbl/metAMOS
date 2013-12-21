@@ -12,6 +12,8 @@ from ruffus import *
 import generic
 
 CGAL_NUM_ALIGN = 500
+TOP_PERCENTILE = 0.10
+QUALIFY_RATIO = 2
 
 _readlibs = []
 _skipsteps = []
@@ -19,6 +21,7 @@ _settings = Settings()
 _scores = None
 _validators = []
 _tieBreakerType = SCORE_TYPE.LAP
+_skipTypesForCandidates = [ SCORE_TYPE.N50, SCORE_TYPE.ORF ]
 
 def init(reads, skipsteps, validators, scoreType):
    global _readlibs
@@ -79,18 +82,29 @@ def runSNP(inputsam, prefix, assembly, min, max, genomeSize):
    if getBAMMapped("%s.sorted.bam"%(inputsam)) == 0:
       return minScore()
 
+   setFailFast(False)
    freebayesOptions = getProgramParams(_settings.METAMOS_UTILS, "freebayes.spec", "", "-")
 
    run_process(_settings, "%s/freebayes %s -E 0 -X -u -p 1 -b %s.sorted.bam -v %s/Validate/out/%s.vcf -f %s"%(_settings.FREEBAYES, freebayesOptions, inputsam, _settings.rundir, prefix, assembly), "Validate")
    num_snps = getCommandOutput("cat %s/Validate/out/%s.vcf |grep -v \"#\" |wc -l"%(_settings.rundir, prefix), False)
+   setFailFast(True)
+   if num_snps == "":
+      return minScore()
+
    return -1 * int(num_snps)
 
 def runLAP(prefix, assembly, pairedReads, unpairedReads, abundanceFile = ""):
    if abundanceFile != "":
       abundanceFile = "-n %s"%(abundanceFile)
 
-   run_process(_settings, "python %s/aligner/calc_prob.py -k --output_sam_file %s.sam -p %d -a %s %s %s > %s/Validate/out/%s.prob"%(_settings.LAP, prefix, _settings.threads, assembly, abundanceFile, pairedReads if pairedReads != "" else unpairedReads, _settings.rundir, prefix), "Validate")
+   run_process(_settings, "python %s/aligner/calc_prob.py -q -k --output_sam_file %s.sam -p %d -a %s %s %s > %s/Validate/out/%s.prob"%(_settings.LAP, prefix, _settings.threads, assembly, abundanceFile, pairedReads if pairedReads != "" else unpairedReads, _settings.rundir, prefix), "Validate")
    lapScore = getCommandOutput("python %s/aligner/sum_prob.py -i %s/Validate/out/%s.prob"%(_settings.LAP, _settings.rundir, prefix), True).split()[0]
+
+   # paired-end lap produces more than one sam file, while unpaired does not
+   # since we always use a single paired-end library for validation, we can link to the pair
+   if pairedReads != "":
+      run_process(_settings, "ln %s/Validate/out/%s.sam_0 %s/Validate/out/%s.sam"%(_settings.rundir, prefix, _settings.rundir, prefix), "Validate")
+
    return lapScore
 
 def runFRCBAM(inputsam, prefix, assembly, min, max, genomeSize):
@@ -113,8 +127,14 @@ def runALE(inputsam, prefix, assembly, min, max, genomeSize):
    if not os.path.exists("%s/ALE"%(_settings.ALE)):
       return None
 
+   setFailFast(False)
    run_process(_settings, "%s/ALE %s %s %s.ale"%(_settings.ALE, inputsam, assembly, prefix), "Validate")
    ale_score = getCommandOutput("cat %s/Validate/out/%s.ale |head -n 1 |awk '{print $NF}'"%(_settings.rundir, prefix), False)
+   setFailFast(True)
+
+   if ale_score == "":
+      ale_score = minScore()
+
    return ale_score 
 
 def runCGAL(inputsam, prefix, assembly, min, max, genomeSize):
@@ -124,16 +144,26 @@ def runCGAL(inputsam, prefix, assembly, min, max, genomeSize):
    if getBAMMapped("%s.sorted.bam"%(inputsam)) == 0:
       return minScore()
 
+   setFailFast(False)
    run_process(_settings, "%s/bowtie2convert %s"%(_settings.CGAL, inputsam), "Validate")
    run_process(_settings, "%s/align %s %d %d"%(_settings.CGAL, assembly, CGAL_NUM_ALIGN, _settings.threads), "Validate")
    run_process(_settings, "%s/cgal %s > %s/Validate/out/%s.cgal"%(_settings.CGAL, assembly, _settings.rundir, prefix), "Validate")
    cgal_score = getCommandOutput("cat %s/Validate/out/%s.cgal"%(_settings.rundir, prefix), False)
+   setFailFast(True)
+   if cgal_score == "":
+      cgal_score = minScore()
 
    return cgal_score
 
 def runORF(inputsam, prefix, assembly, min, max, genomeSize):
    orf_score = getCommandOutput("grep -c '>' %s |awk -F \":\" '{print $NF}'"%(assembly.replace(".asm.contig", ".fna")), False)
    return orf_score
+
+def runN50(inputsam, prefix, assembly, min, max, genomeSize):
+   n50 = getCommandOutput("java -cp %s GetFastaStats -n50 -genomeSize %s %s |awk '{print $NF}'"%(_settings.METAMOS_JAVA, genomeSize, assembly), False)
+   if n50 == "":
+      return minScore()
+   return n50
 
 def runREAPR(pairedFiles, prefix, assembly, min, max, genomeSize):
    if not os.path.exists("%s/reapr"%(_settings.REAPR)):
@@ -164,7 +194,7 @@ def runREAPR(pairedFiles, prefix, assembly, min, max, genomeSize):
    if perfectMapCount != "" and float(perfectMapCount) < 50:
       run_process(_settings, "%s/reapr pipeline %s/Validate/out/%s.reapr.fa %s/Validate/out/%s.reapr.bam %s/Validate/out/%s.reapr %s/Validate/out/%s.reapr.perfect"%(_settings.REAPR, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix), "Validate")
    else:
-      run_process(_settings, "%s/reapr pipeline %s/Validate/out/%s.reapr.fa %s/Validate/out/%s.reapr.sam.sorted.bam %s/Validate/out/%s.reapr"%(_settings.REAPR, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix), "Validate")
+      run_process(_settings, "%s/reapr pipeline %s/Validate/out/%s.reapr.fa %s/Validate/out/%s.reapr.bam %s/Validate/out/%s.reapr"%(_settings.REAPR, _settings.rundir, prefix, _settings.rundir, prefix, _settings.rundir, prefix), "Validate")
 
    setFailFast(True)
 
@@ -177,20 +207,17 @@ def runREAPR(pairedFiles, prefix, assembly, min, max, genomeSize):
 @posttask(touch_file("%s/Logs/validate.ok"%(_settings.rundir)))
 @merge(FindORFS, ["%s/Logs/validate.ok"%(_settings.rundir)])
 def Validate (input_file_names, output_file_name):
-   bestScores = dict()
-   bestAssemblers = dict()
-   bestAssemblies = dict()
+   validationScores = dict()
+
    bestAssembler = ""
    bestAssembly = ""
 
    tieBreakingScores = dict()
 
-   selectedAsm = open("%s/Validate/out/%s.asm.selected"%(_settings.rundir, _settings.PREFIX), 'w')
-   selectedReferences = open("%s/Validate/out/%s.ref.selected"%(_settings.rundir, _settings.PREFIX), 'w')
-
    validatedAsms = dict()
    scoreOrder = dict()
    genomeSize = getEstimatedGenomeSize(_settings)
+   needToOutput = False
 
    if os.path.exists("%s/Validate/out/%s.lap"%(_settings.rundir,_settings.PREFIX)) and os.path.getsize("%s/Validate/out/%s.lap"%(_settings.rundir, _settings.PREFIX)):
       lapfile = open("%s/Validate/out/%s.lap"%(_settings.rundir,_settings.PREFIX),'r')
@@ -208,6 +235,8 @@ def Validate (input_file_names, output_file_name):
             for score in scores:
                if i in scoreOrder:
                    asmScores[scoreOrder[i]] = minScore() if score.lower() == "none" else float(score)
+                   if (scoreOrder[i] == SCORE_TYPE.FRCBAM or scoreOrder[i] == SCORE_TYPE.SNP):
+                      asmScores[scoreOrder[i]] = -1 * asmScores[scoreOrder[i]]
                i += 1 
             validatedAsms[scores[0].lower()] = asmScores
       lapfile.close()
@@ -216,20 +245,26 @@ def Validate (input_file_names, output_file_name):
       lapfile = open("%s/Validate/out/%s.lap"%(_settings.rundir,_settings.PREFIX),'w')
 
    failedOutput = ""
+   totalRun = 0
 
    if "Validate" in _skipsteps or "validate" in _skipsteps:
       run_process(_settings, "touch %s/Logs/validate.skip"%(_settings.rundir), "Validate")
       bestAssembler = getAsmName(input_file_names[0])
-      bestAssembly = input_file_names[0].replace(".contig.cvg", ".asm.contig") 
+      bestAssembly = "%s/Assemble/out/%s.asm.contig"%(_settings.rundir, bestAssembler)
    elif len(input_file_names) == 1 and len(_validators) == 1:
       run_process(_settings, "touch %s/Logs/validate.skip"%(_settings.rundir), "Validate")
       bestAssembler = getAsmName(input_file_names[0])
-      bestAssembly = input_file_names[0].replace(".contig.cvg", ".asm.contig") 
+      bestAssembly = "%s/Assemble/out/%s.asm.contig"%(_settings.rundir, bestAssembler)
    elif not os.path.exists("%s/bowtie2"%(_settings.BOWTIE2)) or not os.path.exists("%s/aligner/calc_prob.py"%(_settings.LAP)):
       run_process(_settings, "touch %s/Logs/validate.skip"%(_settings.rundir), "Validate")
       print "Warning! LAP is not available, cannot select best assembly, chosing first available: %s!"%(getAsmName(input_file_names[0]))
       bestAssembler = getAsmName(input_file_names[0])
-      bestAssembly = input_file_names[0].replace(".contig.cvg", ".asm.contig") 
+      bestAssembly = "%s/Assemble/out/%s.asm.contig"%(_settings.rundir, bestAssembler)
+   elif os.path.exists("%s/Validate/out/%s.asm.selected"%(_settings.rundir, _settings.PREFIX)):
+      selectedAsm = open("%s/Validate/out/%s.asm.selected"%(_settings.rundir, _settings.PREFIX), 'r')
+      bestAssembler = selectedAsm.read().strip()
+      bestAssembly = "%s/Assemble/out/%s.asm.contig"%(_settings.rundir, bestAssembler)
+      selectedAsm.close()
    else:
       # build string of files to use for validation
       os.environ["BT2_HOME"]=_settings.BOWTIE2
@@ -242,10 +277,10 @@ def Validate (input_file_names, output_file_name):
       for lib in _readlibs:
          if lib.mated and pairedReads == "" and lib.innie:
             (pairedMin, pairedMax, pairedMean, pairedSD) = getMeanSD(lib.id) 
-            pairedReads="-1 %s/Preprocess/out/lib%d.1.fastq -2 %s/Preprocess/out/lib%d.2.fastq -m %d -t %d -I %d -X %d"%(_settings.rundir, lib.id, _settings.rundir, lib.id, pairedMean, pairedSD, (pairedMean-5*pairedSD), (pairedMean+5*pairedSD))
+            pairedReads="-1 %s/Preprocess/out/lib%d.1.fastq -2 %s/Preprocess/out/lib%d.2.fastq -m %d -t %d -I %d -X %d"%(_settings.rundir, lib.id, _settings.rundir, lib.id, pairedMean, pairedSD, 0 if pairedMean < 5*pairedSD else (pairedMean-5*pairedSD), (pairedMean+5*pairedSD))
             pairedFiles="%s/Preprocess/out/lib%d.1.fastq %s/Preprocess/out/lib%d.2.fastq"%(_settings.rundir, lib.id, _settings.rundir, lib.id)
-         elif not lib.paired and unpairedReads == "":
-            unpaired=" -i %s/Preprocess/out/lib%d.fastq"%(_settings.rundir, lib.id)
+         elif not lib.mated and unpairedReads == "":
+            unpairedReads = "-i %s/Preprocess/out/lib%d.fastq"%(_settings.rundir, lib.id)
 
       asmNames = ""
       asmFiles = ""
@@ -255,12 +290,15 @@ def Validate (input_file_names, output_file_name):
          assembler = getAsmName(input_file_name)
          assembly = input_file_name.replace(".faa", ".asm.contig")
          abundanceFile = ""
-         if os.path.exists("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, assembler)):
+         if os.path.exists("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, assembler)) and os.path.getsize("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, assembler)) > 0:
             abundanceFile = "%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, assembler)
          scores = dict()
 
-         needToRun = True
+         if assembler == _settings.PREFIX:
+            continue
 
+         scoreOutput = ""
+         needToRun = True
          # if we already had a score for an assembler,we dont need to revalidate it
          if assembler.lower() in validatedAsms:
             asmScores = validatedAsms[assembler.lower()]
@@ -268,7 +306,7 @@ def Validate (input_file_names, output_file_name):
             firstLine = False
             missingScores = ""
 
-            inputSam = "%s/Validate/out/%s.sam_0.sorted.bam"%(_settings.rundir, assembler)
+            inputSam = "%s/Validate/out/%s.sam.sorted.bam"%(_settings.rundir, assembler)
             numMapped = 0
             if os.path.exists("%s"%(inputSam)):
                numMapped = getBAMMapped(inputSam)
@@ -324,6 +362,12 @@ def Validate (input_file_names, output_file_name):
                      missingScores = missingScores + " %s"%(validator.lower())
                   else:
                      scores[SCORE_TYPE.ORF] = asmScores[SCORE_TYPE.ORF]
+               elif validator.lower() == "n50":
+                  if SCORE_TYPE.N50 not in asmScores:
+                     needToRun = True
+                     missingScores = missingScores + " %s"%(validator.lower())
+                  else:
+                     scores[SCORE_TYPE.N50] = asmScores[SCORE_TYPE.N50]
                elif validator.lower() == "reapr":
                   if SCORE_TYPE.REAPR not in asmScores:
                      needToRun = True
@@ -331,18 +375,30 @@ def Validate (input_file_names, output_file_name):
                   else:
                      scores[SCORE_TYPE.REAPR] = asmScores[SCORE_TYPE.REAPR]
 
+            for type in asmScores:
+               if scoreOutput == "":
+                  scoreOutput = "%s"%(asmScores[type])
+               else:
+                  scoreOutput = "%s\t%s"%(scoreOutput, asmScores[type])
+
             if needToRun == True:
+               # as soon as one assembler fails, we truncate the file so we need to output all those that could be resumed as well
+               needToOutput = True
+               scoreOutput = ""
+
+               del validatedAsms[assembler.lower()]
                print "*** metAMOS Warning: validation resume for assembler %s not possible, missing scores %s"%(assembler.upper(), missingScores.strip())
                asmNames = ""
                firstLine = True
                lapfile.seek(0)
                lapfile.truncate()
 
-         scoreOutput = ""
+         header = ""
          if needToRun:
+            totalRun += 1
             scores[SCORE_TYPE.LAP] = runLAP(assembler, assembly, pairedReads, unpairedReads, abundanceFile)
 
-            inputSam = "%s/Validate/out/%s.sam_0"%(_settings.rundir, assembler)
+            inputSam = "%s/Validate/out/%s.sam"%(_settings.rundir, assembler)
             numMapped = 0
             if os.path.exists("%s/samtools"%(_settings.SAMTOOLS)):
                numMapped = convertSamToBAM(inputSam)
@@ -372,6 +428,8 @@ def Validate (input_file_names, output_file_name):
                   scores[SCORE_TYPE.CGAL] = runCGAL(inputSam, assembler, assembly, pairedMin, pairedMax, genomeSize)
                elif validator.lower() == 'orf':
                   scores[SCORE_TYPE.ORF] = runORF(inputSam, assembler, assembly, pairedMin, pairedMax, genomeSize)
+               elif validator.lower() == 'n50':
+                  scores[SCORE_TYPE.N50] = runN50(inputSam, assembler, assembly, pairedMin, pairedMax, genomeSize)
                elif validator.lower() == 'reapr':
                   if pairedReads != "":
                      scores[SCORE_TYPE.REAPR] = runREAPR(pairedFiles, assembler, assembly, pairedMin, pairedMax, genomeSize)
@@ -408,11 +466,11 @@ def Validate (input_file_names, output_file_name):
 
             debugString = "%s %s:%s"%(debugString, SCORE_TYPE.reverse_mapping[type], scores[type])
 
-            # finally record the best assembly for this type 
-            if type not in bestScores or float(scores[type]) > bestScores[type]:
-               bestScores[type] = float(scores[type])
-               bestAssemblers[type] = assembler
-               bestAssemblies[type] = assembly
+            # record in db of all scores
+            if type not in validationScores:
+               validationScores[type] = dict()
+            validationScores[type][assembler] = float(scores[type])
+
          if _settings.VERBOSE:
             print "%s"%(debugString)
 
@@ -424,19 +482,81 @@ def Validate (input_file_names, output_file_name):
             lapfile.write("%s\t%s\n"%(asmName, scoreOutput))
             lapfile.flush()
 
+   # output list of previously validated assemblers that could be resumed if needed
+   if needToOutput:
+      for assembler in validatedAsms:
+         scoreOutput = ""
+         asmScores = validatedAsms[assembler.lower()]
+         for type in asmScores.keys():
+            outputScore = asmScores[type]
+            if asmScores[type] != None and scores[type] == minScore():
+               outputScore = "None"
+            elif asmScores[type] != None and (type == SCORE_TYPE.FRCBAM or type == SCORE_TYPE.SNP):
+               outputScore = -1 * asmScores[type]
+
+            if scoreOutput == "":
+               scoreOutput = "%s"%(outputScore)
+            else:
+               scoreOutput = "%s\t%s"%(scoreOutput, outputScore)
+         lapfile.write("%s\t%s\n"%(assembler.upper(), scoreOutput))
+
    # output failed assemblers
    for file in os.listdir("%s/Assemble/out/"%(_settings.rundir)): 
       if (file.endswith(".failed")):
           assembler = os.path.splitext(os.path.basename(file))[0]
           asmName = getAssemblerName(assembler)
-          lapfile.write("%s\t%s\n"%(asmName, failedOutput))
-          lapfile.flush()
+          if asmName.lower() not in validatedAsms:
+             lapfile.write("%s\t%s\n"%(asmName, failedOutput))
+             lapfile.flush()
 
    # select best assembly
    global _scores
-   if bestAssembler == "": 
+   if totalRun != 0 or bestAssembler == "": 
       if "%s"%(SCORE_TYPE.ALL) in _scores:
          _scores = SCORE_TYPE.reverse_mapping.keys()
+
+      candidates = dict()
+      numCandidatesPerType = int(float(len(input_file_names)) * TOP_PERCENTILE) + 1
+      minNumToQualify = ((len(_scores) - len(_skipTypesForCandidates) - 1) / QUALIFY_RATIO)
+
+      # first we select top candidates from each score then all the scores vote
+      # get top percentile from all scores
+      for type in _scores:
+         type = int(type)
+         counter = 0
+         if type == "":
+            continue
+         if type == SCORE_TYPE.ALL:
+            continue
+         if type in _skipTypesForCandidates:
+            continue
+         if type not in validationScores:
+            print "*** metAMOS: Error, type %s is not available, skipping"%(SCORE_TYPE.reverse_mapping[type])
+            continue
+
+         sorted_scores = sorted(validationScores[type].iteritems(), key=itemgetter(1), reverse=True)
+          
+         for tup in sorted_scores:
+            if counter <= numCandidatesPerType:
+               if tup[0] not in candidates:
+                  candidates[tup[0]] = 0
+               candidates[tup[0]] += 1
+            else:
+               break
+            counter += 1
+
+      # remove those candidates which did not qualify with at least the required scores (i.e. they have to be in top for several scores)
+      bestScores = dict()
+      bestAssemblers = dict()
+      bestAssemblies = dict()
+
+      for type in validationScores:
+         for asm in validationScores[type]:
+            if len(candidates) == 0 or (asm in candidates and candidates[asm] >= minNumToQualify):
+               if type not in bestScores or float(validationScores[type][asm]) > bestScores[type]:
+                  bestScores[type] = float(validationScores[type][asm])
+                  bestAssemblers[type] = asm
+                  bestAssemblies[type] = "%s/Assemble/out/%s.asm.contig"%(_settings.rundir, asm)
 
       assemblerVotes = dict()
       assemblyVotes = dict()
@@ -512,63 +632,81 @@ def Validate (input_file_names, output_file_name):
          print "Error: inconsistent assembly and assembler chosen %s %s"%(bestAssembly, bestAssembler)
          raise(JobSignalledBreak)
 
-   # finally run quqast
-   if "quast" in _validators:
-      # recruit a reference
-      references = recruitGenomes(_settings,bestAssembly,"%s/refseq"%(_settings.DB_DIR), "%s/Validate/out/recruit"%(_settings.rundir), "Validate", 1)
-      if len(references) > 0:
-         for g in references:
-            selectedReferences.write(os.path.splitext(os.path.basename(g))[0] + "\n")
-         runQUAST(asmNames, asmFiles, pairedMin, pairedMax, genomeSize, references[0])
+      if _settings.VERBOSE:
+         print "*** metAMOS assembler %s selected."%(bestAssembler)   
+      run_process(_settings, "unlink %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "Validate") 
+
+   # finally run quast
+   if totalRun != 0:
+      selectedReferences = open("%s/Validate/out/%s.ref.selected"%(_settings.rundir, _settings.PREFIX), 'w')
+      if "quast" in _validators:
+         # recruit a reference
+         references = recruitGenomes(_settings,bestAssembly,"%s/refseq"%(_settings.DB_DIR), "%s/Validate/out/recruit"%(_settings.rundir), "Validate", 1)
+         if len(references) > 0:
+            for g in references:
+               selectedReferences.write(os.path.splitext(os.path.basename(g))[0] + "\n")
+            runQUAST(asmNames, asmFiles, pairedMin, pairedMax, genomeSize, references[0])
+         else:
+            print "Warning: could not recruit any references"
+      selectedReferences.close()
+
+   if not os.path.exists("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX)):
+      selectedAsm = open("%s/Validate/out/%s.asm.selected"%(_settings.rundir, _settings.PREFIX), 'w')
+      selectedAsm.write("%s"%(bestAssembler))
+      selectedAsm.close()
+
+      # link the files for subsequent steps to the best assembler
+      # this includes assemble/mapreads/validate results
+      run_process(_settings, "unlink %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "ln %s %s/Assemble/out/%s.asm.contig"%(bestAssembly, _settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "unlink %s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX), "Validate")
+      if os.path.exists("%s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, bestAssembler)):
+         run_process(_settings, "ln %s/Assemble/out/%s.linearize.scaffolds.final %s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
       else:
-         print "Warning: could not recruit any references"
+         run_process(_settings, "ln %s %s/Assemble/out/%s.linearize.scaffolds.final"%(bestAssembly, _settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "unlink %s/Assemble/out/%s.asm.tigr"%(_settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "ln %s/Assemble/out/%s.asm.tigr %s/Assemble/out/%s.asm.tigr"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "unlink %s/Assemble/out/%s.contig.cnt"%(_settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "ln %s/Assemble/out/%s.contig.cnt %s/Assemble/out/%s.contig.cnt"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "unlink %s/Assemble/out/%s.contig.cvg"%(_settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "ln %s/Assemble/out/%s.contig.cvg %s/Assemble/out/%s.contig.cvg"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "unlink %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.PREFIX), "Validate")
+      if os.path.exists("%s/Assemble/out/%s.afg"%(_settings.rundir, bestAssembler)):
+         run_process(_settings, "ln %s/Assemble/out/%s.afg %s/Assemble/out/%s.afg"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
 
-   if _settings.VERBOSE:
-      print "*** metAMOS assembler %s selected."%(bestAssembler)  
+      # rather than linking orfs, we re-run orf finding without the --fast option
+      setRunFast(False)
+      run_process(_settings, "rm %s/Logs/findorfs.ok"%(_settings.rundir), "Validate")
+      FindORFS("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, _settings.PREFIX), "%s/Assemble/out/%s.faa"%(_settings.rundir, _settings.PREFIX))
+      setRunFast(True)
+      run_process(_settings, "touch %s/Logs/findorfs.ok"%(_settings.rundir), "Validate")
+      run_process(_settings, "unlink %s/Assemble/out/%s.faa"%(_settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/Assemble/out/%s.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "unlink %s/FindRepeats/in/%s.fna"%(_settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "ln %s/FindORFS/out/%s.fna %s/FindRepeats/in/%s.fna"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "unlink %s/FindRepeats/in/%s.faa"%(_settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/FindRepeats/in/%s.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "unlink %s/Annotate/in/%s.fna"%(_settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "ln %s/FindORFS/out/%s.fna %s/Annotate/in/%s.fna"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "unlink %s/Annotate/in/%s.faa"%(_settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/Annotate/in/%s.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
 
-   # link the files for subsequent steps to the best assembler
-   # this includes assemble/mapreads/validate results
-   run_process(_settings, "ln %s %s/Assemble/out/%s.asm.contig"%(bestAssembly, _settings.rundir, _settings.PREFIX), "Validate")
-   if os.path.exists("%s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, bestAssembler)):
-      run_process(_settings, "ln %s/Assemble/out/%s.linearize.scaffolds.final %s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   else:
-      run_process(_settings, "ln %s %s/Assemble/out/%s.linearize.scaffolds.final"%(bestAssembly, _settings.rundir, _settings.PREFIX), "Validate")
-   run_process(_settings, "ln %s/Assemble/out/%s.asm.tigr %s/Assemble/out/%s.asm.tigr"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   run_process(_settings, "ln %s/Assemble/out/%s.contig.cnt %s/Assemble/out/%s.contig.cnt"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   run_process(_settings, "ln %s/Assemble/out/%s.contig.cvg %s/Assemble/out/%s.contig.cvg"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   if os.path.exists("%s/Assemble/out/%s.afg"%(_settings.rundir, bestAssembler)):
-      run_process(_settings, "ln %s/Assemble/out/%s.afg %s/Assemble/out/%s.afg"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
+      for lib in _readlibs: 
+         run_process(_settings, "unlink %s/Assemble/out/%s.lib%d.badmates"%(_settings.rundir, _settings.PREFIX, lib.id), "Validate")
+         run_process(_settings, "ln %s/Assemble/out/%s.lib%d.badmates %s/Assemble/out/%s.lib%d.badmates"%(_settings.rundir, bestAssembler, lib.id, _settings.rundir, _settings.PREFIX, lib.id), "Validate")
+         run_process(_settings, "unlink %s/Assemble/out/%s.lib%d.hdr"%(_settings.rundir, _settings.PREFIX, lib.id), "Validate")
+         run_process(_settings, "ln %s/Assemble/out/%s.lib%d.hdr %s/Assemble/out/%s.lib%d.hdr"%(_settings.rundir, bestAssembler, lib.id, _settings.rundir, _settings.PREFIX, lib.id), "Validate")
+         run_process(_settings, "unlink %s/Assemble/out/%s.lib%d.mappedmates"%(_settings.rundir, _settings.PREFIX,lib.id), "Validate")
+         run_process(_settings, "ln %s/Assemble/out/%s.lib%d.mappedmates %s/Assemble/out/%s.lib%d.mappedmates"%(_settings.rundir, bestAssembler, lib.id, _settings.rundir, _settings.PREFIX, lib.id), "Validate")
+         run_process(_settings, "unlink %s/Assemble/out/%s.lib%d.mates_in_diff_contigs"%(_settings.rundir, _settings.PREFIX, lib.id), "Validate")
+         run_process(_settings, "ln %s/Assemble/out/%s.lib%d.mates_in_diff_contigs %s/Assemble/out/%s.lib%d.mates_in_diff_contigs"%(_settings.rundir, bestAssembler, lib.id, _settings.rundir, _settings.PREFIX, lib.id), "Validate")
+         run_process(_settings, "unlink %s/Assemble/out/%s.lib%dcontig.reads"%(_settings.rundir, _settings.PREFIX, lib.id), "Validate")
+         run_process(_settings, "ln %s/Assemble/out/%s.lib%dcontig.reads %s/Assemble/out/%s.lib%dcontig.reads"%(_settings.rundir, bestAssembler, lib.id, _settings.rundir, _settings.PREFIX, lib.id), "Validate")
+         run_process(_settings, "unlink %s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id), "Validate")
+         run_process(_settings, "ln %s/Assemble/out/%s.lib%d.unaligned.fasta %s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, bestAssembler, lib.id, _settings.rundir, lib.id), "Validate")
+         run_process(_settings, "unlink %s/Assemble/out/lib%d.unaligned.fastq"%(_settings.rundir, lib.id), "Validate")
+         if os.path.exists("%s/Assemble/out/%s.lib%d.unaligned.fastq"%(_settings.rundir, bestAssembler, lib.id)):
+            run_process(_settings, "ln %s/Assemble/out/%s.lib%d.unaligned.fastq %s/Assemble/out/lib%d.unaligned.fastq"%(_settings.rundir, bestAssembler, lib.id, _settings.rundir, lib.id), "Validate")
 
-   # rather than linking orfs, we re-run orf finding without the --fast option
-   setRunFast(False)
-   run_process(_settings, "rm %s/Logs/findorfs.ok"%(_settings.rundir), "Validate")
-   FindORFS("%s/Assemble/out/%s.contig.cvg"%(_settings.rundir, _settings.PREFIX), "%s/Assemble/out/%s.faa"%(_settings.rundir, _settings.PREFIX))
-   setRunFast(True)
-   run_process(_settings, "touch %s/Logs/findorfs.ok"%(_settings.rundir), "Validate")
-   run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/Assemble/out/%s.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
-   run_process(_settings, "ln %s/FindORFS/out/%s.fna %s/FindRepeats/in/%s.fna"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
-   run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/FindRepeats/in/%s.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
-   run_process(_settings, "ln %s/FindORFS/out/%s.fna %s/Annotate/in/%s.fna"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
-   run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/Annotate/in/%s.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
-   #run_process(_settings, "ln %s/FindORFS/out/%s.fna %s/FindORFS/out/%s.fna"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   #run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/FindORFS/out/%s.faa"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   #run_process(_settings, "ln %s/FindORFS/out/%s.gene.cvg %s/FindORFS/out/%s.gene.cvg"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   #run_process(_settings, "ln %s/FindORFS/out/%s.gene.map %s/FindORFS/out/%s.gene.map"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   #run_process(_settings, "ln -s %s/FindORFS/out/%s.fna.bnk %s/FindORFS/out/%s.fna.bnk"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-   #run_process(_settings, "ln -s %s/FindORFS/out/%s.faa.bnk %s/FindORFS/out/%s.faa.bnk"%(_settings.rundir, bestAssembler, _settings.rundir, _settings.PREFIX), "Validate")
-
-   for lib in _readlibs: 
-      run_process(_settings, "ln %s/Assemble/out/%s.lib%d.badmates %s/Assemble/out/%s.lib%d.badmates"%(_settings.rundir, bestAssembler, lib.id, _settings.rundir, _settings.PREFIX, lib.id), "Validate")
-      run_process(_settings, "ln %s/Assemble/out/%s.lib%d.hdr %s/Assemble/out/%s.lib%d.hdr"%(_settings.rundir, bestAssembler, lib.id, _settings.rundir, _settings.PREFIX, lib.id), "Validate")
-      run_process(_settings, "ln %s/Assemble/out/%s.lib%d.mappedmates %s/Assemble/out/%s.lib%d.mappedmates"%(_settings.rundir, bestAssembler, lib.id, _settings.rundir, _settings.PREFIX, lib.id), "Validate")
-      run_process(_settings, "ln %s/Assemble/out/%s.lib%d.mates_in_diff_contigs %s/Assemble/out/%s.lib%d.mates_in_diff_contigs"%(_settings.rundir, bestAssembler, lib.id, _settings.rundir, _settings.PREFIX, lib.id), "Validate")
-      run_process(_settings, "ln %s/Assemble/out/%s.lib%dcontig.reads %s/Assemble/out/%s.lib%dcontig.reads"%(_settings.rundir, bestAssembler, lib.id, _settings.rundir, _settings.PREFIX, lib.id), "Validate")
-      run_process(_settings, "ln %s/Assemble/out/%s.lib%d.unaligned.fasta %s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, bestAssembler, lib.id, _settings.rundir, lib.id), "Validate")
-      if os.path.exists("%s/Assemble/out/%s.lib%d.unaligned.fastq"%(_settings.rundir, bestAssembler, lib.id)):
-         run_process(_settings, "ln %s/Assemble/out/%s.lib%d.unaligned.fastq %s/Assemble/out/lib%d.unaligned.fastq"%(_settings.rundir, bestAssembler, lib.id, _settings.rundir, lib.id), "Validate")
-
-   selectedAsm.write("%s"%(bestAssembler))
-   selectedAsm.close()
-   selectedReferences.close()
    lapfile.close()
 

@@ -26,60 +26,8 @@ if validate_install:
 
 import utils
 import workflow
-ppath = ""
-if "PYTHONPATH" not in os.environ:
-   os.environ["PYTHONPATH"] = ""
-else:
-   ppath = os.environ["PYTHONPATH"] 
-   #os.environ["PYTHONPATH"] = ""
-os.environ["PYTHONPATH"]+=utils.INITIAL_UTILS+os.sep+"python"+os.pathsep
-os.environ["PYTHONPATH"]+=utils.INITIAL_UTILS+os.sep+"ruffus"+os.pathsep
-os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.pathsep
-os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.pathsep
-os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.pathsep
-os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python"+os.pathsep
-os.environ["PYTHONPATH"] += utils.INITIAL_UTILS+os.pathsep
+utils.configureEnvironment(utils.INITIAL_UTILS)
 
-if "PERL5LIB" not in os.environ:
-    os.environ["PERL5LIB"] =  INITIAL_SRC+os.sep+"phylosift"+os.sep+"lib"+os.sep
-else:
-    os.environ["PERL5LIB"] =  INITIAL_SRC+os.sep+"phylosift"+os.sep+"lib"+os.sep + os.pathsep + os.environ["PERL5LIB"]
-try:
-    os.environ["PYTHONPATH"] += sys._MEIPASS + os.pathsep
-    os.environ["PYTHONHOME"] = sys._MEIPASS + os.pathsep
-except Exception:
-    pass
-
-try:
-    sys._MEIPASS
-    #if we are here, frozen binary
-except Exception:
-    #else normal mode, add site dir
-    import site
-    site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
-    site.addsitedir(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
-
-sys.path.append(utils.INITIAL_UTILS)
-sys.path.append(utils.INITIAL_UTILS+os.sep+"python")
-sys.path.append(utils.INITIAL_UTILS+os.sep+"ruffus")
-sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python")
-sys.path.append(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
-try:
-    sys.path.append(sys._MEIPASS)
-except Exception:
-    pass
-sys.path.append("/usr/lib/python")
-
-#remove imports from pth file, if exists
-nf = []
-if 'bash' in shellv or utils.cmdExists('export'):
-   os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
-   os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
-elif utils.cmdExists('setenv'):
-   os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"))
-   os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
-else:
-   print "Warning: could not set PYTHONPATH. Unknown shell %s, some functionality may not work\n"%(shellv)
 ## The usual library dependencies
 import string
 import time
@@ -124,7 +72,7 @@ def usage():
 
     print "\nFor each step you can fine-tune the execution as follows"
     print "[Preprocess]"
-    print "   -t = <bool>:   filter input reads? (default = NO)"
+    print "   -t = <string>:   filter input reads? (default = %s, supported = %s)"%(selected_programs["preprocess"], ",".join(supported_programs["preprocess"]))
     print "   -q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)"
     print "[Assemble]"
     print "   -a = <string>: genome assembler to use (default = %s, supported = %s)"%(selected_programs["assemble"], ",".join(supported_programs["assemble"]))
@@ -183,20 +131,28 @@ def printConfiguration(fileName=None):
     (progName, citation) = utils.getProgramCitations(settings, "metamos")
     configurationText.append(progName + "\n")
     configurationText.append("\t" + citation + "\n\n")
-    if isolate_genome == True:
-       (progName, citation) = utils.getProgramCitations(settings, "metamos_isolate")
-       configurationText.append(progName + "\n")
-       configurationText.append("\t" + citation + "\n\n") 
+    #if isolate_genome == True:
+    #   (progName, citation) = utils.getProgramCitations(settings, "metamos_isolate")
+    #   configurationText.append(progName + "\n")
+    #   configurationText.append("\t" + citation + "\n\n") 
 
     configurationText.append("\n")
     configurationText.append("Step-specific configuration:\n")
     for type in selected_programs.keys():
-        configurationText.append("[" + type + "]\n")
         progs = set(selected_programs[type].split(","))
+        configurationText.append("[" + type + "]\n")
         for prog in progs:
-           # special case for validation, orf is a reference to selected orf finder
+           # special case for validation, orf is a reference to selected orf finder, n50 is nothing
+           if type == "validate" and prog == "n50":
+              continue
            if type == "validate" and prog == "orf":
               prog = selected_programs["findorfs"]
+           if type == "preprocess" and prog == "none":
+              configurationText.append(prog.upper() + "\n\tN/A\n\n")
+              continue
+           if type == "preprocess" and prog == "metamos":
+              configurationText.append("metAMOS built-in filtering\n\tN/A\n\n") 
+              continue
 
            if prog == None or prog == "none":
               configurationText.append("None\n\n")
@@ -237,7 +193,7 @@ def printConfiguration(fileName=None):
         conf.write(''.join(configurationText))
         conf.close()
 
-shortOptions = "hM:IR:rjwbd:s:e:o:k:c:a:n:p:qtf:vm:4g:iu1l:x:yz:LBVX:S:"
+shortOptions = "hM:IR:rjwbd:s:e:o:k:c:a:n:p:qt:f:vm:4g:iu1l:x:yz:LBVX:S:"
 longOptions = ["help", \
                                         "multialigner",\
                                         "isolate",\
@@ -287,6 +243,7 @@ settings = utils.Settings(DEFAULT_KMER, multiprocessing.cpu_count() - 1, "", DEF
 import generic
 
 supported_programs = {}
+supported_preprocessors = ["none", "metamos", "eautils", "pbcr"]
 supported_genecallers = ["fraggenescan","metagenemark","glimmermg"]
 supported_assemblers = ["newbler", "soapdenovo","soapdenovo2","ca","velvet","velvet-sc","metavelvet",\
                             "metaidba","sparseassembler","minimus"]
@@ -298,9 +255,10 @@ supported_aligners = ["mgcat"]
 supported_classifiers = ["fcp","phylosift","phmmer","blast",\
                              "metaphyler", "phymm"]
 supported_classifiers.extend(generic.getSupportedList(utils.INITIAL_UTILS, utils.STEP_NAMES.ANNOTATE))
-supported_validators = ["reapr", "orf", "lap", "ale", "quast", "frcbam", "freebayes", "cgal"]
+supported_validators = ["reapr", "orf", "lap", "ale", "quast", "frcbam", "freebayes", "cgal", "n50"]
 supported_fannotate = ["blast"]
 supported_scaffolders = ["bambus2"]
+supported_programs["preprocess"] = supported_preprocessors
 supported_programs["findorfs"] = supported_genecallers
 supported_programs["assemble"] = supported_assemblers
 supported_programs["mapreads"] = supported_mappers
@@ -314,6 +272,7 @@ supported_programs["validate"] = supported_validators
 supported_taxonomic = ["kingdom", "phylum", "class", "order", "family", "genus", "species"]
 
 selected_programs = {}
+selected_programs["preprocess"] = "metamos"
 selected_programs["assemble"] = "soapdenovo"
 selected_programs["findorfs"] = "fraggenescan"
 selected_programs["mapreads"] = "bowtie"
@@ -342,7 +301,6 @@ bowtie_mapping = 1
 startat = None
 endat = None
 #turn on by default
-filter = True
 forcesteps = []
 
 run_fastqc = False
@@ -412,6 +370,22 @@ if wfName != "":
       else:
          opts = wfopts
          args = wfargs
+   except getopt.GetoptError, err:
+      # print help information and exit:
+       print str(err) # will print something like "option -a not recognized"
+       usage()
+       sys.exit(2)
+
+# finally reload any commands we had
+pip = workflow.Workflow("pipeline", settings.rundir + os.sep)
+pip.read()
+if len(pip.commandList.strip()) > 0:
+   try:
+      wfopts, wfargs = getopt.getopt(pip.commandList.strip().split(), shortOptions, longOptions)
+      wfopts.extend(opts)
+      wfargs.extend(args)
+      opts = wfopts
+      args = wfargs
    except getopt.GetoptError, err:
       # print help information and exit:
        print str(err) # will print something like "option -a not recognized"
@@ -499,7 +473,16 @@ for o, a in opts:
     elif o in ("-q", "--fastqc"):
         run_fastqc = True
     elif o in ("-t", "--filter"):
-        filter = True
+        selected_programs["preprocess"] = a.lower()
+        found = False
+        for sa in supported_preprocessors:
+           if selected_programs["preprocess"] in sa:
+              found = True
+              selected_programs["preprocess"] = sa
+              break
+        if not found:
+           print "Warning: invalid preprocessor %s specified, supported: %s"%(a.lower(), ",".join(supported_preprocessors))
+           selected_programs["preprocess"] = "metamos"
     elif o in ("-I", "--isolate"):
         isolate_genome = True
     elif o in ("-R", "--refgenomes"):
@@ -714,6 +697,11 @@ if len(readlibs) > 1 and "metaidba" in selected_programs["assemble"]:
 if "scaffold" in skipsteps or "Scaffold" in skipsteps:
    skipsteps.append("Propagate")
 
+#if we have pacbio reads use bowtie 2 (since bowtie 1 expects 1024bp sequences) and run CA
+if selected_programs["preprocess"] == "pbcr":
+   selected_programs["mapreads"] = "bowtie2"
+   selected_programs["assemble"] = selected_programs["assemble"] + ",ca"
+
 if userKmerSupplied == False:
    always_run_programs.append("kmergenie")
 
@@ -749,24 +737,15 @@ utils.Settings.readpaths = readpaths
 asmfiles = []
 
 for lib in readlibs:
-    if "MapReads" in forcesteps:
-        for a in selected_programs["assemble"].strip().split(","):
-           if os.path.exists("%s/Assemble/out/%s.asm.contig"%(settings.rundir,a)):
-              utils.run_process(settings, \
-              "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,a),\
-              "RunPipeline")
-        for a in asmcontigs:
-           if os.path.exists("%s/Assemble/out/%s.asm.contig"%(settings.rundir,os.path.splitext(a)[0])):
-                utils.run_process(settings, \
-                   "touch %s/Assemble/out/%s.asm.contig"%(settings.rundir,os.path.splitext(a)[0]),\
-                   "RunPipeline")
-        utils.run_process(settings, "rm %s/Logs/mapreads.ok"%(settings.rundir), "RunPipeline")
     if "Assemble" in forcesteps:
         utils.run_process(settings, \
            "touch %s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id),\
            "RunPipeline")
     asmfiles.append("%s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id))
 
+if "MapReads" in forcesteps:
+    utils.run_process(settings, "rm %s/Assemble/out/*.contig.cvg"%(settings.rundir), "RunPipeline")
+    utils.run_process(settings, "rm %s/Logs/mapreads.ok"%(settings.rundir), "RunPipeline")
 
 utils.Settings.asmfiles = asmfiles
 
@@ -799,20 +778,27 @@ if "Annotate" in forcesteps:
 
 if "Validate" in forcesteps:
    utils.run_process(settings, \
-          "rm %s/Log/validate.ok"%(settings.rundir), "RunPipeline")
+          "rm %s/Logs/validate.ok"%(settings.rundir), "RunPipeline")
    utils.run_process(settings, \
-          "rm %s/Validate/out/%s.lap"%(settings.rundir, settings.PREFIX), "RunPipeline")
+          "rm %s/Validate/out/%s.asm.selected"%(settings.rundir, settings.PREFIX), "RunPipeline")
 
 if "FINDORFS" in forcesteps or "findorfs" in forcesteps or "FindORFS" in forcesteps:
    utils.run_process(settings, \
-          "rm %s/FindORFS/out/%s.faa"%(settings.rundir,settings.PREFIX),"RunPipeline")
+          "rm %s/Assemble/out/*.faa"%(settings.rundir),"RunPipeline")
    utils.run_process(settings, \
-          "rm %s/FindORFS/out/%s.fna"%(settings.rundir,settings.PREFIX),"RunPipeline")
+          "rm %s/Assemble/out/*.fna"%(settings.rundir),"RunPipeline")
+   utils.run_process(settings, \
+          "rm %s/FindORFS/out/*.faa"%(settings.rundir),"RunPipeline")
+   utils.run_process(settings, \
+          "rm %s/FindORFS/out/*.fna"%(settings.rundir),"RunPipeline")
 
 if "Assemble" not in skipsteps and "Assemble" in forcesteps:
     utils.run_process(settings, \
           "rm %s/Logs/assemble.ok"%(settings.rundir),\
           "RunPipeline")
+    utils.run_process(settings, \
+          "rm %s/Assemble/out/*.asm.contig"%(settings.rundir),\
+           "RunPipeline")
 
 if "Classify" not in skipsteps and "Classify" in forcesteps:
     utils.run_process(settings, \
@@ -886,7 +872,7 @@ if __name__ == "__main__":
     import postprocess
 
     # initialize submodules
-    preprocess.init(readlibs, asmcontigs, skipsteps, selected_programs["assemble"], run_fastqc,filter)
+    preprocess.init(readlibs, asmcontigs, skipsteps, selected_programs["assemble"], run_fastqc,selected_programs["preprocess"])
     assemble.init(readlibs, skipsteps, selected_programs["assemble"], asmcontigs, userKmerSupplied == False)
     mapreads.init(readlibs, skipsteps, selected_programs["mapreads"], savebtidx,ctgbpcov,lowmem)
     validate.init(readlibs, skipsteps, selected_programs["validate"], asmScores)
@@ -899,7 +885,7 @@ if __name__ == "__main__":
     scaffold.init(readlibs, skipsteps, retainBank)
     findscforfs.init(readlibs, skipsteps, selected_programs["findorfs"])
     propagate.init(readlibs, skipsteps, selected_programs["annotate"])
-    classify.init(readlibs, skipsteps, selected_programs["annotate"], lowmem)
+    classify.init(readlibs, skipsteps, selected_programs["annotate"], lowmem, 0 if not isolate_genome else 100)
     postprocess.init(readlibs, skipsteps, selected_programs["annotate"])
     generic.init(skipsteps, readlibs)
 

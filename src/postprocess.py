@@ -121,18 +121,6 @@ def Postprocess(input,output):
    run_process(_settings, "unlink %s/Postporocess/out/best.asm"%(_settings.rundir), "Postprocess")
    run_process(_settings, "ln %s/Validate/out/%s.asm.selected %s/Postprocess/out/best.asm"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
 
-   if os.path.exists("%s/Validate/out/%s.ref.selected"%(_settings.rundir, _settings.PREFIX)):
-      run_process(_settings, "unlink %s/Postporocess/out/ref.asm"%(_settings.rundir), "Postprocess")
-      run_process(_settings, "ln %s/Validate/out/%s.ref.selected %s/Postprocess/out/ref.asm"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
-      run_process(_settings, "unlink %s/Postporocess/out/quast"%(_settings.rundir), "Postprocess")
-      run_process(_settings, "ln -s %s/Validate/out/quast/combined_quast_output %s/Postprocess/out/quast"%(_settings.rundir,  _settings.rundir), "Postprocess")
-   else:
-      run_process(_settings, "touch %s/Postprocess/out/ref.asm"%(_settings.rundir), "Postprocess")
-
-   if os.path.exists("%s/Assemble/out/%s_report.html"%(_settings.rundir, _settings.PREFIX)):
-      run_process(_settings, "unlink %s/Postprocess/out/kmergenie_report.html"%(_settings.rundir), "Postprocess")
-      run_process(_settings, "ln %s/Assemble/out/%s_report.html %s/Postprocess/out/kmergenie_report.html"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
-
    #command to open webbrowser?
    #try to open Krona output
    #if openbrowser:
@@ -151,6 +139,9 @@ def Postprocess(input,output):
    run_process(_settings, "unlink %s/Postprocess/out/%s.original.reads.annots"%(_settings.rundir, _settings.taxa_level), "Postprocess")
    run_process(_settings, "ln %s/Annotate/out/%s.reads.annots %s/Postprocess/out/%s.original.reads.annots"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.taxa_level), "Postprocess")
 
+   #unlink to krona taxonomy files to avoid clobber in binary dist
+   if _settings.BINARY_DIST:
+       os.system("unlink %s%sKronaTools%staxonomy"%(Settings.METAMOSDIR,os.sep,os.sep))
    annotatedCtgs = {}
    nopropagate = False
    annotsfiledata = []
@@ -167,7 +158,7 @@ def Postprocess(input,output):
 
       try:
          if int(annot) > maxClassID:
-            maxClassID = int(annot)
+            maxClassID = int(annot) + 1
          annotatedCtgs[ctg] = annot
       except ValueError:
          maxClassID = maxClassID
@@ -179,12 +170,10 @@ def Postprocess(input,output):
    annotsout = ""
    try:
        annotsfile = open("%s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
-       annotsfile = open("%s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
        annotsout = open("%s/Postprocess/out/%s.propagated.annots"%(_settings.rundir, _settings.taxa_level), 'w')
        annotsfiledata = annotsfile.readlines()
    except IOError:
        nopropagate = True
-
 
    for line in annotsfiledata:#.xreadlines():
       line = line.replace("\n", "")
@@ -258,6 +247,19 @@ def Postprocess(input,output):
    run_process(_settings, "ln %s/Postprocess/out/annotate.krona.html %s/Postprocess/out/html/Annotate.html"%(_settings.rundir, _settings.rundir), "Postprocess")
    run_process(_settings, "unlink %s/Postprocess/out/html/Abundance.html"%(_settings.rundir), "Postprocess")
    run_process(_settings, "ln %s/Postprocess/out/abundance.krona.html %s/Postprocess/out/html/Abundance.html"%(_settings.rundir, _settings.rundir), "Postprocess")
+
+   if os.path.exists("%s/Validate/out/%s.ref.selected"%(_settings.rundir, _settings.PREFIX)):
+      run_process(_settings, "unlink %s/Postprocess/out/ref.asm"%(_settings.rundir), "Postprocess")
+      run_process(_settings, "ln %s/Validate/out/%s.ref.selected %s/Postprocess/out/ref.asm"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
+      run_process(_settings, "unlink %s/Postporocess/out/html/quast"%(_settings.rundir), "Postprocess")
+      if os.path.exists("%s/Validate/out/quast"%(_settings.rundir)):
+         run_process(_settings, "cp -r %s/Validate/out/quast %s/Postprocess/out/html/quast"%(_settings.rundir,  _settings.rundir), "Postprocess")
+   else:
+      run_process(_settings, "touch %s/Postprocess/out/ref.asm"%(_settings.rundir), "Postprocess")
+
+   if os.path.exists("%s/Assemble/out/%s_report.html"%(_settings.rundir, _settings.PREFIX)):
+      run_process(_settings, "unlink %s/Postprocess/out/html/kmergenie_report.html"%(_settings.rundir), "Postprocess")
+      run_process(_settings, "ln %s/Assemble/out/%s_report.html %s/Postprocess/out/html/kmergenie_report.html"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
 
    # create html-only files
    run_process(_settings, "mv %s/Preprocess/out/*.fastqc %s/Postprocess/out/html"%(_settings.rundir, _settings.rundir), "Postprocess")

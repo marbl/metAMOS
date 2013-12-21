@@ -43,6 +43,7 @@ ENDC = CSI+'0m'
 
 _METAMOSDIR    = resource_path(sys.path[0])
 INITIAL_UTILS = "%s%sUtilities"%(_METAMOSDIR, os.sep)
+INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
 _NUM_LINES    = 10
 _PROG_NAME_DICT = {}
 _PUB_DICT = {}
@@ -59,7 +60,7 @@ STEP_NAMES = enum("ASSEMBLE", "ANNOTATE", "SCAFFOLD")
 STEP_OUTPUTS = enum(".asm.contig", ".hits", ".linearize.scaffolds.final")
 INPUT_TYPE = enum("FASTQ", "FASTA", "CONTIGS", "SCAFFOLDS", "ORF_FA", "ORF_AA")
 
-SCORE_TYPE = enum("ALL", "LAP", "ALE", "CGAL", "SNP", "FRCBAM", "ORF", "REAPR")
+SCORE_TYPE = enum("ALL", "LAP", "ALE", "CGAL", "SNP", "FRCBAM", "ORF", "REAPR", "N50")
 SCORE_WEIGHTS = dict()
 
 _failFast = True
@@ -76,6 +77,7 @@ class AtomicCounter(object):
          return origVal
 
 _atomicCounter = AtomicCounter(0)
+_envCounter = AtomicCounter(0)
 
 class Settings:
    asmfiles = []
@@ -111,12 +113,14 @@ class Settings:
    SOAPDENOVO2 = ""
    METAIDBA = ""
    CA = ""
+   BLASR = ""
    NEWBLER = ""
    VELVET = ""
    VELVET_SC = ""
    METAVELVET = ""
    SPARSEASSEMBLER = ""
 
+   EAUTILS   = ""
    KMERGENIE = ""
    R         = ""
 
@@ -158,6 +162,8 @@ class Settings:
    nopysam = False
 
    def __init__(self, kmer = None, threads = None, rundir = None, taxa_level = "", localKrona = False, annotateUnmapped = False, doScaffolding = False, verbose = False, outputOnly = False, update = False):
+
+      configureEnvironment(INITIAL_UTILS)
 
       if (Settings.rundir != "" and update == False):
          return
@@ -256,19 +262,32 @@ class Settings:
       Settings.VELVET_SC     = "%s%scpp%s%s-%s%svelvet-sc"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
       Settings.METAVELVET    = "%s%scpp%s%s-%s%sMetaVelvet"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
       Settings.SPARSEASSEMBLER = "%s%scpp%s%s-%s%sSparseAssembler"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
-      Settings.KMERGENIE = "%s%scpp%s%s-%s%skmergenie"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
-      Settings.R = "%s%scpp%s%s-%s%sR"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
+      Settings.EAUTILS       = "%s%scpp%s%s-%s%seautils"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
+      Settings.KMERGENIE     = "%s%scpp%s%s-%s%skmergenie"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
+      Settings.R             = "%s%scpp%s%s-%s%sR"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
       Settings.PHYMM = "%s%sperl%sphymm%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, os.sep)
 
-      Settings.METAPHYLER        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.METAPHYLER    = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
 
       Settings.BOWTIE        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
-      Settings.BOWTIE2        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
-      Settings.SAMTOOLS        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.BOWTIE2       = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.SAMTOOLS      = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
 
       Settings.METAGENEMARK  = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.FRAGGENESCAN  = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.PROKKA        = "%s%scpp%s%s-%s/prokka/bin"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      if _BINARY_DIST:
+          #need to change PROKKA to external db directory
+           kronalibf = open("%s%scpp%s%s-%s/prokka/bin/prokka"%(Settings.METAMOS_UTILS,os.sep,os.sep, Settings.OSTYPE, Settings.MACHINETYPE))
+           data = kronalibf.read()
+           if "my $DBDIR = \"$FindBin::RealBin/../db\";" not in data:
+               kronalibf.close()
+           else:
+               dd = data.replace("my $DBDIR = \"$FindBin::RealBin/../db\";","my $DBDIR = \"%s/prokka/db\";"%(Settings.DB_DIR))
+               kronalibf.close()
+               kronalibf = open("%s%scpp%s%s-%s/prokka/bin/prokka"%(Settings.METAMOS_UTILS,os.sep,os.sep, Settings.OSTYPE, Settings.MACHINETYPE), 'w')
+               kronalibf.write(dd)
+               kronalibf.close()
       Settings.SIGNALP       = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
 
       Settings.FCP           = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
@@ -410,7 +429,12 @@ class readLib:
         pass
 
 def getDefaultWeight(sa):
-   return 1 if sa == SCORE_TYPE.LAP or sa == SCORE_TYPE.ALE or sa == SCORE_TYPE.CGAL else 1
+    if sa == SCORE_TYPE.LAP or sa == SCORE_TYPE.ALE or sa == SCORE_TYPE.CGAL:
+       return 0.33
+    elif sa == SCORE_TYPE.ORF:
+       return 0
+    else:
+       return 1
 
 def initValidationScores(weights = dict()):
    for score in SCORE_TYPE.reverse_mapping.keys():
@@ -425,6 +449,10 @@ def updateConfigCommands(infileName, opts):
    # build the list of commands
    commands = ""
    for o, a in opts:
+      if o == "-f" or o == "--force":
+         continue
+      if o == "-d" or o == "--projectdir":
+         continue
       if "--" in o:
          commands = "%s %s=%s"%(commands, o, a)
       else:
@@ -436,6 +464,33 @@ def updateConfigCommands(infileName, opts):
    for line in infile.xreadlines():
       if "command:" in line:
           tempFile.write("command:\t%s\n"%(commands.strip()))
+      else:
+          tempFile.write(line)
+   infile.close()
+   tempFile.close()
+   os.system("mv %s %s"%(tempFileName, infileName))
+
+def updateLibInfo(infileName, lib):
+   tempFileName = "%s.tmp"%(infileName)
+   tempFile = open(tempFileName, 'w')
+   infile = open(infileName, 'r')
+   written = False
+   for line in infile.xreadlines():
+      if "lib%d"%(lib.id) in line:
+         if written == False:
+            written = True
+            tempFile.write("lib%dformat:\t%s\n"%(lib.id, lib.format))
+            tempFile.write("lib%dmated:\t%s\n"%(lib.id, lib.mated))
+            tempFile.write("lib%dinnie:\t%s\n"%(lib.id, lib.innie))
+            tempFile.write("lib%dinterleaved\t%s\n"%(lib.id, lib.interleaved))
+            if lib.mated:
+               if lib.interleaved:
+                  tempFile.write("lib%df1:\t%s,%d,%d,%d,%d\n"%(lib.id, lib.f1.fname, lib.mmin, lib.mmax, lib.mean, lib.stdev))
+               else:
+                  tempFile.write("lib%df1:\t%s,%d,%d,%d,%d\n"%(lib.id, lib.f1.fname, lib.mmin, lib.mmax, lib.mean, lib.stdev))
+                  tempFile.write("lib%df2:\t%s,%d,%d,%d,%d\n"%(lib.id, lib.f2.fname, lib.mmin, lib.mmax, lib.mean, lib.stdev))
+            else:
+               tempFile.write("lib%dfrg:\t%s\n"%(lib.id, lib.f1.fname))
       else:
           tempFile.write(line)
    infile.close()
@@ -630,7 +685,7 @@ def getFromPath(theCommand, theName, printWarning = True):
        print "Warning: %s is not found, some functionality will not be available"%(theName)
        return ""
     else:
-       return result.replace(theCommand, "").strip()
+       return os.path.dirname(result.strip())
 
 def cmdExists(cmd):
     result = False
@@ -693,6 +748,12 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
     if not os.path.exists(Settings.CA + os.sep + "gatekeeper"):
        Settings.CA = getFromPath("gatekeeper", "Celera Assembler") 
     CAMD5 = getMD5Sum(Settings.CA + os.sep + "gatekeeper")
+
+    # BLASR goes with CA
+    Settings.BLASR = "%s/../../../smrtanalysis/current/analysis/bin"%(Settings.CA)
+    if not os.path.exists(Settings.BLASR + os.sep + "blasr"):
+       Settings.BLASR = getFromPath("blasr", "BLASR")
+    blasrMD5 = getMD5Sum(Settings.BLASR + os.sep + "blasr")
 
     # 4. Newbler
     Settings.NEWBLER = "%s%snewbler%s%s-%s"%(Settings.METAMOSDIR, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
@@ -819,6 +880,11 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
        Settings.PHYLOSIFT = ""
     phylosiftMD5 = getMD5Sum(Settings.PHYLOSIFT + os.sep + "bin" + os.sep + "phylosift")
 
+    Settings.EAUTILS = "%s%scpp%s%s-%s%seautils"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
+    if not os.path.exists(Settings.EAUTILS + os.sep + "fastq-mcf"):
+       Settings.EAUTILS = getFromPath("fastq-mcf", "EA-UTILS")
+    eautilsMD5 = getMD5Sum(Settings.EAUTILS + os.sep + "fastq-mcf")
+
     Settings.KMERGENIE = "%s%scpp%s%s-%s%skmergenie"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep)
     if not os.path.exists(Settings.KMERGENIE + os.sep + "kmergenie"):
        Settings.KMERGENIE = getFromPath("kmergenie", "KmerGenie")
@@ -933,7 +999,7 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped
     conf.write("BLAST:\t\t\t%s\t%s\n"%(Settings.BLAST, blastMD5))
     conf.write("PHYLOSIFT:\t\t%s\t%s\n"%(Settings.PHYLOSIFT, phylosiftMD5))
     conf.write("FASTQC:\t\t\t%s\t%s\n"%(Settings.FASTQC, fastqcMD5))
-
+    conf.write("EAUTILS:\t\t%s\t%s\n"%(Settings.EAUTILS, eautilsMD5))
     conf.write("KMERGENIE:\t\t%s\t%s\n"%(Settings.KMERGENIE, kmergenieMD5))
     conf.write("REPEATOIRE:\t\t%s\t%s\n"%(Settings.REPEATOIRE, repeatoireMD5))
     conf.write("KRONA:\t\t\t%s\t%s\n"%(Settings.KRONA, kronaMD5))
@@ -997,7 +1063,7 @@ def run_process(settings,command,step=""):
               p = subprocess.Popen(command, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,close_fds=True,executable="/bin/bash", cwd=workingDir)
           fstdout,fstderr = p.communicate()
           rc = p.returncode
-          if rc != 0 and _failFast and "rm " not in command and "ls " not in command and "unlink " not in command and "ln " not in command and "mkdir " not in command and "mv " not in command:
+          if rc != 0 and _failFast and "rm " not in command and "ls " not in command and "unlink " not in command and "ln " not in command and "mkdir " not in command and "mv " not in command and "cat" not in command:
               # flush all error/output streams
               outf.flush()
               outf.write(fstdout+fstderr)
@@ -1183,7 +1249,7 @@ def getSelectedAssembler(settings):
       return getCommandOutput("cat %s/Validate/out/%s.asm.selected"%(settings.rundir, settings.PREFIX), False)
 
 def getSelectedKmer(settings):
-   kmer = 0
+   kmer = ""
    if os.path.exists("%s/Assemble/out/%s.kmer"%(settings.rundir, settings.PREFIX)):
       stats = open("%s/Assemble/out/%s.kmer"%(settings.rundir, settings.PREFIX), 'r')
       kmer = stats.read().strip()
@@ -1213,6 +1279,63 @@ def getVersion():
    wfs = workflow.getSupportedWorkflowNames("%s/Utilities/workflows"%(sys.path[0]), False)
 
    return version + " workflows: " + ",".join(wfs)
+
+def configureEnvironment(utilPath):
+   global _envCounter
+   if _envCounter.increment() == 0:
+      if "PYTHONPATH" not in os.environ:
+         os.environ["PYTHONPATH"] = ""
+      else:
+         ppath = os.environ["PYTHONPATH"]
+         #os.environ["PYTHONPATH"] = ""
+      os.environ["PYTHONPATH"]+=utilPath+os.sep+"python"+os.pathsep
+      os.environ["PYTHONPATH"]+=utilPath+os.sep+"ruffus"+os.pathsep
+      os.environ["PYTHONPATH"] += utilPath+os.sep+"python"+os.sep+"lib"+os.pathsep
+      os.environ["PYTHONPATH"] += utilPath+os.sep+"python"+os.sep+"lib"+os.sep+"python"+os.pathsep
+      os.environ["PYTHONPATH"] += utilPath+os.sep+"python"+os.sep+"lib64"+os.pathsep
+      os.environ["PYTHONPATH"] += utilPath+os.sep+"python"+os.sep+"lib64"+os.sep+"python"+os.pathsep
+      os.environ["PYTHONPATH"] += utilPath+os.pathsep
+
+      if "PERL5LIB" not in os.environ:
+         os.environ["PERL5LIB"] =  INITIAL_SRC+os.sep+"phylosift"+os.sep+"lib"+os.sep
+      else:
+         os.environ["PERL5LIB"] =  INITIAL_SRC+os.sep+"phylosift"+os.sep+"lib"+os.sep + os.pathsep + os.environ["PERL5LIB"]
+      try:
+         os.environ["PYTHONPATH"] += sys._MEIPASS + os.pathsep
+         os.environ["PYTHONHOME"] = sys._MEIPASS + os.pathsep
+      except Exception:
+         pass
+
+      try:
+         sys._MEIPASS
+         #if we are here, frozen binary
+      except Exception:
+         #else normal mode, add site dir
+         import site
+         site.addsitedir(utilPath+os.sep+"python"+os.sep+"lib"+os.sep+"python")
+         site.addsitedir(utilPath+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
+
+         sys.path.append(utilPath)
+         sys.path.append(utilPath+os.sep+"python")
+         sys.path.append(utilPath+os.sep+"ruffus")
+         sys.path.append(utilPath+os.sep+"python"+os.sep+"lib"+os.sep+"python")
+         sys.path.append(utilPath+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
+         try:
+            sys.path.append(sys._MEIPASS)
+         except Exception:
+            pass
+         sys.path.append("/usr/lib/python")
+
+         #remove imports from pth file, if exists
+         nf = []
+         if 'bash' in shellv or cmdExists('export'):
+            os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utilPath+os.sep+"python"))
+            os.system("export PYTHONPATH=%s:$PYTHONPATH"%(utilPath+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
+         elif cmdExists('setenv'):
+            os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utilPath+os.sep+"python"))
+            os.system("setenv PYTHONPATH %s:$PYTHONPATH"%(utilPath+os.sep+"python"+os.sep+"lib"+os.sep+"python"))
+         else:
+            print "Warning: could not set PYTHONPATH. Unknown shell %s, some functionality may not work\n"%(shellv)
 
 def translateToSRAURL(settings, name):
    command = "%s/cpp%s%s-%s%s/sra/bin"%(settings.METAMOS_UTILS, os.sep, settings.OSTYPE, settings.MACHINETYPE, os.sep)

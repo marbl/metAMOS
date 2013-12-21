@@ -67,8 +67,7 @@ available on High Memory Instance at Amazon Elastic Compute Cloud ).
 ----------------------------------------------------------------------------------
 ### B) SOFTWARE REQUIREMENTS
 
-The main prequisite software is python2.6+ and AMOS (available from
-http://amos.sf.net). Once python2.6+ and AMOS are installed, there
+The main prequisite software is python2.6+. Once python2.6+ is installed, there
 should not be any other major prerequisites as most everything that is
 needed is distributed with MetAMOS inside of the /Utilities
 directory. Depending on your platform/Linux distribution, you might need to download and install the following BEFORE running INSTALL.py:
@@ -83,26 +82,43 @@ directory. Depending on your platform/Linux distribution, you might need to down
 8. freetype, freetype-devel
 9. libpng-devel
 10. matplotlib
+11. R
 
 Additionally, there is some software that MetAMOS can
 incorporate into its pipeline that we are not allowed to distribute,
-such as MetaGeneMark. To get a license to use MetaGeneMark, plesae
-visit: http://exon.gatech.edu/license_download.cgi.
+such as MetaGeneMark and Newbler. To get a license to use MetaGeneMark, plesae
+visit: http://exon.gatech.edu/license_download.cgi. Once the tool is installed,
+add it to your PATH variable and metAMOS will then enable its use in the pipeline.
 
 ----------------------------------------------------------------------------------
 ### C) INSTALLING MetAMOS
 
-To download the software, go to https://github.com/treangen/MetAMOS
+To download the software, go [here](https://github.com/treangen/metAMOS/archive/Release1.3.zip).
+You can also browse the [repository](https://github.com/treangen/MetAMOS/tree/Release1.3)
 and click on Downloads. Once downloaded, simply unpack the files and
 open the MetAMOS directory. Once inside the MetAMOS directory, run:
 
 python INSTALL.py
 
-This will download and install any external dependencies (or they can
-be refused by answering NO), which may take minutes or hours to
-download depending on your connection speed. If all dependencies are
-downloaded (including optional ones), this will take quite awhile to
-complete (plan on a few hours to 2 days).
+This will download and install the external dependencies which may 
+take minutes or hours to download depending on your connection speed. 
+metAMOS supports workflows to install subsets of tools for faster installation.
+By default only the core dependencies are installed. You can run
+
+python INSTALL.py -h
+
+to get a listing of available workflows and programs. You can specify either
+workflows or programs as arguments to INSTALL.py. For example, to install the 
+core workflow plus PhyloSift, run
+
+python INSTALL.py core phylosift
+
+To install the programs which are part of the optional workflow run
+
+python INSTALL.py optional
+
+If all dependencies are downloaded (including optional/deprecated ones), this will take 
+quite awhile to complete (plan on a few hours to 2 days).
 
 ----------------------------------------------------------------------------------
 ### D) QUICK START
@@ -183,7 +199,7 @@ usage: runPipeline [options] -d projectdir
 
 Pipeline consists of the following steps:
 
-  Preprocess, Assemble, FindORFS, MapReads, Abundance, Annotate,
+  Preprocess, Assemble, FindORFS, MapReads, Validate, Abundance, Annotate,
   Scaffold, Propagate, Classify, Postprocess
 
 Each of these steps can be referred to by the following options:
@@ -197,8 +213,8 @@ For each step you can fine-tune the execution as follows
 
 [Preprocess]
 
-*   -t = <bool>:   filter input reads? (default = NO)
-*   -q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff)? (default = NO)
+*   -t = <bool>:   turn on filter input reads (default = NO)
+*   -q = <bool>:   produce FastQC quality report for reads with quality information (fastq or sff) (default = NO)
 
 
 [Assemble]
@@ -213,7 +229,7 @@ For each step you can fine-tune the execution as follows
 [MapReads]
 
 *   -m = <string>: read mapper to use? (default = bowtie)
-*   -i = <bool>:   save bowtie (i)ndex? (default = NO)
+*   -i = <bool>:   save bowtie (i)ndex (default = NO)
 *   -b = <bool>:   create library specific per bp coverage of assembled contigs (default = NO)
 
 
@@ -227,7 +243,7 @@ For each step you can fine-tune the execution as follows
 [Annotate]
 
 *   -c = <string>: classifier to use for annotation (default = FCP)
-*   -u = <bool>:   annotate unassembled reads? (default = NO)
+*   -u = <bool>:   annotate unassembled reads (default = NO)
 
 
 [Classify]
@@ -236,9 +252,9 @@ For each step you can fine-tune the execution as follows
 
 [misc_opts]: Miscellaneous options
 
-*   -r = <bool>:   retain the AMOS bank?  (default = NO)
+*   -r = <bool>:   retain the AMOS bank  (default = NO)
 *   -p = <int>:    number of threads to use (be greedy!) (default=1)
-*   -4 = <bool>:   454 data? (default = NO)
+*   -4 = <bool>:   454 data (default = NO)
 
 For example, to enable read filtering:
 
@@ -344,9 +360,7 @@ the assemblies can be visualized with Hawkeye.
 ----------------------------------------------------------------------------------
 ### G) BUGS
 
-If you encounter any problems/bugs, please check the wiki page:
-https://github.com/treangen/MetAMOS/wiki
-and the known issues pages:
+If you encounter any problems/bugs, please check the known issues pages:
 https://github.com/treangen/MetAMOS/issues?direction=desc&sort=created&state=open
 to see if it has already been documented.
 

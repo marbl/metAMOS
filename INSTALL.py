@@ -1,4 +1,4 @@
-import os, sys, string, subprocess, distutils.util, check_install, site, glob
+import os, sys, string, subprocess, distutils.util, check_install, site, glob, multiprocessing
 
 user_home = os.environ["HOME"]
 print "<<Welcome to metAMOS install>>"
@@ -54,6 +54,7 @@ if not os.path.exists("%s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os
     os.system("mkdir %s"%utils.INITIAL_UTILS+os.sep+"python"+os.sep+"lib64"+os.sep+"python")
 
 ALLOW_FAST=True
+HAVE_GCC42=False
 HAVE_RT=False
 HAVE_QUIET_HEAD=False
 
@@ -89,6 +90,11 @@ if OSTYPE == "Darwin":
    (checkStdout, checkStderr) = p.communicate()
    if "Apple" not in checkStdout:
       ALLOW_FAST=False
+   gcc42 = utils.getCommandOutput("which g++-4.2", False)
+   if gcc42 == "":
+      HAVE_GCC42=False
+   else:
+      HAVE_GCC42=True
 
 libPaths = [ "/usr/lib", "/usr/lib64", "/usr/local/lib/", "/usr/local/lib64/", "/opt/local/lib/", "/opt/local/lib64/"] 
 for libPath in libPaths:
@@ -324,10 +330,10 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINET
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         archive = "kraken.tar.gz"
-        os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -o %s" %(archive, archive))
+        os.system("curl -L http://ccb.jhu.edu/software/kraken/dl/kraken-0.10.1-beta.tgz -o %s"%(archive))
         os.system("rm -rf ./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.system("tar -xvzf %s"%(archive))
-        os.system("mv kraken-0.9.1b ./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        os.system("mv kraken-0.10.0-beta ./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.chdir("./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.system("./install_kraken.sh `pwd`/bin")
         os.chdir("%s"%(METAMOS_ROOT))
@@ -343,6 +349,7 @@ if not os.path.exists("./Utilities/DB/kraken"):
        settings = utils.Settings(1, 1, "", "")
        settings.OSTYPE = OSTYPE
        mem = utils.getAvailableMemory(settings)
+
        if (mem < 100):
           print "Insufficient memory to build full Kraken database. Requires at least 100GB of memory, using mini DB"
           archive = "minikraken.tgz"
@@ -351,6 +358,25 @@ if not os.path.exists("./Utilities/DB/kraken"):
           os.system("mv minikraken_* ./Utilities/DB/kraken")
           os.system("rm %s"%(archive))
        else:
+          # first we need jellyfish which is used to build DB
+          # kraken needs jellyfish, if we don't find it build it and add to path
+          jellyfish = utils.getFromPath("jellyfish", "Jellyfish", False)
+          if jellyfish == "":
+             archive = jellyfish.tar.gz
+             os.system("curl -L http://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.11.tar.gz -o %s"%(archive, archive))
+             os.system("tar xvzf %s"%(archive))
+             os.system("mv jellyfish-1.1.11 ./Utilities/cpp%s%s-%s%s/jellyfish"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.chdir("./Utilities/cpp%s%s-%s%s/jellyfish"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("./configure --prefix=`pwd`")
+             os.system("make")
+             os.system("make install")
+             os.chdir("%s"%(METAMOS_ROOT))
+
+             pathUpdate = "%s/Utilities/cpp%s%s-%s%sjellyfish/bin/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
+             if "PATH" in os.environ:
+                pathUpdate = "%s%s%s"%(os.environ["PATH"], os.pathsep, pathUpdate)
+             os.environ["PATH"]=pathUpdate
+
           os.chdir("./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
           os.system("./bin/kraken-build --standard --threads %d --db %s/Utilities/DB/kraken"%(multiprocessing.cpu_count() - 1, METAMOS_ROOT)) 
           os.chdir("%s"%(METAMOS_ROOT))
@@ -448,7 +474,7 @@ if "optional" in enabledWorkflows or manual:
             os.system("tar -C ./Utilities/ -xvf %s" % archive)
             os.system("rm %s"%archive)
 
-    if not os.path.exists("./phylosift") or not os.path.exists("./phylosift/legacy/version.pm") or not os.path.exists("./phylosift/lib/Params"):
+    if not os.path.exists("./phylosift") or not os.path.exists("./phylosift/lib/version.pm") or not os.path.exists("./phylosift/lib/Params"):
        if "phylosift" in packagesToInstall:
           dl = 'y'
        else:
@@ -556,26 +582,25 @@ if "isolate" in enabledWorkflows or manual:
          print "Celera Assembler binaries not found, optional for Assemble step, download now?"
          dl = raw_input("Enter Y/N: ")
       if dl == 'y' or dl == 'Y':
-          if OSTYPE == 'Linux' and MACHINETYPE == "x86_64":
-             #hard coded, will fail if moved
-             os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/wgs-7.0-PacBio-Linux-amd64.tar.bz2 -o wgs-7.0-PacBio-Linux-amd64.tar.bz2")
-             os.system("bunzip2 wgs-7.0-PacBio-Linux-amd64.tar.bz2")
-             os.system("tar xvf wgs-7.0-PacBio-Linux-amd64.tar")
-             os.system("rm -rf wgs-7.0-PacBio-Linux-amd64.tar")
-          else:
-             os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/wgs-7.0.tar.bz2 -o wgs-7.0.tar.bz2")
-             os.system("bunzip2 wgs-7.0.tar.bz2")
-             os.system("tar xvf wgs-7.0.tar")
-             os.system("rm -rf wgs-7.0.tar")
-             # patch CA to support PacBio sequences and non-apple compilers on OSX
-             if not ALLOW_FAST:
-                os.system("cd wgs-7.0/kmer/ && cp configure.sh configure.original")
-                os.system("cd wgs-7.0/kmer/ && cat configure.original |sed s/\-fast//g > configure.sh")
-             os.system("cd wgs-7.0/src/ && cp AS_global.h AS_global.original")
-             os.system("cd wgs-7.0/src/ && cat AS_global.original | sed 's/AS_READ_MAX_NORMAL_LEN_BITS.*11/AS_READ_MAX_NORMAL_LEN_BITS      15/g' > AS_global.h")
-             os.system("cd wgs-7.0/kmer && ./configure.sh && gmake install")
-             os.system("cd wgs-7.0/src && gmake")
-          os.system("mv wgs-7.0 CA")
+          os.system("curl -L https://downloads.sourceforge.net/project/wgs-assembler/wgs-assembler/wgs-8.0/wgs-8.0.tar.bz2 -o wgs-8.0.tar.bz2")
+          os.system("curl -L https://github.com/samtools/samtools/archive/0.1.19.tar.gz -o samtools.tar.gz")
+          os.system("tar xvzf samtools.tar.gz")
+          os.system("tar xvjf wgs-8.0.tar.bz2")
+          os.system("rm -rf wgs-8.0.tar.bz2")
+          os.system("mv wgs-8.0 CA")
+          os.system("mv samtools-0.1.19 CA/samtools")
+          # patch CA to support PacBio sequences and non-apple compilers on OSX
+          if not ALLOW_FAST:
+             os.system("cd CA/kmer/ && cp configure.sh configure.original")
+             os.system("cd CA/kmer/ && cat configure.original |sed s/\-fast//g > configure.sh")
+             os.system("cd CA/src/ && cp c_make.as c_make.original")
+             os.system("cd CA/src/ && cat c_make.original |sed s/\-fast//g > c_make.as")
+          if not HAVE_GCC42:
+             os.system("cd CA/src/ && cp c_make.as c_make.original")
+             os.system("cd CA/src/ && cat c_make.original |sed s/\-4.2//g > c_make.as")
+          os.system("cd CA/samtools && make")
+          os.system("cd CA/kmer && ./configure.sh && gmake install")
+          os.system("cd CA/src && gmake")
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%sRay"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        if "ray" in packagesToInstall:
@@ -915,6 +940,35 @@ if "isolate" in enabledWorkflows or manual:
              os.system("make")
              os.chdir("%s"%(METAMOS_ROOT))
              os.system("rm -rf idba.tar.gz")
+
+    if not os.path.exists("./Utilities/cpp%s%s-%s%seautils"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+       eautils = utils.getFromPath("fastq-mcf", "EA-UTILS", False)
+       if eautils == "":
+          if "eautils" in packagesToInstall:
+             dl = 'y'
+          else:
+             print "EA-UTILS binaries not found, optional for Assemble step, download now?"
+             dl = raw_input("Enter Y/N: ")
+          if dl == 'y' or dl == 'Y':
+             os.system("curl -L https://ea-utils.googlecode.com/files/ea-utils.1.1.2-537.tar.gz -o eautils.tar.gz")
+             os.system("curl -L ftp://ftp.gnu.org/gnu/gsl/gsl-1.16.tar.gz -o gsl.tar.gz")
+             os.system("tar xvzf eautils.tar.gz")
+             os.system("tar xvzf gsl.tar.gz")
+             os.system("mv gsl-1.16 ea-utils.1.1.2-537/gsl")
+             os.system("mv ea-utils.1.1.2-537 ./Utilities/cpp%s%s-%s%seautils"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.chdir("./Utilities/cpp%s%s-%s%seautils/gsl"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("./configure --prefix=`pwd`/build")
+             os.system("make")
+             os.system("make install")
+             os.chdir("..")
+             os.system("mv Makefile Makefile.orig")
+             os.system("cat Makefile.orig |sed s/CFLAGS?=/CFLAGS+=/g |sed s/CPPFLAGS?=/CPPFLAGS+=/g > Makefile")
+             os.environ["CFLAGS"] = "-L%s/Utilities/cpp%s%s-%s%seautils/gsl/build/lib/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
+             os.environ["CPPFLAGS"] = "-L%s/Utilities/cpp%s%s-%s%seautils/gsl/build/lib/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
+             os.system("make")
+             os.chdir("%s"%(METAMOS_ROOT))
+             os.system("rm -rf eautils.tar.gz")
+             os.system("rm -rf gsl.tar.gz")
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%sabyss"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        abyss = utils.getFromPath("ABYSS", "ABySS", False)

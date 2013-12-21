@@ -95,7 +95,7 @@ def get_classify_stats(ocf,cf,ck,out_dir,outf,outfo,taxa_level):
         except KeyError:
             continue
         classify.tr()
-        classify.add("<td align=\"left\"><a target=\"_blank\" href=\"%s.classified/%s/%s.fasta\">%s</a></td><td align=\"right\">%d</td><td align=\"right\">%3.2f%%</td>"%(taxa_level, class_name, class_name, class_name, contigs_by_class[key], contigs_by_class[key]/float(classifiedCount)*100))
+        classify.add("<td align=\"left\"><a target=\"_blank\" href=\"../%s.classified/%s/\">%s</a></td><td align=\"right\">%d</td><td align=\"right\">%3.2f%%</td>"%(taxa_level, class_name, class_name, contigs_by_class[key], contigs_by_class[key]/float(classifiedCount)*100))
         classify.tr.close()
     classify.tr()
     classify.add("<td align=\"left\"Total classified:</td><td align=\"right\">%d</td>"%(classifiedCount))

@@ -121,6 +121,8 @@ python INSTALL.py optional
 If all dependencies are downloaded (including optional/deprecated ones), this will take 
 quite awhile to complete (plan on a few hours to 2 days).
 
+Note: If you are experiencing trouble with INSTALL, its likely you have not installed all prereq software (please see above section on SOFTWARE REQUIREMENTS ).
+
 ----------------------------------------------------------------------------------
 ### D) QUICK START
 

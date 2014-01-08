@@ -79,6 +79,7 @@ directory. Depending on your platform/Linux distribution, you might need to down
 9. libpng-devel
 10. matplotlib
 11. R
+12. curl
 
 Additionally, there is some software that MetAMOS can
 incorporate into its pipeline that we are not allowed to distribute,

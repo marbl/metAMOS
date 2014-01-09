@@ -330,10 +330,10 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINET
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         archive = "kraken.tar.gz"
-        os.system("curl -L http://ccb.jhu.edu/software/kraken/dl/kraken-0.10.1-beta.tgz -o %s"%(archive))
+        os.system("curl -L http://ccb.jhu.edu/software/kraken/dl/kraken-0.10.3-beta.tgz -o %s"%(archive))
         os.system("rm -rf ./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.system("tar -xvzf %s"%(archive))
-        os.system("mv kraken-0.10.0-beta ./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        os.system("mv kraken-0.10.3-beta ./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.chdir("./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.system("./install_kraken.sh `pwd`/bin")
         os.chdir("%s"%(METAMOS_ROOT))

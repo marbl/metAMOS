@@ -384,6 +384,10 @@ def Assemble(input,output):
 
       if not os.path.exists(binPath + os.sep + "SOAPdenovo-63mer"):
          print "Error: %s not found in %s. Please check your path and try again.\n"%(asmName.title(), binPath)
+         run_process(_settings, "touch %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "Assemble")
+         _settings.kmer = originalKmer
+         _settings.PREFIX = originalPrefix
+         setFailFast(True)
          return
 
       soapOptions = getProgramParams(_settings.METAMOS_UTILS, specName, "pregraph", "-") 
@@ -426,6 +430,10 @@ def Assemble(input,output):
    elif asmName == "newbler":
       if not os.path.exists(_settings.NEWBLER + os.sep + "newAssembly"):
          print "Error: Newbler not found in %s. Please check your path and try again.\n"%(_settings.NEWBLER)
+         run_process(_settings, "touch %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "Assemble")
+         _settings.kmer = originalKmer
+         _settings.PREFIX = originalPrefix
+         setFailFast(True)
          return
 
       run_process(_settings, "%s/newAssembly -force %s/Assemble/out"%(_settings.NEWBLER, _settings.rundir),"Assemble")
@@ -448,6 +456,10 @@ def Assemble(input,output):
          elif lib.format == "fastq":
              if (NEWBLER_VERSION < 2.6):
                 print "Error: FASTQ + Newbler only supported in Newbler version 2.6+. You are using version %s."%(_settings.NEWBLER_VERSION)
+                run_process(_settings, "touch %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "Assemble")
+                _settings.kmer = originalKmer
+                _settings.PREFIX = originalPrefix
+                setFailFast(True)
                 return
              run_process(_settings, "%s/addRun %s/Assemble/out %s/Preprocess/out/lib%d.fastq"%(_settings.NEWBLER, _settings.rundir, _settings.rundir, lib.id),"Assemble")
 

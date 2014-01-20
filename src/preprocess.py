@@ -201,6 +201,10 @@ def Preprocess(input,output):
        return 0
    run_process(_settings, "rm %s/Preprocess/out/all.seq.mates"%(_settings.rundir), "Preprocess")
 
+   global _filter
+   if _filter == "eautils" and not os.path.exists(_settings.EAUTILS + "fastq-mcf"):
+      _filter = "metamos"
+
    if _filter == "metamos":
        #print "filtering.."
      

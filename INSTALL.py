@@ -1,4 +1,4 @@
-import os, sys, string, subprocess, distutils.util, check_install, site, glob, multiprocessing
+import os, sys, string, subprocess, distutils.util, site, glob, multiprocessing
 
 user_home = os.environ["HOME"]
 print "<<Welcome to metAMOS install>>"
@@ -117,6 +117,11 @@ for flow in workflows:
 manual = False
 fail = False
 
+availableWf = workflow.getSupportedWorkflows("%s/Utilities/workflows"%(METAMOS_ROOT), False)
+for wf in availableWf:
+   enabledWorkflows.update(wf.getDerivedName())
+   packagesToInstall.update(wf.programList)
+
 if (len(sys.argv) > 1):
   # should support tool list as well added
   for i in range(1, len(sys.argv)):
@@ -143,13 +148,6 @@ if (len(sys.argv) > 1):
          if arg != "help":
             print "Unknown program or workflow %s specified."%(arg)
          fail = True
-else:
-    availableWf = workflow.getSupportedWorkflows("%s/Utilities/workflows"%(METAMOS_ROOT), False)
-    for wf in availableWf:
-       enabledWorkflows.update(wf.getDerivedName())
-       packagesToInstall.update(wf.programList)
-
-    print "Installing %s metAMOS workflow"%(",".join(enabledWorkflows))
 
 if fail or help in sys.argv:
    print "Available workflows: %s"%(" ".join(workflows.keys()))
@@ -330,10 +328,10 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINET
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         archive = "kraken.tar.gz"
-        os.system("curl -L http://ccb.jhu.edu/software/kraken/dl/kraken-0.10.1-beta.tgz -o %s"%(archive))
+        os.system("curl -L http://ccb.jhu.edu/software/kraken/dl/kraken-0.10.3-beta.tgz -o %s"%(archive))
         os.system("rm -rf ./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.system("tar -xvzf %s"%(archive))
-        os.system("mv kraken-0.10.0-beta ./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        os.system("mv kraken-0.10.3-beta ./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.chdir("./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.system("./install_kraken.sh `pwd`/bin")
         os.chdir("%s"%(METAMOS_ROOT))
@@ -575,20 +573,17 @@ if "isolate" in enabledWorkflows or manual:
        os.environ["PATH"]=pathUpdate
     os.chdir("%s"%(METAMOS_ROOT))
 
-    if not os.path.exists("./CA") or 0:
+    if not os.path.exists("./CA"):
       if "ca" in packagesToInstall:
          dl = 'y'
       else:
          print "Celera Assembler binaries not found, optional for Assemble step, download now?"
          dl = raw_input("Enter Y/N: ")
       if dl == 'y' or dl == 'Y':
-          os.system("curl -L https://downloads.sourceforge.net/project/wgs-assembler/wgs-assembler/wgs-8.0/wgs-8.0.tar.bz2 -o wgs-8.0.tar.bz2")
-          os.system("curl -L https://github.com/samtools/samtools/archive/0.1.19.tar.gz -o samtools.tar.gz")
-          os.system("tar xvzf samtools.tar.gz")
-          os.system("tar xvjf wgs-8.0.tar.bz2")
-          os.system("rm -rf wgs-8.0.tar.bz2")
-          os.system("mv wgs-8.0 CA")
-          os.system("mv samtools-0.1.19 CA/samtools")
+          os.system("curl -L https://downloads.sourceforge.net/project/wgs-assembler/wgs-assembler/wgs-8.1/wgs-8.1.tar.bz2 -o wgs-8.1.tar.bz2")
+          os.system("tar xvjf wgs-8.1.tar.bz2")
+          os.system("rm -rf wgs-8.1.tar.bz2")
+          os.system("mv wgs-8.1 CA")
           # patch CA to support PacBio sequences and non-apple compilers on OSX
           if not ALLOW_FAST:
              os.system("cd CA/kmer/ && cp configure.sh configure.original")
@@ -914,9 +909,9 @@ if "isolate" in enabledWorkflows or manual:
              dl = raw_input("Enter Y/N: ")
           if dl == 'y' or dl == 'Y':
              if OSTYPE == "Darwin":
-	        os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc4_darwin12.5.0_x86_64_static.tar.bz2 -o mira.tar.bz2")
+	        os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc5_darwin13.0.0_x86_64_static.tar.bz2 -o mira.tar.bz2")
              else:
-                os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc4_linux-gnu_x86_64_static.tar.bz2 -o mira.tar.bz2")
+                os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc5_linux-gnu_x86_64_static.tar.bz2 -o mira.tar.bz2")
              os.system("tar xvjf mira.tar.bz2")
              os.system("rm -f mira.tar.bz2")
              os.system("mv `ls -d mira*` ./Utilities/cpp%s%s-%s%smira"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
@@ -1367,6 +1362,7 @@ except IOError:
 
 validate_install = 0
 if validate_install:
+    import check_install
     rt = check_install.validate_dir(METAMOS_ROOT,'required_file_list.txt')
     if rt == -1:
         print "MetAMOS not properly installed, please reinstall or contact development team for assistance"

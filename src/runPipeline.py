@@ -16,9 +16,9 @@ DEFAULT_KMER  = "31"
 ## Hardcode a default taxonomic classification level
 DEFAULT_TAXA_LEVEL = "class"
 sys.path.append(INITIAL_SRC)
-import check_install
 validate_install = 0
 if validate_install:
+    import check_install
     rt = check_install.validate_dir(sys.path[0].strip(),sys.path[0]+os.sep+'required_file_list.txt')
     if rt == -1:
         print "MetAMOS not properly installed, please reinstall or contact development team for assistance"
@@ -56,6 +56,7 @@ def usage():
     print "   -j = <bool>:   just output all of the programs and citations then exit (default = NO)"
     print "   -v = <bool>:   verbose output? (default = NO)"
     print "   -d = <string>: directory created by initPipeline (REQUIRED)"
+    print "   -w = <string>: workflow name (optional). Input parameters/data from workflow"
 
     print "\n[options]: [pipeline_opts] [misc_opts]"
     print "\n[pipeline_opts]: options that affect the pipeline execution"

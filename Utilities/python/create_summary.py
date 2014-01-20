@@ -382,7 +382,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
           contPercent = cont.read().split()
           cont.close()
           validate.br()
-          validate.add("<b>Sample may have contaminants, only %s%% assigned to %s. Check Annotate output</b>"%(contPercent[0], contPercent[1]))
+          validate.add("<b>Sample may have contaminants, only %s%% contigs/reads >%sbp assigned to %s. Check Annotate output</b>"%(contPercent[0], contPercent[2], contPercent[1]))
        validate.br()
        for line in laps:
           line = line.replace("\n","")

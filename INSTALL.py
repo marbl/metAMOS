@@ -328,7 +328,7 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINET
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         archive = "kraken.tar.gz"
-        os.system("curl -L http://ccb.jhu.edu/software/kraken/dl/kraken-0.10.3-beta.tgz -o %s"%(archive))
+        os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/kraken-0.10.3-beta.tgz -o %s"%(archive))
         os.system("rm -rf ./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.system("tar -xvzf %s"%(archive))
         os.system("mv kraken-0.10.3-beta ./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
@@ -351,7 +351,7 @@ if not os.path.exists("./Utilities/DB/kraken"):
        if (mem < 100):
           print "Insufficient memory to build full Kraken database. Requires at least 100GB of memory, using mini DB"
           archive = "minikraken.tgz"
-          os.system("curl -L http://ccb.jhu.edu/software/kraken/dl/%s -o %s"%(archive, archive))
+          os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -o %s"%(archive, archive))
           os.system("tar xvzf %s"%(archive))
           os.system("mv minikraken_* ./Utilities/DB/kraken")
           os.system("rm %s"%(archive))
@@ -864,7 +864,8 @@ if "isolate" in enabledWorkflows or manual:
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        masurca = utils.getFromPath("runSRCA.pl", "MaSuRCA", False)
-       if masurca == "" and OSTYPE != "Darwin":
+       if masurca == "":
+# and OSTYPE != "Darwin":
           if "masurca" in packagesToInstall:
              dl = 'y'
           else:
@@ -875,9 +876,9 @@ if "isolate" in enabledWorkflows or manual:
              if float(gccVersion) < 4.4:
                 print "Error: MaSuRCA requires gcc at least version 4.4, found version %s. Please update and try again"%(gccVersion)
              else:
-                os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/MaSuRCA-2.0.3.1.tar.gz -o msrca.tar.gz")
+                os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/MaSuRCA-2.2.0.tar.gz -o msrca.tar.gz")
                 os.system("tar xvzf msrca.tar.gz")
-                os.system("mv ./MaSuRCA-2.0.3.1 ./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+                os.system("mv ./MaSuRCA-2.2.0 ./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
                 os.chdir("./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
                 os.system("cp install.sh install.orig")
                 os.system("cat install.orig |sed s/\-\-prefix/\-\-disable\-shared\ \-\-prefix/g > install.sh")
@@ -896,7 +897,7 @@ if "isolate" in enabledWorkflows or manual:
                 os.system("rm CA/kmer/makepath")
                 os.system("bash install.sh")
                 os.chdir("%s"%(METAMOS_ROOT))
-                os.system("rm -rf ./MaSuRCA-2.0.3.1")
+                os.system("rm -rf ./MaSuRCA-2.2.0")
                 os.system("rm msrca.tar.gz")
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%smira"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
@@ -909,9 +910,9 @@ if "isolate" in enabledWorkflows or manual:
              dl = raw_input("Enter Y/N: ")
           if dl == 'y' or dl == 'Y':
              if OSTYPE == "Darwin":
-	        os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc5_darwin13.0.0_x86_64_static.tar.bz2 -o mira.tar.bz2")
+	        os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/mira_4.0rc5_darwin13.0.0_x86_64_static.tar.bz2 -o mira.tar.bz2")
              else:
-                os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc5_linux-gnu_x86_64_static.tar.bz2 -o mira.tar.bz2")
+                os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/mira_4.0rc5_linux-gnu_x86_64_static.tar.bz2 -o mira.tar.bz2")
              os.system("tar xvjf mira.tar.bz2")
              os.system("rm -f mira.tar.bz2")
              os.system("mv `ls -d mira*` ./Utilities/cpp%s%s-%s%smira"%(os.sep, OSTYPE, MACHINETYPE, os.sep))

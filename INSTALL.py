@@ -546,7 +546,7 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%ssra"%(os.sep, OSTYPE, MACHINETYPE
            os.system("mv sratoolkit.2.3.3-3-* ./Utilities/cpp%s%s-%s%ssra"%(os.sep, OSTYPE, MACHINETYPE, os.sep)) 
            os.system("rm -rf sra.tar.gz")
 
-if "isolate" in enabledWorkflows or "iMetAMOS" in enabledWorkflows or manual:
+if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
     # check for cmake
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
@@ -905,7 +905,7 @@ if "isolate" in enabledWorkflows or "iMetAMOS" in enabledWorkflows or manual:
                       testIn = open("bin/expand_fastq.orig", 'r')
                       testOut = open("bin/expand_fastq", 'w')
                       for line in testIn.xreadlines():
-                         if "^case" in line:
+                         if "case $(file" in line:
                             testOut.write("case $(file -b --mime \"$FILE\" |awk '{print $1}'|sed s/\\;//g) in\n")
                          else:
                             testOut.write(line.strip() + "\n")

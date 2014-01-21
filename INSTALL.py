@@ -546,7 +546,7 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%ssra"%(os.sep, OSTYPE, MACHINETYPE
            os.system("mv sratoolkit.2.3.3-3-* ./Utilities/cpp%s%s-%s%ssra"%(os.sep, OSTYPE, MACHINETYPE, os.sep)) 
            os.system("rm -rf sra.tar.gz")
 
-if "isolate" in enabledWorkflows or manual:
+if "isolate" in enabledWorkflows or "iMetAMOS" in enabledWorkflows or manual:
     # check for cmake
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
@@ -896,6 +896,24 @@ if "isolate" in enabledWorkflows or manual:
                    os.system("cd SuperReads-0.3.2/src && cat runSRCA.original |sed s/head\ \-q/head/g > runSRCA.pl")
                 os.system("rm CA/kmer/makepath")
                 os.system("bash install.sh")
+                fileOptions = utils.getCommandOutput("file -b --mime-type INSTALL.py", False)
+                if fileOptions == "":
+                   fileOptions = utils.getCommandOutput("file -b --mime INSTALL.py", False)
+                   if fileOptions != "":
+                      # fix file command used by MaSuRCA, its not compatible with the system
+                      os.system("cp bin/expand_fastq bin/expand_fastq.orig")
+                      testIn = open("bin/expand_fastq.orig", 'r')
+                      testOut = open("bin/expand_fastq", 'w')
+                      for line in testIn.xreadlines():
+                         if "^case" in line:
+                            testOut.write("case $(file -b --mime \"$FILE\" |awk '{print $1}'|sed s/\\;//g) in\n")
+                         else:
+                            testOut.write(line.strip() + "\n")
+                      testIn.close()
+                      testOut.close()
+                   else:
+                      os.chdir("%s"%(METAMOS_ROOT))
+                      os.stem("rm -rf ./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
                 os.chdir("%s"%(METAMOS_ROOT))
                 os.system("rm -rf ./MaSuRCA-2.2.0")
                 os.system("rm msrca.tar.gz")

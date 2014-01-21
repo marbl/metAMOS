@@ -887,14 +887,28 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
                    os.system("cd CA/kmer/ && cp configure.sh configure.original")
                    os.system("cd CA/kmer/ && cat configure.original |sed s/\-fast//g > configure.sh")
                 if not HAVE_RT:
-                   os.system("cd SuperReads-0.3.2/ && cp Makefile.am Makefile.am.original")
-                   os.system("cd SuperReads-0.3.2/ && cat Makefile.am.original |sed s/\-lrt//g > Makefile.am")
-                   os.system("cd SuperReads-0.3.2/ && cp Makefile.in Makefile.in.original")
-                   os.system("cd SuperReads-0.3.2/ && cat Makefile.in.original |sed s/\-lrt//g > Makefile.in")
+                   os.system("cd SuperReads/ && cp Makefile.am Makefile.am.original")
+                   os.system("cd SuperReads/ && cat Makefile.am.original |sed s/\-lrt//g > Makefile.am")
+                   os.system("cd SuperReads/ && cp Makefile.in Makefile.in.original")
+                   os.system("cd SuperReads/ && cat Makefile.in.original |sed s/\-lrt//g > Makefile.in")
                 if not HAVE_QUIET_HEAD:
-                   os.system("cd SuperReads-0.3.2/src && cp runSRCA.pl runSRCA.original")
-                   os.system("cd SuperReads-0.3.2/src && cat runSRCA.original |sed s/head\ \-q/head/g > runSRCA.pl")
-                os.system("rm CA/kmer/makepath")
+                   os.system("cd SuperReads/src && cp runSRCA.pl runSRCA.original")
+                   os.system("cd SuperReads/src && cat runSRCA.original |sed s/head\ \-q/head/g > runSRCA.pl")
+                os.system("rm -f CA/kmer/makepath")
+
+                # fix compilation on OSX
+                if OSTYPE == "Darwin":
+                   os.system("cp SuperReads/include/reallocators.hpp SuperReads/include/reallocators.hpp.orig")
+                   testIn = open("SuperReads/include/reallocators.hpp.orig", 'r')
+                   testOut = open("SuperReads/include/reallocators.hpp", 'w')
+                   for line in testIn.xreadlines():
+                      if "T* res = reallocator<T>::operator()(" in line:
+                         testOut.write("T* res = reallocator<T>::realloc(ptr, osize, nsize);\n")
+                      else:
+                         testOut.write(line.strip() + "\n")
+                   testIn.close()
+                   testOut.close()
+
                 os.system("bash install.sh")
                 fileOptions = utils.getCommandOutput("file -b --mime-type INSTALL.py", False)
                 if fileOptions == "":

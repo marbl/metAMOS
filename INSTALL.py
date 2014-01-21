@@ -927,7 +927,11 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
                       testOut.close()
                    else:
                       os.chdir("%s"%(METAMOS_ROOT))
-                      os.stem("rm -rf ./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+                      os.system("rm -rf ./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+                # update path to CA which is always hardcoded to Linux-amd64
+                os.system("cp bin/masurca bin/masurca.orig")
+                os.system("cat bin/masurca.orig | sed s/Linux-amd64/%s-%s/g |sed s/check_exec\\(\\\"jellyfish\\\"/check_exec\\(\\\"jellyfish-2.0\\\"/g > bin/masurca"%(OSTYPE, MACHINETYPE.replace("x86_64", "amd64")))
+
                 os.chdir("%s"%(METAMOS_ROOT))
                 os.system("rm -rf ./MaSuRCA-2.2.0")
                 os.system("rm msrca.tar.gz")

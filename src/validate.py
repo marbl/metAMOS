@@ -31,7 +31,7 @@ def init(reads, skipsteps, validators, scoreType):
 
    _readlibs = reads
    _skipsteps = skipsteps
-   _scores = "%s"%(scoreType)
+   _scores = set(scoreType.strip().split(","))
    _validators = set(validators.strip().split(","))
 
 def minScore():

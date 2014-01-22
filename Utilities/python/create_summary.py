@@ -358,17 +358,17 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     firstScore = True
     bestAsm = ""
     refs = [] 
-    if os.path.exists("%s/Postprocess/out/lap.scores"%(MA_dir)):
+    if os.path.exists("%s/Postprocess/out/asm.scores"%(MA_dir)):
        best = open("%s/Postprocess/out/best.asm"%(MA_dir), 'r')
        bestAsm = best.read()
        best.close()
-       laps = open("%s/Postprocess/out/lap.scores"%(MA_dir), 'r')
+       laps = open("%s/Postprocess/out/asm.scores"%(MA_dir), 'r')
        validate = markup.page()
        validate.init(css="style.css", bodyattrs={'style':"background-color:#FFFFFF;"})
        validate.p()
        validate.add("<div class=\"datagrid\">")
        validate.add("Selected assembler: %s"%(bestAsm))
-       ref = open("%s/Postprocess/out/ref.asm"%(MA_dir), 'r')
+       ref = open("%s/Postprocess/out/ref.name"%(MA_dir), 'r')
        first = True
        for r in ref.xreadlines():
            refs.append(r)

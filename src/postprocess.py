@@ -219,6 +219,7 @@ def Postprocess(input,output):
    # add links to assembled contigs and scaffolds
    run_process(_settings, "cp %s/Scaffold/out/%s.linearize.scaffolds.final %s/Postprocess/out/%s.scf.fa"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Postprocess")
    run_process(_settings, "cp %s/Scaffold/out/%s.contigs %s/Postprocess/out/%s.ctg.fa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
+   run_process(_settings, "cp %s/Scaffold/out/%s.motifs.fa %s/Postprocess/out/%s.motifs"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
    run_process(_settings, "ln -s %s/Scaffold/in/%s.bnk %s/Postprocess/out/"%(_settings.rundir,_settings.PREFIX,_settings.rundir),"Postprocess")
 
    # add links to sequence info

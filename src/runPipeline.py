@@ -90,7 +90,7 @@ def usage():
     print "   -x = <int>>:   min contig coverage to use for ORF call (default = 3X)"
     print "[Validate]"
     print "   -X = <string>: comma-separated list of validators to run on the assembly. (default = %s, supported = %s)"%(selected_programs["validate"], ",".join(supported_programs["validate"]))
-    print "   -S = <string>: comma-separated list of scores to use to select the winning assembly. By default, all validation tools specified by -X will be run. For each score, an optional weight can be specified as SCORE:WEIGHT. For example, LAP:1,CGAL:2 (supported = %s)"%(",".join(utils.SCORE_TYPE.reverse_mapping.values()))
+    print "   -S = <string>: comma-separated list of scores to use to select the winning assembly. By default, all validation tools specified by -X will be run. For each score, an optional weight can be specified as SCORE:WEIGHT. For example, LAP:1,CGAL:2 (supported = %s)"%(",".join(utils.SCORE_TYPE.reverse_mapping.values()).lower())
     print "[Annotate]"
     print "   -c = <string>: classifier to use for annotation (default = %s, supported = %s"%(selected_programs["annotate"], ",".join(supported_programs["annotate"]))
     print "   -u = <bool>:   annotate unassembled reads? (default = NO)"

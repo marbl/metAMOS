@@ -863,9 +863,8 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("rm -rf gapcloser.tar.gz")
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
-       masurca = utils.getFromPath("runSRCA.pl", "MaSuRCA", False)
+       masurca = utils.getFromPath("masurca", "MaSuRCA", False)
        if masurca == "":
-# and OSTYPE != "Darwin":
           if "masurca" in packagesToInstall:
              dl = 'y'
           else:
@@ -892,8 +891,8 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
                    os.system("cd SuperReads/ && cp Makefile.in Makefile.in.original")
                    os.system("cd SuperReads/ && cat Makefile.in.original |sed s/\-lrt//g > Makefile.in")
                 if not HAVE_QUIET_HEAD:
-                   os.system("cd SuperReads/src && cp runSRCA.pl runSRCA.original")
-                   os.system("cd SuperReads/src && cat runSRCA.original |sed s/head\ \-q/head/g > runSRCA.pl")
+                   os.system("cd SuperReads/src && cp masurca masurca.original")
+                   os.system("cd SuperReads/src && cat masurca.original |sed s/head\ \-q/head/g > masurca")
                 os.system("rm -f CA/kmer/makepath")
 
                 # fix compilation on OSX
@@ -931,6 +930,10 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
                 # update path to CA which is always hardcoded to Linux-amd64
                 os.system("cp bin/masurca bin/masurca.orig")
                 os.system("cat bin/masurca.orig | sed s/Linux-amd64/%s-%s/g |sed s/check_exec\\(\\\"jellyfish\\\"/check_exec\\(\\\"jellyfish-2.0\\\"/g > bin/masurca"%(OSTYPE, MACHINETYPE.replace("x86_64", "amd64")))
+
+                if OSTYPE == "Darwin":
+                   os.system("cp bin/masurca bin/masurca.orig")
+                   os.system("cat bin/masurca.orig | sed  s/\\(\\'..TOTAL_READS\\'/\\(\\\\\\\\\\$ENV{\\'TOTAL_READS\\'}/g| sed s/'<..$NUM_SUPER_READS.'/\"<ENVIRON[\\'NUM_SUPER_READS\\']\"/g | sed s/'>=..$NUM_SUPER_READS.'/\">=ENVIRON[\\'NUM_SUPER_READS\\']\"/g > bin/masurca")
 
                 os.chdir("%s"%(METAMOS_ROOT))
                 os.system("rm -rf ./MaSuRCA-2.2.0")
@@ -988,6 +991,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("tar xvzf gsl.tar.gz")
              os.system("mv gsl-1.16 ea-utils.1.1.2-537/gsl")
              os.system("mv ea-utils.1.1.2-537 ./Utilities/cpp%s%s-%s%seautils"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("rm ea-utils.1.1.2-537/tidx/utils.cpp")
              os.chdir("./Utilities/cpp%s%s-%s%seautils/gsl"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("./configure --prefix=`pwd`/build")
              os.system("make")

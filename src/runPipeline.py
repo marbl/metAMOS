@@ -45,6 +45,7 @@ skipsteps = ["FindRepeats"]
 isolate_genome = False
 userKmerSupplied = False
 asmScores = "%d"%(utils.SCORE_TYPE.LAP)
+userScoresSupplied = False
 asmScoreWeights = dict()
 
 ## Get start time
@@ -87,6 +88,9 @@ def usage():
     print "   -g = <string>: gene caller to use (default = %s, supported = %s)"%(selected_programs["findorfs"], ",".join(supported_programs["findorfs"]))
     print "   -l = <int>:    min contig length to use for ORF call (default = 300)"
     print "   -x = <int>>:   min contig coverage to use for ORF call (default = 3X)"
+    print "[Validate]"
+    print "   -X = <string>: comma-separated list of validators to run on the assembly. (default = %s, supported = %s)"%(selected_programs["validate"], ",".join(supported_programs["validate"]))
+    print "   -S = <string>: comma-separated list of scores to use to select the winning assembly. By default, all validation tools specified by -X will be run. For each score, an optional weight can be specified as SCORE:WEIGHT. For example, LAP:1,CGAL:2 (supported = %s)"%(",".join(utils.SCORE_TYPE.reverse_mapping.values()))
     print "[Annotate]"
     print "   -c = <string>: classifier to use for annotation (default = %s, supported = %s"%(selected_programs["annotate"], ",".join(supported_programs["annotate"]))
     print "   -u = <bool>:   annotate unassembled reads? (default = NO)"
@@ -627,6 +631,8 @@ for o, a in opts:
 
        if asmScores == "":
           asmScores = "%d"%(utils.SCORE_TYPE.LAP)
+       else:
+          userScoresSupplied = True
 
     elif o in ("-X", "--validator"):
         validators = a.lower().split(",")
@@ -847,12 +853,13 @@ if __name__ == "__main__":
        if "bowtie2" == selected_programs["mapreads"]:
           selected_programs["mapreads"] = "bowtie"
 
-    for validator in selected_programs["validate"].split(","):
-       validator = validator.upper()
-       if (validator not in utils.SCORE_TYPE.mapping):
-          continue
-       if str(utils.SCORE_TYPE.mapping[validator]) not in asmScores:
-          asmScores = "%s,%s"%(asmScores, utils.SCORE_TYPE.mapping[validator])
+    if userScoresSupplied == False:
+       for validator in selected_programs["validate"].split(","):
+          validator = validator.upper()
+          if (validator not in utils.SCORE_TYPE.mapping):
+             continue
+          if str(utils.SCORE_TYPE.mapping[validator]) not in asmScores:
+             asmScores = "%s,%s"%(asmScores, utils.SCORE_TYPE.mapping[validator])
 
     for asmScore in asmScores.split(","):
        if int(asmScore) == utils.SCORE_TYPE.ALL:

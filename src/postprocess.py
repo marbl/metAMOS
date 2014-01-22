@@ -116,8 +116,8 @@ def Postprocess(input,output):
    run_process(_settings, "unlink %s/Postprocess/out/%s.classified"%(_settings.rundir, _settings.taxa_level), "Postprocess")
    run_process(_settings, "ln -s %s/Classify/out %s/Postprocess/out/%s.classified"%(_settings.rundir, _settings.rundir, _settings.taxa_level), "Postprocess")
 
-   run_process(_settings, "unlink %s/Postporocess/out/lap.scores"%(_settings.rundir), "Postprocess")
-   run_process(_settings, "ln %s/Validate/out/%s.lap %s/Postprocess/out/lap.scores"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
+   run_process(_settings, "unlink %s/Postporocess/out/asm.scores"%(_settings.rundir), "Postprocess")
+   run_process(_settings, "ln %s/Validate/out/%s.lap %s/Postprocess/out/asm.scores"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
    run_process(_settings, "unlink %s/Postporocess/out/best.asm"%(_settings.rundir), "Postprocess")
    run_process(_settings, "ln %s/Validate/out/%s.asm.selected %s/Postprocess/out/best.asm"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
 
@@ -249,13 +249,15 @@ def Postprocess(input,output):
    run_process(_settings, "ln %s/Postprocess/out/abundance.krona.html %s/Postprocess/out/html/Abundance.html"%(_settings.rundir, _settings.rundir), "Postprocess")
 
    if os.path.exists("%s/Validate/out/%s.ref.selected"%(_settings.rundir, _settings.PREFIX)):
-      run_process(_settings, "unlink %s/Postprocess/out/ref.asm"%(_settings.rundir), "Postprocess")
-      run_process(_settings, "ln %s/Validate/out/%s.ref.selected %s/Postprocess/out/ref.asm"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
+      run_process(_settings, "unlink %s/Postprocess/out/ref.name"%(_settings.rundir), "Postprocess")
+      run_process(_settings, "ln %s/Validate/out/%s.ref.selected %s/Postprocess/out/ref.name"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
+      run_process(_settings, "unlink %s/Postprocess/out/ref.fasta"%(_settings.rundir), "Postprocess")
+      run_process(_settings, "ln %s/Validate/out/%s.ref.fasta %s/Postprocess/out/ref.fasta"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
       run_process(_settings, "unlink %s/Postporocess/out/html/quast"%(_settings.rundir), "Postprocess")
       if os.path.exists("%s/Validate/out/quast"%(_settings.rundir)):
          run_process(_settings, "cp -r %s/Validate/out/quast %s/Postprocess/out/html/quast"%(_settings.rundir,  _settings.rundir), "Postprocess")
    else:
-      run_process(_settings, "touch %s/Postprocess/out/ref.asm"%(_settings.rundir), "Postprocess")
+      run_process(_settings, "touch %s/Postprocess/out/ref.name"%(_settings.rundir), "Postprocess")
 
    if os.path.exists("%s/Assemble/out/%s_report.html"%(_settings.rundir, _settings.PREFIX)):
       run_process(_settings, "unlink %s/Postprocess/out/html/kmergenie_report.html"%(_settings.rundir), "Postprocess")

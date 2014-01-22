@@ -847,11 +847,18 @@ if __name__ == "__main__":
        if "bowtie2" == selected_programs["mapreads"]:
           selected_programs["mapreads"] = "bowtie"
 
+    for validator in selected_programs["validate"].split(","):
+       validator = validator.upper()
+       if (validator not in utils.SCORE_TYPE.mapping):
+          continue
+       if str(utils.SCORE_TYPE.mapping[validator]) not in asmScores:
+          asmScores = "%s,%s"%(asmScores, utils.SCORE_TYPE.mapping[validator])
+
     for asmScore in asmScores.split(","):
        if int(asmScore) == utils.SCORE_TYPE.ALL:
           selected_programs["validate"] = ",".join(supported_programs["validate"])
        elif utils.SCORE_TYPE.reverse_mapping[int(asmScore)].lower() not in selected_programs["validate"]:
-          selected_programs["validate"] = "%s,%s"%(selected_programs["validate"], asmScore.lower())
+          selected_programs["validate"] = "%s,%s"%(selected_programs["validate"], utils.SCORE_TYPE.reverse_mapping[int(asmScore)].lower())
 
     # intialize weights
     utils.initValidationScores(asmScoreWeights)

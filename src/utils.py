@@ -1267,8 +1267,8 @@ def getEstimatedGenomeSize(settings):
 def getVersion():
    #look for pattern like: MetAMOS [VERSION] README
    version = "UNKNOWN"
-   if os.path.exists("%s%sREADME"%(sys.path[0], os.sep)):
-      readme_file = open("%s%sREADME"%(sys.path[0], os.sep), 'r')
+   if os.path.exists("%s%sREADME.md"%(sys.path[0], os.sep)):
+      readme_file = open("%s%sREADME.md"%(sys.path[0], os.sep), 'r')
       for line in readme_file.xreadlines():
          if "# MetAMOS" in line:
             version = line.strip().split("# MetAMOS")[1]

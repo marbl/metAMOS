@@ -116,9 +116,9 @@ def Postprocess(input,output):
    run_process(_settings, "unlink %s/Postprocess/out/%s.classified"%(_settings.rundir, _settings.taxa_level), "Postprocess")
    run_process(_settings, "ln -s %s/Classify/out %s/Postprocess/out/%s.classified"%(_settings.rundir, _settings.rundir, _settings.taxa_level), "Postprocess")
 
-   run_process(_settings, "unlink %s/Postporocess/out/asm.scores"%(_settings.rundir), "Postprocess")
+   run_process(_settings, "unlink %s/Postprocess/out/asm.scores"%(_settings.rundir), "Postprocess")
    run_process(_settings, "ln %s/Validate/out/%s.lap %s/Postprocess/out/asm.scores"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
-   run_process(_settings, "unlink %s/Postporocess/out/best.asm"%(_settings.rundir), "Postprocess")
+   run_process(_settings, "unlink %s/Postprocess/out/best.asm"%(_settings.rundir), "Postprocess")
    run_process(_settings, "ln %s/Validate/out/%s.asm.selected %s/Postprocess/out/best.asm"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
 
    #command to open webbrowser?
@@ -219,8 +219,16 @@ def Postprocess(input,output):
    # add links to assembled contigs and scaffolds
    run_process(_settings, "cp %s/Scaffold/out/%s.linearize.scaffolds.final %s/Postprocess/out/%s.scf.fa"%(_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Postprocess")
    run_process(_settings, "cp %s/Scaffold/out/%s.contigs %s/Postprocess/out/%s.ctg.fa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
-   run_process(_settings, "cp %s/Scaffold/out/%s.motifs.fa %s/Postprocess/out/%s.motifs"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
+   run_process(_settings, "cp %s/Scaffold/out/%s.motifs %s/Postprocess/out/%s.motifs.fa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
    run_process(_settings, "ln -s %s/Scaffold/in/%s.bnk %s/Postprocess/out/"%(_settings.rundir,_settings.PREFIX,_settings.rundir),"Postprocess")
+
+   # add links to orfs
+   if os.path.exists("%s/FindORFS/out/%s.faa"%(_settings.rundir, _settings.PREFIX)):
+      run_process(_settings, "ln %s/FindORFS/out/%s.fna %s/Postprocess/out/%s.orf.fna"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
+      run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/Postprocess/out/%s.orf.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
+   if os.path.exists("%s/FindScaffoldORFS/out/%s.faa"%(_settings.rundir, _settings.PREFIX)):
+      run_process(_settings, "ln %s/FindScaffoldORFS/out/%s.fna %s/Postprocess/out/%s.scf.orf.fna"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
+      run_process(_settings, "ln %s/FindScaffoldORFS/out/%s.faa %s/Postprocess/out/%s.scf.orf.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
 
    # add links to sequence info
    for lib in _readlibs:

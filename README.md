@@ -1,15 +1,14 @@
 [![githalytics.com alpha](https://cruel-carlota.pagodabox.com/50642308f8120a4dd17e617e46cc21b1 "githalytics.com")](http://githalytics.com/treangen/metAMOS)
-# MetAMOS v1.5 "Brownie" README
+# MetAMOS v1.3 "Brownie" README
 Last updated: January 31st, 2014
 ***********************************************************************************
 We are happy to announce version 1.5, a.k.a. Brownie
 
 ## NEWS
-       1. iMetAMOS now available.
-       2. Updated 64-bit frozen Linux binary now available (fixed FastQC issue)
-       3. SRA run identifiers supported.
-       4. Remote input files, as well as compressed input files are supported.
-       5. Numerous bug fixes
+       1. Updated 64-bit frozen Linux binary now available (fixed FastQC issue)
+       2. SRA run identifiers supported.
+       3. Remote input files, as well as compressed input files are supported.
+       4. Numerous bug fixes
 
 *on deck: kmher, and Viritas
 

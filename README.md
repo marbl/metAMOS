@@ -30,8 +30,8 @@ We are happy to announce version 1.3, a.k.a. Candied Bacon
 *on deck: kmher, and Viritas
 
 -----------------------------------------------------------------------------------
-## MetAMOS single file binary ## [TOC](#table-of-contents)
-
+[TOC](#table-of-contents)
+## MetAMOS single file binary ## 
 In attempt to further simplify the MetAMOS installation process, we are happy to announce the availability of a 'frozen' MetAMOS binary for Linux-x68_64 platforms. Along with this binary comes a significantly reduced list of prerequisites:
 
 * Java 1.6 (or newer)
@@ -56,8 +56,8 @@ The revised installation procedure is simply:
 Mac OSX equivalent will be soon appearing [here](http://www.cbcb.umd.edu/confcour/temp/metAMOS_binary_noblastdbs_osx.tar.gz) 
 
 ----------------------------------------------------------------------------------
-
-## SUMMARY [TOC](#table-of-contents)
+[TOC](#table-of-contents)
+## SUMMARY ##  
         A) HARDWARE REQUIREMENTS
         B) SOFTWARE REQUIREMENTS
         C) INSTALLING MetAMOS
@@ -70,7 +70,8 @@ Mac OSX equivalent will be soon appearing [here](http://www.cbcb.umd.edu/confcou
         J) CITE
 
 ----------------------------------------------------------------------------------
-### A) HARDWARE REQUIREMENTS [TOC](#table-of-contents)
+[TOC](#table-of-contents)
+### A) HARDWARE REQUIREMENTS 
 
 MetAMOS was designed to work on any standard 64bit Linx
 environment. To use MetAMOS for tutorial/teaching purposes, a minimum
@@ -81,7 +82,8 @@ million read datasets, 64 GB is a good place to start (128 GB of memory now
 available on High Memory Instance at Amazon Elastic Compute Cloud ). 
 
 ----------------------------------------------------------------------------------
-### B) SOFTWARE REQUIREMENTS [TOC](#table-of-contents)
+[TOC](#table-of-contents)
+### B) SOFTWARE REQUIREMENTS 
 
 The main prequisite software is python2.6+ and AMOS (available from
 http://amos.sf.net). Once python2.6+ and AMOS are installed, there
@@ -108,7 +110,8 @@ visit: http://exon.gatech.edu/license_download.cgi. Once the tool is installed,
 add it to your PATH variable and metAMOS will then enable its use in the pipeline.
 
 ----------------------------------------------------------------------------------
-### C) INSTALLING MetAMOS [TOC](#table-of-contents)
+[TOC](#table-of-contents)
+### C) INSTALLING MetAMOS 
 
 To download the software release package, go [here](https://github.com/treangen/metAMOS/archive/Release1.3.zip).
 You can also browse the [repository](https://github.com/treangen/MetAMOS/tree/Release1.3)
@@ -142,7 +145,8 @@ If all dependencies are downloaded (including optional/deprecated ones), this wi
 quite awhile to complete (plan on a few hours to 2 days).
 
 ----------------------------------------------------------------------------------
-### D) QUICK START [TOC](#table-of-contents)
+[TOC](#table-of-contents)
+### D) QUICK START 
 
 Before you get started using MetAMOS/iMetAMOS a brief review of its design will
 help clarify its intended use. MetAMOS gas two main components:
@@ -342,6 +346,7 @@ comparative plots.
 
 
 ----------------------------------------------------------------------------------
+[TOC](#table-of-contents)
 ### E) WORKFLOWS
 
 A workflow is a text-file that specified command-line options and input sequences
@@ -392,6 +397,7 @@ lib1f2: /Users/skoren/Personal/Research/metAMOS/Test/carsonella_pe.2.fna.gz,2000
 Workflows may be shared between users, as long as the input files are accessible (i.e. they are on a remote server on the systems share a filesystem). Workflow files should be placed in the metAMOS/workflows directory or the working directory where metAMOS is launched.
 
 ----------------------------------------------------------------------------------
+[TOC](#table-of-contents)
 ### F) GENERIC TOOLS
 
 MetAMOS allows new tools to be added to the ASSEMBLE and ANNOTATE steps without requiring code changes. The addition of a tool is a three-step process. 
@@ -529,6 +535,7 @@ The currently supported list of keywords:
 *   TECHNOLOGY - the type of sequencing data (454, Illumina, etc) 
 
 ----------------------------------------------------------------------------------
+[TOC](#table-of-contents)
 ### G) Test suite
 
 We have developed a set of scripts for testing the various features of
@@ -587,6 +594,7 @@ is a brief listing of the test scripts we currently include:
 ..more on the way!
 
 ----------------------------------------------------------------------------------
+[TOC](#table-of-contents)
 ### H) Example output
 
 MetAMOS generates an interactive webpage once a run successfully completes:
@@ -716,7 +724,8 @@ Sep 30;12:385.  PMID: 21961884
 [3] Wood DE, Salzberg SL. Rapid phylogenetic sequence classification through repeated exact alignment. In preparation.
 
 ----------------------------------------------------------------------------------
-### I) BUGS
+[TOC](#table-of-contents)
+### I) CONTACT
 
 If you encounter any problems/bugs, please check the known issues pages:
 https://github.com/treangen/MetAMOS/issues?direction=desc&sort=created&state=open
@@ -727,6 +736,7 @@ by submitting a new issue online. Please include information on your run,
 any output produced by runPipeline, as well as the pipeline.* files and the 
 Log/<LAST_STEP> file (if not too large).
 
+[TOC](#table-of-contents)
 ### J) CONTACT
 
 Who to contact to report bugs, forward complaints, feature requests:
@@ -735,6 +745,7 @@ Todd Treangen: treangen@gmail.com
 Sergey Koren: sergek@umd.edu
 
 ----------------------------------------------------------------------------------
+[TOC](#table-of-contents)
 ### K) CITE
 
 Treangen TJ\*, Koren S\*, Sommer DD, Liu B, Astrovskaya I, Ondov B,
@@ -746,4 +757,5 @@ url: http://genomebiology.com/content/pdf/gb-2013-14-1-r2.pdf
 
 *Indicates both authors contributed equally to this work
 
+[TOC](#table-of-contents)
 ## END

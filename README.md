@@ -1,8 +1,8 @@
 [![githalytics.com alpha](https://cruel-carlota.pagodabox.com/50642308f8120a4dd17e617e46cc21b1 "githalytics.com")](http://githalytics.com/treangen/metAMOS)
-# MetAMOS v1.3 "Brownie" README
-Last updated: January 31st, 2014
+# MetAMOS v1.3 "Candied Bacon" README
+Last updated: January 23rd 2014
 ***********************************************************************************
-We are happy to announce version 1.5, a.k.a. Brownie
+We are happy to announce version 1.3, a.k.a. Candied Bacon
 
 ## NEWS
        1. Updated 64-bit frozen Linux binary now available (fixed FastQC issue)

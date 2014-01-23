@@ -7,18 +7,18 @@ We are happy to announce version 1.3, a.k.a. Candied Bacon
 ## Table of Contents ##
 
 - [NEWS](#news)
-- [MetAMOS single file binary](#MetAMOS-single-file-binary)
-- [SUMMARY](#SUMMARY)
-    - [HARDWARE REQUIREMENTS](#hardware)
-    - [SOFTWARE REQUIREMENTS](#sofware)
-    - [INSTALLING METAMOS](#install)
-    - [QUICK START](#quickstart)
-    - [WORKFLOWS](#workflows)
-    - [GENERIC TOOL](#generic)
-    - [TEST SUITE](#test)
-    - [EXAMPLE OUTPUT](#example)
-    - [CONTACT](#contact)
-    - [CITING](#cite)
+- [MetAMOS single file binary](#metamos-single-file-binary)
+- [SUMMARY](#summary)
+    - [HARDWARE REQUIREMENTS](#a-hardware-requirements)
+    - [SOFTWARE REQUIREMENTS](#b-software-requirements)
+    - [INSTALLING METAMOS](#c-installing-metamos)
+    - [QUICK START](#d-quick-start)
+    - [WORKFLOWS](#e-workflows)
+    - [GENERIC TOOL](#f-generic-tools)
+    - [TEST SUITE](#g-test-suite)
+    - [EXAMPLE OUTPUT](#h-example-output)
+    - [CONTACT](#i-contact)
+    - [CITE](#j-cite)
 - [END](#end)
 
 ## NEWS
@@ -67,7 +67,7 @@ Mac OSX equivalent will be soon appearing [here](http://www.cbcb.umd.edu/confcou
         G) TEST SUITE
         H) EXAMPLE OUTPUT
         I) CONTACT
-        J) CITING
+        J) CITE
 
 ----------------------------------------------------------------------------------
 ### A) HARDWARE REQUIREMENTS
@@ -745,3 +745,5 @@ metagenomic assembly and analysis pipeline. Genome Biol. 2013 Jan
 url: http://genomebiology.com/content/pdf/gb-2013-14-1-r2.pdf
 
 *Indicates both authors contributed equally to this work
+
+## END

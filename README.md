@@ -4,6 +4,23 @@ Last updated: January 23rd 2014
 ***********************************************************************************
 We are happy to announce version 1.3, a.k.a. Candied Bacon
 
+## Table of Contents ##
+
+- [NEWS](#news)
+- [MetAMOS single file binary](#MetAMOS-single-file-binary)
+- [SUMMARY](#SUMMARY)
+    - [HARDWARE REQUIREMENTS](#hardware)
+    - [SOFTWARE REQUIREMENTS](#sofware)
+    - [INSTALLING METAMOS](#install)
+    - [QUICK START](#quickstart)
+    - [WORKFLOWS](#workflows)
+    - [GENERIC TOOL](#generic)
+    - [TEST SUITE](#test)
+    - [EXAMPLE OUTPUT](#example)
+    - [CONTACT](#contact)
+    - [CITING](#cite)
+- [END](#end)
+
 ## NEWS
        1. Updated 64-bit frozen Linux binary now available (fixed FastQC issue)
        2. SRA run identifiers supported.
@@ -13,7 +30,7 @@ We are happy to announce version 1.3, a.k.a. Candied Bacon
 *on deck: kmher, and Viritas
 
 -----------------------------------------------------------------------------------
-## **MetAMOS single file binary**
+## MetAMOS single file binary ##
 
 In attempt to further simplify the MetAMOS installation process, we are happy to announce the availability of a 'frozen' MetAMOS binary for Linux-x68_64 platforms. Along with this binary comes a significantly reduced list of prerequisites:
 

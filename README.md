@@ -30,7 +30,7 @@ We are happy to announce version 1.3, a.k.a. Candied Bacon
 *on deck: kmher, and Viritas
 
 -----------------------------------------------------------------------------------
-## MetAMOS single file binary ##
+## MetAMOS single file binary ## [TOC](#table-of-contents)
 
 In attempt to further simplify the MetAMOS installation process, we are happy to announce the availability of a 'frozen' MetAMOS binary for Linux-x68_64 platforms. Along with this binary comes a significantly reduced list of prerequisites:
 
@@ -57,7 +57,7 @@ Mac OSX equivalent will be soon appearing [here](http://www.cbcb.umd.edu/confcou
 
 ----------------------------------------------------------------------------------
 
-## SUMMARY
+## SUMMARY [TOC](#table-of-contents)
         A) HARDWARE REQUIREMENTS
         B) SOFTWARE REQUIREMENTS
         C) INSTALLING MetAMOS
@@ -70,7 +70,7 @@ Mac OSX equivalent will be soon appearing [here](http://www.cbcb.umd.edu/confcou
         J) CITE
 
 ----------------------------------------------------------------------------------
-### A) HARDWARE REQUIREMENTS
+### A) HARDWARE REQUIREMENTS [TOC](#table-of-contents)
 
 MetAMOS was designed to work on any standard 64bit Linx
 environment. To use MetAMOS for tutorial/teaching purposes, a minimum
@@ -81,7 +81,7 @@ million read datasets, 64 GB is a good place to start (128 GB of memory now
 available on High Memory Instance at Amazon Elastic Compute Cloud ). 
 
 ----------------------------------------------------------------------------------
-### B) SOFTWARE REQUIREMENTS
+### B) SOFTWARE REQUIREMENTS [TOC](#table-of-contents)
 
 The main prequisite software is python2.6+ and AMOS (available from
 http://amos.sf.net). Once python2.6+ and AMOS are installed, there
@@ -108,7 +108,7 @@ visit: http://exon.gatech.edu/license_download.cgi. Once the tool is installed,
 add it to your PATH variable and metAMOS will then enable its use in the pipeline.
 
 ----------------------------------------------------------------------------------
-### C) INSTALLING MetAMOS
+### C) INSTALLING MetAMOS [TOC](#table-of-contents)
 
 To download the software release package, go [here](https://github.com/treangen/metAMOS/archive/Release1.3.zip).
 You can also browse the [repository](https://github.com/treangen/MetAMOS/tree/Release1.3)
@@ -142,7 +142,7 @@ If all dependencies are downloaded (including optional/deprecated ones), this wi
 quite awhile to complete (plan on a few hours to 2 days).
 
 ----------------------------------------------------------------------------------
-### D) QUICK START
+### D) QUICK START [TOC](#table-of-contents)
 
 Before you get started using MetAMOS/iMetAMOS a brief review of its design will
 help clarify its intended use. MetAMOS gas two main components:

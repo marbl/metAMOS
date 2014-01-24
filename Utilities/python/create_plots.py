@@ -131,12 +131,13 @@ def create_plots(handlef,TITLE):
             sample.orflist_sizes = sorted(sample.orf_sizes.values(), reverse=True)
             #print " orf_size " + str(len(sample.orf_sizes))
     
-            for header, seq in (fasta_iter(dir + SCFORF_PATH + METAMOS_prefix + SCFORF_file)):
-                l = len(seq)
-                if(l > SIZE_CUTOFF):
-                    sample.scforf_sizes[header] = l
-            sample.scforflist_sizes = sorted(sample.scforf_sizes.values(), reverse=True)
-            #print " sforf_size " + str(len(sample.scforf_sizes))
+            if (os.path.exists(dir + SCFORF_PATH + METAMOS_prefix + SCFORF_file)):
+               for header, seq in (fasta_iter(dir + SCFORF_PATH + METAMOS_prefix + SCFORF_file)):
+                   l = len(seq)
+                   if(l > SIZE_CUTOFF):
+                       sample.scforf_sizes[header] = l
+               sample.scforflist_sizes = sorted(sample.scforf_sizes.values(), reverse=True)
+               #print " sforf_size " + str(len(sample.scforf_sizes))
     
             cvgs = open(dir + ASSEMBLY + METAMOS_prefix + Cvg_file, 'r')
             counter = 1

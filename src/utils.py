@@ -43,7 +43,7 @@ ENDC = CSI+'0m'
 
 _METAMOSDIR    = resource_path(sys.path[0])
 INITIAL_UTILS = "%s%sUtilities"%(_METAMOSDIR, os.sep)
-INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
+INITIAL_SRC   = "%s%ssrc"%(_METAMOSDIR, os.sep)
 _NUM_LINES    = 10
 _PROG_NAME_DICT = {}
 _PUB_DICT = {}

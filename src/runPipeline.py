@@ -41,7 +41,8 @@ import multiprocessing
 from operator import itemgetter
 from ruffus import *
 from task import JobSignalledBreak
-skipsteps = ["FindRepeats"]
+skipsteps = set()
+skipsteps.add("FindRepeats")
 isolate_genome = False
 userKmerSupplied = False
 asmScores = "%d"%(utils.SCORE_TYPE.LAP)
@@ -57,7 +58,6 @@ def usage():
     print "   -j = <bool>:   just output all of the programs and citations then exit (default = NO)"
     print "   -v = <bool>:   verbose output? (default = NO)"
     print "   -d = <string>: directory created by initPipeline (REQUIRED)"
-    print "   -w = <string>: workflow name (optional). Input parameters/data from workflow"
 
     print "\n[options]: [pipeline_opts] [misc_opts]"
     print "\n[pipeline_opts]: options that affect the pipeline execution"
@@ -306,7 +306,7 @@ bowtie_mapping = 1
 startat = None
 endat = None
 #turn on by default
-forcesteps = []
+forcesteps = set()
 
 run_fastqc = False
 runfast = False
@@ -409,7 +409,7 @@ for o, a in opts:
         noblastdb = True
         #skip Metaphyler
         #skipsteps.append("Abundance")
-        skipsteps.append("FunctionalAnnotation")
+        skipsteps.add("FunctionalAnnotation")
         #skip
         nofcpblast = True
     elif o in ("-y","--lowcpu"):
@@ -447,13 +447,13 @@ for o, a in opts:
         if startat not in allsteps:
             print "cannot start at %s, step does not exist in pipeline"%(startat)
             print allsteps
-        skipsteps.extend(allsteps[:allsteps.index(startat)]) 
+        skipsteps.update(allsteps[:allsteps.index(startat)]) 
     elif o in ("-e","--endat"):
         endat = a
         if endat not in allsteps:
             print "cannot end at %s, step does not exist in pipeline"%(endat)
             print allsteps 
-        skipsteps.extend(allsteps[allsteps.index(endat)+1:])
+        skipsteps.update(allsteps[allsteps.index(endat)+1:])
     elif o in ("-o", "--minoverlap"):
         pass
     elif o in ("-k", "--kmersize"):
@@ -463,9 +463,13 @@ for o, a in opts:
        selected_programs["assemble"] = "newbler,%s"%(selected_programs["assemble"])
        selected_programs["mapreads"] = "bowtie2"
     elif o in ("-f", "--forcesteps"):
-        forcesteps = a.split(",")
+        for step in a.split(","):
+           forcesteps.add(step)
+           skipsteps.discard(step)
     elif o in ("-n", "--skipsteps"):
-        skipsteps.extend(a.split(","))
+        for step in a.split(","):
+           skipsteps.add(step)
+           forcesteps.discard(step)
     elif o in ("-p", "--threads"):
         if int(a) > 0:
             utils.Settings.threads = int(a)
@@ -537,8 +541,8 @@ for o, a in opts:
                 break
         if sc == "metaphyler":
             #not quite ready for primetime, need krona import script and annots file
-            skipsteps.append("Propagate")
-            skipsteps.append("Classify")
+            skipsteps.add("Propagate")
+            skipsteps.add("Classify")
         if not foundit:
             print "!!Sorry, %s is not a supported classification method. Using FCP instead"%(selected_programs["annotate"])
             selected_programs["annotate"] = "fcp"
@@ -680,7 +684,7 @@ if os.path.exists("%s%sLogs%s*.started"%(settings.rundir,os.sep,os.sep)):
     os.system("rm %s%sLogs%s*.started"%(settings.rundir,os.sep,os.sep))
 
 if not isolate_genome:
-  skipsteps.append("MultiAlign")
+  skipsteps.add("MultiAlign")
 else:
   try:
       settings.doscaffolding = True
@@ -689,10 +693,16 @@ else:
       selected_programs["assemble"] = selected_programs["assemble"] + ",velvet"
       selected_programs["findorfs"] = "prokka"
       asmScores = "%d"%(utils.SCORE_TYPE.ALL)
-      skipsteps.append("Scaffold")
-      skipsteps.append("Propagate")
+      skipsteps.add("Scaffold")
+      skipsteps.add("Propagate")
   except KeyError:
-      skipsteps.append("MultiAlign")
+      skipsteps.add("MultiAlign")
+
+# by default don't do functional annotate or scaffold orf finding
+if "FunctionalAnnotation" not in forcesteps:
+   skipsteps.add("FunctionalAnnotation")
+if "FindScaffoldORFS" not in forcesteps:
+   skipsteps.add("FindScaffoldORFS")
 
 if len(asmcontigs) != 0 and not asmSpecified:
    selected_programs["assemble"] = "none"
@@ -702,7 +712,7 @@ if len(readlibs) > 1 and "metaidba" in selected_programs["assemble"]:
     sys.exit(1)
 
 if "scaffold" in skipsteps or "Scaffold" in skipsteps:
-   skipsteps.append("Propagate")
+   skipsteps.add("Propagate")
 
 #if we have pacbio reads use bowtie 2 (since bowtie 1 expects 1024bp sequences) and run CA
 if selected_programs["preprocess"] == "pbcr":
@@ -843,7 +853,7 @@ if __name__ == "__main__":
             print utils.WARNING_YELLOW+"\t*Only %d CPU cores available, some modules might take awhile to complete"%(numcpus)+utils.ENDC
             print utils.WARNING_YELLOW+"\t*Disabling all BLAST (where possible)"+utils.ENDC
             nofcpblast = True
-            skipsteps.append("FunctionalAnnotation")
+            skipsteps.add("FunctionalAnnotation")
         else:
             print utils.OK_GREEN+"\t*ok"+utils.ENDC
 

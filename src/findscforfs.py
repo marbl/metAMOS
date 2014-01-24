@@ -30,6 +30,7 @@ def init(reads, skipsteps,orf):
 def FindScaffoldORFS(input,output):
    if "FindScaffoldORFS" in _skipsteps:
       run_process(_settings, "touch %s/FindScaffoldORFS/out/%s.scaffolds.faa"%(_settings.rundir, _settings.PREFIX))
+      run_process(_settings, "touch %s/Logs/findscaffoldorfs.skip"%(_settings.rundir), "FindScaffoldORFS")
       return 0
    if _orf == "metagenemark":
        if not os.path.exists(_settings.METAGENEMARK + os.sep + "gmhmmp"):

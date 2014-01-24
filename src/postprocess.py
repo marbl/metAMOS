@@ -223,10 +223,10 @@ def Postprocess(input,output):
    run_process(_settings, "ln -s %s/Scaffold/in/%s.bnk %s/Postprocess/out/"%(_settings.rundir,_settings.PREFIX,_settings.rundir),"Postprocess")
 
    # add links to orfs
-   if os.path.exists("%s/FindORFS/out/%s.faa"%(_settings.rundir, _settings.PREFIX)):
+   if os.path.exists("%s/FindORFS/out/%s.fna"%(_settings.rundir, _settings.PREFIX)):
       run_process(_settings, "ln %s/FindORFS/out/%s.fna %s/Postprocess/out/%s.orf.fna"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
       run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/Postprocess/out/%s.orf.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
-   if os.path.exists("%s/FindScaffoldORFS/out/%s.faa"%(_settings.rundir, _settings.PREFIX)):
+   if os.path.exists("%s/FindScaffoldORFS/out/%s.fna"%(_settings.rundir, _settings.PREFIX)):
       run_process(_settings, "ln %s/FindScaffoldORFS/out/%s.fna %s/Postprocess/out/%s.scf.orf.fna"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
       run_process(_settings, "ln %s/FindScaffoldORFS/out/%s.faa %s/Postprocess/out/%s.scf.orf.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Postprocess")
 

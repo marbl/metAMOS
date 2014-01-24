@@ -353,6 +353,8 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     preprocess_out.close()
 
     validate_out = open("%s/Validate.html"%(html_prefix), 'w')
+    validate = markup.page()
+    validate.init(css="style.css", bodyattrs={'style':"background-color:#FFFFFF;"})
     headerArray = []
     dataArray = []
     firstScore = True
@@ -363,8 +365,6 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
        bestAsm = best.read()
        best.close()
        laps = open("%s/Postprocess/out/asm.scores"%(MA_dir), 'r')
-       validate = markup.page()
-       validate.init(css="style.css", bodyattrs={'style':"background-color:#FFFFFF;"})
        validate.p()
        validate.add("<div class=\"datagrid\">")
        validate.add("Selected assembler: %s"%(bestAsm))

@@ -1,8 +1,8 @@
 [![githalytics.com alpha](https://cruel-carlota.pagodabox.com/50642308f8120a4dd17e617e46cc21b1 "githalytics.com")](http://githalytics.com/treangen/metAMOS)
-# MetAMOS v1.3 "Candied Bacon" README
-Last updated: January 23rd 2014
+# MetAMOS v2.0rc1 "Praline Brownie" README
+Last updated: January 24rd 2014
 ***********************************************************************************
-We are happy to announce version 1.3, a.k.a. Candied Bacon
+We are happy to announce version 2.0rc1, a.k.a. Praline Brownie 
 
 ## Table of Contents ##
 
@@ -22,10 +22,12 @@ We are happy to announce version 1.3, a.k.a. Candied Bacon
 - [END](#end)
 
 ## NEWS
-       1. Updated 64-bit frozen Linux binary now available (fixed FastQC issue)
-       2. SRA run identifiers supported.
-       3. Remote input files, as well as compressed input files are supported.
-       4. Numerous bug fixes
+       1. iMetAMOS now available.
+       2. Updated 64-bit frozen Linux binary now available (fixed FastQC issue)
+       3. Generic framework for adding assemblers/classifiers
+       4. SRA run identifiers supported.
+       5. Remote input files, as well as compressed input files are supported.
+       6. Numerous bug fixes
 
 *on deck: kmher, and Viritas
 
@@ -85,11 +87,12 @@ available on High Memory Instance at Amazon Elastic Compute Cloud ).
 [TOC](#table-of-contents)
 ### B) SOFTWARE REQUIREMENTS 
 
-The main prequisite software is python2.6+ and AMOS (available from
-http://amos.sf.net). Once python2.6+ and AMOS are installed, there
-should not be any other major prerequisites as most everything that is
-needed is distributed with MetAMOS inside of the /Utilities
-directory. Depending on your platform/Linux distribution, you might need to download and install the following BEFORE running INSTALL.py:
+If you are using the frozen binary, you can skip this section. The metAMOS frozen
+binary includes dependencies and only requires perl 5.8+ and java 1.6+.
+
+The main prequisite software for installing/running metAMOS is python 2.6+, perl 5.8+,
+and java 1.6+. Depending on your platform/Linux distribution, you might also need to download and 
+install the following BEFORE running INSTALL.py:
 
 1. git
 2. gcc
@@ -103,6 +106,7 @@ directory. Depending on your platform/Linux distribution, you might need to down
 10. matplotlib
 11. curl
 
+Additional software will be downloaded by metAMOS as needed.
 Additionally, there is some software that MetAMOS can
 incorporate into its pipeline that we are not allowed to distribute,
 such as MetaGeneMark and Newbler. To get a license to use MetaGeneMark, plesae
@@ -113,8 +117,8 @@ add it to your PATH variable and metAMOS will then enable its use in the pipelin
 [TOC](#table-of-contents)
 ### C) INSTALLING MetAMOS 
 
-To download the software release package, go [here](https://github.com/treangen/metAMOS/archive/Release1.3.zip).
-You can also browse the [repository](https://github.com/treangen/MetAMOS/tree/Release1.3)
+To download the software release package, go [here](https://github.com/treangen/metAMOS/archive/Release2.0.zip).
+You can also browse the [repository](https://github.com/treangen/MetAMOS/tree/Release2.0)
 and click on Downloads. Once downloaded, simply unpack the files and
 open the MetAMOS directory. Once inside the MetAMOS directory, run:
 ```
@@ -154,6 +158,12 @@ help clarify its intended use. MetAMOS gas two main components:
 1. initPipeline
 2. runPipeline
 
+Below is a simple example of running of iMetAMOS to assemble an SRA dataset:
+```
+initPipeline -q -1 SRR987657 -d projectDir -W iMetAMOS
+runPipeline -d projectDir -p 16
+```
+
 The first component, initPipeline, is for creating new projects and
 also initiliazing sequence libraries. Currently interleaved &
 non-interleaved fasta, fastq, and SFF files are supported. Input
@@ -180,6 +190,7 @@ options: -s -c -q, -f, -1, -2, -d, -m, -i
 * -o: reads are in outtie orientation (default innie)
 * -q: boolean, reads are in fastq format (default is fastq)
 * -s/--sff: boolean, reads are in SFF format (default is fastq)
+* -W: string: workflow name (-W iMetAMOS will run iMetAMOS). A workflow can specify parameters as well as data. A workflow can be immutable in which case any command-line parameters will not be used. Otherwise, command-line parameters take priority over workflow defaults.
 
 For example, to input a:
 
@@ -207,13 +218,13 @@ initPipeline -q -m file.fastq.12,file2.fastq.12 -c file.contig.fa -d projectDir 
 ```
 initPipeline -q -1 ftp://ftp.cbcb.umd.edu/pub/data/metamos/gage-b-rb.miseq.1.fastq.gz -2 ftp://ftp.cbcb.umd.edu/pub/data/metamos/gage-b-rb.miseq.2.fastq.gz -d projectDir -i 300:500
 ```
-(unpared SRA run)
+(unpared SRA run using iMetAMOS)
 ```
-initPipeline 1 <SRA RUN ID> -d projectDir
+initPipeline 1 <SRA RUN ID> -d projectDir -W iMetAMOS
 ```
-(paired-end SRA run)
+(paired-end SRA run using iMetAMOS)
 ```
-initPipeline -m <SRA RUN ID> -d projectDir -i 300:500
+initPipeline -m <SRA RUN ID> -d projectDir -i 300:500 -W imetAMOS
 ```
 The second component, runPipeline, takes a project directory as
 input and runs the following steps by default:
@@ -240,7 +251,6 @@ usage: runPipeline [options] -d projectdir
 *   -j = <bool>:   just output all of the programs and citations then exit (default = NO)
 *   -v = <bool>:   verbose output? (default = NO)
 *   -d = <string>: directory created by initPipeline (REQUIRED)
-*   -w = <string>: workflow name (-w iMetAMOS will run iMetAMOS). A workflow can specify parameters as well as data. A workflow can be immutable in which case any command-line parameters will not be used. Otherwise, command-line parameters take priority over workflow defaults.
 
 [options]: [pipeline_opts] [misc_opts]
 
@@ -602,7 +612,8 @@ http://treangen.github.io/metAMOS/example/html/summary.html
 
 This includes summary statistics and taxonomic information based on Krona [1].
 The easiest way to interact with the results is through the web interface.
-The Postprocess/out directory contains the results of the analysis. The files output are:
+The Postprocess/out directory contains the results of the analysis. By default, 
+metAMOS uses the prefix "proba" (Galician for test). Thus, files will have the name "proba".*.
 
 * abundance.krona.html
     

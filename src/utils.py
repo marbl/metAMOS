@@ -276,7 +276,15 @@ class Settings:
       Settings.METAGENEMARK  = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.FRAGGENESCAN  = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.PROKKA        = "%s%scpp%s%s-%s/prokka/bin"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
-      if _BINARY_DIST:
+      runp = True
+      if 1:
+           try:
+               kronalibf = open("%s%scpp%s%s-%s/prokka/bin/prokka"%(Settings.METAMOS_UTILS,os.sep,os.sep, Settings.OSTYPE, Settings.MACHINETYPE))
+           except IOError:
+               #this is initPipeline, skip                                                                                                                                                                                                    
+               runp = False
+
+      if _BINARY_DIST and runp:
           #need to change PROKKA to external db directory
            kronalibf = open("%s%scpp%s%s-%s/prokka/bin/prokka"%(Settings.METAMOS_UTILS,os.sep,os.sep, Settings.OSTYPE, Settings.MACHINETYPE))
            data = kronalibf.read()
@@ -297,7 +305,7 @@ class Settings:
       Settings.PHYLOSIFT     = "%s%sPhyloSift"%(Settings.METAMOSDIR, os.sep)
 
       Settings.KRONA         = "%s%sKronaTools%sbin"%(Settings.METAMOSDIR,os.sep,os.sep)
-      if _BINARY_DIST:
+      if _BINARY_DIST and runp:
           #need to change KronaTools.pm to external Taxonomy directory
            kronalibf = open("%s%sKronaTools%slib%sKronaTools.pm"%(Settings.METAMOSDIR,os.sep,os.sep,os.sep))
            data = kronalibf.read()

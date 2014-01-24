@@ -1152,15 +1152,18 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
             os.system("rm -rf quast.tar.gz")
 
             # since quast requires a reference, also download refseq
-            ftpSite = "ftp://ftp.ncbi.nih.gov/genomes/Bacteria"
+            ftpSite = "ftp://ftp.ncbi.nih.gov/genomes/"
             file = "all.fna.tar.gz"
-            print "Downloading refseq genomes (%s)..."%(file)
+            print "Downloading refseq genomes (Bacteria/%s, Viruses/%s)..."%(file,file)
             print "\tThis file is large and may take time to download"
-            os.system("curl -L %s/%s -o genomes.tar.gz"%(ftpSite, file))
+            os.system("curl -L %s/Bacteria/%s -o bacteria.tar.gz"%(ftpSite, file))
+            os.system("curl -L %s/Viruses/%s -o viruses.tar.gz"%(ftpSite, file))
             os.system("mkdir -p ./Utilities/DB/refseq/temp")
-            os.system("mv genomes.tar.gz ./Utilities/DB/refseq/temp")
+            os.system("mv bacteria.tar.gz ./Utilities/DB/refseq/temp")
+            os.system("mv viruses.tar.gz  ./Utilities/DB/refseq/temp")
             os.chdir("./Utilities/DB/refseq/temp")
-            os.system("tar xvzf genomes.tar.gz")
+            os.system("tar xvzf bacteria.tar.gz")
+            os.system("tar xvzf viruses.tar.gz")
             os.chdir("..")
             print "Current directory is %s"%(os.getcwd())
             for file in os.listdir("%s/temp"%(os.getcwd())):

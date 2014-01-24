@@ -13,6 +13,7 @@ import utils
 import workflow
 
 settings = utils.Settings(1, 1, "", "")
+utils.getMachineType()
 
 #code to discover frozen binary location
 application_path = ""

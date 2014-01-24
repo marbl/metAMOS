@@ -23,7 +23,7 @@ setup(
     license = "GPLv3+",
     keywords = "metagenomic assembly bioinformatics",
     url = "http://github.com/treangen/metAMOS/wiki",
-    long_description=read('README'),
+    long_description=read('README.md'),
     classifiers=[
         "Development Status :: 3 - Alpha"
     ],

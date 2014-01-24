@@ -1267,12 +1267,20 @@ def getEstimatedGenomeSize(settings):
 def getVersion():
    #look for pattern like: MetAMOS [VERSION] README
    version = "UNKNOWN"
-   if os.path.exists("%s%sREADME.md"%(sys.path[0], os.sep)):
-      readme_file = open("%s%sREADME.md"%(sys.path[0], os.sep), 'r')
+   filePath = "%s%sREADME.md"%(sys.path[0], os.sep)
+   try:
+      sys._MEIPASS
+      filePath = "%s%sREADME.md"%(sys._MEIPASS, os.sep)
+   except Exception:
+      filePath = "%s%sREADME.md"%(sys.path[0], os.sep)
+   
+   if os.path.exists(filePath):
+      readme_file = open(filePath, 'r')
       for line in readme_file.xreadlines():
          if "# MetAMOS" in line:
             version = line.strip().split("# MetAMOS")[1]
             version = version.strip().split("README")[0]
+            break
       readme_file.close()
 
    import workflow

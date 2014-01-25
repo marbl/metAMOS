@@ -404,7 +404,7 @@ lib1f1: /Users/skoren/Personal/Research/metAMOS/Test/carsonella_pe_1.fna.gz,2000
 lib1f2: /Users/skoren/Personal/Research/metAMOS/Test/carsonella_pe.2.fna.gz,2000,5000,3500,500
 ```
 
-Workflows may be shared between users, as long as the input files are accessible (i.e. they are on a remote server on the systems share a filesystem). Workflow files should be placed in the metAMOS/workflows directory or the working directory where metAMOS is launched.
+Workflows may be shared between users, as long as the input files are accessible (i.e. they are on a remote server or the systems share a filesystem). Workflow files should be placed in the metAMOS/workflows directory or the working directory where metAMOS is launched.
 
 ----------------------------------------------------------------------------------
 [TOC](#table-of-contents)
@@ -412,7 +412,7 @@ Workflows may be shared between users, as long as the input files are accessible
 
 MetAMOS allows new tools to be added to the ASSEMBLE and ANNOTATE steps without requiring code changes. The addition of a tool is a three-step process. 
 
-###### 1) Add the tool name under metAMOS/Utilities/<STEPNAME>.generic. For example. if you want to add a new assembler, you would modify ASSEMBLE.generic. This file contains one tool name per line. The tool name is arbitrary text and will be used by metAMOS to look up detailed configuration. The current ASSEMBLE.generic looks like:
+###### 1) Add the tool name under metAMOS/Utilities/\<STEPNAME\>.generic. For example. if you want to add a new assembler, you would modify ASSEMBLE.generic. This file contains one tool name per line. The tool name is arbitrary text and will be used by metAMOS to look up detailed configuration. The current ASSEMBLE.generic looks like:
 ```
 % cat Utilities/config/ASSEMBLE.generic
 abyss
@@ -514,10 +514,12 @@ Here, the config template is specified (again relative to metAMOS/Utilities) and
 
 ###### 3) Add a citation to the tool under metAMOS/doc/citations.rst
 Citations are tab-delimited and specify the lower-case tool alias, full tool-name, and citation information. For example:
+```
 soap_v105	SOAPdenovo v1.05	Li Y, Hu Y, Bolund L, Wang J: State of the art de novo assembly of human genomes from massively parallel sequencing data.Human genomics 2010, 4:271-277.
+```
 The citation will be automatically printed by metAMOS whenever a run uses the specified tool. 
 
-###### 4) For ANNOTATE tools, we also need a way to convert the output to Krona. By default, metAMOS will look for an Import<toolName>.pl script. If one is not found, it will rely on a generic import which will assumed a tab-delimited format:
+###### 4) For ANNOTATE tools, we also need a way to convert the output to Krona. By default, metAMOS will look for an Import\<toolName\>.pl script. If one is not found, it will rely on a generic import which will assumed a tab-delimited format:
 ```
 contig/readID	NCBI Taxonomy ID
 ```

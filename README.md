@@ -749,9 +749,6 @@ by submitting a new issue online. Please include information on your run,
 any output produced by runPipeline, as well as the pipeline.* files and the 
 Log/<LAST_STEP> file (if not too large).
 
-[TOC](#table-of-contents)
-### J) CONTACT
-
 Who to contact to report bugs, forward complaints, feature requests:
 
 Todd Treangen: treangen@gmail.com
@@ -759,7 +756,7 @@ Sergey Koren: sergek@umd.edu
 
 ----------------------------------------------------------------------------------
 [TOC](#table-of-contents)
-### K) CITE
+### J) CITE
 
 Treangen TJ\*, Koren S\*, Sommer DD, Liu B, Astrovskaya I, Ondov B,
 Darling AE, Phillippy AM, Pop M.  MetAMOS: a modular and open source

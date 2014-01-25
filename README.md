@@ -19,6 +19,7 @@ We are happy to announce version 1.5rc1, a.k.a. Praline Brownie
     - [EXAMPLE OUTPUT](#h-example-output)
     - [CONTACT](#i-contact)
     - [CITE](#j-cite)
+    - [ISSUES](#k-issues)
 - [FIN](#end)
 
 ## NEWS
@@ -70,6 +71,7 @@ Mac OSX equivalent will be soon appearing [here](http://www.cbcb.umd.edu/confcou
         H) EXAMPLE OUTPUT
         I) CONTACT
         J) CITE
+        K) ISSUES
 
 ----------------------------------------------------------------------------------
 [TOC](#table-of-contents)
@@ -768,4 +770,8 @@ url: http://genomebiology.com/content/pdf/gb-2013-14-1-r2.pdf
 *Indicates both authors contributed equally to this work
 
 [TOC](#table-of-contents)
+### K) ISSUES
+
+Here is a [link](https://github.com/treangen/metAMOS/issues?state=open) to known, open issues.
+
 ## FIN

@@ -1,4 +1,3 @@
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/50642308f8120a4dd17e617e46cc21b1 "githalytics.com")](http://githalytics.com/treangen/metAMOS)
 # MetAMOS v1.5rc1 "Praline Brownie" README
 Last updated: January 24rd 2014
 ***********************************************************************************
@@ -8,6 +7,7 @@ We are happy to announce version 1.5rc1, a.k.a. Praline Brownie
 
 - [NEWS](#news)
 - [MetAMOS single file binary](#metamos-single-file-binary)
+    - [Download](http://www.cbcb.umd.edu/confcour/temp/metAMOS_binary_noblastdbs.tar.gz)
 - [SUMMARY](#summary)
     - [HARDWARE REQUIREMENTS](#a-hardware-requirements)
     - [SOFTWARE REQUIREMENTS](#b-software-requirements)
@@ -19,7 +19,7 @@ We are happy to announce version 1.5rc1, a.k.a. Praline Brownie
     - [EXAMPLE OUTPUT](#h-example-output)
     - [CONTACT](#i-contact)
     - [CITE](#j-cite)
-- [END](#end)
+- [FIN](#end)
 
 ## NEWS
        1. iMetAMOS now available.
@@ -33,7 +33,7 @@ We are happy to announce version 1.5rc1, a.k.a. Praline Brownie
 
 -----------------------------------------------------------------------------------
 [TOC](#table-of-contents)
-## MetAMOS single file binary ## 
+## MetAMOS single file binary
 In attempt to further simplify the MetAMOS installation process, we are happy to announce the availability of a 'frozen' MetAMOS binary for Linux-x68_64 platforms. Along with this binary comes a significantly reduced list of prerequisites:
 
 * Java 1.6 (or newer)
@@ -59,7 +59,7 @@ Mac OSX equivalent will be soon appearing [here](http://www.cbcb.umd.edu/confcou
 
 ----------------------------------------------------------------------------------
 [TOC](#table-of-contents)
-## SUMMARY ##  
+## SUMMARY 
         A) HARDWARE REQUIREMENTS
         B) SOFTWARE REQUIREMENTS
         C) INSTALLING MetAMOS
@@ -769,4 +769,4 @@ url: http://genomebiology.com/content/pdf/gb-2013-14-1-r2.pdf
 *Indicates both authors contributed equally to this work
 
 [TOC](#table-of-contents)
-## END
+## FIN

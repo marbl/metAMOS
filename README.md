@@ -1,8 +1,8 @@
 [![githalytics.com alpha](https://cruel-carlota.pagodabox.com/50642308f8120a4dd17e617e46cc21b1 "githalytics.com")](http://githalytics.com/treangen/metAMOS)
-# MetAMOS v2.0rc1 "Praline Brownie" README
+# MetAMOS v1.5rc1 "Praline Brownie" README
 Last updated: January 24rd 2014
 ***********************************************************************************
-We are happy to announce version 2.0rc1, a.k.a. Praline Brownie 
+We are happy to announce version 1.5rc1, a.k.a. Praline Brownie 
 
 ## Table of Contents ##
 
@@ -117,8 +117,8 @@ add it to your PATH variable and metAMOS will then enable its use in the pipelin
 [TOC](#table-of-contents)
 ### C) INSTALLING MetAMOS 
 
-To download the software release package, go [here](https://github.com/treangen/metAMOS/archive/Release2.0.zip).
-You can also browse the [repository](https://github.com/treangen/MetAMOS/tree/Release2.0)
+To download the software release package, go [here](https://github.com/treangen/metAMOS/archive/Release1.5.zip).
+You can also browse the [repository](https://github.com/treangen/MetAMOS/tree/Release1.5)
 and click on Downloads. Once downloaded, simply unpack the files and
 open the MetAMOS directory. Once inside the MetAMOS directory, run:
 ```

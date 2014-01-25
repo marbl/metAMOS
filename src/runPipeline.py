@@ -16,9 +16,9 @@ DEFAULT_KMER  = "31"
 ## Hardcode a default taxonomic classification level
 DEFAULT_TAXA_LEVEL = "class"
 sys.path.append(INITIAL_SRC)
-import check_install
 validate_install = 0
 if validate_install:
+    import check_install
     rt = check_install.validate_dir(sys.path[0].strip(),sys.path[0]+os.sep+'required_file_list.txt')
     if rt == -1:
         print "MetAMOS not properly installed, please reinstall or contact development team for assistance"
@@ -41,10 +41,12 @@ import multiprocessing
 from operator import itemgetter
 from ruffus import *
 from task import JobSignalledBreak
-skipsteps = ["FindRepeats"]
+skipsteps = set()
+skipsteps.add("FindRepeats")
 isolate_genome = False
 userKmerSupplied = False
 asmScores = "%d"%(utils.SCORE_TYPE.LAP)
+userScoresSupplied = False
 asmScoreWeights = dict()
 
 ## Get start time
@@ -86,6 +88,9 @@ def usage():
     print "   -g = <string>: gene caller to use (default = %s, supported = %s)"%(selected_programs["findorfs"], ",".join(supported_programs["findorfs"]))
     print "   -l = <int>:    min contig length to use for ORF call (default = 300)"
     print "   -x = <int>>:   min contig coverage to use for ORF call (default = 3X)"
+    print "[Validate]"
+    print "   -X = <string>: comma-separated list of validators to run on the assembly. (default = %s, supported = %s)"%(selected_programs["validate"], ",".join(supported_programs["validate"]))
+    print "   -S = <string>: comma-separated list of scores to use to select the winning assembly. By default, all validation tools specified by -X will be run. For each score, an optional weight can be specified as SCORE:WEIGHT. For example, LAP:1,CGAL:2 (supported = %s)"%(",".join(utils.SCORE_TYPE.reverse_mapping.values()).lower())
     print "[Annotate]"
     print "   -c = <string>: classifier to use for annotation (default = %s, supported = %s"%(selected_programs["annotate"], ",".join(supported_programs["annotate"]))
     print "   -u = <bool>:   annotate unassembled reads? (default = NO)"
@@ -301,7 +306,7 @@ bowtie_mapping = 1
 startat = None
 endat = None
 #turn on by default
-forcesteps = []
+forcesteps = set()
 
 run_fastqc = False
 runfast = False
@@ -404,7 +409,7 @@ for o, a in opts:
         noblastdb = True
         #skip Metaphyler
         #skipsteps.append("Abundance")
-        skipsteps.append("FunctionalAnnotation")
+        skipsteps.add("FunctionalAnnotation")
         #skip
         nofcpblast = True
     elif o in ("-y","--lowcpu"):
@@ -442,13 +447,13 @@ for o, a in opts:
         if startat not in allsteps:
             print "cannot start at %s, step does not exist in pipeline"%(startat)
             print allsteps
-        skipsteps.extend(allsteps[:allsteps.index(startat)]) 
+        skipsteps.update(allsteps[:allsteps.index(startat)]) 
     elif o in ("-e","--endat"):
         endat = a
         if endat not in allsteps:
             print "cannot end at %s, step does not exist in pipeline"%(endat)
             print allsteps 
-        skipsteps.extend(allsteps[allsteps.index(endat)+1:])
+        skipsteps.update(allsteps[allsteps.index(endat)+1:])
     elif o in ("-o", "--minoverlap"):
         pass
     elif o in ("-k", "--kmersize"):
@@ -458,9 +463,13 @@ for o, a in opts:
        selected_programs["assemble"] = "newbler,%s"%(selected_programs["assemble"])
        selected_programs["mapreads"] = "bowtie2"
     elif o in ("-f", "--forcesteps"):
-        forcesteps = a.split(",")
+        for step in a.split(","):
+           forcesteps.add(step)
+           skipsteps.discard(step)
     elif o in ("-n", "--skipsteps"):
-        skipsteps.extend(a.split(","))
+        for step in a.split(","):
+           skipsteps.add(step)
+           forcesteps.discard(step)
     elif o in ("-p", "--threads"):
         if int(a) > 0:
             utils.Settings.threads = int(a)
@@ -532,8 +541,8 @@ for o, a in opts:
                 break
         if sc == "metaphyler":
             #not quite ready for primetime, need krona import script and annots file
-            skipsteps.append("Propagate")
-            skipsteps.append("Classify")
+            skipsteps.add("Propagate")
+            skipsteps.add("Classify")
         if not foundit:
             print "!!Sorry, %s is not a supported classification method. Using FCP instead"%(selected_programs["annotate"])
             selected_programs["annotate"] = "fcp"
@@ -626,6 +635,8 @@ for o, a in opts:
 
        if asmScores == "":
           asmScores = "%d"%(utils.SCORE_TYPE.LAP)
+       else:
+          userScoresSupplied = True
 
     elif o in ("-X", "--validator"):
         validators = a.lower().split(",")
@@ -673,7 +684,7 @@ if os.path.exists("%s%sLogs%s*.started"%(settings.rundir,os.sep,os.sep)):
     os.system("rm %s%sLogs%s*.started"%(settings.rundir,os.sep,os.sep))
 
 if not isolate_genome:
-  skipsteps.append("MultiAlign")
+  skipsteps.add("MultiAlign")
 else:
   try:
       settings.doscaffolding = True
@@ -682,10 +693,16 @@ else:
       selected_programs["assemble"] = selected_programs["assemble"] + ",velvet"
       selected_programs["findorfs"] = "prokka"
       asmScores = "%d"%(utils.SCORE_TYPE.ALL)
-      skipsteps.append("Scaffold")
-      skipsteps.append("Propagate")
+      skipsteps.add("Scaffold")
+      skipsteps.add("Propagate")
   except KeyError:
-      skipsteps.append("MultiAlign")
+      skipsteps.add("MultiAlign")
+
+# by default don't do functional annotate or scaffold orf finding
+if "FunctionalAnnotation" not in forcesteps:
+   skipsteps.add("FunctionalAnnotation")
+if "FindScaffoldORFS" not in forcesteps:
+   skipsteps.add("FindScaffoldORFS")
 
 if len(asmcontigs) != 0 and not asmSpecified:
    selected_programs["assemble"] = "none"
@@ -695,7 +712,7 @@ if len(readlibs) > 1 and "metaidba" in selected_programs["assemble"]:
     sys.exit(1)
 
 if "scaffold" in skipsteps or "Scaffold" in skipsteps:
-   skipsteps.append("Propagate")
+   skipsteps.add("Propagate")
 
 #if we have pacbio reads use bowtie 2 (since bowtie 1 expects 1024bp sequences) and run CA
 if selected_programs["preprocess"] == "pbcr":
@@ -836,7 +853,7 @@ if __name__ == "__main__":
             print utils.WARNING_YELLOW+"\t*Only %d CPU cores available, some modules might take awhile to complete"%(numcpus)+utils.ENDC
             print utils.WARNING_YELLOW+"\t*Disabling all BLAST (where possible)"+utils.ENDC
             nofcpblast = True
-            skipsteps.append("FunctionalAnnotation")
+            skipsteps.add("FunctionalAnnotation")
         else:
             print utils.OK_GREEN+"\t*ok"+utils.ENDC
 
@@ -846,11 +863,19 @@ if __name__ == "__main__":
        if "bowtie2" == selected_programs["mapreads"]:
           selected_programs["mapreads"] = "bowtie"
 
+    if userScoresSupplied == False:
+       for validator in selected_programs["validate"].split(","):
+          validator = validator.upper()
+          if (validator not in utils.SCORE_TYPE.mapping):
+             continue
+          if str(utils.SCORE_TYPE.mapping[validator]) not in asmScores:
+             asmScores = "%s,%s"%(asmScores, utils.SCORE_TYPE.mapping[validator])
+
     for asmScore in asmScores.split(","):
        if int(asmScore) == utils.SCORE_TYPE.ALL:
           selected_programs["validate"] = ",".join(supported_programs["validate"])
        elif utils.SCORE_TYPE.reverse_mapping[int(asmScore)].lower() not in selected_programs["validate"]:
-          selected_programs["validate"] = "%s,%s"%(selected_programs["validate"], asmScore.lower())
+          selected_programs["validate"] = "%s,%s"%(selected_programs["validate"], utils.SCORE_TYPE.reverse_mapping[int(asmScore)].lower())
 
     # intialize weights
     utils.initValidationScores(asmScoreWeights)

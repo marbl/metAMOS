@@ -43,7 +43,7 @@ ENDC = CSI+'0m'
 
 _METAMOSDIR    = resource_path(sys.path[0])
 INITIAL_UTILS = "%s%sUtilities"%(_METAMOSDIR, os.sep)
-INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
+INITIAL_SRC   = "%s%ssrc"%(_METAMOSDIR, os.sep)
 _NUM_LINES    = 10
 _PROG_NAME_DICT = {}
 _PUB_DICT = {}
@@ -276,7 +276,15 @@ class Settings:
       Settings.METAGENEMARK  = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.FRAGGENESCAN  = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.PROKKA        = "%s%scpp%s%s-%s/prokka/bin"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
-      if _BINARY_DIST:
+      runp = True
+      if 1:
+           try:
+               kronalibf = open("%s%scpp%s%s-%s/prokka/bin/prokka"%(Settings.METAMOS_UTILS,os.sep,os.sep, Settings.OSTYPE, Settings.MACHINETYPE))
+           except IOError:
+               #this is initPipeline, skip                                                                                                                                                                                                    
+               runp = False
+
+      if _BINARY_DIST and runp:
           #need to change PROKKA to external db directory
            kronalibf = open("%s%scpp%s%s-%s/prokka/bin/prokka"%(Settings.METAMOS_UTILS,os.sep,os.sep, Settings.OSTYPE, Settings.MACHINETYPE))
            data = kronalibf.read()
@@ -297,7 +305,7 @@ class Settings:
       Settings.PHYLOSIFT     = "%s%sPhyloSift"%(Settings.METAMOSDIR, os.sep)
 
       Settings.KRONA         = "%s%sKronaTools%sbin"%(Settings.METAMOSDIR,os.sep,os.sep)
-      if _BINARY_DIST:
+      if _BINARY_DIST and runp:
           #need to change KronaTools.pm to external Taxonomy directory
            kronalibf = open("%s%sKronaTools%slib%sKronaTools.pm"%(Settings.METAMOSDIR,os.sep,os.sep,os.sep))
            data = kronalibf.read()
@@ -1267,12 +1275,20 @@ def getEstimatedGenomeSize(settings):
 def getVersion():
    #look for pattern like: MetAMOS [VERSION] README
    version = "UNKNOWN"
-   if os.path.exists("%s%sREADME"%(sys.path[0], os.sep)):
-      readme_file = open("%s%sREADME"%(sys.path[0], os.sep), 'r')
+   filePath = "%s%sREADME.md"%(sys.path[0], os.sep)
+   try:
+      sys._MEIPASS
+      filePath = "%s%sREADME.md"%(sys._MEIPASS, os.sep)
+   except Exception:
+      filePath = "%s%sREADME.md"%(sys.path[0], os.sep)
+   
+   if os.path.exists(filePath):
+      readme_file = open(filePath, 'r')
       for line in readme_file.xreadlines():
          if "# MetAMOS" in line:
             version = line.strip().split("# MetAMOS")[1]
             version = version.strip().split("README")[0]
+            break
       readme_file.close()
 
    import workflow

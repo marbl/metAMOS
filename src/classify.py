@@ -100,5 +100,5 @@ def Classify(input,output):
       if isContaminant:
          name = getCommandOutput("cat %s/tax_key.tab |awk -F \"\\t\" '{if ($1 == %s) print $NF}'"%(_settings.DB_DIR, classID), False)
          contaminant = open("%s/Classify/out/contaminant.true"%(_settings.rundir), 'w')
-         contaminant.write("%s\t%s\n"%(majority*100, name))
+         contaminant.write("%s\t%s\t%s\n"%(majority*100, name, _minContaminantTrustedLen))
          contaminant.close()

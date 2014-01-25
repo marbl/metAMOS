@@ -13,6 +13,7 @@ import utils
 import workflow
 
 settings = utils.Settings(1, 1, "", "")
+utils.getMachineType()
 
 #code to discover frozen binary location
 application_path = ""
@@ -117,7 +118,7 @@ def usage():
     print "-o: reads are in outtie orientation (default innie)"
     print "-q: boolean, reads are in fastq format (default is fastq)"
     print "-s/--sff: boolean, reads are in SFF format (default is fastq)"
-    print "-W: workflow name, automatically set options for runPipeline and download data, if applicable"
+    print "-W: string, workflow name (-w iMetAMOS will run iMetAMOS). A workflow can specify parameters as well as data. A workflow can be immutable in which case any command-line parameters will not be used. Otherwise, command-line parameters take priority over workflow defaults."
 
 def isSRAID(file):
    return utils.translateToSRAURL(settings, file) != ""

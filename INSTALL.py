@@ -1,4 +1,4 @@
-import os, sys, string, subprocess, distutils.util, check_install, site, glob, multiprocessing
+import os, sys, string, subprocess, distutils.util, site, glob, multiprocessing
 
 user_home = os.environ["HOME"]
 print "<<Welcome to metAMOS install>>"
@@ -117,6 +117,11 @@ for flow in workflows:
 manual = False
 fail = False
 
+availableWf = workflow.getSupportedWorkflows("%s/Utilities/workflows"%(METAMOS_ROOT), False)
+for wf in availableWf:
+   enabledWorkflows.update(wf.getDerivedName())
+   packagesToInstall.update(wf.programList)
+
 if (len(sys.argv) > 1):
   # should support tool list as well added
   for i in range(1, len(sys.argv)):
@@ -143,13 +148,6 @@ if (len(sys.argv) > 1):
          if arg != "help":
             print "Unknown program or workflow %s specified."%(arg)
          fail = True
-else:
-    availableWf = workflow.getSupportedWorkflows("%s/Utilities/workflows"%(METAMOS_ROOT), False)
-    for wf in availableWf:
-       enabledWorkflows.update(wf.getDerivedName())
-       packagesToInstall.update(wf.programList)
-
-    print "Installing %s metAMOS workflow"%(",".join(enabledWorkflows))
 
 if fail or help in sys.argv:
    print "Available workflows: %s"%(" ".join(workflows.keys()))
@@ -330,10 +328,10 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINET
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         archive = "kraken.tar.gz"
-        os.system("curl -L http://ccb.jhu.edu/software/kraken/dl/kraken-0.10.1-beta.tgz -o %s"%(archive))
+        os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/kraken-0.10.3-beta.tgz -o %s"%(archive))
         os.system("rm -rf ./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.system("tar -xvzf %s"%(archive))
-        os.system("mv kraken-0.10.0-beta ./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        os.system("mv kraken-0.10.3-beta ./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.chdir("./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.system("./install_kraken.sh `pwd`/bin")
         os.chdir("%s"%(METAMOS_ROOT))
@@ -353,7 +351,7 @@ if not os.path.exists("./Utilities/DB/kraken"):
        if (mem < 100):
           print "Insufficient memory to build full Kraken database. Requires at least 100GB of memory, using mini DB"
           archive = "minikraken.tgz"
-          os.system("curl -L http://ccb.jhu.edu/software/kraken/dl/%s -o %s"%(archive, archive))
+          os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -o %s"%(archive, archive))
           os.system("tar xvzf %s"%(archive))
           os.system("mv minikraken_* ./Utilities/DB/kraken")
           os.system("rm %s"%(archive))
@@ -548,7 +546,7 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%ssra"%(os.sep, OSTYPE, MACHINETYPE
            os.system("mv sratoolkit.2.3.3-3-* ./Utilities/cpp%s%s-%s%ssra"%(os.sep, OSTYPE, MACHINETYPE, os.sep)) 
            os.system("rm -rf sra.tar.gz")
 
-if "isolate" in enabledWorkflows or manual:
+if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
     # check for cmake
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
@@ -575,20 +573,17 @@ if "isolate" in enabledWorkflows or manual:
        os.environ["PATH"]=pathUpdate
     os.chdir("%s"%(METAMOS_ROOT))
 
-    if not os.path.exists("./CA") or 0:
+    if not os.path.exists("./CA"):
       if "ca" in packagesToInstall:
          dl = 'y'
       else:
          print "Celera Assembler binaries not found, optional for Assemble step, download now?"
          dl = raw_input("Enter Y/N: ")
       if dl == 'y' or dl == 'Y':
-          os.system("curl -L https://downloads.sourceforge.net/project/wgs-assembler/wgs-assembler/wgs-8.0/wgs-8.0.tar.bz2 -o wgs-8.0.tar.bz2")
-          os.system("curl -L https://github.com/samtools/samtools/archive/0.1.19.tar.gz -o samtools.tar.gz")
-          os.system("tar xvzf samtools.tar.gz")
-          os.system("tar xvjf wgs-8.0.tar.bz2")
-          os.system("rm -rf wgs-8.0.tar.bz2")
-          os.system("mv wgs-8.0 CA")
-          os.system("mv samtools-0.1.19 CA/samtools")
+          os.system("curl -L https://downloads.sourceforge.net/project/wgs-assembler/wgs-assembler/wgs-8.1/wgs-8.1.tar.bz2 -o wgs-8.1.tar.bz2")
+          os.system("tar xvjf wgs-8.1.tar.bz2")
+          os.system("rm -rf wgs-8.1.tar.bz2")
+          os.system("mv wgs-8.1 CA")
           # patch CA to support PacBio sequences and non-apple compilers on OSX
           if not ALLOW_FAST:
              os.system("cd CA/kmer/ && cp configure.sh configure.original")
@@ -868,8 +863,8 @@ if "isolate" in enabledWorkflows or manual:
              os.system("rm -rf gapcloser.tar.gz")
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
-       masurca = utils.getFromPath("runSRCA.pl", "MaSuRCA", False)
-       if masurca == "" and OSTYPE != "Darwin":
+       masurca = utils.getFromPath("masurca", "MaSuRCA", False)
+       if masurca == "":
           if "masurca" in packagesToInstall:
              dl = 'y'
           else:
@@ -880,9 +875,9 @@ if "isolate" in enabledWorkflows or manual:
              if float(gccVersion) < 4.4:
                 print "Error: MaSuRCA requires gcc at least version 4.4, found version %s. Please update and try again"%(gccVersion)
              else:
-                os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/MaSuRCA-2.0.3.1.tar.gz -o msrca.tar.gz")
+                os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/MaSuRCA-2.2.0.tar.gz -o msrca.tar.gz")
                 os.system("tar xvzf msrca.tar.gz")
-                os.system("mv ./MaSuRCA-2.0.3.1 ./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+                os.system("mv ./MaSuRCA-2.2.0 ./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
                 os.chdir("./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
                 os.system("cp install.sh install.orig")
                 os.system("cat install.orig |sed s/\-\-prefix/\-\-disable\-shared\ \-\-prefix/g > install.sh")
@@ -891,17 +886,57 @@ if "isolate" in enabledWorkflows or manual:
                    os.system("cd CA/kmer/ && cp configure.sh configure.original")
                    os.system("cd CA/kmer/ && cat configure.original |sed s/\-fast//g > configure.sh")
                 if not HAVE_RT:
-                   os.system("cd SuperReads-0.3.2/ && cp Makefile.am Makefile.am.original")
-                   os.system("cd SuperReads-0.3.2/ && cat Makefile.am.original |sed s/\-lrt//g > Makefile.am")
-                   os.system("cd SuperReads-0.3.2/ && cp Makefile.in Makefile.in.original")
-                   os.system("cd SuperReads-0.3.2/ && cat Makefile.in.original |sed s/\-lrt//g > Makefile.in")
+                   os.system("cd SuperReads/ && cp Makefile.am Makefile.am.original")
+                   os.system("cd SuperReads/ && cat Makefile.am.original |sed s/\-lrt//g > Makefile.am")
+                   os.system("cd SuperReads/ && cp Makefile.in Makefile.in.original")
+                   os.system("cd SuperReads/ && cat Makefile.in.original |sed s/\-lrt//g > Makefile.in")
                 if not HAVE_QUIET_HEAD:
-                   os.system("cd SuperReads-0.3.2/src && cp runSRCA.pl runSRCA.original")
-                   os.system("cd SuperReads-0.3.2/src && cat runSRCA.original |sed s/head\ \-q/head/g > runSRCA.pl")
-                os.system("rm CA/kmer/makepath")
+                   os.system("cd SuperReads/src && cp masurca masurca.original")
+                   os.system("cd SuperReads/src && cat masurca.original |sed s/head\ \-q/head/g > masurca")
+                os.system("rm -f CA/kmer/makepath")
+
+                # fix compilation on OSX
+                if OSTYPE == "Darwin":
+                   os.system("cp SuperReads/include/reallocators.hpp SuperReads/include/reallocators.hpp.orig")
+                   testIn = open("SuperReads/include/reallocators.hpp.orig", 'r')
+                   testOut = open("SuperReads/include/reallocators.hpp", 'w')
+                   for line in testIn.xreadlines():
+                      if "T* res = reallocator<T>::operator()(" in line:
+                         testOut.write("T* res = reallocator<T>::realloc(ptr, osize, nsize);\n")
+                      else:
+                         testOut.write(line.strip() + "\n")
+                   testIn.close()
+                   testOut.close()
+
                 os.system("bash install.sh")
+                fileOptions = utils.getCommandOutput("file -b --mime-type INSTALL.py", False)
+                if fileOptions == "":
+                   fileOptions = utils.getCommandOutput("file -b --mime INSTALL.py", False)
+                   if fileOptions != "":
+                      # fix file command used by MaSuRCA, its not compatible with the system
+                      os.system("cp bin/expand_fastq bin/expand_fastq.orig")
+                      testIn = open("bin/expand_fastq.orig", 'r')
+                      testOut = open("bin/expand_fastq", 'w')
+                      for line in testIn.xreadlines():
+                         if "case $(file" in line:
+                            testOut.write("case $(file -b --mime \"$FILE\" |awk '{print $1}'|sed s/\\;//g) in\n")
+                         else:
+                            testOut.write(line.strip() + "\n")
+                      testIn.close()
+                      testOut.close()
+                   else:
+                      os.chdir("%s"%(METAMOS_ROOT))
+                      os.system("rm -rf ./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+                # update path to CA which is always hardcoded to Linux-amd64
+                os.system("cp bin/masurca bin/masurca.orig")
+                os.system("cat bin/masurca.orig | sed s/Linux-amd64/%s-%s/g |sed s/check_exec\\(\\\"jellyfish\\\"/check_exec\\(\\\"jellyfish-2.0\\\"/g > bin/masurca"%(OSTYPE, MACHINETYPE.replace("x86_64", "amd64")))
+
+                if OSTYPE == "Darwin":
+                   os.system("cp bin/masurca bin/masurca.orig")
+                   os.system("cat bin/masurca.orig | sed  s/\\(\\'..TOTAL_READS\\'/\\(\\\\\\\\\\$ENV{\\'TOTAL_READS\\'}/g| sed s/'<..$NUM_SUPER_READS.'/\"<ENVIRON[\\'NUM_SUPER_READS\\']\"/g | sed s/'>=..$NUM_SUPER_READS.'/\">=ENVIRON[\\'NUM_SUPER_READS\\']\"/g > bin/masurca")
+
                 os.chdir("%s"%(METAMOS_ROOT))
-                os.system("rm -rf ./MaSuRCA-2.0.3.1")
+                os.system("rm -rf ./MaSuRCA-2.2.0")
                 os.system("rm msrca.tar.gz")
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%smira"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
@@ -914,9 +949,9 @@ if "isolate" in enabledWorkflows or manual:
              dl = raw_input("Enter Y/N: ")
           if dl == 'y' or dl == 'Y':
              if OSTYPE == "Darwin":
-	        os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc4_darwin12.5.0_x86_64_static.tar.bz2 -o mira.tar.bz2")
+	        os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/mira_4.0rc5_darwin13.0.0_x86_64_static.tar.bz2 -o mira.tar.bz2")
              else:
-                os.system("curl -L http://sourceforge.net/projects/mira-assembler/files/MIRA/stable/mira_4.0rc4_linux-gnu_x86_64_static.tar.bz2 -o mira.tar.bz2")
+                os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/mira_4.0rc5_linux-gnu_x86_64_static.tar.bz2 -o mira.tar.bz2")
              os.system("tar xvjf mira.tar.bz2")
              os.system("rm -f mira.tar.bz2")
              os.system("mv `ls -d mira*` ./Utilities/cpp%s%s-%s%smira"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
@@ -956,6 +991,7 @@ if "isolate" in enabledWorkflows or manual:
              os.system("tar xvzf gsl.tar.gz")
              os.system("mv gsl-1.16 ea-utils.1.1.2-537/gsl")
              os.system("mv ea-utils.1.1.2-537 ./Utilities/cpp%s%s-%s%seautils"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("rm ea-utils.1.1.2-537/tidx/utils.cpp")
              os.chdir("./Utilities/cpp%s%s-%s%seautils/gsl"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("./configure --prefix=`pwd`/build")
              os.system("make")
@@ -1116,15 +1152,18 @@ if "isolate" in enabledWorkflows or manual:
             os.system("rm -rf quast.tar.gz")
 
             # since quast requires a reference, also download refseq
-            ftpSite = "ftp://ftp.ncbi.nih.gov/genomes/Bacteria"
+            ftpSite = "ftp://ftp.ncbi.nih.gov/genomes/"
             file = "all.fna.tar.gz"
-            print "Downloading refseq genomes (%s)..."%(file)
+            print "Downloading refseq genomes (Bacteria/%s, Viruses/%s)..."%(file,file)
             print "\tThis file is large and may take time to download"
-            os.system("curl -L %s/%s -o genomes.tar.gz"%(ftpSite, file))
+            os.system("curl -L %s/Bacteria/%s -o bacteria.tar.gz"%(ftpSite, file))
+            os.system("curl -L %s/Viruses/%s -o viruses.tar.gz"%(ftpSite, file))
             os.system("mkdir -p ./Utilities/DB/refseq/temp")
-            os.system("mv genomes.tar.gz ./Utilities/DB/refseq/temp")
+            os.system("mv bacteria.tar.gz ./Utilities/DB/refseq/temp")
+            os.system("mv viruses.tar.gz  ./Utilities/DB/refseq/temp")
             os.chdir("./Utilities/DB/refseq/temp")
-            os.system("tar xvzf genomes.tar.gz")
+            os.system("tar xvzf bacteria.tar.gz")
+            os.system("tar xvzf viruses.tar.gz")
             os.chdir("..")
             print "Current directory is %s"%(os.getcwd())
             for file in os.listdir("%s/temp"%(os.getcwd())):
@@ -1367,6 +1406,7 @@ except IOError:
 
 validate_install = 0
 if validate_install:
+    import check_install
     rt = check_install.validate_dir(METAMOS_ROOT,'required_file_list.txt')
     if rt == -1:
         print "MetAMOS not properly installed, please reinstall or contact development team for assistance"

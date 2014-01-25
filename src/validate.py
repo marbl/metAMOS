@@ -21,7 +21,7 @@ _settings = Settings()
 _scores = None
 _validators = []
 _tieBreakerType = SCORE_TYPE.LAP
-_skipTypesForCandidates = [ SCORE_TYPE.N50, SCORE_TYPE.ORF ]
+_skipTypesForCandidates = [ SCORE_TYPE.ORF ]
 
 def init(reads, skipsteps, validators, scoreType):
    global _readlibs
@@ -31,7 +31,7 @@ def init(reads, skipsteps, validators, scoreType):
 
    _readlibs = reads
    _skipsteps = skipsteps
-   _scores = "%s"%(scoreType)
+   _scores = set(scoreType.strip().split(","))
    _validators = set(validators.strip().split(","))
 
 def minScore():

@@ -90,6 +90,7 @@ def Scaffold(input,output):
       else:
          run_process(_settings, "ln %s/Assemble/out/%s.asm.contig %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
       run_process(_settings, "ln %s/Scaffold/out/%s.linearize.scaffolds.final %s/Scaffold/out/%s.scaffolds.final"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
+      run_process(_settings, "touch %s/Scaffold/out/%s.motifs"%(_settings.rundir, _settings.PREFIX), "Scaffold")
       run_process(_settings, "touch %s/Logs/scaffold.skip"%(_settings.rundir), "Scaffold")
       return 0
 
@@ -98,6 +99,7 @@ def Scaffold(input,output):
        run_process(_settings, "%s/bank2fasta -eid -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.contigs"%(_settings.AMOS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
        run_process(_settings, "ln %s/Scaffold/out/%s.contigs %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
        run_process(_settings, "ln %s/Scaffold/out/%s.scaffolds.final %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
+       run_process(_settings, "touch %s/Scaffold/out/%s.motifs"%(_settings.rundir, _settings.PREFIX), "Scaffold")
        #run_process(_settings, "touch %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX), "Scaffold")
        #_skipsteps.append("FindScaffoldORFS")
        #_skipsteps.append("Propagate")

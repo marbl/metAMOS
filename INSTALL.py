@@ -440,6 +440,60 @@ if not os.path.exists("./Utilities/DB/uniprot_sprot.fasta"):
         os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -o %s" %(archive, archive))
         os.system("tar -C ./Utilities/DB/ -xvf %s" % archive)
         os.system("rm %s"%archive)
+
+# velvet
+if not os.path.exists("./Utilities/cpp%s%s-%s%svelvet"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+    if "velvet" in packagesToInstall:
+       dl = 'y'
+    else:
+       print "Velvet not found, optional for Assemble step, download now?"
+       dl = raw_input("Enter Y/N: ")
+    if dl == 'y' or dl == 'Y':
+        archive = "velvet.tar.gz"
+        os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/velvet_1.2.10.tgz -o %s"%(archive))
+        os.system("rm -rf ./Utilities/cpp%s%s-%s%svelvet"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        os.system("tar -xvzf %s"%(archive))
+        os.system("mv velvet_1.2.10 ./Utilities/cpp/%s%s-%s%svelvet"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        os.chdir("./Utilities/cpp/%s%s-%s%svelvet"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        os.system("make CATEGORIES=16 BUNDLEDZLIB=1 MAXKMERLENGTH=127 OPENMP=1")
+        os.chdir("%s"%(METAMOS_ROOT))
+        os.system("rm %s"%archive)
+
+# velvet-sc
+if not os.path.exists("./Utilities/cpp%s%s-%s%svelvet-sc"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+    if "velvet-sc" in packagesToInstall:
+       dl = 'y'
+    else:
+       print "Velvet-SC not found, optional for Assemble step, download now?"
+       dl = raw_input("Enter Y/N: ")
+    if dl == 'y' or dl == 'Y':
+        archive = "velvet-sc.tar.gz"
+        os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/velvet-sc.tar.gz -o %s"%(archive))
+        os.system("rm -rf ./Utilities/cpp%s%s-%s%svelvet-sc"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        os.system("tar -xvzf %s"%(archive))
+        os.system("mv velvet-sc ./Utilities/cpp/%s%s-%s%svelvet-sc"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        os.chdir("./Utilities/cpp/%s%s-%s%svelvet"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        os.system("make CATEGORIES=16 BUNDLEDZLIB=1 MAXKMERLENGTH=127 OPENMP=1")
+        os.chdir("%s"%(METAMOS_ROOT))
+        os.system("rm %s"%archive)
+
+# metavelvet
+if not os.path.exists("./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+    if "kraken" in packagesToInstall:
+       dl = 'y'
+    else:
+       print "MetaVelvet not found, optional for Assemble step, download now?"
+       dl = raw_input("Enter Y/N: ")
+    if dl == 'y' or dl == 'Y':
+        archive = "MetaVelvet-1.2.02.tgz"
+        os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/MetaVelvet-1.2.02.tgz -o %s"%(archive))
+        os.system("rm -rf ./Utilities/cpp%s%s-%s%sMetaVelvet"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        os.system("tar -xvzf %s"%(archive))
+        os.system("mv MetaVelvet-1.2.02 ./Utilities/cpp/%s%s-%s%sMetaVelvet"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        os.chdir("./Utilities/cpp/%s%s-%s%sMetaVelvet"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        os.system("make CATEGORIES=16 MAXKMERLENGTH=127")
+        os.chdir("%s"%(METAMOS_ROOT))
+        os.system("rm %s"%archive)
         
 # now workflow specific tools
 if "optional" in enabledWorkflows or manual:
@@ -875,9 +929,9 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              if float(gccVersion) < 4.4:
                 print "Error: MaSuRCA requires gcc at least version 4.4, found version %s. Please update and try again"%(gccVersion)
              else:
-                os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/MaSuRCA-2.2.0.tar.gz -o msrca.tar.gz")
+                os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/MaSuRCA-2.0.3.1.tar.gz -o msrca.tar.gz")
                 os.system("tar xvzf msrca.tar.gz")
-                os.system("mv ./MaSuRCA-2.2.0 ./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+                os.system("mv ./MaSuRCA-2.0.3.1 ./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
                 os.chdir("./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
                 os.system("cp install.sh install.orig")
                 os.system("cat install.orig |sed s/\-\-prefix/\-\-disable\-shared\ \-\-prefix/g > install.sh")
@@ -914,16 +968,17 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
                    fileOptions = utils.getCommandOutput("file -b --mime INSTALL.py", False)
                    if fileOptions != "":
                       # fix file command used by MaSuRCA, its not compatible with the system
-                      os.system("cp bin/expand_fastq bin/expand_fastq.orig")
-                      testIn = open("bin/expand_fastq.orig", 'r')
-                      testOut = open("bin/expand_fastq", 'w')
-                      for line in testIn.xreadlines():
-                         if "case $(file" in line:
-                            testOut.write("case $(file -b --mime \"$FILE\" |awk '{print $1}'|sed s/\\;//g) in\n")
-                         else:
-                            testOut.write(line.strip() + "\n")
-                      testIn.close()
-                      testOut.close()
+                      if os.path.exists("bin/expand_fastq"):
+                         os.system("cp bin/expand_fastq bin/expand_fastq.orig")
+                         testIn = open("bin/expand_fastq.orig", 'r')
+                         testOut = open("bin/expand_fastq", 'w')
+                         for line in testIn.xreadlines():
+                            if "case $(file" in line:
+                               testOut.write("case $(file -b --mime \"$FILE\" |awk '{print $1}'|sed s/\\;//g) in\n")
+                            else:
+                               testOut.write(line.strip() + "\n")
+                         testIn.close()
+                         testOut.close()
                    else:
                       os.chdir("%s"%(METAMOS_ROOT))
                       os.system("rm -rf ./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
@@ -936,7 +991,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
                    os.system("cat bin/masurca.orig | sed  s/\\(\\'..TOTAL_READS\\'/\\(\\\\\\\\\\$ENV{\\'TOTAL_READS\\'}/g| sed s/'<..$NUM_SUPER_READS.'/\"<ENVIRON[\\'NUM_SUPER_READS\\']\"/g | sed s/'>=..$NUM_SUPER_READS.'/\">=ENVIRON[\\'NUM_SUPER_READS\\']\"/g > bin/masurca")
 
                 os.chdir("%s"%(METAMOS_ROOT))
-                os.system("rm -rf ./MaSuRCA-2.2.0")
+                os.system("rm -rf ./MaSuRCA-2.0.3.1")
                 os.system("rm msrca.tar.gz")
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%smira"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):

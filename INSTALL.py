@@ -95,6 +95,7 @@ else:
 
 addedCFlags=""
 addedLDFlags=""
+addedMakeFlags=""
 if OSTYPE == "Darwin":
    p = subprocess.Popen("echo `gcc --version`", shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
    (checkStdout, checkStderr) = p.communicate()
@@ -115,12 +116,14 @@ if OSTYPE == "Darwin":
    if cpplib != "":
       libPath="%s %s"%(libPath, cpplib)
 
-   addEnvironmentVar("CFLAGS", "-mmacosx-version-min=10.6 -static-libgcc")
-   addEnvironmentVar("CPPFLAGS", "-mmacosx-version-min=10.6 -static-libgcc")
-   addEnvironmentVar("CXXFLAGS", "-mmacosx-version-min=10.6 -static-libgcc")
-   addEnvironmentVar("LDFLAGS", "%s"%(libPath))
-   addedCFlags="-mmacosx-version-min=10.6 -static-libgcc"
+   commonFlags="-mmacosx-version-min=10.6 -static-libgcc"
+   addEnvironmentVar("CFLAGS", " %s "%(commonFlags))
+   addEnvironmentVar("CPPFLAGS", " %s "%(commonFlags))
+   addEnvironmentVar("CXXFLAGS", " %s "%(commonFlags))
+   addEnvironmentVar("LDFLAGS", " %s "%(libPath))
+   addedCFlags="%s"%(commonFlags)
    addedLDFlags="%s"%(libPath)
+   addedMakeFlags="-e CFLAGS=\"%s -O3\" -e CPPFLAGS=\"%s -O3\" -e CXXFLAGS=\"%s -O3\" LDFLAGS=\"%s\""%(commonFlags, commonFlags, commonFlags, libPath)
 
 libPaths = [ "/usr/lib", "/usr/lib64", "/usr/local/lib/", "/usr/local/lib64/", "/opt/local/lib/", "/opt/local/lib64/"] 
 for libPath in libPaths:
@@ -487,11 +490,14 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%svelvet"%(os.sep, OSTYPE, MACHINET
         os.chdir("./Utilities/cpp/%s%s-%s%svelvet"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         if OSTYPE == "Darwin":
            os.system("cp Makefile Makefile.orig")
-           os.system("cat Makefile.orig |awk '{if (match($1, \"CFLAGS=\")) { print $0\" %s\"; } else if (match($1, \"LDFLAGS=\")) { print $0\" %s\" } else { print $0; } }' > Makefile"%(addedCFlags, addedLDFlags))
+           numLD=utils.getCommandOutput("grep -c \"^LDFLAGS = \" Makefile.orig", False).strip()
+           if numLD == "" or int(numLD) == 0:
+              os.system("cat Makefile.orig |awk '{if (match($0, \"CFLAGS = \")) { print $0\" %s\\nLDFLAGS = %s\"; } else { print $0; } }' > Makefile"%(addedCFlags, addedLDFlags))
+           else:
+              os.system("cat Makefile.orig |awk '{if (match($0, \"CFLAGS = \")) { print $0\" %s\"; } else if (match($0, \"LDFLAGS = \")) { print $0\" %s\" } else { print $0; } }' > Makefile"%(addedCFlags, addedLDFlags))
         os.system("make CATEGORIES=16 MAXKMERLENGTH=127 OPENMP=1")
         os.chdir("%s"%(METAMOS_ROOT))
         os.system("rm %s"%archive)
-        sys.exit(1)
 
 # velvet-sc
 if not os.path.exists("./Utilities/cpp%s%s-%s%svelvet-sc"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
@@ -509,7 +515,11 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%svelvet-sc"%(os.sep, OSTYPE, MACHI
         os.chdir("./Utilities/cpp/%s%s-%s%svelvet-sc"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         if OSTYPE == "Darwin":
            os.system("cp Makefile Makefile.orig")
-           os.system("cat Makefile.orig |awk '{if (match($1, \"CFLAGS=\")) { print $0\" %s\"; } else if (match($1, \"LDFLAGS=\")) { print $0\" %s\" } else { print $0; } }' > Makefile"%(addedCFlags, addedLDFlags))
+           numLD=utils.getCommandOutput("grep -c \"^LDFLAGS = \" Makefile.orig", False).strip()
+           if numLD == "" or int(numLD) == 0:
+              os.system("cat Makefile.orig |awk '{if (match($0, \"CFLAGS = \")) { print $0\" %s\\nLDFLAGS = %s\"; } else { print $0; } }' > Makefile"%(addedCFlags, addedLDFlags))
+           else:
+              os.system("cat Makefile.orig |awk '{if (match($0, \"CFLAGS = \")) { print $0\" %s\"; } else if (match($0, \"LDFLAGS = \")) { print $0\" %s\" } else { print $0; } }' > Makefile"%(addedCFlags, addedLDFlags))
         os.system("make CATEGORIES=16 MAXKMERLENGTH=127 OPENMP=1")
         os.chdir("%s"%(METAMOS_ROOT))
         os.system("rm %s"%archive)
@@ -532,7 +542,7 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%sMetaVelvet"%(os.sep, OSTYPE, MACH
            os.system("cp Utils/Utils.hh Utils/Utils.hh.orig")
            os.system("cat Utils/Utils.hh.orig |awk '{if (match($0, \"#define MAX_STRING_LENGTH\")) { print \"#include <sys/types.h>\\n\"$0; } else { print $0; }}' > Utils/Utils.hh")
            os.system("cp Makefile Makefile.orig")
-           os.system("cat Makefile.orig |awk '{if (match($1, \"CFLAGS=\")) { print $0\" %s\"; } else if (match($1, \"LDFLAGS=\")) { print $0\" %s\" } else { print $0; } }' > Makefile"%(addedCFlags, addedLDFlags))
+           os.system("cat Makefile.orig |awk '{if (match($0, \"CFLAGS = \")) { print $0\" %s\"; } else if (match($0, \"CXXFLAGS =\")) { print $0\" %s\"; } else if (match($0, \"DFLAGS =\")) { print $0\" %s\" } else { print $0; } }' > Makefile"%(addedCFlags, addedCFlags, addedLDFlags))
         os.system("make CATEGORIES=16 MAXKMERLENGTH=127")
         os.chdir("%s"%(METAMOS_ROOT))
         os.system("rm %s"%archive)
@@ -973,9 +983,9 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              if float(gccVersion) < 4.4:
                 print "Error: MaSuRCA requires gcc at least version 4.4, found version %s. Please update and try again"%(gccVersion)
              else:
-                os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/MaSuRCA-2.0.3.1.tar.gz -o msrca.tar.gz")
+                os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/MaSuRCA-2.2.0.tar.gz -o msrca.tar.gz")
                 os.system("tar xvzf msrca.tar.gz")
-                os.system("mv ./MaSuRCA-2.0.3.1 ./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+                os.system("mv ./MaSuRCA-2.2.0 ./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
                 os.chdir("./Utilities/cpp%s%s-%s%sMaSuRCA"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
                 os.system("cp install.sh install.orig")
                 os.system("cat install.orig |sed s/\-\-prefix/\-\-disable\-shared\ \-\-prefix/g > install.sh")
@@ -1035,7 +1045,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
                    os.system("cat bin/masurca.orig | sed  s/\\(\\'..TOTAL_READS\\'/\\(\\\\\\\\\\$ENV{\\'TOTAL_READS\\'}/g| sed s/'<..$NUM_SUPER_READS.'/\"<ENVIRON[\\'NUM_SUPER_READS\\']\"/g | sed s/'>=..$NUM_SUPER_READS.'/\">=ENVIRON[\\'NUM_SUPER_READS\\']\"/g > bin/masurca")
 
                 os.chdir("%s"%(METAMOS_ROOT))
-                os.system("rm -rf ./MaSuRCA-2.0.3.1")
+                os.system("rm -rf ./MaSuRCA-2.2.0")
                 os.system("rm msrca.tar.gz")
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%smira"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
@@ -1285,7 +1295,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
            os.system("git clone --recursive git://github.com/ekg/freebayes.git freebayes")
            os.system("mv ./freebayes ./Utilities/cpp/%s%s-%s%sfreebayes"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
            os.chdir("./Utilities/cpp/%s%s-%s%sfreebayes"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-           os.system("make")
+           os.system("make %"%(addedMakeFlags))
            os.chdir("%s"%(METAMOS_ROOT))
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%scgal"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
@@ -1299,7 +1309,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
             os.system("tar xvf cgal.tar")
             os.system("mv cgal-0.9.6-beta ./Utilities/cpp/%s%s-%s%scgal"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
             os.chdir("./Utilities/cpp/%s%s-%s%scgal"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-            os.system("make")
+            os.system("make %s"%(addedMakeFlags))
             os.chdir("%s"%(METAMOS_ROOT))
             os.system("rm -rf cgal.tar")
 
@@ -1315,7 +1325,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
             os.system("tar xvf trnascan.tar")
             os.system("mv tRNAscan-SE-1.3.1 ./Utilities/cpp/%s%s-%s%strnascan"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
             os.chdir("./Utilities/cpp/%s%s-%s%strnascan"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-            os.system("make")
+            os.system("make %s"%(addedMakeFlags))
             os.chdir("%s"%(METAMOS_ROOT))
             os.system("rm -rf trnascan.tar")
 

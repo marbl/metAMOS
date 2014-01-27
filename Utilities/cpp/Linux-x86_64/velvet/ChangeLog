@@ -402,3 +402,59 @@ V 1.1.06
 - Added gap mask in Columbus
 - Offsets used in kmerOccurenceTable to accelerate searches
 - Some memory leaks
+
+V 1.1.07
+- Concurrency issues in Columbus
+- Pairing bug for odd number of reads
+- Variable size in reading sequence lengths
+- Ubuntu patch to Makefile
+
+V 1.1.08
+- Negative marker bug in TourBus
+- Better reading of SAM/BAM files
+- Added conserveLong option
+
+V 1.2.01
+- David Soper's create_binary option
+
+V 1.2.02
+- Strict Columbus
+- Recast SAM/BAM parser for pattern structure
+- David Soper changes to conserve reference masking of gaps
+- David Soper changes to store multiple mappings per sequence
+
+V 1.2.03
+- Comments in FastA headers are now discarded
+- Print reference mapping stats, and optional warning
+- Updated some warning printouts
+
+V 1.2.04
+- Crashing bugs linked to empty readsets.
+- Realloc bug when a read has more then 20 mappings.
+
+V 1.2.05
+- Scrubbing comments out of FastQ read names
+- Bug in multiple k-mer settings when kmax is equal to MAXKMERLENGTH
+- Bug when parsing parameters for multiple length k-mers
+
+V 1.2.06
+- Added test framework
+- Added option '-separate' to allow reading paired reads from 2 separate files
+
+V 1.2.07
+- Add file format option '-fmtAuto' to auto-detect compression (using gunzip/bunzip2) and format (only FastA or FastQ for now)
+- Updated MetaVelvet
+- Bug in unit testing
+- Compilation bug
+- Memory corruption when running multiple k-mers
+
+V 1.2.08
+- Bug in multi-kmer Columbus reference masks
+
+V 1.2.09
+- Bug in copying read mappings into Sequences file
+
+V 1.2.10
+- Bug in multi k-mer run
+- Addition of contributed 'read_prepare' script
+- Better detection of out-of-bounds error

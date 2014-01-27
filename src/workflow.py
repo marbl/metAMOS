@@ -192,7 +192,7 @@ def getAllWorkflows(path = "%s%sUtilities%sworkflows"%(sys.path[0], os.sep, os.s
      if os.path.exists("%s%sworkflows.ini"%(path, os.sep)):
         workflow_file = open("%s%sworkflows.ini"%(path, os.sep), 'r') 
         for line in workflow_file.xreadlines():
-           workflowName = line.strip()
+           workflowName = line.strip().lower()
            workflow = Workflow(workflowName, path)
            workflow.read()
            _workflows[workflowName] = workflow 

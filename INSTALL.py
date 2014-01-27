@@ -1303,6 +1303,22 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
             os.chdir("%s"%(METAMOS_ROOT))
             os.system("rm -rf cgal.tar")
 
+
+    if not os.path.exists("./Utilities/cpp%s%s-%s%strnascan"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+        if "trnascan" in packagesToInstall:
+           dl = 'y'
+        else:
+           print "tRNAscan not found, optional for Annotate step, download now?"
+           dl = raw_input("Enter Y/N: ")
+        if dl == 'y' or dl == 'Y':
+            os.system("curl -L http://lowelab.ucsc.edu/software/tRNAscan-SE.tar.gz -o trnascan.tar")
+            os.system("tar xvf trnascan.tar")
+            os.system("mv tRNAscan-SE-1.3.1 ./Utilities/cpp/%s%s-%s%strnascan"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+            os.chdir("./Utilities/cpp/%s%s-%s%strnascan"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+            os.system("make")
+            os.chdir("%s"%(METAMOS_ROOT))
+            os.system("rm -rf trnascan.tar")
+
     if not os.path.exists("./Utilities/cpp%s%s-%s%sREAPR"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        if "reapr" in packagesToInstall:
           dl = 'y'

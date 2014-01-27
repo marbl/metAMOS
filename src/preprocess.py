@@ -217,11 +217,7 @@ def Preprocess(input,output):
                    #parse out paired record (8 lines), rename header to be filename + "/1" or "/2", and remove reads with N
                    rf = open(read.path,'r')
                    npath = read.path.replace("/in/","/out/")
-                   #readpath,base = os.path.split(npath)
-                   #newpath = readpath+"lib%d"%(lib.id)
                    wf = open(npath,'w')
-                   #wf = open(read.path.replace("/in/","/out/"),'w')
-                   #wf = open(readpath+"lib%d"%(lib.id),'w')
                    start = 1
                    rcnt = 0
                    recordcnt = 0
@@ -379,9 +375,7 @@ def Preprocess(input,output):
                    rf = open(read.path,'r')
                    rq = open(read.path+".qual", 'r')
                    npath = read.path.replace("/in/","/out/")
-                   #print npath
-                   #readpath,base = os.path.split(npath)
-                   #newpath = readpath+"lib%d"%(lib.id)
+
                    wf = open(npath,'w')
                    wq = open(npath+".qual", 'w')
                    #wf = open(read.path.replace("/in/","/out/"),'w')

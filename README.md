@@ -1,13 +1,13 @@
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/50642308f8120a4dd17e617e46cc21b1 "githalytics.com")](http://githalytics.com/treangen/metAMOS)
-# MetAMOS v2.0rc1 "Praline Brownie" README
-Last updated: January 24rd 2014
+# MetAMOS v1.5rc1 "Praline Brownie" README
+Last updated: January 24th 2014
 ***********************************************************************************
-We are happy to announce version 2.0rc1, a.k.a. Praline Brownie 
+We are happy to announce version 1.5rc1, a.k.a. Praline Brownie 
 
 ## Table of Contents ##
 
 - [NEWS](#news)
 - [MetAMOS single file binary](#metamos-single-file-binary)
+    - [Download](http://www.cbcb.umd.edu/confcour/temp/metAMOS_binary_noblastdbs.tar.gz)
 - [SUMMARY](#summary)
     - [HARDWARE REQUIREMENTS](#a-hardware-requirements)
     - [SOFTWARE REQUIREMENTS](#b-software-requirements)
@@ -19,7 +19,8 @@ We are happy to announce version 2.0rc1, a.k.a. Praline Brownie
     - [EXAMPLE OUTPUT](#h-example-output)
     - [CONTACT](#i-contact)
     - [CITE](#j-cite)
-- [END](#end)
+    - [ISSUES](#k-issues)
+- [FIN](#end)
 
 ## NEWS
        1. iMetAMOS now available.
@@ -33,7 +34,7 @@ We are happy to announce version 2.0rc1, a.k.a. Praline Brownie
 
 -----------------------------------------------------------------------------------
 [TOC](#table-of-contents)
-## MetAMOS single file binary ## 
+## MetAMOS single file binary
 In attempt to further simplify the MetAMOS installation process, we are happy to announce the availability of a 'frozen' MetAMOS binary for Linux-x68_64 platforms. Along with this binary comes a significantly reduced list of prerequisites:
 
 * Java 1.6 (or newer)
@@ -59,7 +60,7 @@ Mac OSX equivalent will be soon appearing [here](http://www.cbcb.umd.edu/confcou
 
 ----------------------------------------------------------------------------------
 [TOC](#table-of-contents)
-## SUMMARY ##  
+## SUMMARY 
         A) HARDWARE REQUIREMENTS
         B) SOFTWARE REQUIREMENTS
         C) INSTALLING MetAMOS
@@ -70,15 +71,16 @@ Mac OSX equivalent will be soon appearing [here](http://www.cbcb.umd.edu/confcou
         H) EXAMPLE OUTPUT
         I) CONTACT
         J) CITE
+        K) ISSUES
 
 ----------------------------------------------------------------------------------
 [TOC](#table-of-contents)
 ### A) HARDWARE REQUIREMENTS 
 
-MetAMOS was designed to work on any standard 64bit Linx
+MetAMOS was designed to work on any standard 64bit Linux
 environment. To use MetAMOS for tutorial/teaching purposes, a minimum
 of 8 GB RAM is required. To get started on real data sets a minimum of
-32 GB of RAM is recommened, and anywhere from 64-1000 GB may be
+32 GB of RAM is recommended, and anywhere from 64-1000 GB may be
 necessary for larger datasets. In our experience, for most 50-100
 million read datasets, 64 GB is a good place to start (128 GB of memory now
 available on High Memory Instance at Amazon Elastic Compute Cloud ). 
@@ -90,7 +92,7 @@ available on High Memory Instance at Amazon Elastic Compute Cloud ).
 If you are using the frozen binary, you can skip this section. The metAMOS frozen
 binary includes dependencies and only requires perl 5.8+ and java 1.6+.
 
-The main prequisite software for installing/running metAMOS is python 2.6+, perl 5.8+,
+The main prerequisite software for installing/running metAMOS is python 2.6+, perl 5.8+,
 and java 1.6+. Depending on your platform/Linux distribution, you might also need to download and 
 install the following BEFORE running INSTALL.py:
 
@@ -109,7 +111,7 @@ install the following BEFORE running INSTALL.py:
 Additional software will be downloaded by metAMOS as needed.
 Additionally, there is some software that MetAMOS can
 incorporate into its pipeline that we are not allowed to distribute,
-such as MetaGeneMark and Newbler. To get a license to use MetaGeneMark, plesae
+such as MetaGeneMark and Newbler. To get a license to use MetaGeneMark, please
 visit: http://exon.gatech.edu/license_download.cgi. Once the tool is installed,
 add it to your PATH variable and metAMOS will then enable its use in the pipeline.
 
@@ -117,8 +119,8 @@ add it to your PATH variable and metAMOS will then enable its use in the pipelin
 [TOC](#table-of-contents)
 ### C) INSTALLING MetAMOS 
 
-To download the software release package, go [here](https://github.com/treangen/metAMOS/archive/Release2.0.zip).
-You can also browse the [repository](https://github.com/treangen/MetAMOS/tree/Release2.0)
+To download the software release package, go [here](https://github.com/treangen/metAMOS/archive/Release1.5.zip).
+You can also browse the [repository](https://github.com/treangen/MetAMOS/tree/Release1.5)
 and click on Downloads. Once downloaded, simply unpack the files and
 open the MetAMOS directory. Once inside the MetAMOS directory, run:
 ```
@@ -165,7 +167,7 @@ runPipeline -d projectDir -p 16
 ```
 
 The first component, initPipeline, is for creating new projects and
-also initiliazing sequence libraries. Currently interleaved &
+also initializing sequence libraries. Currently interleaved &
 non-interleaved fasta, fastq, and SFF files are supported. Input
 files can be compressed (bzip2, gzip) and can reside on remote
 servers (in this case the full URL must be specified). SRA run identifiers
@@ -218,7 +220,7 @@ initPipeline -q -m file.fastq.12,file2.fastq.12 -c file.contig.fa -d projectDir 
 ```
 initPipeline -q -1 ftp://ftp.cbcb.umd.edu/pub/data/metamos/gage-b-rb.miseq.1.fastq.gz -2 ftp://ftp.cbcb.umd.edu/pub/data/metamos/gage-b-rb.miseq.2.fastq.gz -d projectDir -i 300:500
 ```
-(unpared SRA run using iMetAMOS)
+(unpaired SRA run using iMetAMOS)
 ```
 initPipeline 1 <SRA RUN ID> -d projectDir -W iMetAMOS
 ```
@@ -335,7 +337,7 @@ following parameter to runPipeline:
 ```
 MetAMOS reruns steps based on timestamp information, so if the input
 files for a step in the pipeline hasn't changed since the last run, it
-will be skipped automatically. However, you can forefully run any step
+will be skipped automatically. However, you can forcefully run any step
 in the pipeline by passing the following parameter to runPipeline:
 ```
 -f,--force=Step1,..
@@ -351,7 +353,7 @@ Upon completion, all of the final results will be stored in the
 Postprocess/out directory. A component, create_summary.py, takes
 this directory as input and as output, generates an HTML page with
 with summary statistics and a few plots. An optional component, create_plots.py,
-takes one or multiple Posprocess/out directories as input and generates
+takes one or multiple Postprocess/out directories as input and generates
 comparative plots.
 
 
@@ -404,7 +406,7 @@ lib1f1: /Users/skoren/Personal/Research/metAMOS/Test/carsonella_pe_1.fna.gz,2000
 lib1f2: /Users/skoren/Personal/Research/metAMOS/Test/carsonella_pe.2.fna.gz,2000,5000,3500,500
 ```
 
-Workflows may be shared between users, as long as the input files are accessible (i.e. they are on a remote server on the systems share a filesystem). Workflow files should be placed in the metAMOS/workflows directory or the working directory where metAMOS is launched.
+Workflows may be shared between users, as long as the input files are accessible (i.e. they are on a remote server or the systems share a file system). Workflow files should be placed in the metAMOS/workflows directory or the working directory where metAMOS is launched.
 
 ----------------------------------------------------------------------------------
 [TOC](#table-of-contents)
@@ -412,7 +414,7 @@ Workflows may be shared between users, as long as the input files are accessible
 
 MetAMOS allows new tools to be added to the ASSEMBLE and ANNOTATE steps without requiring code changes. The addition of a tool is a three-step process. 
 
-###### 1) Add the tool name under metAMOS/Utilities/<STEPNAME>.generic. For example. if you want to add a new assembler, you would modify ASSEMBLE.generic. This file contains one tool name per line. The tool name is arbitrary text and will be used by metAMOS to look up detailed configuration. The current ASSEMBLE.generic looks like:
+###### 1) Add the tool name under metAMOS/Utilities/\<STEPNAME\>.generic. For example. if you want to add a new assembler, you would modify ASSEMBLE.generic. This file contains one tool name per line. The tool name is arbitrary text and will be used by metAMOS to look up detailed configuration. The current ASSEMBLE.generic looks like:
 ```
 % cat Utilities/config/ASSEMBLE.generic
 abyss
@@ -465,14 +467,14 @@ The [CONFIG] section is the generic configuration section, you can specify step-
  * name - the full name of the tool you want to report later on. This can be arbitrary text.
  * output - where the output contigs from the tool are. For assemblers, this is contigs. [PREFIX] is a keyword for the metAMOS prefix for the assembly when it is run. This is assumed to be relative to the metAMOS run directory.
  * scaffoldOutput - where the output scaffolds from the tool are, if available.
- * backupOutput - some assemblers fail to generate their final output on some datasets. In this case, this can specify prelminiary contig output which will only be used if the main output is not available.
+ * backupOutput - some assemblers fail to generate their final output on some datasets. In this case, this can specify preliminary contig output which will only be used if the main output is not available.
  * location - path to the executable. This is relative to metAMOS/Utilities. You can specify [MACHINE] to substitute your machine type into the executable path (i.e. Linux-x86_64). The user path will be searched if the tool is not found in the specified location
  * threads - the parameter to pass number of threads to use for the program, if available
  * paired - how to pass paired-end (assumed innie) interleaved data (FIRST refers to left mates, SECOND to right)
  * paired_interleaved - how to pass paired-end (assumed innie) non-interleaved. FIRST refers to the interleaved file.
  * mated - how to pass mate-pair data (assumed outtie) non-interleaved data (FIRST refers to left mates, SECOND to right)
  * mated_interleaved - how to pass mate-pair data (assumed outtie) interleaved mates
- * unpaired - how to pass fragment data to the program. FIRST referes to the unmated file.
+ * unpaired - how to pass fragment data to the program. FIRST refers to the unmated file.
  * commands - an arbitrary list of commands to run to execute the tool. Multiple lines are supported with the \ character. Multiple commands can be specified using &&. In the above example, rm -rf will run first followed by Ray. Common useful keywords are:
     * [PREFIX] - the prefix to use for output 
     * [RUNDIR] where the program is running
@@ -510,14 +512,16 @@ max_rd_len=150
 [LIB]
 [INPUT]
 ```
-Here, the config template is specified (again relative to metAMOS/Utilities) and the [INPUT] keyword will be replaced by the library information at runtime.
+Here, the config template is specified (again relative to metAMOS/Utilities) and the [INPUT] keyword will be replaced by the library information at run time.
 
 ###### 3) Add a citation to the tool under metAMOS/doc/citations.rst
 Citations are tab-delimited and specify the lower-case tool alias, full tool-name, and citation information. For example:
+```
 soap_v105	SOAPdenovo v1.05	Li Y, Hu Y, Bolund L, Wang J: State of the art de novo assembly of human genomes from massively parallel sequencing data.Human genomics 2010, 4:271-277.
+```
 The citation will be automatically printed by metAMOS whenever a run uses the specified tool. 
 
-###### 4) For ANNOTATE tools, we also need a way to convert the output to Krona. By default, metAMOS will look for an Import<toolName>.pl script. If one is not found, it will rely on a generic import which will assumed a tab-delimited format:
+###### 4) For ANNOTATE tools, we also need a way to convert the output to Krona. By default, metAMOS will look for an Import\<toolName\>.pl script. If one is not found, it will rely on a generic import which will assumed a tab-delimited format:
 ```
 contig/readID	NCBI Taxonomy ID
 ```
@@ -607,7 +611,7 @@ is a brief listing of the test scripts we currently include:
 [TOC](#table-of-contents)
 ### H) Example output
 
-MetAMOS generates an interactive webpage once a run successfully completes:
+MetAMOS generates an interactive web page once a run successfully completes:
 http://treangen.github.io/metAMOS/example/html/summary.html
 
 This includes summary statistics and taxonomic information based on Krona [1].
@@ -641,7 +645,7 @@ metAMOS uses the prefix "proba" (Galician for test). Thus, files will have the n
 
 * <taxonomy>.original.reads.annots	
 
-    Tab-delimited taxonomic level assignments as above, where contigs are replaced wich their constituent sequences.
+    Tab-delimited taxonomic level assignments as above, where contigs are replaced with their constituent sequences.
 
 * <taxonomy>.propagated.annots		
 
@@ -649,7 +653,7 @@ metAMOS uses the prefix "proba" (Galician for test). Thus, files will have the n
 
 * <taxonomy>.propagated.reads.annots	
 
-    Tab-delimited file as above after propagation and having contigs replaced with their constutent reads.
+    Tab-delimited file as above after propagation and having contigs replaced with their constituent reads.
 
 * html				
 
@@ -747,9 +751,6 @@ by submitting a new issue online. Please include information on your run,
 any output produced by runPipeline, as well as the pipeline.* files and the 
 Log/<LAST_STEP> file (if not too large).
 
-[TOC](#table-of-contents)
-### J) CONTACT
-
 Who to contact to report bugs, forward complaints, feature requests:
 
 Todd Treangen: treangen@gmail.com
@@ -757,7 +758,7 @@ Sergey Koren: sergek@umd.edu
 
 ----------------------------------------------------------------------------------
 [TOC](#table-of-contents)
-### K) CITE
+### J) CITE
 
 Treangen TJ\*, Koren S\*, Sommer DD, Liu B, Astrovskaya I, Ondov B,
 Darling AE, Phillippy AM, Pop M.  MetAMOS: a modular and open source
@@ -769,4 +770,8 @@ url: http://genomebiology.com/content/pdf/gb-2013-14-1-r2.pdf
 *Indicates both authors contributed equally to this work
 
 [TOC](#table-of-contents)
-## END
+### K) ISSUES
+
+Here is a [link](https://github.com/treangen/metAMOS/issues?state=open) to known, open issues.
+
+## FIN

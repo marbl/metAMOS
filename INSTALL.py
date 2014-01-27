@@ -116,6 +116,7 @@ for flow in workflows:
 
 manual = False
 fail = False
+nodbs = False
 
 availableWf = workflow.getSupportedWorkflows("%s/Utilities/workflows"%(METAMOS_ROOT), False)
 for wf in availableWf:
@@ -138,6 +139,9 @@ if (len(sys.argv) > 1):
         manual = True
         for flow in workflows:
            enabledWorkflows.update(workflows[flow].getDerivedName())
+      elif arg.lower() == "nodbs":
+        nodbs = True
+
       elif arg.lower() in knownPackages:
          packagesToInstall.add(arg.lower())
          for flow in workflows:
@@ -348,14 +352,14 @@ if not os.path.exists("./Utilities/DB/kraken"):
        settings.OSTYPE = OSTYPE
        mem = utils.getAvailableMemory(settings)
 
-       if (mem < 100):
+       if (mem < 100) and not nodbs:
           print "Insufficient memory to build full Kraken database. Requires at least 100GB of memory, using mini DB"
           archive = "minikraken.tgz"
           os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -o %s"%(archive, archive))
           os.system("tar xvzf %s"%(archive))
           os.system("mv minikraken_* ./Utilities/DB/kraken")
           os.system("rm %s"%(archive))
-       else:
+       elif not nodbs:
           # first we need jellyfish which is used to build DB
           # kraken needs jellyfish, if we don't find it build it and add to path
           jellyfish = utils.getFromPath("jellyfish", "Jellyfish", False)
@@ -411,7 +415,7 @@ if not os.path.exists("KronaTools/taxonomy/taxonomy.tab") or 0:
     else:
        print "KronaTools taxonomy data not found, needed for Postprocess, download now (will take around 20 minutes)?"
        dl = raw_input("Enter Y/N: ")
-    if dl == 'y' or dl == 'Y':
+    if (dl == 'y' or dl == 'Y') and not nodbs:
         os.system("cd KronaTools && ./updateTaxonomy.sh")
         os.chdir("%s"%(METAMOS_ROOT))
         os.system("cat KronaTools/taxonomy/taxonomy.tab |awk -F \"\\t\" '{print $1\"\\\t\"$NF}' > ./Utilities/DB/tax_key.tab")
@@ -435,7 +439,7 @@ if not os.path.exists("./Utilities/DB/uniprot_sprot.fasta"):
     else:
        print "Uniprot/Swissprot DB not found, optional for Functional Annotation, download now?"
        dl = raw_input("Enter Y/N: ")
-    if dl == 'y' or dl == 'Y':
+    if (dl == 'y' or dl == 'Y') and not nodbs:
         archive = "uniprot.tar.gz"
         os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -o %s" %(archive, archive))
         os.system("tar -C ./Utilities/DB/ -xvf %s" % archive)
@@ -518,7 +522,7 @@ if "optional" in enabledWorkflows or manual:
         else:
            print "Genome models not found, optional for FCP/NB, download now?"
            dl = raw_input("Enter Y/N: ")
-        if dl == 'y' or dl == 'Y':
+        if (dl == 'y' or dl == 'Y') and not nodbs:
             archive = "fcp_models.tar.gz"
             os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -o %s" %(archive, archive))
             os.system("rm -rf ./Utilities/DB/blast_data")
@@ -557,10 +561,12 @@ if "optional" in enabledWorkflows or manual:
              os.system("rm -rf params-validate.tar.gz")
     
     # check the number of files the DB currently is and see if we have the expected number
-    dbResult = utils.getCommandOutput("perl ./Utilities/perl/update_blastdb.pl refseq_protein --numpartitions", False)
-    if dbResult == "":
+    dbResult = ""
+    if not nodbs:
+        dbResult = utils.getCommandOutput("perl ./Utilities/perl/update_blastdb.pl refseq_protein --numpartitions", False)
+    if not nodbs and dbResult == "":
        print "Error: could not connect to NCBI, will not be installing refseq protein DB"
-    else:
+    elif not nodbs:
        (dbName, numPartitions) = dbResult.split("\t", 1) 
        print "Checking whether %s is complete. Expecting %d partitions.\n"%(dbName, int(numPartitions))
        numPartitions = int(numPartitions) - 1
@@ -1209,25 +1215,27 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
             # since quast requires a reference, also download refseq
             ftpSite = "ftp://ftp.ncbi.nih.gov/genomes/"
             file = "all.fna.tar.gz"
-            print "Downloading refseq genomes (Bacteria/%s, Viruses/%s)..."%(file,file)
-            print "\tThis file is large and may take time to download"
-            os.system("curl -L %s/Bacteria/%s -o bacteria.tar.gz"%(ftpSite, file))
-            os.system("curl -L %s/Viruses/%s -o viruses.tar.gz"%(ftpSite, file))
-            os.system("mkdir -p ./Utilities/DB/refseq/temp")
-            os.system("mv bacteria.tar.gz ./Utilities/DB/refseq/temp")
-            os.system("mv viruses.tar.gz  ./Utilities/DB/refseq/temp")
-            os.chdir("./Utilities/DB/refseq/temp")
-            os.system("tar xvzf bacteria.tar.gz")
-            os.system("tar xvzf viruses.tar.gz")
-            os.chdir("..")
-            print "Current directory is %s"%(os.getcwd())
-            for file in os.listdir("%s/temp"%(os.getcwd())):
-               file = "%s%stemp%s%s"%(os.getcwd(), os.sep, os.sep, file)
-               if os.path.isdir(file):
-                  prefix = os.path.splitext(os.path.basename(file))[0]
-                  os.system("cat %s/*.fna > %s.fna"%(file, prefix))
-            os.system("rm -rf temp")
-            os.chdir("%s"%(METAMOS_ROOT))
+            if not nodbs:
+                
+                print "Downloading refseq genomes (Bacteria/%s, Viruses/%s)..."%(file,file)
+                print "\tThis file is large and may take time to download"
+                os.system("curl -L %s/Bacteria/%s -o bacteria.tar.gz"%(ftpSite, file))
+                os.system("curl -L %s/Viruses/%s -o viruses.tar.gz"%(ftpSite, file))
+                os.system("mkdir -p ./Utilities/DB/refseq/temp")
+                os.system("mv bacteria.tar.gz ./Utilities/DB/refseq/temp")
+                os.system("mv viruses.tar.gz  ./Utilities/DB/refseq/temp")
+                os.chdir("./Utilities/DB/refseq/temp")
+                os.system("tar xvzf bacteria.tar.gz")
+                os.system("tar xvzf viruses.tar.gz")
+                os.chdir("..")
+                print "Current directory is %s"%(os.getcwd())
+                for file in os.listdir("%s/temp"%(os.getcwd())):
+                    file = "%s%stemp%s%s"%(os.getcwd(), os.sep, os.sep, file)
+                    if os.path.isdir(file):
+                        prefix = os.path.splitext(os.path.basename(file))[0]
+                        os.system("cat %s/*.fna > %s.fna"%(file, prefix))
+                os.system("rm -rf temp")
+                os.chdir("%s"%(METAMOS_ROOT))
    
     if not os.path.exists("./Utilities/cpp%s%s-%s%sfreebayes"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
         if "freebayes" in packagesToInstall:
@@ -1416,7 +1424,7 @@ if "deprecated" in enabledWorkflows or manual:
         else:
            print "Glimmer-MG not found, optional for FindORFS step. Caution, this will take approx. 24 hours to complete, including Phymm download & install. download & install now?"
            dl = raw_input("Enter Y/N: ")
-        if dl == 'y' or dl == 'Y':
+        if (dl == 'y' or dl == 'Y') or not nodbs:
             archive = "glimmer-mg-0.3.1.tar.gz"
             os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -o %s" %(archive, archive))
             os.system("tar -C ./Utilities/ -xvf %s" % archive)

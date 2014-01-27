@@ -1,5 +1,13 @@
 import os, sys, string, subprocess, distutils.util, site, glob, multiprocessing
 
+def addEnvironmentVar(varName, newValue, sep = " "):
+   oldVal = ""
+   if varName in os.environ:
+      oldVal = os.environ[varName]
+      os.environ[varName] = newValue + sep + oldVal
+   else:
+      os.environ[varName] = newValue
+
 user_home = os.environ["HOME"]
 print "<<Welcome to metAMOS install>>"
 
@@ -85,6 +93,8 @@ if checkStderr != "":
 else:
    MACHINETYPE = checkStdout.strip()
 
+addedCFlags=""
+addedLDFlags=""
 if OSTYPE == "Darwin":
    p = subprocess.Popen("echo `gcc --version`", shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
    (checkStdout, checkStderr) = p.communicate()
@@ -95,6 +105,22 @@ if OSTYPE == "Darwin":
       HAVE_GCC42=False
    else:
       HAVE_GCC42=True
+
+   # global vars for building
+   libPath=""
+   clib=utils.getCommandOutput("g++ -print-file-name=libgcc.a", False)
+   if clib != "":
+      libPath="%s"%(clib)
+   cpplib=utils.getCommandOutput("g++ -print-file-name=libstdc++.a", False)
+   if cpplib != "":
+      libPath="%s %s"%(libPath, cpplib)
+
+   addEnvironmentVar("CFLAGS", "-mmacosx-version-min=10.6 -static-libgcc")
+   addEnvironmentVar("CPPFLAGS", "-mmacosx-version-min=10.6 -static-libgcc")
+   addEnvironmentVar("CXXFLAGS", "-mmacosx-version-min=10.6 -static-libgcc")
+   addEnvironmentVar("LDFLAGS", "%s"%(libPath))
+   addedCFlags="-mmacosx-version-min=10.6 -static-libgcc"
+   addedLDFlags="%s"%(libPath)
 
 libPaths = [ "/usr/lib", "/usr/lib64", "/usr/local/lib/", "/usr/local/lib64/", "/opt/local/lib/", "/opt/local/lib64/"] 
 for libPath in libPaths:
@@ -459,9 +485,13 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%svelvet"%(os.sep, OSTYPE, MACHINET
         os.system("tar -xvzf %s"%(archive))
         os.system("mv velvet_1.2.10 ./Utilities/cpp/%s%s-%s%svelvet"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.chdir("./Utilities/cpp/%s%s-%s%svelvet"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-        os.system("make CATEGORIES=16 BUNDLEDZLIB=1 MAXKMERLENGTH=127 OPENMP=1")
+        if OSTYPE == "Darwin":
+           os.system("cp Makefile Makefile.orig")
+           os.system("cat Makefile.orig |awk '{if (match($1, \"CFLAGS=\")) { print $0\" %s\"; } else if (match($1, \"LDFLAGS=\")) { print $0\" %s\" } else { print $0; } }' > Makefile"%(addedCFlags, addedLDFlags))
+        os.system("make CATEGORIES=16 MAXKMERLENGTH=127 OPENMP=1")
         os.chdir("%s"%(METAMOS_ROOT))
         os.system("rm %s"%archive)
+        sys.exit(1)
 
 # velvet-sc
 if not os.path.exists("./Utilities/cpp%s%s-%s%svelvet-sc"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
@@ -476,14 +506,17 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%svelvet-sc"%(os.sep, OSTYPE, MACHI
         os.system("rm -rf ./Utilities/cpp%s%s-%s%svelvet-sc"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.system("tar -xvzf %s"%(archive))
         os.system("mv velvet-sc ./Utilities/cpp/%s%s-%s%svelvet-sc"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-        os.chdir("./Utilities/cpp/%s%s-%s%svelvet"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-        os.system("make CATEGORIES=16 BUNDLEDZLIB=1 MAXKMERLENGTH=127 OPENMP=1")
+        os.chdir("./Utilities/cpp/%s%s-%s%svelvet-sc"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        if OSTYPE == "Darwin":
+           os.system("cp Makefile Makefile.orig")
+           os.system("cat Makefile.orig |awk '{if (match($1, \"CFLAGS=\")) { print $0\" %s\"; } else if (match($1, \"LDFLAGS=\")) { print $0\" %s\" } else { print $0; } }' > Makefile"%(addedCFlags, addedLDFlags))
+        os.system("make CATEGORIES=16 MAXKMERLENGTH=127 OPENMP=1")
         os.chdir("%s"%(METAMOS_ROOT))
         os.system("rm %s"%archive)
 
 # metavelvet
-if not os.path.exists("./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
-    if "kraken" in packagesToInstall:
+if not os.path.exists("./Utilities/cpp%s%s-%s%sMetaVelvet"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+    if "metavelvet" in packagesToInstall:
        dl = 'y'
     else:
        print "MetaVelvet not found, optional for Assemble step, download now?"
@@ -495,6 +528,11 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINET
         os.system("tar -xvzf %s"%(archive))
         os.system("mv MetaVelvet-1.2.02 ./Utilities/cpp/%s%s-%s%sMetaVelvet"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.chdir("./Utilities/cpp/%s%s-%s%sMetaVelvet"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        if OSTYPE == "Darwin":
+           os.system("cp Utils/Utils.hh Utils/Utils.hh.orig")
+           os.system("cat Utils/Utils.hh.orig |awk '{if (match($0, \"#define MAX_STRING_LENGTH\")) { print \"#include <sys/types.h>\\n\"$0; } else { print $0; }}' > Utils/Utils.hh")
+           os.system("cp Makefile Makefile.orig")
+           os.system("cat Makefile.orig |awk '{if (match($1, \"CFLAGS=\")) { print $0\" %s\"; } else if (match($1, \"LDFLAGS=\")) { print $0\" %s\" } else { print $0; } }' > Makefile"%(addedCFlags, addedLDFlags))
         os.system("make CATEGORIES=16 MAXKMERLENGTH=127")
         os.chdir("%s"%(METAMOS_ROOT))
         os.system("rm %s"%archive)
@@ -1060,8 +1098,8 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.chdir("..")
              os.system("mv Makefile Makefile.orig")
              os.system("cat Makefile.orig |sed s/CFLAGS?=/CFLAGS+=/g |sed s/CPPFLAGS?=/CPPFLAGS+=/g > Makefile")
-             os.environ["CFLAGS"] = "-L%s/Utilities/cpp%s%s-%s%seautils/gsl/build/lib/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
-             os.environ["CPPFLAGS"] = "-L%s/Utilities/cpp%s%s-%s%seautils/gsl/build/lib/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
+             addEnvironmentVar("CFLAGS", "-L%s/Utilities/cpp%s%s-%s%seautils/gsl/build/lib/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep))
+             addEnvironmentVar("CPPFLAGS", "-L%s/Utilities/cpp%s%s-%s%seautils/gsl/build/lib/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("make")
              os.chdir("%s"%(METAMOS_ROOT))
              os.system("rm -rf eautils.tar.gz")
@@ -1088,9 +1126,9 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("tar xvzf abyss.tar.gz")
              os.chdir("abyss-1.3.6")
              os.system("ln -s %s/boost_1_54_0/boost boost"%(METAMOS_ROOT))
-             os.environ["CFLAGS"] = "-I%s/sparsehash-2.0.2/include"%(METAMOS_ROOT)
-             os.environ["CPPFLAGS"] = "-I%s/sparsehash-2.0.2/include"%(METAMOS_ROOT)
-             os.environ["CXXFLAGS"] = "-I%s/sparsehash-2.0.2/include"%(METAMOS_ROOT)
+             addEnvironmentVar("CFLAGS", "-I%s/sparsehash-2.0.2/include"%(METAMOS_ROOT))
+             addEnvironmentVar("CPPFLAGS", "-I%s/sparsehash-2.0.2/include"%(METAMOS_ROOT))
+             addEnvironmentVar("CXXFLAGS", "-I%s/sparsehash-2.0.2/include"%(METAMOS_ROOT))
 
              # sparse hash library has unused variables which cause warnings with gcc 4.8 so disable -Werror
              gccVersion = utils.getCommandOutput("gcc --version|grep gcc|awk '{print $NF}' |awk -F \".\" '{print $1\".\"$2}'", False)

@@ -793,6 +793,32 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
            os.chdir("%s"%(METAMOS_ROOT))
            os.system("rm -rf kmer.tar.gz")
 
+    if not os.path.exists("./Utilities/cpp%s%s-%s%sspades"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+        spades = utils.getFromPath("spades.py", "SPAdes", False)
+        if spades == "":
+           if "spades" in packagesToInstall:
+              dl = 'y'
+           else:
+              print "SPAdes was not found, optional for Assemble step, download now?"
+              dl = raw_input("Enter Y/N: ")
+        if dl == 'y' or dl == 'Y':
+           if OSTYPE == "Darwin":
+              gccVersion = utils.getCommandOutput("gcc --version|grep gcc|awk '{print $NF}' |awk -F \".\" '{print $1\".\"$2}'", False)
+              if float(gccVersion) < 4.7:
+                 print "Error: SPAdes requires gcc at least version 4.7, found version %s. Please update and try again"%(gccVersion)
+              else:
+                 os.system("curl -L http://spades.bioinf.spbau.ru/release3.0.0/SPAdes-3.0.0.tar.gz -o spades.tar.gz")
+                 os.system("tar xvzf spades.tar.gz")
+                 os.system("mv SPAdes-3.0.0 ./Utilities/cpp%s%s-%s%sspades"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+                 os.chdir("./Utilities/cpp%s%s-%s%sspades"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+                 os.system("bash spades_compile.sh")
+                 os.chdir("%s"%(METAMOS_ROOT))
+           else:
+              os.system("curl -L http://spades.bioinf.spbau.ru/release3.0.0/SPAdes-3.0.0-Linux.tar.gz -o spades.tar.gz")
+              os.system("tar xvzf spades.tar.gz")
+              os.system("mv SPAdes-3.0.0-Linux ./Utilities/cpp%s%s-%s%sspades"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+           os.system("rm -rf spades.tar.gz")
+
     if not os.path.exists("./Utilities/cpp%s%s-%s%sprokka"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        prokaBin = utils.getFromPath("prokka", "Prokka", False)
        dl = 'n'

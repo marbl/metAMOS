@@ -1011,6 +1011,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              else:
                 os.system("curl -L http://sourceforge.net/projects/soapdenovo2/files/SOAPdenovo2/bin/r240/SOAPdenovo2-bin-LINUX-generic-r240.tgz -o soap2.tar.gz")
                 os.system("tar xvzf soap2.tar.gz")
+                os.system("mkdir ./Utilities/cpp%s%s-%s%ssoap2"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
                 os.system("mv SOAPdenovo2-bin-LINUX-generic-r240 ./Utilities/cpp%s%s-%s%ssoap2/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("curl -L http://sourceforge.net/projects/soapdenovo2/files/GapCloser/src/r6/GapCloser-src-v1.12-r6.tgz -o gapcloser.tar.gz")
              os.system("tar xvzf gapcloser.tar.gz")

@@ -523,7 +523,8 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%svelvet"%(os.sep, OSTYPE, MACHINET
         os.system("mv velvet_1.2.10 ./Utilities/cpp/%s%s-%s%svelvet"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.chdir("./Utilities/cpp/%s%s-%s%svelvet"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
-        os.system("make CATEGORIES=16 MAXKMERLENGTH=127 OPENMP=1")
+        os.system("make clean")
+        os.system("make CATEGORIES=16 MAXKMERLENGTH=127 OPENMP=1 BUNDLEDZLIB=1")
         os.chdir("%s"%(METAMOS_ROOT))
         os.system("rm %s"%archive)
 
@@ -542,6 +543,7 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%svelvet-sc"%(os.sep, OSTYPE, MACHI
         os.system("mv velvet-sc ./Utilities/cpp/%s%s-%s%svelvet-sc"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.chdir("./Utilities/cpp/%s%s-%s%svelvet-sc"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
+        os.system("make clean")
         os.system("make CATEGORIES=16 MAXKMERLENGTH=127 OPENMP=1")
         os.chdir("%s"%(METAMOS_ROOT))
         os.system("rm %s"%archive)
@@ -564,11 +566,28 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%sMetaVelvet"%(os.sep, OSTYPE, MACH
            os.system("cp Utils/Utils.hh Utils/Utils.hh.orig")
            os.system("cat Utils/Utils.hh.orig |awk '{if (match($0, \"#define MAX_STRING_LENGTH\")) { print \"#include <sys/types.h>\\n\"$0; } else { print $0; }}' > Utils/Utils.hh")
            updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
-
+        os.system("make")
         os.system("make CATEGORIES=16 MAXKMERLENGTH=127")
         os.chdir("%s"%(METAMOS_ROOT))
         os.system("rm %s"%archive)
         
+if "viritas" in enabledWorkflows or manual:
+    if not os.path.exists("./Utilities/cpp%s%s-%s%strnascan"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+        if "trnascan" in packagesToInstall:
+           dl = 'y'
+        else:
+           print "tRNAscan not found, optional for Annotate step, download now?"
+           dl = raw_input("Enter Y/N: ")
+        if dl == 'y' or dl == 'Y':
+            os.system("curl -L http://lowelab.ucsc.edu/software/tRNAscan-SE.tar.gz -o trnascan.tar")
+            os.system("tar xvf trnascan.tar")
+            os.system("mv tRNAscan-SE-1.3.1 ./Utilities/cpp/%s%s-%s%strnascan"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+            os.chdir("./Utilities/cpp/%s%s-%s%strnascan"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+            updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
+            os.system("make")
+            os.chdir("%s"%(METAMOS_ROOT))
+            os.system("rm -rf trnascan.tar")
+
 # now workflow specific tools
 if "optional" in enabledWorkflows or manual:
     if not os.path.exists("./Utilities/cpp/%s-%s/metaphylerClassify"%(OSTYPE, MACHINETYPE)) or not os.path.exists("./Utilities/perl/metaphyler/markers/markers.protein") or not os.path.exists("./Utilities/perl/metaphyler/markers/markers.dna"):
@@ -979,19 +998,25 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              dl = raw_input("Enter Y/N: ")
           if dl == 'y' or dl == 'Y':
              if OSTYPE == "Darwin":
-                os.system("curl -L http://sourceforge.net/projects/soapdenovo2/files/SOAPdenovo2/bin/r223/SOAPdenovo2-bin-MACOS-generic-r223.tgz -o soap2.tar.gz")
+                os.system("curl -L http://sourceforge.net/projects/soapdenovo2/files/SOAPdenovo2/src/r240/SOAPdenovo2-src-r240-mac.tgz -o soap2.tar.gz")
+                os.system("tar xvzf soap2.tar.gz")
+                os.system("mv r240_noAIOinPregraph ./Utilities/cpp%s%s-%s%ssoap2"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+                os.chdir("./Utilities/cpp%s%s-%s%ssoap2"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+                updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
+                os.system("make clean")
+                os.system("make")
+                os.system("mkdir bin")
+                os.system("mv SOAPdenovo-* bin/")
+                os.chdir("%s"%(METAMOS_ROOT))
              else:
-                os.system("curl -L http://sourceforge.net/projects/soapdenovo2/files/SOAPdenovo2/bin/r223/SOAPdenovo2-bin-LINUX-generic-r223.tgz -o soap2.tar.gz")
+                os.system("curl -L http://sourceforge.net/projects/soapdenovo2/files/SOAPdenovo2/bin/r240/SOAPdenovo2-bin-LINUX-generic-r240.tgz -o soap2.tar.gz")
+                os.system("tar xvzf soap2.tar.gz")
+                os.system("mv SOAPdenovo2-bin-LINUX-generic-r240 ./Utilities/cpp%s%s-%s%ssoap2/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("curl -L http://sourceforge.net/projects/soapdenovo2/files/GapCloser/src/r6/GapCloser-src-v1.12-r6.tgz -o gapcloser.tar.gz")
              os.system("tar xvzf gapcloser.tar.gz")
              os.chdir("v1.12-r6")
              updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
              os.system("make")
-             os.chdir("%s"%(METAMOS_ROOT))
-             os.system("mkdir -p ./Utilities/cpp%s%s-%s%ssoap2/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-             os.system("mv soap2.tar.gz ./Utilities/cpp%s%s-%s%ssoap2/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-             os.chdir("./Utilities/cpp%s%s-%s%ssoap2/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-             os.system("tar xvzf soap2.tar.gz")
              os.chdir("%s"%(METAMOS_ROOT))
              os.system("mv v1.12-r6/Release/* ./Utilities/cpp%s%s-%s%ssoap2/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("rm -rf soap2.tar.gz")
@@ -1076,7 +1101,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
 
                 if OSTYPE == "Darwin":
                    os.system("cp bin/masurca bin/masurca.orig")
-                   os.system("cat bin/masurca.orig | sed  s/\\(\\'..TOTAL_READS\\'/\\(\\\\\\\\\\$ENV{\\'TOTAL_READS\\'}/g| sed s/'<..$NUM_SUPER_READS.'/\"<ENVIRON[\\'NUM_SUPER_READS\\']\"/g | sed s/'>=..$NUM_SUPER_READS.'/\">=ENVIRON[\\'NUM_SUPER_READS\\']\"/g > bin/masurca")
+                   os.system("cat bin/masurca.orig | awk '{if (match($0, \"save NUM_SUPER_READS\")) { print $0\"\\n\\tprint FILE \\\"export NUM_SUPER_READS=\\\\$NUM_SUPER_READS\\\\n\\\";\"; } else { print $0}}' | sed  s/\\(\\'..TOTAL_READS\\'/\\(\\\\\\\\\\$ENV{\\'TOTAL_READS\\'}/g| sed s/'<..$NUM_SUPER_READS.'/\"<ENVIRON[\\\\\\\\\\\"NUM_SUPER_READS\\\\\\\\\\\"]\"/g | sed s/'>=..$NUM_SUPER_READS.'/\">=ENVIRON[\\\\\\\\\\\"NUM_SUPER_READS\\\\\\\\\\\"]\"/g > bin/masurca")
 
                    # reset env variables again
                    addEnvironmentVar("CFLAGS", " %s "%(addedCFlags))
@@ -1358,23 +1383,6 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
             os.system("make")
             os.chdir("%s"%(METAMOS_ROOT))
             os.system("rm -rf cgal.tar")
-
-
-    if not os.path.exists("./Utilities/cpp%s%s-%s%strnascan"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
-        if "trnascan" in packagesToInstall:
-           dl = 'y'
-        else:
-           print "tRNAscan not found, optional for Annotate step, download now?"
-           dl = raw_input("Enter Y/N: ")
-        if dl == 'y' or dl == 'Y':
-            os.system("curl -L http://lowelab.ucsc.edu/software/tRNAscan-SE.tar.gz -o trnascan.tar")
-            os.system("tar xvf trnascan.tar")
-            os.system("mv tRNAscan-SE-1.3.1 ./Utilities/cpp/%s%s-%s%strnascan"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-            os.chdir("./Utilities/cpp/%s%s-%s%strnascan"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-            updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
-            os.system("make")
-            os.chdir("%s"%(METAMOS_ROOT))
-            os.system("rm -rf trnascan.tar")
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%sREAPR"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        if "reapr" in packagesToInstall:

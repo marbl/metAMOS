@@ -7,6 +7,34 @@ def addEnvironmentVar(varName, newValue, sep = " "):
       os.environ[varName] = newValue + sep + oldVal
    else:
       os.environ[varName] = newValue
+   return oldVal
+
+def updateMakeFileForDarwin(fileName, addedCFlags, addedLDFlags, addFlagsToCompile=False):
+   if OSTYPE == "Darwin":
+      os.system("cp %s %s.orig"%(fileName, fileName))
+      numCF=utils.getCommandOutput("grep -c \"CFLAGS*=\" %s.orig"%(fileName), False).strip()
+      numCX=utils.getCommandOutput("grep -c \"CXXFLAGS*=\" %s.orig"%(fileName), False).strip()
+      numLD=utils.getCommandOutput("grep -c \"LDFLAGS*=\" %s.orig"%(fileName), False).strip()
+      numD=utils.getCommandOutput("grep -c \^DFLAGS*=\" %s.orig"%(fileName), False).strip()
+
+      addCF = False
+      addLD = False
+      if ((numCF == "" or int(numCF) == 0) and (numCX == "" or int(numCX) == 0)):
+         addCF = True
+      if ((numCF == "" or int(numCF) == 0) and (numD == "" or int(numD) == 0)):
+         addLD = True
+
+      os.system("cat %s.orig |awk '{if (match($0, \"^CFLAGS.*=\")) { print $0\" %s\"; } else if (match($0, \"^CXXFLAGS.*=\")) { print $0\" %s\"; } else if (match($0, \"^LDFLAGS.*=\")) { print $0\" %s\" } else if (match($0, \"^DFLAGS =\")) { print $0\" %s\"; } else { print $0; } }' >%s"%(fileName, addedCFlags, addedCFlags, addedLDFlags, addedLDFlags, fileName))
+      if addCF:
+         os.system("cp %s %s.orig"%(fileName, fileName))
+         os.system("cat %s.orig |awk '{if (NR == 1) { print \"CFLAGS=%s\\nCXXFLAGS=%s\\n\"$0; } else { print $0; } }' > %s"%(fileName, addedCFlags, addedCFlags, fileName))
+      if addLD:
+         os.system("cp %s %s.orig"%(fileName, fileName))
+         os.system("cat %s.orig |awk '{if (NR == 1) { print \"LDFLAGS=%s\\n\"$0; } else { print $0; } }' > %s"%(fileName, addedLDFlags, fileName))
+
+      if addFlagsToCompile:
+         os.system("cp %s %s.orig"%(fileName, fileName))
+         os.system("cat %s.orig |awk '{if (match($1, \"g++\")) { sub(/g\\+\\+/, \"g++ \\$(CXXFLAGS) \\$(LDFLAGS)\", $0) } print $0; }' > %s"%(fileName, fileName))
 
 user_home = os.environ["HOME"]
 print "<<Welcome to metAMOS install>>"
@@ -95,7 +123,11 @@ else:
 
 addedCFlags=""
 addedLDFlags=""
-addedMakeFlags=""
+oldCFlags = ""
+oldCPPFlags = ""
+oldCXXFlags = ""
+oldLDFlags = ""
+
 if OSTYPE == "Darwin":
    p = subprocess.Popen("echo `gcc --version`", shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
    (checkStdout, checkStderr) = p.communicate()
@@ -111,19 +143,21 @@ if OSTYPE == "Darwin":
    libPath=""
    clib=utils.getCommandOutput("g++ -print-file-name=libgcc.a", False)
    if clib != "":
-      libPath="%s"%(clib)
+      libPath="%s %s"%(libPath, clib)
    cpplib=utils.getCommandOutput("g++ -print-file-name=libstdc++.a", False)
    if cpplib != "":
       libPath="%s %s"%(libPath, cpplib)
+   omplib=utils.getCommandOutput("g++ -print-file-name=libgomp.a", False)
+   if omplib != "":
+      libPath="%s %s"%(libPath, omplib)
 
-   commonFlags="-mmacosx-version-min=10.6 -static-libgcc"
-   addEnvironmentVar("CFLAGS", " %s "%(commonFlags))
-   addEnvironmentVar("CPPFLAGS", " %s "%(commonFlags))
-   addEnvironmentVar("CXXFLAGS", " %s "%(commonFlags))
-   addEnvironmentVar("LDFLAGS", " %s "%(libPath))
-   addedCFlags="%s"%(commonFlags)
+   commonFlags="-mmacosx-version-min=10.6 "
+   oldCFlags = addEnvironmentVar("CFLAGS", " %s "%(commonFlags))
+   oldCPPFlags = addEnvironmentVar("CPPFLAGS", " %s "%(commonFlags))
+   oldCXXFlags = addEnvironmentVar("CXXFLAGS", " %s "%(commonFlags))
+   oldLDFlags = addEnvironmentVar("LDFLAGS", " %s "%(libPath))
+   addedCFlags="%s %s"%(commonFlags, libPath)
    addedLDFlags="%s"%(libPath)
-   addedMakeFlags="-e CFLAGS=\"%s -O3\" -e CPPFLAGS=\"%s -O3\" -e CXXFLAGS=\"%s -O3\" LDFLAGS=\"%s\""%(commonFlags, commonFlags, commonFlags, libPath)
 
 libPaths = [ "/usr/lib", "/usr/lib64", "/usr/local/lib/", "/usr/local/lib64/", "/opt/local/lib/", "/opt/local/lib64/"] 
 for libPath in libPaths:
@@ -488,13 +522,7 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%svelvet"%(os.sep, OSTYPE, MACHINET
         os.system("tar -xvzf %s"%(archive))
         os.system("mv velvet_1.2.10 ./Utilities/cpp/%s%s-%s%svelvet"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.chdir("./Utilities/cpp/%s%s-%s%svelvet"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-        if OSTYPE == "Darwin":
-           os.system("cp Makefile Makefile.orig")
-           numLD=utils.getCommandOutput("grep -c \"^LDFLAGS = \" Makefile.orig", False).strip()
-           if numLD == "" or int(numLD) == 0:
-              os.system("cat Makefile.orig |awk '{if (match($0, \"CFLAGS = \")) { print $0\" %s\\nLDFLAGS = %s\"; } else { print $0; } }' > Makefile"%(addedCFlags, addedLDFlags))
-           else:
-              os.system("cat Makefile.orig |awk '{if (match($0, \"CFLAGS = \")) { print $0\" %s\"; } else if (match($0, \"LDFLAGS = \")) { print $0\" %s\" } else { print $0; } }' > Makefile"%(addedCFlags, addedLDFlags))
+        updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
         os.system("make CATEGORIES=16 MAXKMERLENGTH=127 OPENMP=1")
         os.chdir("%s"%(METAMOS_ROOT))
         os.system("rm %s"%archive)
@@ -513,13 +541,7 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%svelvet-sc"%(os.sep, OSTYPE, MACHI
         os.system("tar -xvzf %s"%(archive))
         os.system("mv velvet-sc ./Utilities/cpp/%s%s-%s%svelvet-sc"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.chdir("./Utilities/cpp/%s%s-%s%svelvet-sc"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-        if OSTYPE == "Darwin":
-           os.system("cp Makefile Makefile.orig")
-           numLD=utils.getCommandOutput("grep -c \"^LDFLAGS = \" Makefile.orig", False).strip()
-           if numLD == "" or int(numLD) == 0:
-              os.system("cat Makefile.orig |awk '{if (match($0, \"CFLAGS = \")) { print $0\" %s\\nLDFLAGS = %s\"; } else { print $0; } }' > Makefile"%(addedCFlags, addedLDFlags))
-           else:
-              os.system("cat Makefile.orig |awk '{if (match($0, \"CFLAGS = \")) { print $0\" %s\"; } else if (match($0, \"LDFLAGS = \")) { print $0\" %s\" } else { print $0; } }' > Makefile"%(addedCFlags, addedLDFlags))
+        updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
         os.system("make CATEGORIES=16 MAXKMERLENGTH=127 OPENMP=1")
         os.chdir("%s"%(METAMOS_ROOT))
         os.system("rm %s"%archive)
@@ -541,8 +563,8 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%sMetaVelvet"%(os.sep, OSTYPE, MACH
         if OSTYPE == "Darwin":
            os.system("cp Utils/Utils.hh Utils/Utils.hh.orig")
            os.system("cat Utils/Utils.hh.orig |awk '{if (match($0, \"#define MAX_STRING_LENGTH\")) { print \"#include <sys/types.h>\\n\"$0; } else { print $0; }}' > Utils/Utils.hh")
-           os.system("cp Makefile Makefile.orig")
-           os.system("cat Makefile.orig |awk '{if (match($0, \"CFLAGS = \")) { print $0\" %s\"; } else if (match($0, \"CXXFLAGS =\")) { print $0\" %s\"; } else if (match($0, \"DFLAGS =\")) { print $0\" %s\" } else { print $0; } }' > Makefile"%(addedCFlags, addedCFlags, addedLDFlags))
+           updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
+
         os.system("make CATEGORIES=16 MAXKMERLENGTH=127")
         os.chdir("%s"%(METAMOS_ROOT))
         os.system("rm %s"%archive)
@@ -701,6 +723,9 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
           if not HAVE_GCC42:
              os.system("cd CA/src/ && cp c_make.as c_make.original")
              os.system("cd CA/src/ && cat c_make.original |sed s/\-4.2//g > c_make.as")
+          updateMakeFileForDarwin("CA/kmer/Makefile", addedCFlags, addedLDFlags)
+          updateMakeFileForDarwin("CA/samtools/Makefile", addedCFlags, addedLDFlags)
+          updateMakeFileForDarwin("CA/src/c_make.as", addedCFlags, addedLDFlags)
           os.system("cd CA/samtools && make")
           os.system("cd CA/kmer && ./configure.sh && gmake install")
           os.system("cd CA/src && gmake")
@@ -744,6 +769,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
            os.system("tar xvzf kmer.tar.gz")
            os.system("mv kmergenie-1.5692 ./Utilities/cpp%s%s-%s%skmergenie"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
            os.chdir("./Utilities/cpp%s%s-%s%skmergenie"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+           updateMakeFileForDarwin("makefile", addedCFlags, addedLDFlags)
            os.system("make k=300")
            os.chdir("%s"%(METAMOS_ROOT))
            os.system("rm -rf kmer.tar.gz")
@@ -841,7 +867,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("curl -L http://130.235.46.10/ARAGORN/Downloads/aragorn1.2.36.tgz -o aragorn.tar.gz")
              os.system("tar xvzf aragorn.tar.gz")
              os.chdir("aragorn1.2.36")
-             os.system("gcc -O3 -ffast-math -finline-functions -o aragorn aragorn1.2.36.c")
+             os.system("gcc -O3 -ffast-math -finline-functions %s %s -o aragorn aragorn1.2.36.c"%(addedCFlags, addedLDFlags))
              os.chdir("%s"%(METAMOS_ROOT))
              os.system("mv aragorn1.2.36/aragorn ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
              os.system("rm -rf aragorn1.2.36")
@@ -909,7 +935,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
 
           prodigal = utils.getFromPath("prodigal", "PRODIGAL", False)
           if prodigal != "":
-             prodigalVersion = utils.getCommandOutput("%s/prodigal -v 2>&1 | grep -i '^Prodigal V' |sed s/V//g |awk '{printf(\"%%2.2f\n\", $2)}'"%(prodigal), True)
+             prodigalVersion = utils.getCommandOutput("%s/prodigal -v 2>&1 | grep -i '^Prodigal V' |sed s/V//g |awk '{printf(\"%%2.2f\\n\", $2)}'"%(prodigal), True)
              print "Found prodigal %s %s"%(prodigal, prodigalVersion)
              if float(prodigalVersion) < 2.6:
                 prodigal = ""
@@ -922,6 +948,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("tar xvzf prodigal.tar.gz")
              os.system("mv prodigal_v2.60.bugfix1/* prodigal.v2_60/")
              os.chdir("prodigal.v2_60")
+             updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
              os.system("make")
              os.chdir("%s"%(METAMOS_ROOT))
              os.system("mv prodigal.v2_60/prodigal ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
@@ -958,6 +985,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("curl -L http://sourceforge.net/projects/soapdenovo2/files/GapCloser/src/r6/GapCloser-src-v1.12-r6.tgz -o gapcloser.tar.gz")
              os.system("tar xvzf gapcloser.tar.gz")
              os.chdir("v1.12-r6")
+             updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
              os.system("make")
              os.chdir("%s"%(METAMOS_ROOT))
              os.system("mkdir -p ./Utilities/cpp%s%s-%s%ssoap2/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
@@ -1016,6 +1044,12 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
                    testIn.close()
                    testOut.close()
 
+                   # dont set static building libs on OSX, sseems to cause compile issues for jellyfish
+                   os.environ["CFLAGS"] = oldCFlags  
+                   os.environ["CPPFLAGS"] = oldCPPFlags
+                   os.environ["CXXFLAGS"] = oldCXXFlags
+                   os.environ["LDFLAGS"] = oldLDFlags
+
                 os.system("bash install.sh")
                 fileOptions = utils.getCommandOutput("file -b --mime-type INSTALL.py", False)
                 if fileOptions == "":
@@ -1043,6 +1077,12 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
                 if OSTYPE == "Darwin":
                    os.system("cp bin/masurca bin/masurca.orig")
                    os.system("cat bin/masurca.orig | sed  s/\\(\\'..TOTAL_READS\\'/\\(\\\\\\\\\\$ENV{\\'TOTAL_READS\\'}/g| sed s/'<..$NUM_SUPER_READS.'/\"<ENVIRON[\\'NUM_SUPER_READS\\']\"/g | sed s/'>=..$NUM_SUPER_READS.'/\">=ENVIRON[\\'NUM_SUPER_READS\\']\"/g > bin/masurca")
+
+                   # reset env variables again
+                   addEnvironmentVar("CFLAGS", " %s "%(addedCFlags))
+                   addEnvironmentVar("CPPFLAGS", " %s "%(addedCFlags))
+                   addEnvironmentVar("CXXFLAGS", " %s "%(addedCFlags))
+                   addEnvironmentVar("LDFLAGS", " %s "%(addedLDFlags))
 
                 os.chdir("%s"%(METAMOS_ROOT))
                 os.system("rm -rf ./MaSuRCA-2.2.0")
@@ -1081,6 +1121,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("mv src/sequence/short_sequence.h src/sequence/short_sequence.orig")
              os.system("cat src/sequence/short_sequence.orig |awk '{if (match($0, \"kMaxShortSequence = 128\")) print \"static const uint32_t kMaxShortSequence = 32768;\"; else print $0}' > src/sequence/short_sequence.h")
              os.system("./configure")
+             updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
              os.system("make")
              os.chdir("%s"%(METAMOS_ROOT))
              os.system("rm -rf idba.tar.gz")
@@ -1190,6 +1231,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("tar xvzf sparse.tar.gz")
              os.chdir("sparsehash-2.0.2")
              os.system("./configure --prefix=`pwd`")
+             updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
              os.system("make install")
              os.chdir("%s"%(METAMOS_ROOT))
              os.system("curl -L https://github.com/pezmaster31/bamtools/archive/v2.3.0.tar.gz -o bamtools.tar.gz")
@@ -1219,6 +1261,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
                 os.system("cat configure.original |sed s/\-Werror//g > configure.ac")
              os.system("sh ./autogen.sh")
              os.system("./configure --with-sparsehash=`pwd`/../sparsehash --with-bamtools=`pwd`/../bamtools --prefix=`pwd`/../")
+             updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
              os.system("make install")
              os.chdir("%s"%(METAMOS_ROOT))
              os.system("mv bwa-0.7.5a/bwa ./Utilities/cpp%s%s-%s%ssga/bin/"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
@@ -1244,6 +1287,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
           os.system("tar xvzf edena.tar.gz")
           os.system("mv EdenaV3.130110 ./Utilities/cpp%s%s-%s%sedena"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
           os.chdir("./Utilities/cpp%s%s-%s%sedena"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+          updateMakeFileForDarwin("src/Makefile", addedCFlags, addedLDFlags)
           os.system("make")
           os.chdir("%s"%(METAMOS_ROOT))
           os.system("rm -rf edena.tar.gz")
@@ -1295,7 +1339,8 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
            os.system("git clone --recursive git://github.com/ekg/freebayes.git freebayes")
            os.system("mv ./freebayes ./Utilities/cpp/%s%s-%s%sfreebayes"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
            os.chdir("./Utilities/cpp/%s%s-%s%sfreebayes"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-           os.system("make %"%(addedMakeFlags))
+           updateMakeFileForDarwin("src/makefile", addedCFlags, addedLDFlags)
+           os.system("make")
            os.chdir("%s"%(METAMOS_ROOT))
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%scgal"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
@@ -1309,7 +1354,8 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
             os.system("tar xvf cgal.tar")
             os.system("mv cgal-0.9.6-beta ./Utilities/cpp/%s%s-%s%scgal"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
             os.chdir("./Utilities/cpp/%s%s-%s%scgal"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-            os.system("make %s"%(addedMakeFlags))
+            updateMakeFileForDarwin("makefile", addedCFlags, addedLDFlags, True)
+            os.system("make")
             os.chdir("%s"%(METAMOS_ROOT))
             os.system("rm -rf cgal.tar")
 
@@ -1325,7 +1371,8 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
             os.system("tar xvf trnascan.tar")
             os.system("mv tRNAscan-SE-1.3.1 ./Utilities/cpp/%s%s-%s%strnascan"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
             os.chdir("./Utilities/cpp/%s%s-%s%strnascan"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-            os.system("make %s"%(addedMakeFlags))
+            updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
+            os.system("make")
             os.chdir("%s"%(METAMOS_ROOT))
             os.system("rm -rf trnascan.tar")
 
@@ -1378,6 +1425,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("tar xvzf smalt.tar.gz")
              os.chdir("./smalt-0.7.5")
              os.system("./configure --prefix=`pwd`/build")
+             updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
              os.system("make install")
              os.chdir("..")
              os.system("rm smalt_x86_64")
@@ -1428,6 +1476,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
             if HAVE_CURSES == "":
                os.system("mv Makefile Makefile.original")
                os.system("cat Makefile.original | sed s/\-lcurses//g |sed s/\-D_CURSES_LIB=1//g > Makefile")
+            updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
             os.system("make")
             os.chdir("%s/Utilities/cpp/%s%s-%s%sFRCbam"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep))
             boostFlags = ""
@@ -1459,6 +1508,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
                os.system("rm -rf boost.tar.gz")
     
             os.system("./configure --prefix=%s/Utilities/cpp/%s%s-%s%sFRCbam/ %s"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep, boostFlags))
+            updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
             os.system("make install")
             if boostFlags != "":
                os.system("cp boost_1_54_0/build/lib/* ./bin")
@@ -1477,6 +1527,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
            os.system("tar xvzf ale.tar.gz")
            os.system("mv ALE ./Utilities/cpp/%s%s-%s%sALE"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
            os.chdir("./Utilities/cpp/%s%s-%s%sALE/src"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+           updateMakeFileForDarwin("makefile", addedCFlags, addedLDFlags)
            os.system("make all") 
            os.chdir("%s"%(METAMOS_ROOT))
            os.system("rm -rf ale.tar.gz")

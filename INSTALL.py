@@ -36,6 +36,22 @@ def updateMakeFileForDarwin(fileName, addedCFlags, addedLDFlags, addFlagsToCompi
          os.system("cp %s %s.orig"%(fileName, fileName))
          os.system("cat %s.orig |awk '{if (match($1, \"g++\")) { sub(/g\\+\\+/, \"g++ \\$(CXXFLAGS) \\$(LDFLAGS)\", $0) } print $0; }' > %s"%(fileName, fileName))
 
+def copyPerlLib(pathToCopy, dest):
+   if pathToCopy != "":
+      pathsToCopy = pathToCopy.strip().split("\n")
+      for path in pathsToCopy:
+         pathToCopy = os.path.dirname(path)
+         os.system("mkdir -p %s"%(dest))
+         # copy one at a time in case of conflicts
+         for file in os.listdir("%s%s"%(pathToCopy, os.sep)):
+            toCopy = file
+            file = "%s%s%s"%(pathToCopy, os.sep, toCopy)
+            if os.path.exists("%s/%s"%(dest, toCopy)):
+               os.system("mv %s/* %s/%s/"%(file, dest, toCopy))
+            else:
+               os.system("mv %s %s/"%(file, dest))
+
+
 user_home = os.environ["HOME"]
 print "<<Welcome to metAMOS install>>"
 
@@ -567,7 +583,7 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%sMetaVelvet"%(os.sep, OSTYPE, MACH
            os.system("cp Utils/Utils.hh Utils/Utils.hh.orig")
            os.system("cat Utils/Utils.hh.orig |awk '{if (match($0, \"#define MAX_STRING_LENGTH\")) { print \"#include <sys/types.h>\\n\"$0; } else { print $0; }}' > Utils/Utils.hh")
            updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
-        os.system("make")
+        os.system("make clean")
         os.system("make CATEGORIES=16 MAXKMERLENGTH=127")
         os.chdir("%s"%(METAMOS_ROOT))
         os.system("rm %s"%archive)
@@ -843,6 +859,8 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
           bioperl = utils.getCommandOutput("perl -MBio::Seq -e 0 && echo $?", True)
           perltime = utils.getCommandOutput("perl -MTime::Piece -e 0 && echo $?", True)
           xmlsimple = utils.getCommandOutput("perl -MXML::Simple -e 0 && echo $?", True)
+          storable = utils.getCommandOutput("perl -MStorable -e 0 && echo $?", True) 
+          xmlparser = utils.getCommandOutput("perl -MXML:Parser -e 0 && echo $?", True)
 
           # always install bioperl, otherwise parts may be missing or it may be the wrong version
           # phylosift comes with BioPerl, use it
@@ -860,18 +878,25 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("make install")
              os.chdir("%s"%(METAMOS_ROOT))
              pathToCopy = utils.getCommandOutput("find Time-Piece-1.08/build -type d -name \"Time\" |grep -v auto", False)
-             pathToCopy = os.path.dirname(pathToCopy)
-             os.system("mkdir -p ./Utilities/cpp%s%s-%s%sprokka/lib"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-             # copy one at a time in case of conflicts
-             for file in os.listdir("%s%s"%(pathToCopy, os.sep)):
-                toCopy = file
-                file = "%s%s%s"%(pathToCopy, os.sep, toCopy)
-                if os.path.exists("./Utilities/cpp%s%s-%s%sprokka/lib/%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, toCopy)):
-                   os.system("mv %s/* ./Utilities/cpp%s%s-%s%sprokka/lib/%s/"%(file, os.sep, OSTYPE, MACHINETYPE, os.sep, toCopy))
-                else:
-                   os.system("mv %s ./Utilities/cpp%s%s-%s%sprokka/lib/"%(file, os.sep, OSTYPE, MACHINETYPE, os.sep))
+             copyPerlLib(pathToCopy, "./Utilities/cpp%s%s-%s%sprokka/lib/"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("rm -rf time.tar.gz")
              os.system("rm -rf Time-Piece-1.08") 
+
+          if xmlparser == "":
+             os.system("curl -L http://search.cpan.org/CPAN/authors/id/M/MS/MSERGEANT/XML-Parser-2.36.tar.gz -o parse.tar.gz")
+             os.system("tar -xvzf parse.tar.gz")
+             os.chdir("XML-Parser-2.36")
+             os.system("perl Makefile.PL PREFIX=`pwd`/build")
+             os.system("make install")
+             os.chdir("%s"%(METAMOS_ROOT))
+             pathToCopy = utils.getCommandOutput("find XML-Parser-2.36/build -type d -name \"XML\" |grep -v auto", False)
+             copyPerlLib(pathToCopy, "./Utilities/cpp%s%s-%s%sprokka/lib/"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             libUpdate = "%s/Utilities/cpp%s%s-%s%sprokka/lib/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
+             if "PERL5LIB" in os.environ:
+                libUpdate = "%s%s%s"%(os.environ["PERL5LIB"], os.pathsep, libUpdate)
+             os.environ["PERL5LIB"]=libUpdate
+             os.system("rm -rf parse.tar.gz")
+             os.system("rm -rf XML-Parser-2.36")
 
           if xmlsimple == "":
              os.system("curl -L http://search.cpan.org/CPAN/authors/id/G/GR/GRANTM/XML-Simple-1.08.tar.gz -o xml.tar.gz")
@@ -881,15 +906,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("make install")
              os.chdir("%s"%(METAMOS_ROOT))
              pathToCopy = utils.getCommandOutput("find XML-Simple-1.08/build -type d -name \"XML\" |grep -v auto", False)
-             pathToCopy = os.path.dirname(pathToCopy)
-             os.system("mkdir -p ./Utilities/cpp%s%s-%s%sprokka/lib"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-             for file in os.listdir("%s%s"%(pathToCopy, os.sep)):
-                toCopy = file
-                file = "%s%s%s"%(pathToCopy, os.sep, toCopy)
-                if os.path.exists("./Utilities/cpp%s%s-%s%sprokka/lib/%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, toCopy)):
-                   os.system("mv %s/* ./Utilities/cpp%s%s-%s%sprokka/lib/%s/"%(file, os.sep, OSTYPE, MACHINETYPE, os.sep, toCopy))
-                else:
-                   os.system("mv %s ./Utilities/cpp%s%s-%s%sprokka/lib/"%(file, os.sep, OSTYPE, MACHINETYPE, os.sep))
+             copyPerlLib(pathToCopy, "./Utilities/cpp%s%s-%s%sprokka/lib/"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("rm -rf xml.tar.gz")
              os.system("rm -rf XML-Simple-1.08")
 
@@ -1390,7 +1407,18 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
            os.system("mv ./freebayes ./Utilities/cpp/%s%s-%s%sfreebayes"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
            os.chdir("./Utilities/cpp/%s%s-%s%sfreebayes"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
            updateMakeFileForDarwin("src/makefile", addedCFlags, addedLDFlags)
+           # dont set static building libs on OSX, sseems to cause compile issues
+           os.environ["CFLAGS"] = oldCFlags
+           os.environ["CPPFLAGS"] = oldCPPFlags
+           os.environ["CXXFLAGS"] = oldCXXFlags
+           os.environ["LDFLAGS"] = oldLDFlags
            os.system("make")
+           if OSTYPE == "Darwin":
+              # reset env variables again
+              addEnvironmentVar("CFLAGS", " %s "%(addedCFlags))
+              addEnvironmentVar("CPPFLAGS", " %s "%(addedCFlags))
+              addEnvironmentVar("CXXFLAGS", " %s "%(addedCFlags))
+              addEnvironmentVar("LDFLAGS", " %s "%(addedLDFlags))
            os.chdir("%s"%(METAMOS_ROOT))
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%scgal"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
@@ -1420,6 +1448,13 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
           os.system("tar xvzf reapr.tar.gz")
           os.system("mv Reapr_1.0.16 ./Utilities/cpp/%s%s-%s%sREAPR"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
 
+
+          # find cmake we installed anyway
+          if not os.path.exists("./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
+             cmake = utils.getFromPath("cmake", "CMAKE", False)
+          else:
+             cmake="%s/Utilities/cpp%s%s-%s%scmake/bin/cmake"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
+
           filespec = utils.getCommandOutput("perl -MFile::Spec::Link -e 0 && echo $?", True)
           if filespec == "":
              os.system("curl -L http://search.cpan.org/CPAN/authors/id/R/RM/RMBARKER/File-Copy-Link-0.113.tar.gz -o file.tar.gz")
@@ -1429,16 +1464,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("make install")
              os.chdir("%s"%(METAMOS_ROOT))
              pathToCopy = utils.getCommandOutput("find File-Copy-Link-0.113/build -type d -name \"File\" |grep -v auto", False)
-             pathToCopy = os.path.dirname(pathToCopy)
-             os.system("mkdir -p ./Utilities/cpp%s%s-%s%sREAPR/lib"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-             # copy one at a time in case of conflicts
-             for file in os.listdir("%s%s"%(pathToCopy, os.sep)):
-                toCopy = file
-                file = "%s%s%s"%(pathToCopy, os.sep, toCopy)
-                if os.path.exists("./Utilities/cpp%s%s-%s%sREAPR/lib/%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, toCopy)):
-                   os.system("mv %s/* ./Utilities/cpp%s%s-%s%sREAPR/lib/%s/"%(file, os.sep, OSTYPE, MACHINETYPE, os.sep, toCopy))
-                else:
-                   os.system("mv %s ./Utilities/cpp%s%s-%s%sREAPR/lib/"%(file, os.sep, OSTYPE, MACHINETYPE, os.sep))
+             copyPerlLib(pathToCopy, "./Utilities/cpp%s%s-%s%sREAPR/lib/"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("rm -rf file.tar.gz")
              os.system("rm -rf File-Copy-Link-0.113")
              libUpdate = "%s/Utilities/cpp%s%s-%s%sREAPR/lib/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
@@ -1453,6 +1479,11 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.chdir("%s"%(METAMOS_ROOT))
 
              # also need smalt, the reapr distro comes with linux 64 bit only
+             # dont set static building libs on OSX, sseems to cause compile issues for jellyfish
+             os.environ["CFLAGS"] = oldCFlags
+             os.environ["CPPFLAGS"] = oldCPPFlags
+             os.environ["CXXFLAGS"] = oldCXXFlags
+             os.environ["LDFLAGS"] = oldLDFlags
              os.chdir("./Utilities/cpp/%s%s-%s%sREAPR/third_party"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("curl -L http://sourceforge.net/projects/smalt/files/smalt-0.7.5.tar.gz -o smalt.tar.gz")
              os.system("tar xvzf smalt.tar.gz")
@@ -1460,6 +1491,13 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("./configure --prefix=`pwd`/build")
              updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
              os.system("make install")
+             if OSTYPE == "Darwin":
+                   # reset env variables again
+                   addEnvironmentVar("CFLAGS", " %s "%(addedCFlags))
+                   addEnvironmentVar("CPPFLAGS", " %s "%(addedCFlags))
+                   addEnvironmentVar("CXXFLAGS", " %s "%(addedCFlags))
+                   addEnvironmentVar("LDFLAGS", " %s "%(addedLDFlags))
+
              os.chdir("..")
              os.system("rm smalt_x86_64")
              os.system("rm -rf smalt.tar.gz")
@@ -1475,6 +1513,24 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("mv Makefile Makefile.original")
              os.system("cat Makefile.original | sed s/\-lcurses//g |sed s/\-D_CURSES_LIB=1//g > Makefile")
              os.chdir("../../")
+
+          # reapr comes with its own cmake which has issues building on recent gcc
+          # kill it it and use our own
+          os.system("cp install.sh install.sh.orig")
+          testIn = open("install.sh.orig", 'r')
+          testOut = open("install.sh", 'w')
+          for line in testIn.xreadlines():
+             if "cmake/bin/cmake" in line:
+                testOut.write("%s ..\n"%(cmake))
+             elif "cd cmake" in line:
+                testIn.xreadlines()
+                testIn.xreadlines()
+                testIn.xreadlines()
+             else:
+                testOut.write(line.strip() + "\n")
+          testIn.close()
+          testOut.close()
+
           os.system("sh install.sh force")
           os.system("chmod ug+x third_party/smalt_x86_64")
           os.chdir("%s"%(METAMOS_ROOT))

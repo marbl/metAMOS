@@ -404,6 +404,20 @@ if not os.path.exists("./AMOS") or 0:
         os.system("tar -xvf amos-binaries.tar.gz")
         os.system("rm -rf amos-binaries.tar.gz")
 
+        # descriptive perl module
+        stat = utils.getCommandOutput("perl -MStatistics::Descriptive -e 0 && echo $?", True)
+        if stat == "":
+           os.system("curl -L http://search.cpan.org/CPAN/authors/id/C/CO/COLINK/Statistics-Descriptive-2.6.tar.gz -o stat.tar.gz")
+           os.system("tar -xvzf stat.tar.gz")
+           os.chdir("Statistics-Descriptive-2.6")
+           os.system("perl Makefile.PL PREFIX=`pwd`/build")
+           os.system("make install")
+           os.chdir("%s"%(METAMOS_ROOT))
+           pathToCopy = utils.getCommandOutput("find Statistics-Descriptive-2.6/build -type d -name \"Statistics\" |grep -v auto", False)
+           copyPerlLib(pathToCopy, "AMOS%s%s-%s%slib"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+           os.system("rm -rf stat.tar.gz")
+           os.system("rm -rf Statistics-Descriptive-2.6")
+
 if not os.path.exists("./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
     if "kraken" in packagesToInstall:
        dl = 'y'

@@ -6,7 +6,6 @@ from datetime import time
 from datetime import datetime
 from operator import itemgetter
 import multiprocessing
-
 import hashlib
 shellv = os.environ["SHELL"]
 _BINARY_DIST = False
@@ -1107,7 +1106,7 @@ def run_process(settings,command,step=""):
               # also make sure this step will be re-run on restart
               os.system("rm %s%sLogs%s%s.ok"%(settings.rundir, os.sep, os.sep, step.lower())) 
               #sys.exit(rc)
-              raise (JobSignalledBreak)
+              raise 
           if step == "":
               print fstdout,fstderr
           else:

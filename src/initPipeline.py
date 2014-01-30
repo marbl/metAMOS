@@ -12,6 +12,7 @@ sys.path.append(INITIAL_SRC)
 import utils
 import workflow
 
+utils.configureEnvironment(utils.INITIAL_UTILS)
 settings = utils.Settings(1, 1, "", "")
 utils.getMachineType()
 

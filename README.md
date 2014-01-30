@@ -124,6 +124,7 @@ install the following BEFORE running INSTALL.py:
 9. libpng-devel
 10. matplotlib
 11. curl
+12. R
 
 Additional software will be downloaded by MetAMOS as needed.
 Additionally, there is some software that MetAMOS can

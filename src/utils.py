@@ -688,8 +688,9 @@ def getCommandOutput(theCommand, checkForStderr):
        return checkStdout.strip()
 
 def getFromPath(theCommand, theName, printWarning = True):
+    deprecated_list = ["METAIDBA","PHYMM"]
     result = getCommandOutput("which %s"%(theCommand), True)
-    if result == "" and printWarning:
+    if theName.upper() not in deprecated_list and result == "" and printWarning:
        print "Warning: %s is not found, some functionality will not be available"%(theName)
        return ""
     else:

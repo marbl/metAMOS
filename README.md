@@ -24,13 +24,19 @@ We are happy to announce version 1.5rc1, a.k.a. Praline Brownie
         - matplotlib
         - curl
     - [INSTALLING METAMOS](#c-installing-metamos)
+        - python INSTALL.py core
     - [QUICK START](#d-quick-start)
+        - initPipeline -q -1 fastq.1 -2 fastq.2 -d projectDir -W core
+        - runPipeline -d projectDir -p 16
     - [WORKFLOWS](#e-workflows)
+        - core
+        - imetamos
     - [GENERIC TOOL](#f-generic-tools)
     - [TEST SUITE](#g-test-suite)
     - [EXAMPLE OUTPUT](#h-example-output)
     - [CONTACT](#i-contact)
     - [CITE](#j-cite)
+        - PMID: 23320958
     - [ISSUES](#k-issues)
 - [FIN](#end)
 

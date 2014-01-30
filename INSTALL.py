@@ -1491,12 +1491,6 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("./configure --prefix=`pwd`/build")
              updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
              os.system("make install")
-             if OSTYPE == "Darwin":
-                   # reset env variables again
-                   addEnvironmentVar("CFLAGS", " %s "%(addedCFlags))
-                   addEnvironmentVar("CPPFLAGS", " %s "%(addedCFlags))
-                   addEnvironmentVar("CXXFLAGS", " %s "%(addedCFlags))
-                   addEnvironmentVar("LDFLAGS", " %s "%(addedLDFlags))
 
              os.chdir("..")
              os.system("rm smalt_x86_64")
@@ -1519,19 +1513,27 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
           os.system("cp install.sh install.sh.orig")
           testIn = open("install.sh.orig", 'r')
           testOut = open("install.sh", 'w')
+          isSkip = 0;
           for line in testIn.xreadlines():
              if "cmake/bin/cmake" in line:
                 testOut.write("%s ..\n"%(cmake))
              elif "cd cmake" in line:
-                testIn.xreadlines()
-                testIn.xreadlines()
-                testIn.xreadlines()
+                # skip some lines
+                isSkip = 3 
+             elif isSkip > 0:
+                isSkip -= 1
              else:
                 testOut.write(line.strip() + "\n")
           testIn.close()
           testOut.close()
 
           os.system("sh install.sh force")
+          if OSTYPE == "Darwin":
+             # reset env variables again
+             addEnvironmentVar("CFLAGS", " %s "%(addedCFlags))
+             addEnvironmentVar("CPPFLAGS", " %s "%(addedCFlags))
+             addEnvironmentVar("CXXFLAGS", " %s "%(addedCFlags))
+             addEnvironmentVar("LDFLAGS", " %s "%(addedLDFlags))
           os.system("chmod ug+x third_party/smalt_x86_64")
           os.chdir("%s"%(METAMOS_ROOT))
 

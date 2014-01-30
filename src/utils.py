@@ -6,7 +6,6 @@ from datetime import time
 from datetime import datetime
 from operator import itemgetter
 import multiprocessing
-
 import hashlib
 shellv = os.environ["SHELL"]
 _BINARY_DIST = False
@@ -687,8 +686,9 @@ def getCommandOutput(theCommand, checkForStderr):
        return checkStdout.strip()
 
 def getFromPath(theCommand, theName, printWarning = True):
+    deprecated_list = ["METAIDBA","PHYMM"]
     result = getCommandOutput("which %s"%(theCommand), True)
-    if result == "" and printWarning:
+    if theName.upper() not in deprecated_list and result == "" and printWarning:
        print "Warning: %s is not found, some functionality will not be available"%(theName)
        return ""
     else:
@@ -1105,7 +1105,7 @@ def run_process(settings,command,step=""):
               # also make sure this step will be re-run on restart
               os.system("rm %s%sLogs%s%s.ok"%(settings.rundir, os.sep, os.sep, step.lower())) 
               #sys.exit(rc)
-              raise (JobSignalledBreak)
+              raise 
           if step == "":
               print fstdout,fstderr
           else:

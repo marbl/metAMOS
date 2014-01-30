@@ -972,5 +972,6 @@ if __name__ == "__main__":
 
        #print elapsed
        print "done! pipeline took %.2f minutes"%(float(elapsed)/float(60.0))
-    except JobSignalledBreak:
-       print "Done with errors\n"
+    except Exception, e:
+       print "Oops, MetAMOS finished with errors! see text in red above for details."
+       sys.exit()

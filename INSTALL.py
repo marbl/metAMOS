@@ -93,6 +93,7 @@ ALLOW_FAST=True
 HAVE_GCC42=False
 HAVE_RT=False
 HAVE_QUIET_HEAD=False
+GCC_VERSION=float(utils.getCommandOutput("gcc --version|grep gcc|awk '{print $NF}' |awk -F \".\" '{print $1\".\"$2}'", False))
 
 OSTYPE="Linux"
 OSVERSION="1"
@@ -742,6 +743,9 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
           if not HAVE_GCC42:
              os.system("cd CA/src/ && cp c_make.as c_make.original")
              os.system("cd CA/src/ && cat c_make.original |sed s/\-4.2//g > c_make.as")
+          if GCC_VERSION >= 4.7:
+             os.system("cd CA/src/ && cp c_make.as c_make.original")
+             os.system("cd CA/src/ && cat c_make.original |sed s/\-rdynamic//g > c_make.as")
           updateMakeFileForDarwin("CA/kmer/Makefile", addedCFlags, addedLDFlags)
           updateMakeFileForDarwin("CA/samtools/Makefile", addedCFlags, addedLDFlags)
           updateMakeFileForDarwin("CA/src/c_make.as", addedCFlags, addedLDFlags)
@@ -803,9 +807,8 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
               dl = raw_input("Enter Y/N: ")
         if dl == 'y' or dl == 'Y':
            if OSTYPE == "Darwin":
-              gccVersion = utils.getCommandOutput("gcc --version|grep gcc|awk '{print $NF}' |awk -F \".\" '{print $1\".\"$2}'", False)
-              if float(gccVersion) < 4.7:
-                 print "Error: SPAdes requires gcc at least version 4.7, found version %s. Please update and try again"%(gccVersion)
+              if GCC_VERSION < 4.7:
+                 print "Error: SPAdes requires gcc at least version 4.7, found version %s. Please update and try again"%(GCC_VERSION)
               else:
                  os.system("curl -L http://spades.bioinf.spbau.ru/release3.0.0/SPAdes-3.0.0.tar.gz -o spades.tar.gz")
                  os.system("tar xvzf spades.tar.gz")
@@ -1059,9 +1062,8 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              print "MaSuRCA binaries not found, optional for Assemble step, download now?"
              dl = raw_input("Enter Y/N: ")
           if dl == 'y' or dl == 'Y':
-             gccVersion = utils.getCommandOutput("gcc --version|grep gcc|awk '{print $NF}' |awk -F \".\" '{print $1\".\"$2}'", False)
-             if float(gccVersion) < 4.4:
-                print "Error: MaSuRCA requires gcc at least version 4.4, found version %s. Please update and try again"%(gccVersion)
+             if GCC_VERSION < 4.4:
+                print "Error: MaSuRCA requires gcc at least version 4.4, found version %s. Please update and try again"%(GCC_VERSION)
              else:
                 os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/MaSuRCA-2.2.0.tar.gz -o msrca.tar.gz")
                 os.system("tar xvzf msrca.tar.gz")
@@ -1234,9 +1236,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              addEnvironmentVar("CXXFLAGS", "-I%s/sparsehash-2.0.2/include"%(METAMOS_ROOT))
 
              # sparse hash library has unused variables which cause warnings with gcc 4.8 so disable -Werror
-             gccVersion = utils.getCommandOutput("gcc --version|grep gcc|awk '{print $NF}' |awk -F \".\" '{print $1\".\"$2}'", False)
-             print "GCC version is %s"%(gccVersion)
-             if float(gccVersion) >= 4.8:
+             if GCC_VERSION >= 4.8:
                 os.system("mv configure configure.original")
                 os.system("cat configure.original |sed s/\-Werror//g > configure")
                 os.system("chmod ug+x configure")
@@ -1306,9 +1306,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.chdir("%s"%(METAMOS_ROOT))
              os.chdir("./Utilities/cpp%s%s-%s%ssga/src"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              # sparse hash library has unused variables which cause warnings with gcc 4.8 so disable -Werror
-             gccVersion = utils.getCommandOutput("gcc --version|grep gcc|awk '{print $NF}' |awk -F \".\" '{print $1\".\"$2}'", False)
-             print "GCC version is %s"%(gccVersion)
-             if float(gccVersion) >= 4.8:
+             if GCC_VERSION >= 4.8:
                 os.system("mv configure.ac configure.original")
                 os.system("cat configure.original |sed s/\-Werror//g > configure.ac")
              os.system("sh ./autogen.sh")

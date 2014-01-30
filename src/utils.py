@@ -213,7 +213,7 @@ class Settings:
       Settings.OSTYPE        = "Linux"
       Settings.OSVERSION     = "0.0"
       Settings.MACHINETYPE   = "x86_64"
-
+      getMachineType()
 
       Settings.METAMOSDIR    = sys.path[0]
       Settings.METAMOS_DOC   = "%s%sdoc"%(Settings.METAMOSDIR, os.sep)
@@ -226,9 +226,6 @@ class Settings:
       
       if _BINARY_DIST:
           #need to change KronaTools.pm to external Taxonomy directory
-
-            
-
           try:
               _DB_PATH = "%s/DB/"%(application_path)
               _BLASTDB_PATH = _DB_PATH + os.sep + "blastdbs"+os.sep
@@ -284,14 +281,16 @@ class Settings:
                #this is initPipeline, skip                                                                                                                                                                                                    
                runp = False
 
-      if _BINARY_DIST and runp:
+     if _BINARY_DIST and runp:
           #need to change PROKKA to external db directory
            kronalibf = open("%s%scpp%s%s-%s/prokka/bin/prokka"%(Settings.METAMOS_UTILS,os.sep,os.sep, Settings.OSTYPE, Settings.MACHINETYPE))
            data = kronalibf.read()
+           print "Read in prokka from %s%scpp%s%s-%s/prokka/bin/prokka"%(Settings.METAMOS_UTILS,os.sep,os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
            if "my $DBDIR = \"$FindBin::RealBin/../db\";" not in data:
                kronalibf.close()
            else:
                dd = data.replace("my $DBDIR = \"$FindBin::RealBin/../db\";","my $DBDIR = \"%s/prokka/db\";"%(Settings.DB_DIR))
+               print "Replacing db dir from relative path to my $DBDIR = \"%s/prokka/db\";"%(Settings.DB_DIR)
                kronalibf.close()
                kronalibf = open("%s%scpp%s%s-%s/prokka/bin/prokka"%(Settings.METAMOS_UTILS,os.sep,os.sep, Settings.OSTYPE, Settings.MACHINETYPE), 'w')
                kronalibf.write(dd)

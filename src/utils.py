@@ -280,7 +280,7 @@ class Settings:
                #this is initPipeline, skip                                                                                                                                                                                                    
                runp = False
 
-     if _BINARY_DIST and runp:
+      if _BINARY_DIST and runp:
           #need to change PROKKA to external db directory
            kronalibf = open("%s%scpp%s%s-%s/prokka/bin/prokka"%(Settings.METAMOS_UTILS,os.sep,os.sep, Settings.OSTYPE, Settings.MACHINETYPE))
            data = kronalibf.read()

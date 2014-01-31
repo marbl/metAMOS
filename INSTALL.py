@@ -844,7 +844,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
                  os.system("tar xvzf spades.tar.gz")
                  os.system("mv SPAdes-3.0.0 ./Utilities/cpp%s%s-%s%sspades"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
                  os.chdir("./Utilities/cpp%s%s-%s%sspades"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-                 os.system("bash spades_compile.sh")
+                 os.system("export CC=`which gcc` && bash spades_compile.sh")
                  os.chdir("%s"%(METAMOS_ROOT))
            else:
               os.system("curl -L http://spades.bioinf.spbau.ru/release3.0.0/SPAdes-3.0.0-Linux.tar.gz -o spades.tar.gz")
@@ -1004,7 +1004,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("./configure --prefix=`pwd`")
              os.system("make install")
              os.chdir("%s"%(METAMOS_ROOT))
-             os.system("mv parallel-20100424/parallel ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
+             os.system("mv parallel-20100424/bin/parallel ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
              os.system("rm -rf parallel-20100424")
              os.system("rm parallel.tar.gz")
           
@@ -1206,7 +1206,6 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("mv src/sequence/short_sequence.h src/sequence/short_sequence.orig")
              os.system("cat src/sequence/short_sequence.orig |awk '{if (match($0, \"kMaxShortSequence = 128\")) print \"static const uint32_t kMaxShortSequence = 32768;\"; else print $0}' > src/sequence/short_sequence.h")
              os.system("./configure")
-             updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
              os.system("make")
              os.chdir("%s"%(METAMOS_ROOT))
              os.system("rm -rf idba.tar.gz")
@@ -1332,7 +1331,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.chdir("./Utilities/cpp%s%s-%s%ssga/bamtools"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("mkdir build")
              os.chdir("build")
-             os.system("cmake ..")
+             os.system("export CC=`which gcc` && cmake ..")
              os.system("make")
              os.chdir("%s"%(METAMOS_ROOT))
              os.chdir("./Utilities/cpp%s%s-%s%ssga/src"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
@@ -1388,8 +1387,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
             # since quast requires a reference, also download refseq
             ftpSite = "ftp://ftp.ncbi.nih.gov/genomes/"
             file = "all.fna.tar.gz"
-            if not nodbs:
-                
+            if not os.path.exists("./Utilities/DB/refseq/") and not nodbs:
                 print "Downloading refseq genomes (Bacteria/%s, Viruses/%s)..."%(file,file)
                 print "\tThis file is large and may take time to download"
                 os.system("curl -L %s/Bacteria/%s -o bacteria.tar.gz"%(ftpSite, file))
@@ -1465,7 +1463,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
 
           # find cmake we installed anyway
           if not os.path.exists("./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
-             cmake = utils.getFromPath("cmake", "CMAKE", False)
+             cmake = utils.getFromPath("cmake", "CMAKE", False) + os.sep + "cmake"
           else:
              cmake="%s/Utilities/cpp%s%s-%s%scmake/bin/cmake"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep)
 

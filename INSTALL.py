@@ -109,7 +109,14 @@ ALLOW_FAST=True
 HAVE_GCC42=False
 HAVE_RT=False
 HAVE_QUIET_HEAD=False
-GCC_VERSION=float(utils.getCommandOutput("gcc --version|grep gcc|awk '{print $NF}' |awk -F \".\" '{print $1\".\"$2}'", False))
+GCC_VERSION=0.0
+try:
+   GCC_VERSION=float(utils.getCommandOutput("gcc --version|grep gcc|awk '{print $NF}' |awk -F \".\" '{print $1\".\"$2}'", False))
+except:
+   try:
+      GCC_VERSION=float(utils.getCommandOutput("gcc --version|grep gcc|awk '{print $3}' |awk -F \".\" '{print $1\".\"$2}'", False))
+   except:
+      print "Warning: cannot determine GCC version"
 
 OSTYPE="Linux"
 OSVERSION="1"

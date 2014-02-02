@@ -175,13 +175,13 @@ if OSTYPE == "Darwin":
    if omplib != "":
       libPath="%s %s"%(libPath, omplib)
 
-   commonFlags="-mmacosx-version-min=10.6 "
+   commonFlags="-mmacosx-version-min=10.6 -static-libgcc -static-libstdc++ "
    oldCFlags = addEnvironmentVar("CFLAGS", " %s "%(commonFlags))
    oldCPPFlags = addEnvironmentVar("CPPFLAGS", " %s "%(commonFlags))
    oldCXXFlags = addEnvironmentVar("CXXFLAGS", " %s "%(commonFlags))
    oldLDFlags = addEnvironmentVar("LDFLAGS", " %s "%(libPath))
    addedCFlags="%s %s"%(commonFlags, libPath)
-   addedLDFlags="%s"%(libPath)
+   addedLDFlags="-static-libgcc -static-libstdc++ %s"%(libPath)
 
 libPaths = [ "/usr/lib", "/usr/lib64", "/usr/local/lib/", "/usr/local/lib64/", "/opt/local/lib/", "/opt/local/lib64/"] 
 for libPath in libPaths:
@@ -1142,6 +1142,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
                    os.environ["CXXFLAGS"] = oldCXXFlags
                    os.environ["LDFLAGS"] = oldLDFlags
 
+                updateMakeFileForDarwin("CA/src/c_make.as", addedCFlags, addedLDFlags)
                 os.system("bash install.sh")
                 fileOptions = utils.getCommandOutput("file -b --mime-type INSTALL.py", False)
                 if fileOptions == "":
@@ -1231,8 +1232,8 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("tar xvzf eautils.tar.gz")
              os.system("tar xvzf gsl.tar.gz")
              os.system("mv gsl-1.16 ea-utils.1.1.2-537/gsl")
-             os.system("mv ea-utils.1.1.2-537 ./Utilities/cpp%s%s-%s%seautils"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("rm ea-utils.1.1.2-537/tidx/utils.cpp")
+             os.system("mv ea-utils.1.1.2-537 ./Utilities/cpp%s%s-%s%seautils"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.chdir("./Utilities/cpp%s%s-%s%seautils/gsl"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("./configure --prefix=`pwd`/build")
              os.system("make")
@@ -1352,7 +1353,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("make install")
              os.chdir("%s"%(METAMOS_ROOT))
              os.system("mv bwa-0.7.5a/bwa ./Utilities/cpp%s%s-%s%ssga/bin/"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-             os.system("ln %s/Utilities/cpp%s%s-%s%ssamtools %s/Utilities/cpp%s%s-%s%ssga/bin%ssamtools"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep, METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep))
+             os.system("cp %s/Utilities/cpp%s%s-%s%ssamtools %s/Utilities/cpp%s%s-%s%ssga/bin%ssamtools"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep, METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep))
              os.system("rm -rf sparsehash-2.0.2")
              os.system("rm -rf sparse.tar.gz")
              os.system("rm -rf bamtools-2.3.0")
@@ -1426,18 +1427,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
            os.system("mv ./freebayes ./Utilities/cpp/%s%s-%s%sfreebayes"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
            os.chdir("./Utilities/cpp/%s%s-%s%sfreebayes"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
            updateMakeFileForDarwin("src/makefile", addedCFlags, addedLDFlags)
-           # dont set static building libs on OSX, sseems to cause compile issues
-           os.environ["CFLAGS"] = oldCFlags
-           os.environ["CPPFLAGS"] = oldCPPFlags
-           os.environ["CXXFLAGS"] = oldCXXFlags
-           os.environ["LDFLAGS"] = oldLDFlags
            os.system("make")
-           if OSTYPE == "Darwin":
-              # reset env variables again
-              addEnvironmentVar("CFLAGS", " %s "%(addedCFlags))
-              addEnvironmentVar("CPPFLAGS", " %s "%(addedCFlags))
-              addEnvironmentVar("CXXFLAGS", " %s "%(addedCFlags))
-              addEnvironmentVar("LDFLAGS", " %s "%(addedLDFlags))
            os.chdir("%s"%(METAMOS_ROOT))
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%scgal"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
@@ -1466,7 +1456,6 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
           os.system("curl -L ftp://ftp.sanger.ac.uk/pub4/resources/software/reapr/Reapr_1.0.16.tar.gz -o reapr.tar.gz")
           os.system("tar xvzf reapr.tar.gz")
           os.system("mv Reapr_1.0.16 ./Utilities/cpp/%s%s-%s%sREAPR"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-
 
           # find cmake we installed anyway
           if not os.path.exists("./Utilities/cpp%s%s-%s%scmake"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
@@ -1498,12 +1487,9 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.chdir("%s"%(METAMOS_ROOT))
 
              # also need smalt, the reapr distro comes with linux 64 bit only
-             # dont set static building libs on OSX, sseems to cause compile issues for jellyfish
-             os.environ["CFLAGS"] = oldCFlags
-             os.environ["CPPFLAGS"] = oldCPPFlags
-             os.environ["CXXFLAGS"] = oldCXXFlags
-             os.environ["LDFLAGS"] = oldLDFlags
              os.chdir("./Utilities/cpp/%s%s-%s%sREAPR/third_party"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             updateMakeFileForDarwin("tabix/Makefile", addedCFlags, addedLDFlags)
+             updateMakeFileForDarwin("snpomatic/Makefile", addedCFlags, addedLDFlags)
              os.system("curl -L http://sourceforge.net/projects/smalt/files/smalt-0.7.5.tar.gz -o smalt.tar.gz")
              os.system("tar xvzf smalt.tar.gz")
              os.chdir("./smalt-0.7.5")
@@ -1546,13 +1532,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
           testIn.close()
           testOut.close()
 
-          os.system("sh install.sh force")
-          if OSTYPE == "Darwin":
-             # reset env variables again
-             addEnvironmentVar("CFLAGS", " %s "%(addedCFlags))
-             addEnvironmentVar("CPPFLAGS", " %s "%(addedCFlags))
-             addEnvironmentVar("CXXFLAGS", " %s "%(addedCFlags))
-             addEnvironmentVar("LDFLAGS", " %s "%(addedLDFlags))
+          os.system("export CC=`which gcc` && sh install.sh force")
           os.system("chmod ug+x third_party/smalt_x86_64")
           os.chdir("%s"%(METAMOS_ROOT))
 
@@ -1562,8 +1542,12 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("cat reapr.original |awk '{if (match($0, \"use strict\")) { print \"use lib \\\"%s/Utilities/cpp%s%s-%s%sREAPR/lib\\\";\"; print $0; } else { print $0}}' > reapr"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.chdir("%s"%(METAMOS_ROOT))
 
-          # REAPR has a bug where fasta headers with commas are not properly fixed, patch the bug
           os.chdir("./Utilities/cpp%s%s-%s%sREAPR/src"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+          # fix samtools link
+          os.system("rm samtools")
+          os.system("cp ../third_party/samtools/samtools ./") 
+
+          # REAPR has a bug where fasta headers with commas are not properly fixed, patch the bug
           os.system("cp task_facheck.pl task_facheck.pl.original")
           os.system("cat task_facheck.pl.original |awk -v quote=\"'\"  '{if (match($0, \"new_id =~\")) { print \"    $new_id =~ s/[;\"quote\"|:,\\\\+\\\\-\\\\s\\\\(\\\\)\\\\{\\\\}\\\\[\\\\]]/_/g;\"; } else { print $0}}' > task_facheck.pl")
           os.chdir("%s"%(METAMOS_ROOT))

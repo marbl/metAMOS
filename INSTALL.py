@@ -1643,6 +1643,11 @@ if "deprecated" in enabledWorkflows or manual:
 # should check for success of installation
 workflow.updateSupportedWorkflows(enabledWorkflows)
 
+os.environ["CFLAGS"] = oldCFlags
+os.environ["CPPFLAGS"] = oldCPPFlags
+os.environ["CXXFLAGS"] = oldCXXFlags
+os.environ["LDFLAGS"] = oldLDFlags
+
 sys.path.append(METAMOS_ROOT + os.sep + "Utilities" + os.sep + "python")
 from get_setuptools import use_setuptools
 use_setuptools()

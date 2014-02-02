@@ -1005,14 +1005,14 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
           gnuparallel = utils.getFromPath("parallel", "GNU Parallel", False)
           if gnuparallel == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/parallel"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
              print "GNU Parallel is missing, will install"
-             os.system("curl -L http://ftp.gnu.org/gnu/parallel/parallel-20100424.tar.bz2 -o parallel.tar.gz")
+             os.system("curl -L http://ftp.gnu.org/gnu/parallel/parallel-20130822.tar.bz2 -o parallel.tar.gz")
              os.system("tar xvjf parallel.tar.gz")
-             os.chdir("parallel-20100424")
+             os.chdir("parallel-20130822")
              os.system("./configure --prefix=`pwd`")
              os.system("make install")
              os.chdir("%s"%(METAMOS_ROOT))
-             os.system("mv parallel-20100424/bin/parallel ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
-             os.system("rm -rf parallel-20100424")
+             os.system("mv parallel-20130822/bin/parallel ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
+             os.system("rm -rf parallel-20130822")
              os.system("rm parallel.tar.gz")
           
           blastp = utils.getFromPath("blastp", "BLAST+", False)

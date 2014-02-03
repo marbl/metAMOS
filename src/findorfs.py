@@ -324,6 +324,10 @@ def findFastaORFs(orf, contigs, outputFNA, outputFAA, outputCVG, outputMAP, min_
          print "Error: Prokka not found in %s. Please check your paths and try again"%(_settings.PROKKA)
          raise(JobSignalledBreak)
 
+      libUpdate = "%s/lib/"%(os.path.dirname(_settings.PROKKA))
+      if "PERL5LIB" in os.environ:
+         libUpdate = "%s%s%s"%(os.environ["PERL5LIB"], os.pathsep, libUpdate)
+      os.environ["PERL5LIB"]=libUpdate
       prokkaOptions = getProgramParams(_settings.METAMOS_UTILS, "prokka.spec", "", "-")
       if "--gram" in prokkaOptions and not os.path.exists(_settings.SIGNALP + os.sep + "signalp"):
          print "Warning: Prokka option --gram requires SignalP which is not found. Disabling"
@@ -345,15 +349,20 @@ def findFastaORFs(orf, contigs, outputFNA, outputFAA, outputCVG, outputMAP, min_
 @posttask(touch_file("%s/Logs/findorfs.ok"%(_settings.rundir)))
 @transform(SplitForORFs, suffix(".contig.cvg"), ".faa")
 def FindORFS(input,output):
-   if "FindORFS" in _skipsteps:
-      run_process(_settings, "touch %s/Logs/findorfs.skip"%(_settings.rundir), "FindORFS")
-      run_process(_settings, "touch %s/Annotate/in/%s.faa"%(_settings.rundir, _settings.PREFIX), "FindORFS")
-      run_process(_settings, "touch %s/FindRepeats/in/%s.fna"%(_settings.rundir, _settings.PREFIX), "FindORFS")
-      return 0
-
    originalPrefix = _settings.PREFIX
    _settings.PREFIX = output.replace("%s/Assemble/out/"%(_settings.rundir), "")
    _settings.PREFIX = _settings.PREFIX.replace(".faa", "")
+
+   if "FindORFS" in _skipsteps:
+      run_process(_settings, "touch %s/Logs/findorfs.skip"%(_settings.rundir), "FindORFS")
+      run_process(_settings, "touch %s/FindORFS/out/%s.faa"%(_settings.rundir, _settings.PREFIX), "FindORFS")
+      run_process(_settings, "touch %s/FindORFS/out/%s.fna"%(_settings.rundir, _settings.PREFIX), "FindORFS")
+      run_process(_settings, "touch %s/Assemble/out/%s.faa"%(_settings.rundir, _settings.PREFIX), "FindORFS")
+      run_process(_settings, "touch %s/Assemble/out/%s.fna"%(_settings.rundir, _settings.PREFIX), "FindORFS")
+      run_process(_settings, "touch %s/FindORFS/out/%s.gene.cvg"%(_settings.rundir, _settings.PREFIX), "FindORFS")
+      run_process(_settings, "touch %s/FindORFS/out/%s.gene.map"%(_settings.rundir, _settings.PREFIX), "FindORFS")
+      _settings.PREFIX = originalPrefix
+      return 0
 
    #if _asm == "soapdenovo":
        #if not os.path.exists("%s/Assemble/out/%s.asm.scafSeq.contigs"%(_settings.rundir,_settings.PREFIX)):

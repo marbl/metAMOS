@@ -551,8 +551,6 @@ def CheckAsmResults (input_file_names, output_file_name):
    if "Assemble" in _skipsteps or "assemble" in _skipsteps:
       run_process(_settings, "touch %s/Logs/assemble.skip"%(_settings.rundir), "Assemble")
       return 0
-   if _asm == "none" or _asm == None:
-      pass
    else:
       assemblers = _asm.split(",")
       kmers = _settings.kmer.split(",")
@@ -583,12 +581,21 @@ def CheckAsmResults (input_file_names, output_file_name):
 
       for contigs in _asmcontigs:
          contig = os.path.splitext(contigs)[0]
+         print "Checking result for conitg %s and will look for file %s.asm.contig"%(contig, contig)
          if not os.path.exists("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, contig)) or os.path.getsize("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, contig)) == 0:
             print "*** MetAMOS Warning: %s input contigs could not be processed!"%(contig)
             run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, contig), "Assemble")
             run_process(_settings, "rm %s/Assemble/out/%s.run"%(_settings.rundir, contig), "Assemble")
             run_process(_settings, "touch %s/Assemble/out/%s.failed"%(_settings.rundir, contig), "Assemble")
          else:
+            # remove ambiguity codes
+            run_process(_settings, "mv %s/Assemble/out/%s.asm.contig %s/Assemble/out/%s.asm.contigWIUPAC.fa"%(_settings.rundir, contig, _settings.rundir, contig), "Assemble")
+            run_process(_settings, "java -cp %s RemoveIUPAC %s/Assemble/out/%s.asm.contigWIUPAC.fa > %s/Assemble/out/%s.asm.contig"%(_settings.METAMOS_JAVA, _settings.rundir, contig, _settings.rundir, contig), "Assemble")
+            # split contigs if necessary
+            numNs = getCommandOutput("grep NNN %s/Assemble/out/%s.asm.contig |grep -v \">\" |wc -l"%(_settings.rundir, contig), True)
+            if int(numNs) > 0:
+               run_process(_settings, "mv %s/Assemble/out/%s.asm.contig %s/Assemble/out/%s.asm.contigWNs.fa"%(_settings.rundir, contig, _settings.rundir, contig), "Assemble")
+               run_process(_settings, "java -cp %s SplitFastaByLetter %s/Assemble/out/%s.asm.contigWNs.fa NNN > %s/Assemble/out/%s.asm.contig"%(_settings.METAMOS_JAVA, _settings.rundir, contig, _settings.rundir, contig), "Assemble")
             run_process(_settings, "rm %s/Assemble/out/%s.run"%(_settings.rundir, contig), "Assemble")
             successfull+=1
    if successfull == 0:

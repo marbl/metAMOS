@@ -1,5 +1,5 @@
 # MetAMOS v1.5rc1 "Praline Brownie" README
-Last updated: January 24th 2014
+Last updated: February 3rd 2014
 ***********************************************************************************
 We are happy to announce version 1.5rc1, a.k.a. Praline Brownie 
 

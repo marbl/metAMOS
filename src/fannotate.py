@@ -56,7 +56,8 @@ def FunctionalAnnotation(input,output):
        blastout = open("%s/FunctionalAnnotation/out/blast.out"%(_settings.rundir),'r')
    else:
       print "blastall in FunctionalAnnotation failed.."
-      sys.exit(1)
+      run_process(_settings, "touch %s/FunctionalAnnotation/out/blast.out"%(_settings.rundir), "FunctionalAnnotation")
+      return 0
    blastdata = blastout.readlines()
    foutput = open("%s/FunctionalAnnotation/out/krona.ec.input"%(_settings.rundir),'w')
    for line in blastdata:

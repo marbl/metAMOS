@@ -235,6 +235,9 @@ class Settings:
                       Settings.noblastdb = True
                       #sys.exit(1)
               #print "BINARY DIST", _DB_PATH
+              elif not os.path.exists(_BLASTDB_PATH):
+                 print "Error: cannot find BLAST DB directory, expected it in %s. Disabling blastdb dependent programs"%(_BLASTDB_PATH)
+                 Settings.noblastdb = True
           except KeyError:
               #_DB_PATH = "./DB/"
               pass

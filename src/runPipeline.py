@@ -136,10 +136,10 @@ def printConfiguration(fileName=None):
     (progName, citation) = utils.getProgramCitations(settings, "metamos")
     configurationText.append(progName + "\n")
     configurationText.append("\t" + citation + "\n\n")
-    #if isolate_genome == True:
-    #   (progName, citation) = utils.getProgramCitations(settings, "metamos_isolate")
-    #   configurationText.append(progName + "\n")
-    #   configurationText.append("\t" + citation + "\n\n") 
+    if isolate_genome == True:
+       (progName, citation) = utils.getProgramCitations(settings, "metamos_isolate")
+       configurationText.append(progName + "\n")
+       configurationText.append("\t" + citation + "\n\n") 
 
     configurationText.append("\n")
     configurationText.append("Step-specific configuration:\n")
@@ -674,9 +674,13 @@ for o, a in opts:
     else:
         assert False, "unhandled option"
 
-if (settings.noblastdb or noblastdb) and (selected_programs["annotate"] == "blast" or selected_programs["annotate"] == "fcp"):
-    print "**no DB directory available, cannot run blast or FCP for classification (model files in DB dir). replacing with phylosift!"
-    selected_programs["annotate"] = "phylosift"
+if (settings.noblastdb or noblastdb):
+    print "**no blast DB directory available, disabling steps requiring BLAST DB"
+    if (selected_programs["annotate"] == "blast"):
+        print "Cannot run blast for classification (model files in DB dir). replacing with kraken!"
+        selected_programs["annotate"] = "kraken"
+    skipsteps.add("FunctionalAnnotation")
+    nofcpblast = True
 
 print "[Steps to be skipped]: ", skipsteps
 #remove started & ok flags in Logs

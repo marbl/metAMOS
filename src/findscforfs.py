@@ -51,6 +51,11 @@ def FindScaffoldORFS(input,output):
          print "Error: Prokka not found in %s. Please check your paths and try again"%(_settings.PROKKA)
          raise(JobSignalledBreak)
 
+      libUpdate = "%s/lib/"%(os.path.dirname(_settings.PROKKA))
+      if "PERL5LIB" in os.environ:
+         libUpdate = "%s%s%s"%(os.environ["PERL5LIB"], os.pathsep, libUpdate)
+      os.environ["PERL5LIB"]=libUpdate
+      print "The path for proka is %s"%(libUpdate)
       prokkaOptions = getProgramParams(_settings.METAMOS_UTILS, "prokka.spec", "", "-")
       if "--gram" in prokkaOptions and not os.path.exists(_settings.SIGNALP + os.sep + "signalp"):
          print "Warning: Prokka option --gram requires SignalP which is not found. Disabling"

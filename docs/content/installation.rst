@@ -16,11 +16,13 @@ To download the software release package:
     $ wget https://github.com/marbl/metAMOS/archive/Release1.5.zip
 
 If you see a certificate not trusted error, you can add the following option to wget:
+
 .. code-block:: bash
 
     $ --no-check-certificate
 
 And if ``wget`` not available, you can use ``curl`` instead:
+
 .. code-block:: bash
 
     $ curl https://github.com/marbl/metAMOS/archive/Release1.5.zip > Release1.5.zip
@@ -29,6 +31,7 @@ You can also browse the https://github.com/marbl/MetAMOS/tree/Release1.5
 and click on Downloads. 
 
 Once downloaded, extract to unpack:
+
 .. code-block:: bash
 
     $ unzip Release1.5.zip
@@ -69,6 +72,7 @@ To install iMetAMOS run:
 
 
 Also, you can run:
+
 .. code-block:: bash
 
     $ python INSTALL.py -h

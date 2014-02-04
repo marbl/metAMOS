@@ -6,7 +6,6 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.TreeMap;
 
 public class SubFile {
    public static final int BASES_IN=40;
@@ -31,54 +30,13 @@ public class SubFile {
       public String info;
    }
    
-   private TreeMap<String, Integer> toRead = new TreeMap<String, Integer>();
-   private TreeMap<String, Integer> read = new TreeMap<String, Integer>();
-   private LinkedHashMap<String, String> result = new LinkedHashMap<String, String>();
-   private TreeMap<Double, ArrayList<Pair>> toReadPairs = new TreeMap<Double, ArrayList<Pair>>();   
-   
-   public double getBasesInSection(double theID, double min, double max) {
-      double start = Double.MAX_VALUE;
-      double end = Double.MIN_VALUE;
-      
-      if (true) {
-         ArrayList<Pair> pairs = toReadPairs.get(theID);
-         if (pairs == null) { return 0; } // when the id is not meant to be read, skip it
-         
-         for (Pair p : pairs) {
-            assert(p.id == theID);            
-            double ovl = Math.min(p.end, max) - Math.max(p.beg, min);
-            
-            if (ovl > 0) {
-if (OUTPUT_OVERLAP) {
-   NumberFormat nf = new DecimalFormat("#######");
-   System.err.println(p.info + " " + nf.format(min-p.beg+1) + " " + nf.format(max-p.beg+1));
-}
-               if (start > Math.max(p.beg, min)) { start = Math.max(p.beg, min); } 
-               if (end < Math.min(p.end, max)) { end = Math.min(p.end, max); }
-            }
-         }         
-      } else {/*
-         for (Double d : toRead.keySet()) {
-            if (d < min) {continue;}   
-            
-            if (d > max) { break; }
-            if (start == 0) { start = d; }
-            
-            if (d <= max) {
-               end = d;
-            }
-         }*/
-      }
-
-      return (end-start+1);
-   }
+   private HashMap<String, Integer> toRead = new HashMap<String, Integer>();
    
    public void subFile(String keysFile, String inputFile, Integer idCol, Integer idCol2, boolean rev) throws Exception {
       BufferedReader bf = new BufferedReader(new InputStreamReader(
             new FileInputStream(keysFile)));
       String line = null;
       String prev = null;
-      boolean outputNext = false;
 
 System.err.println("BEGIN PROCESSING KEYS");
 
@@ -87,13 +45,6 @@ HashMap<String, ArrayList<String>> lineNum = new HashMap<String, ArrayList<Strin
          String[] splitLine = line.trim().split("\\s+");
          
          try {
-            if (idCol2 != -1) {               
-               double theID = Double.parseDouble(splitLine[0]);
-               if (toReadPairs.get(theID) == null) {
-                  toReadPairs.put(theID, new ArrayList<Pair>());
-               }
-               toReadPairs.get(theID).add(new Pair(Double.parseDouble(splitLine[0]), Double.parseDouble(splitLine[1]), Double.parseDouble(splitLine[2]), splitLine[3]));
-            } else {
                if (!toRead.containsKey(splitLine[KEY_ID])){
                   toRead.put(splitLine[KEY_ID], 0);  
                }
@@ -103,7 +54,6 @@ HashMap<String, ArrayList<String>> lineNum = new HashMap<String, ArrayList<Strin
                   lineNum.put(splitLine[KEY_ID], new ArrayList<String>());
                }
                lineNum.get(splitLine[KEY_ID]).add(splitLine[0]);
-            }
          } catch (Exception e) {
             System.err.println("Warning: Could not parse line " + line);
          }
@@ -129,47 +79,6 @@ System.err.println("DONE PROCESSING KEYS");
             if (toRead.containsKey(id)) {
                output = toRead.get(id);               
             }
-/*
-            String altID = id.substring(0, id.length() - 1);
-            if (toRead.containsKey(altID)) {
-System.err.println("ID " + id + " CHANGED TO " + altID);               
-               output = toRead.get(altID);
-            }
-*/
-         }
-         else if (idCol2 != -1) {
-            double idd = 0;         
-            double id2 = -1;
-            try {
-               idd = Double.parseDouble(splitLine[idCol]);
-                  
-                  if (idCol2 != -1) {
-                     id2 = Double.parseDouble(splitLine[idCol2]);
-                  }
-            }
-            catch (Exception e) {
-               System.err.println("WARNING: I could not parse line " + line);
-            }         
-            double min = Math.min(idd,id2);
-            double max = Math.max(idd,id2);
-            
-            if (true) {
-               Double theID = Double.parseDouble(splitLine[0]);
-               double bases = getBasesInSection(theID, min, max);
-               if ((bases/(max-min+1)) >= THRESHOLD) {
-                  output++;                  
-               }               
-            } 
-            else {
-               double startBases = getBasesInSection(-1, min, min+BASES_IN+1);
-               double endBases = getBasesInSection(-1, max-BASES_IN-1, max);
-   
-               //System.err.println("For range (" + min + ", " + (min+BASES_IN) + ") bases is " + startBases);
-               //System.err.println("For range (" + (max-BASES_IN) + ", " + (max) + ") bases is " + endBases);
-               if (((startBases/BASES_IN) >= THRESHOLD) && ((endBases/BASES_IN) >= THRESHOLD)) {
-                  output++;
-               }
-            }
          }
          
          if (rev) {
@@ -177,55 +86,13 @@ System.err.println("ID " + id + " CHANGED TO " + altID);
             else { output = 0; }
          }
 
-         if (outputNext == true) {
-            outputNext = false;
-            //System.out.println("THE NEXT " + line);
-            //System.out.println("----------------------------------------------------");
-         }
          for (int i = 0; i < output; i++) {
-            NumberFormat form = NumberFormat.getIntegerInstance();
-            form.setGroupingUsed(false);
-
-            //System.out.println("----------- ID " + form.format(id) + " ----------------------");
-            //System.out.println("THE PREV " + prev);
-            //System.out.println(/*lineNum.get(id).get(i) + " " + */line);
-            //result.put(id+i, line);
             System.out.println(line);
-            outputNext = true;
-            
-            Integer val = read.get(id);
-            if (val == null) {
-               read.put(id, 0);
-               val = 0;
-            }
-            if (!rev) {
-               read.put(id, val+1);
-            }
             count++;
          }         
          prev = line;
          
          count++;
-      }
-      
-      if (!rev && idCol2 == -1) {
-         for (String d : read.keySet()) {
-            Integer val = read.get(d);
-            
-            if (val != null) {
-               if (val < 1) {
-                  NumberFormat form = NumberFormat.getIntegerInstance();
-                  form.setGroupingUsed(false);
-
-                  //System.out.println("ID OF " + form.format(d) + " was read " + val + " times");
-                  System.out.println("ID OF " + d + " was read " + val + " times");
-               }
-            }
-         }
-      }
-
-      for (String key : result.keySet()) {
-         System.out.println(result.get(key));
       }
    }
    

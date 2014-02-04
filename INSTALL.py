@@ -1295,8 +1295,24 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
                    mpi = command = ""
              os.chdir("./Utilities/cpp%s%s-%s%sabyss/bin/"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("cp abyss-pe abyss-pe-orig")
-             if mpi != "" and os.path.exists("./Utilities/cpp%s%s-%s%sabyss/bin/ABYSS-P"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
-                os.system("cat abyss-pe-orig |sed s/which\ mpirun/which\ %s/g > abyss-pe"%(command))
+             if mpi != "" and os.path.exists("ABYSS-P"):
+                testIn = open("abyss-pe-orig", 'r')
+                testOut = open("abyss-pe", 'w')
+                for line in testIn.xreadlines():
+                   if "which mpirun" in line:
+                      testOut.write("mpirun?=$(shell which %s)\n"%(command))
+                   elif "ifdef np" in line:
+                      testOut.write(line)
+                      testOut.write("ifneq ($(mpirun),mpirun)\n")
+                   elif "ABYSS-P" in line:
+                      testOut.write(line)
+                      testOut.write("else\n")
+                      testOut.write("\tABYSS $(abyssopt) $(ABYSS_OPTIONS) -o $@ $(in) $(se)\n")
+                      testOut.write("endif\n")
+                   else:
+                      testOut.write(line)
+                testIn.close()
+                testOut.close()
              else:
                 print "Error: cannot find MPI in your path. Disabling ABySS threading."
                 os.system("cat abyss-pe-orig |awk -v found=0 -v skipping=0 '{if (match($0, \"ifdef np\")) {skipping=1; } if (skipping && match($1, \"ABYSS\")) {print $0; skipping=1; found=1} if (found && match($1, \"endif\")) {skipping=0;found = 0;} else if (skipping == 0) { print $0; } }' > abyss-pe")
@@ -1427,6 +1443,20 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
            os.system("mv ./freebayes ./Utilities/cpp/%s%s-%s%sfreebayes"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
            os.chdir("./Utilities/cpp/%s%s-%s%sfreebayes"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
            updateMakeFileForDarwin("src/makefile", addedCFlags, addedLDFlags)
+
+           # dont set static building libs on OSX, sseems to cause compile issues for jellyfish
+           os.environ["CFLAGS"] = oldCFlags
+           os.environ["CPPFLAGS"] = oldCPPFlags
+           os.environ["CXXFLAGS"] = oldCXXFlags
+           os.environ["LDFLAGS"] = oldLDFlags
+           os.system("make")
+           os.chdir("%s"%(METAMOS_ROOT))
+           if OSTYPE == "Darwin":
+              # reset env variables again
+              addEnvironmentVar("CFLAGS", " %s "%(addedCFlags))
+              addEnvironmentVar("CPPFLAGS", " %s "%(addedCFlags))
+              addEnvironmentVar("CXXFLAGS", " %s "%(addedCFlags))
+              addEnvironmentVar("LDFLAGS", " %s "%(addedLDFlags))
            os.system("make")
            os.chdir("%s"%(METAMOS_ROOT))
 

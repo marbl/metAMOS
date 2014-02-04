@@ -59,21 +59,7 @@ In attempt to further simplify the MetAMOS installation process, we are happy to
 * Perl 5.8.8 (or newer)
 * 64-bit *nix OS
 
-You can download a frozen binary with all BLAST DBs [here](http://www.cbcb.umd.edu/confcour/temp/metAMOS_binary.tar.gz) 
-
-*Note: this is a big file to download and will take awhile to finish (~13GB compressed, 27GB unzipped)
-
-Alternatively, you can download a frozen binary with NO BLAST DBs [here](http://www.cbcb.umd.edu/confcour/temp/metAMOS_binary_noblastdbs.tar.gz) 
-
-*Note: ~2GB compressed, 4GB unzipped
-
-The revised installation procedure is simply:
-
-1. Download tarball
-2. Extract
-3. Run a test script or two
-
-Mac OSX equivalent will be soon appearing [here](http://www.cbcb.umd.edu/confcour/temp/metAMOS_binary_noblastdbs_osx.tar.gz) 
+The updated binaries, including several important updates, will be available shorlty for download. In the meantime, please refer to the Quick Start section on how to download and use MetAMOS.
 
 ----------------------------------------------------------------------------------
 [TOC](#table-of-contents)

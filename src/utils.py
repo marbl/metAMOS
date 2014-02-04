@@ -1355,6 +1355,16 @@ def configureEnvironment(utilPath):
          else:
             print "Warning: could not set PYTHONPATH. Unknown shell %s, some functionality may not work\n"%(shellv)
 
+   # finally set LD path
+   libPath = os.path.abspath(utilPath + os.sep + ".." + os.sep + "lib")
+   oldLDPath = ""
+   if "LD_LIBRARY_PATH" in os.environ:
+      oldLDPath = os.environ["LD_LIBRARY_PATH"]
+   elif "DYLD_FALLBACK_LIBRARY_PATH" in os.environ:
+      oldLDPath = os.environ["DYLD_FALLBACK_LIBRARY_PATH"]
+   os.environ["DYLD_FALLBACK_LIBRARY_PATH"] = libPath + os.pathsep + oldLDPath
+   os.environ["LD_LIBRARY_PATH"] = libPath + os.pathsep + oldLDPath
+
 def translateToSRAURL(settings, name):
    command = "%s/cpp%s%s-%s%s/sra/bin"%(settings.METAMOS_UTILS, os.sep, settings.OSTYPE, settings.MACHINETYPE, os.sep)
    result = getCommandOutput("%s/srapath %s"%(command, name), True)

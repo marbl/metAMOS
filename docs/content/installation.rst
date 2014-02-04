@@ -37,9 +37,10 @@ Once downloaded, extract to unpack:
     $ unzip Release1.5.zip
 
 Change to MetAMOS directory:
+
 .. code-block:: bash
 
-    $ cd XXX
+    $ cd metAMOS-Release1.5
 
 Alternatively, you can download the INSTALL.py directly from:
 

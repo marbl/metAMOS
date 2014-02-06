@@ -98,7 +98,7 @@ def runLAP(prefix, assembly, pairedReads, unpairedReads, abundanceFile = ""):
       abundanceFile = "-n %s"%(abundanceFile)
 
    run_process(_settings, "python %s/aligner/calc_prob.py -q -k --output_sam_file %s.sam -p %d -a %s %s %s > %s/Validate/out/%s.prob"%(_settings.LAP, prefix, _settings.threads, assembly, abundanceFile, pairedReads if pairedReads != "" else unpairedReads, _settings.rundir, prefix), "Validate")
-   lapScore = getCommandOutput("python %s/aligner/sum_prob.py -i %s/Validate/out/%s.prob"%(_settings.LAP, _settings.rundir, prefix), True).split()[0]
+   lapScore = getCommandOutput("python %s/aligner/sum_prob.py -t 1e-30 -i %s/Validate/out/%s.prob"%(_settings.LAP, _settings.rundir, prefix), True).split()[0]
 
    # paired-end lap produces more than one sam file, while unpaired does not
    # since we always use a single paired-end library for validation, we can link to the pair

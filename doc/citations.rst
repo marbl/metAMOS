@@ -5,8 +5,8 @@ metagenemark	MetaGeneMark	Borodovsky M, Mills R, Besemer J, Lomsadze A: Prokaryo
 soapdenovo	SOAPdenovo	Li Y, Hu Y, Bolund L, Wang J: State of the art de novo assembly of human genomes from massively parallel sequencing data.Human genomics 2010, 4:271-277.
 soapdenovo2	SOAPdenovo2	Luo, R, Liu, B, Xie, Y, Li, Z, Huang, W, Yuan, J, He G, Chen Y, Pan Q, Liu Y, Tang J, Wu G, Zhang H, Shi Y, Liu Y, Yu C, Wang B, Lu Y, Han C, Cheung DW, Yiu S, Peng S, Xiaoqian Z, Liu G, Liao X, Li Y, Yang H, Wang J, Lam T, Wang J. SOAPdenovo2: an empirically improved memory-efficient short-read de novo assembler. GigaScience, 1(1), 18, 2012.
 metaidba	Meta-IDBA	Peng Y, Leung HCM, Yiu SM, Chin FYL: Meta-IDBA: a de Novo assembler for metagenomic data. Bioinformatics 2011, 27:i94-i101.
-velvet	Velvet	Zerbino DR, Birney E. Velvet: algorithms for de novo short read assembly using de Bruijn graphs. Genome Res. 2008 May;18(5):821-9. Epub 2008 Mar 18.
-metavelvet	MetaVelvet	Namiki T, Hachiya T, Tanaka H, Sakakibara Y: MetaVelvet : An extension of Velvet assembler to de novo metagenome assembly from short sequence reads. In; 2011.
+velvet	Velvet	Zerbino DR, Birney E. Velvet: algorithms for de novo short read assembly using de Bruijn graphs. Genome Res. 2008 May;18(5):821-9.
+metavelvet	MetaVelvet	Namiki, T., Hachiya, T., Tanaka, H., & Sakakibara, Y. MetaVelvet: an extension of Velvet assembler to de novo metagenome assembly from short sequence reads. Nucleic acids research, 40(20), e155-e155, 2012.
 ca	Celera Assembler	Miller JR, Delcher AL, Koren S, Venter E, Walenz BP, Brownley A, Johnson J, Li K, Mobarry C, Sutton G. Aggressive assembly of pyrosequencing reads with mates.Bioinformatics. 2008 Dec 15;24(24):2818-24. Epub 2008 Oct 24.
 bambus2	Bambus 2	Koren S, Treangen TJ, Pop M. Bambus 2: scaffolding metagenomes. Bioinformatics 27(21): 2964-2971 2011.
 fcp	FCP,Naive Bayesian Classifier	Macdonald NJ, Parks DH, Beiko RG. Rapid identification of high-confidence taxonomic assignments for metagenomic data. Nucleic Acids Res. 2012 Apr 24.
@@ -46,3 +46,4 @@ edena	Edena	Hernandez D, Tewhey R, Veyrieras J, Farinelli L, Østerås M, Franç
 eautils	EA-UTILS	Aronesty E. TOBioiJ : "Comparison of Sequencing Utility Programs", DOI:10.2174/1875036201307010001, 2013.
 pbcr	PBcR	Koren S, Harhay GP, Smith TPL, Bono JL, Harhay DM, Mcvey SD, Radune D, Bergman NH, Phillippy AM. Reducing assembly complexity of microbial genomes with single-molecule sequencing. Genome Biology 14:R101 2013.
 metamos	MetAMOS	Treangen, TJ ⇔  Koren, S, Sommer, DD, Liu, B, Astrovskaya, I, Ondov, B, Darling AE, Phillippy AM, Pop, M. MetAMOS: a modular and open source metagenomic assembly and analysis pipeline. Genome biology, 14(1), R2, 2013.
+metamos_isolate	iMetAMOS	Koren, S, Treangen, TJ, Hill, CM, Pop, M, Phillippy, AM. Automated ensemble assembly and validation of microbial genomes. bioRxiv preprint, 2014. 

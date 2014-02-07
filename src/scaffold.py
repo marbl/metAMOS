@@ -121,12 +121,14 @@ def Scaffold(input,output):
    # output results
    run_process(_settings, "%s/bank2fasta -eid  -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.contigs"%(_settings.AMOS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
    run_process(_settings, "%s/OutputMotifs -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.motifs"%(_settings.BAMBUS2,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
-   run_process(_settings, "%s/OutputResults -b %s/Scaffold/in/%s.bnk -p %s/Scaffold/out/%s "%(_settings.BAMBUS2,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
+   if _settings.VERBOSE:
+      run_process(_settings, "%s/OutputResults -b %s/Scaffold/in/%s.bnk -p %s/Scaffold/out/%s "%(_settings.BAMBUS2,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
    run_process(_settings, "%s/OutputScaffolds -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.scaffolds.final"%(_settings.BAMBUS2,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
 
    # generate linearize results
    run_process(_settings, "%s/Linearize -b %s/Scaffold/in/%s.bnk"%(_settings.BAMBUS2,_settings.rundir,_settings.PREFIX),"Scaffold")
-   run_process(_settings, "%s/OutputResults -b %s/Scaffold/in/%s.bnk -p %s/Scaffold/out/%s.linearize "%(_settings.BAMBUS2,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
+   if _settings.VERBOSE:
+      run_process(_settings, "%s/OutputResults -b %s/Scaffold/in/%s.bnk -p %s/Scaffold/out/%s.linearize "%(_settings.BAMBUS2,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
    run_process(_settings, "%s/OutputScaffolds -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.BAMBUS2,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Scaffold")
 
 

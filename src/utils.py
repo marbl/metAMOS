@@ -1357,13 +1357,20 @@ def configureEnvironment(utilPath):
 
    # finally set LD path
    libPath = os.path.abspath(utilPath + os.sep + ".." + os.sep + "lib")
-   oldLDPath = ""
-   if "LD_LIBRARY_PATH" in os.environ:
-      oldLDPath = os.environ["LD_LIBRARY_PATH"]
-   elif "DYLD_FALLBACK_LIBRARY_PATH" in os.environ:
-      oldLDPath = os.environ["DYLD_FALLBACK_LIBRARY_PATH"]
-   os.environ["DYLD_FALLBACK_LIBRARY_PATH"] = libPath + os.pathsep + oldLDPath
-   os.environ["LD_LIBRARY_PATH"] = libPath + os.pathsep + oldLDPath
+   if os.path.exists(libPath):
+      oldLDPath = ""
+      needToAdd = True
+      if "LD_LIBRARY_PATH" in os.environ:
+        oldLDPath = os.environ["LD_LIBRARY_PATH"]
+        if libPath in oldLDPath:
+           needToAdd = False
+      elif "DYLD_FALLBACK_LIBRARY_PATH" in os.environ:
+         oldLDPath = os.environ["DYLD_FALLBACK_LIBRARY_PATH"]
+         if libPath in oldLDPath:
+            needToAdd = False
+      if needToAdd:
+         os.environ["DYLD_FALLBACK_LIBRARY_PATH"] = libPath + os.pathsep + oldLDPath
+         os.environ["LD_LIBRARY_PATH"] = libPath + os.pathsep + oldLDPath
 
 def translateToSRAURL(settings, name):
    command = "%s/cpp%s%s-%s%s/sra/bin"%(settings.METAMOS_UTILS, os.sep, settings.OSTYPE, settings.MACHINETYPE, os.sep)

@@ -538,13 +538,13 @@ def readConfigInfo(infile, filePrefix=""):
       if "#" in line:
          continue
       elif "inherit:" in line:
-         wfc = line.replace("\n", "").split(":").strip()
+         wfc = line.replace("\n", "").split(":")
          if len(wfc) < 2:
             continue
-         workflow = wfc[1]
+         workflow = wfc[1].strip()
       elif "asmcontigs:" in line:
-         asmc = line.replace("\n","").split(":")
-         if len(asmc) < 2 or len(asmc[1]) == 0:
+         asmc = line.replace("\n","").split("asmcontigs:")
+         if len(asmc) < 2 or len(asmc[1].strip()) == 0:
             continue
          contigs = asmc[1].strip().split(",")
          for contig in contigs:

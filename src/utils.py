@@ -538,12 +538,12 @@ def readConfigInfo(infile, filePrefix=""):
       if "#" in line:
          continue
       elif "inherit:" in line:
-         wfc = line.replace("\n", "").split("\t")
+         wfc = line.replace("\n", "").split(":").strip()
          if len(wfc) < 2:
             continue
          workflow = wfc[1]
       elif "asmcontigs:" in line:
-         asmc = line.replace("\n","").split("\t")
+         asmc = line.replace("\n","").split(":")
          if len(asmc) < 2 or len(asmc[1]) == 0:
             continue
          contigs = asmc[1].strip().split(",")
@@ -558,20 +558,19 @@ def readConfigInfo(infile, filePrefix=""):
             nlib = readLib(format,mmin,mmax,nread1,nread2,mated,interleaved,innie,linkerType)
             readlibs.append(nlib)
          libadded = False
-         format = line.replace("\n","").split("\t")[-1]
+         format = line.replace("\n","").split(":")[-1].strip()
       elif "mated:" in line:
-         mated = str2bool(line.replace("\n","").split("\t")[-1])
+         mated = str2bool(line.replace("\n","").split(":")[-1].strip())
       elif "interleaved:" in line:
-         interleaved = str2bool(line.replace("\n","").split("\t")[-1])
+         interleaved = str2bool(line.replace("\n","").split(":")[-1].strip())
       elif "innie:" in line:
-         innie = str2bool(line.replace("\n","").split("\t")[-1])
+         innie = str2bool(line.replace("\n","").split(":")[-1].strip())
       elif "linker:" in line:
-          linkerType = line.replace("\n","").split("\t")[-1]
+          linkerType = line.replace("\n","").split(":")[-1].strip()
       elif "f1:" in line:
-         data = line.split("\t")
-
-         f1 = "%s%s"%(filePrefix, data[1].split(",")[0])
-         inf = data[1].split(",")
+         data = line.split("f1:")
+         f1 = "%s%s"%(filePrefix, data[1].strip().split(",")[0])
+         inf = data[1].strip().split(",")
          mean = int(inf[3])
          stdev = int(inf[4])
          mmin = int(inf[1])
@@ -579,8 +578,8 @@ def readConfigInfo(infile, filePrefix=""):
          libs.append(f1)
 
       elif "f2:" in line:
-         data = line.split("\t")
-         f2 = "%s%s"%(filePrefix,data[1].split(",")[0])
+         data = line.split("f2:")
+         f2 = "%s%s"%(filePrefix,data[1].strip().split(",")[0])
          inf = data[1].split(",")
          mean = int(inf[3])
          stdev = int(inf[4])
@@ -597,8 +596,8 @@ def readConfigInfo(infile, filePrefix=""):
          readlibs.append(nlib)
          libadded = True
       elif "frg" in line:
-         data = line.split("\t")
-         frg = "%s%s"%(filePrefix,data[1].split(",")[0])
+         data = line.split("frg:")
+         frg = "%s%s"%(filePrefix,data[1].strip().split(",")[0])
          mated = False
          f1 = frg
          libs.append(frg)

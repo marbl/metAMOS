@@ -581,7 +581,6 @@ def CheckAsmResults (input_file_names, output_file_name):
 
       for contigs in _asmcontigs:
          contig = os.path.splitext(contigs)[0]
-         print "Checking result for conitg %s and will look for file %s.asm.contig"%(contig, contig)
          if not os.path.exists("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, contig)) or os.path.getsize("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, contig)) == 0:
             print "*** MetAMOS Warning: %s input contigs could not be processed!"%(contig)
             run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, contig), "Assemble")

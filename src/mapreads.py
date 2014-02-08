@@ -12,6 +12,7 @@ from ruffus import *
 import pysam
 
 MAX_ENTRIES = 10000
+MAX_SD = 25
 
 _readlibs = []
 _skipsteps = []
@@ -443,12 +444,12 @@ def map2contig():
             elif strand_dict[mate] == "+" and strand_dict[matepair] == "-":
                 new_matefile.write("%s\t%s\t%d\n"%(mate,matepair,lib.id))
                 ilen = fiveprimeend_dict[matepair]-fiveprimeend_dict[mate]
-                if ilen < oldmax and ilen > oldmin:
+                if ilen < (oldmax + MAX_SD*oldstdev) and ilen > max(0, oldmin - MAX_SD*oldstdev):
                     insertlens.append(ilen)
             elif strand_dict[mate] == "-" and strand_dict[matepair] == "+":
                 new_matefile.write("%s\t%s\t%d\n"%(matepair,mate,lib.id))
                 ilen = fiveprimeend_dict[matepair]-fiveprimeend_dict[mate]
-                if ilen < oldmax and ilen > oldmin:
+                if ilen < (oldmax + MAX_SD*oldstdev) and ilen > max(0, oldmin - MAX_SD*oldstdev):
                     insertlens.append(ilen)
 
             elif strand_dict[mate] == "+" and strand_dict[matepair] == "+":

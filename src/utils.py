@@ -1373,8 +1373,15 @@ def configureEnvironment(utilPath):
          os.environ["LD_LIBRARY_PATH"] = libPath + os.pathsep + oldLDPath
 
 def translateToSRAURL(settings, name):
+   oldDyLD = ""
+   if "DYLD_FALLBACK_LIBRARY_PATH" in os.environ:
+      oldDyLD = os.environ["DYLD_FALLBACK_LIBRARY_PATH"]
+      del os.environ["DYLD_FALLBACK_LIBRARY_PATH"]
    command = "%s/cpp%s%s-%s%s/sra/bin"%(settings.METAMOS_UTILS, os.sep, settings.OSTYPE, settings.MACHINETYPE, os.sep)
    result = getCommandOutput("%s/srapath %s"%(command, name), True)
    if result == name:
       result = ""
+
+   if oldDyLD != "":
+      os.environ["DYLD_FALLBACK_LIBRARY_PATH"] = oldDyLD
    return result

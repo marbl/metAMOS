@@ -228,24 +228,32 @@ class Settings:
           try:
               _DB_PATH = "%s/DB/"%(application_path)
               _BLASTDB_PATH = _DB_PATH + os.sep + "blastdbs"+os.sep
-              if len(os.environ["BLASTDB"]) != 0:
+              if "BLASTDB" in os.environ and len(os.environ["BLASTDB"]) != 0:
                   _BLASTDB_PATH == os.environ["BLASTDB"]
                   if not os.path.exists(_BLASTDB_PATH):
                       print "Error: cannot find BLAST DB directory, yet path set via $BLASTDB: %s. Disabling blastdb dependent programs"%(os.environ["BLASTDB"])
                       Settings.noblastdb = True
-                      #sys.exit(1)
-              #print "BINARY DIST", _DB_PATH
               elif not os.path.exists(_BLASTDB_PATH):
                  print "Error: cannot find BLAST DB directory, expected it in %s. Disabling blastdb dependent programs"%(_BLASTDB_PATH)
                  Settings.noblastdb = True
           except KeyError:
               #_DB_PATH = "./DB/"
+              Settings.noblastdb = True
               pass
 
           if not os.path.exists(_DB_PATH):
               print "Error: cannot find DB directory in %s, was it deleted? oops, it is required to run MetAMOS!"%(_DB_PATH)
               sys.exit(1)
-             
+      else:
+         if "BLASTDB" in os.environ and len(os.environ["BLASTDB"]) != 0:
+             _BLASTDB_PATH == os.environ["BLASTDB"]
+             if not os.path.exists(_BLASTDB_PATH):
+                print "Error: cannot find BLAST DB directory, yet path set via $BLASTDB: %s. Disabling blastdb dependent programs"%(os.environ["BLASTDB"])
+                Settings.noblastdb = True
+         elif not os.path.exists("%s%srefseq_protein.00.pin"%(_BLASTDB_PATH, os.sep)):
+            print "Error: cannot find BLAST DB directory, expected it in %s. Disabling blastdb dependent programs"%(_BLASTDB_PATH)
+            Settings.noblastdb = True
+       
       Settings.DB_DIR        = _DB_PATH 
       Settings.BLASTDB_DIR   = _BLASTDB_PATH 
       Settings.BINARY_DIST   = _BINARY_DIST
@@ -287,12 +295,10 @@ class Settings:
           #need to change PROKKA to external db directory
            kronalibf = open("%s%scpp%s%s-%s/prokka/bin/prokka"%(Settings.METAMOS_UTILS,os.sep,os.sep, Settings.OSTYPE, Settings.MACHINETYPE))
            data = kronalibf.read()
-           print "Read in prokka from %s%scpp%s%s-%s/prokka/bin/prokka"%(Settings.METAMOS_UTILS,os.sep,os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
            if "my $DBDIR = \"$FindBin::RealBin/../db\";" not in data:
                kronalibf.close()
            else:
                dd = data.replace("my $DBDIR = \"$FindBin::RealBin/../db\";","my $DBDIR = \"%s/prokka/db\";"%(Settings.DB_DIR))
-               print "Replacing db dir from relative path to my $DBDIR = \"%s/prokka/db\";"%(Settings.DB_DIR)
                kronalibf.close()
                kronalibf = open("%s%scpp%s%s-%s/prokka/bin/prokka"%(Settings.METAMOS_UTILS,os.sep,os.sep, Settings.OSTYPE, Settings.MACHINETYPE), 'w')
                kronalibf.write(dd)

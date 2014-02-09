@@ -58,7 +58,7 @@ In attempt to further simplify the MetAMOS installation process, we are happy to
 * Perl 5.8.8 (or newer)
 * 64-bit *nix OS
 
-The updated binaries, including several important updates, will be available shorlty for download. In the meantime, please refer to the [Quick Start](#d-quick-start) section on how to download and use MetAMOS.
+The updated binaries, including several important updates, will be available shorlty for download. In the meantime, please refer to the [Install/Quick Start](#c-installing-metamos) sections on how to download and use MetAMOS.
 
 ----------------------------------------------------------------------------------
 [TOC](#table-of-contents)

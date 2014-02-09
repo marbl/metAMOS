@@ -51,14 +51,22 @@ We are happy to announce version 1.5rc1, a.k.a. Praline Brownie
 
 -----------------------------------------------------------------------------------
 [TOC](#table-of-contents)
-## MetAMOS single file binary
+## MetAMOS PyInstaller single file binary
 In attempt to further simplify the MetAMOS installation process, we are happy to announce the availability of a 'frozen' MetAMOS binary for Linux-x68_64 platforms. Along with this binary comes a significantly reduced list of prerequisites:
 
 * Java 1.6 (or newer)
 * Perl 5.8.8 (or newer)
-* 64-bit *nix OS
+* 64-bit *nix OS or Mac OSX 10.7+ (you may need to install MacPorts for full functionality)
 
-The updated binaries, including several important updates, will be available shorlty for download. In the meantime, please refer to the [Install/Quick Start](#c-installing-metamos) sections on how to download and use MetAMOS.
+Linux 64-bit (all except for Blast DBS): [here](https://www.traingene.com/MA_fb.linux.tar.gz).
+OSX 64-bit (7GB tarball, all except for Blast DBS): [here](https://www.traingene.com/MA_fb.OSX.tar.gz).
+Blast DBS: [here](https://www.traingene.com/blastdbs.tar.gz)
+
+This binaries are BIG, not only to download but also to run. Please ensure you have ample free space (100GB+) before download & use. Once you've downloaded & installed the tarball, there is NO NEED to redownload the huge package, instead download the runPipeline updates from here:
+
+### runPipeline
+Linux 64-bit: [here](https://www.traingene.com/runPipeline_fb.linux.tar.gz).
+OSX 64-bit: [here](https://www.traingene.com/runPipeline_fb.OSX.tar.gz).
 
 ----------------------------------------------------------------------------------
 [TOC](#table-of-contents)
@@ -151,7 +159,7 @@ To install the programs which are part of the optional workflow run
 python INSTALL.py optional
 ```
 If all dependencies are downloaded (including optional/deprecated ones), this will take 
-quite awhile to complete (plan on a few hours to 2 days).
+quite awhile to complete (dependending on internet connection & server, anywhere from a few hours to 1-2 days).
 
 ----------------------------------------------------------------------------------
 [TOC](#table-of-contents)

@@ -123,8 +123,8 @@ add it to your PATH variable and MetAMOS will then enable its use in the pipelin
 [TOC](#table-of-contents)
 ### C) INSTALLING MetAMOS 
 
-To download the software release package, go [here](https://github.com/treangen/metAMOS/archive/Release1.5.zip).
-You can also browse the [repository](https://github.com/treangen/MetAMOS/tree/Release1.5)
+To download the software release package, go [here](https://github.com/marbl/metAMOS/archive/v1.5rc1.zip).
+You can also browse the [repository](https://github.com/treangen/MetAMOS/tree/v1.5rc1)
 and click on Downloads. Once downloaded, simply unpack the files and
 open the MetAMOS directory. Once inside the MetAMOS directory, run:
 ```
@@ -579,6 +579,9 @@ is a brief listing of the test scripts we currently include:
 *Test iMetAMOS
 ./Test/test_ima.sh
 
+*Test SRA download
+./Test/test_sra.sh
+
 *Test Newbler (if available)
 ./Test/test_newbler.sh
 
@@ -614,7 +617,7 @@ is a brief listing of the test scripts we currently include:
 ### H) Example output
 
 MetAMOS generates an interactive web page once a run successfully completes:
-http://treangen.github.io/metAMOS/example/html/summary.html
+http://www.cbcb.umd.edu/~sergek/imetamos/gageb/Postprocess/out/html/summary.html
 
 This includes summary statistics and taxonomic information based on Krona [1].
 The easiest way to interact with the results is through the web interface.

@@ -6,7 +6,7 @@ We are happy to announce version 1.5rc1, a.k.a. Praline Brownie
 ## Table of Contents ##
 
 - [NEWS](#news)
-- [MetAMOS single file binary](#metamos-single-file-binary)
+- [MetAMOS single file binary](#metamos-PyInstaller-single-file-binary)
 - [SUMMARY](#summary)
     - [HARDWARE REQUIREMENTS](#a-hardware-requirements)
          - 32GB of RAM

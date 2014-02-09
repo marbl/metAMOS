@@ -1483,7 +1483,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
            print "REAPR tool not found, optional for Validate step, download now?"
            dl = raw_input("Enter Y/N: ")
        if dl == 'y' or dl == 'Y':
-          os.system("curl -L ftp://ftp.sanger.ac.uk/pub4/resources/software/reapr/Reapr_1.0.16.tar.gz -o reapr.tar.gz")
+          os.system("curl -L ftp://cbcb.umd.edu/pub/data/metamos/Reapr_1.0.16.tar.gz -o reapr.tar.gz")
           os.system("tar xvzf reapr.tar.gz")
           os.system("mv Reapr_1.0.16 ./Utilities/cpp/%s%s-%s%sREAPR"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
 

@@ -13,7 +13,7 @@ To download the software release package:
 
 .. code-block:: bash
 
-    $ wget https://github.com/marbl/metAMOS/archive/Release1.5.zip
+    $ wget https://github.com/marbl/metAMOS/archive/v1.5rc1.zip
 
 If you see a certificate not trusted error, you can add the following option to wget:
 
@@ -25,22 +25,22 @@ And if ``wget`` not available, you can use ``curl`` instead:
 
 .. code-block:: bash
 
-    $ curl https://github.com/marbl/metAMOS/archive/Release1.5.zip > Release1.5.zip
+    $ curl https://github.com/marbl/metAMOS/archive/v1.5rc1 > Release1.5.zip
 
-You can also browse the https://github.com/marbl/MetAMOS/tree/Release1.5
+You can also browse the https://github.com/marbl/MetAMOS/tree/v1.5rc1
 and click on Downloads. 
 
 Once downloaded, extract to unpack:
 
 .. code-block:: bash
 
-    $ unzip Release1.5.zip
+    $ unzip v1.5rc1.zip
 
 Change to MetAMOS directory:
 
 .. code-block:: bash
 
-    $ cd metAMOS-Release1.5
+    $ cd metAMOS-v1.5rc1
 
 Alternatively, you can download the INSTALL.py directly from:
 

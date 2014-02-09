@@ -58,16 +58,16 @@ In attempt to further simplify the MetAMOS installation process, we are happy to
 * Perl 5.8.8 (or newer)
 * 64-bit *nix OS or Mac OSX 10.7+ (you may need to install MacPorts for full functionality)
 
-Linux 64-bit (all except for Blast DBS): ftp.cbcb.umd.edu/pub/data/treangen/MA_fb_v1.5rc1_linux.tar.gz
+Linux 64-bit: ftp://ftp.cbcb.umd.edu/pub/data/treangen/MA_fb_v1.5rc1_linux.tar.gz
 
-OSX 64-bit (7GB tarball, all except for Blast DBS): ftp.cbcb.umd.edu/pub/data/treangen/MA_fb_v1.5rc1_OSX.tar.gz
+OSX 64-bit: ftp://ftp.cbcb.umd.edu/pub/data/treangen/MA_fb_v1.5rc1_OSX.tar.gz
 
-Blast DBS: ftp.cbcb.umd.edu/pub/data/treangen//blastdbs.tar.gz
+Blast DBS: ftp://ftp.cbcb.umd.edu/pub/data/treangen//blastdbs.tar.gz
 
 This binaries are BIG, not only to download but also to run. Please ensure you have ample free space (100GB+) before download & use. Once you've downloaded & installed the tarball, there is NO NEED to redownload the huge package, instead download the runPipeline updates from here:
 
 
-Linux 64-bit: ftp.cbcb.umd.edu/pub/data/treangen/runPipeline_fb.linux.tar.gz
+Linux 64-bit: ftp://ftp.cbcb.umd.edu/pub/data/treangen/runPipeline_fb.linux.tar.gz
 
 OSX 64-bit: ftp://ftp.cbcb.umd.edu/pub/data/treangen/runPipeline_fb.OSX.tar.gz
 

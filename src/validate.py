@@ -639,7 +639,7 @@ def Validate (input_file_names, output_file_name):
    # finally run quast
    if totalRun != 0:
       selectedReferences = open("%s/Validate/out/%s.ref.selected"%(_settings.rundir, _settings.PREFIX), 'w')
-      if "quast" in _validators:
+      if "quast" in _validators and os.path.exists("%s/metaquast.py"%(_settings.QUAST)):
          # recruit a reference
          references = recruitGenomes(_settings,bestAssembly,"%s/refseq"%(_settings.DB_DIR), "%s/Validate/out/recruit"%(_settings.rundir), "Validate", 1)
          if len(references) > 0:

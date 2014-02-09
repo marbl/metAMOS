@@ -1150,8 +1150,7 @@ def recruitGenomes(settings,query,genomeDir,outDir,stepName, top=1):
          i+=1
    else:
       print "Error: recruiting references failed"
-      raise(JobSignalledBreak)
-           
+
    return gtr
 
       

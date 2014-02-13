@@ -41,8 +41,8 @@ Quick Start
     @imetamos [fastq_pair_1] [fastq_pair_2] [#ASSEMBLE] [id]
 
 - Think of an automated #icanhazpdf but for genome assemblies (#icanhazasm). 
-- Currently reads need to be in non-interleaved fastq format. Support exists but untested for SRA ids. 
-- id simply needs to be a job-unique integer to avoid duplicate tweets in case you have to submit your job multiple times before it is ran. 
+- Currently reads need to be in non-interleaved fastq format.
+- id simply needs to be a job-unique integer to avoid duplicate tweets in case you have to submit your job multiple times before it runs. 
 - You should notice that no parameters are required (except for the input data). In practice this works thanks to several software packages, e.g. kmergenie (http://kmergenie.bx.psu.edu/), and an ensemble assembly approach (powered by several assembly and assembly validation tools). 
 
 .. image:: f1.png

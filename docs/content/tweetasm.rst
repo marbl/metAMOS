@@ -22,8 +22,8 @@ Limitations
 
 Before proceeding, its important to higlight a few important points:
 
-- The server behind TweetAssembler is only able to assemble a couple of requests (at best) per day. Specs are: 32GB RAM & 32GhZ of compute. 
-- There exists limitations on the size of the input data. i.e. MiSeq ok, HiSeq not ok. be gentle!
+- The server behind TweetAssembler is only able to assemble a couple of requests (at best) per day. Specs are: 32GB RAM & 32GhZ of compute... be gentle!
+- There exists limitations on the size of the input data. i.e. MiSeq ok, HiSeq not ok. 
 - TweetAssembler is nothing more than a tweet-based interface to an iMetAMOS webserver.
 - Given the limited resources, job queue management is disabled. You will only be able to run a job if no other jobs are active; your only indication that your job was accepted is the confirmation tweet (see below). 
 - Twitter has a maximum # of tweets allowed per day (1000), as well hourly limits. If TweetAssembler goes over any of these limits it will be deactivated for approx. 1 hour, potentially longer.

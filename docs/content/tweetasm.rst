@@ -70,3 +70,47 @@ Quick Start
 .. image:: f5.png
 
 8) Suggestions & comments welcome! 
+
+
+Supported Software
+====================
+
+Last but not least, we would like to acknowledge all of the wonderful software that provides the firepower behind TweetAssembler and iMetAMOS:
+
+[Preprocess]
+- ea-utils (code.google.com/p/ea-utils)
+- FastQC (bioinformatics.babraham.ac.uk)
+- KmerGenie (Chikhi et al 2014)
+
+[Assemble]
+- ABySS (Simpson et al 2009)
+- CABOG (Miller et al 2008)
+- IDBA-UD (Peng et al 2012)
+- MaSuRCA (Zimin et al 2013) 
+- MetaVelvet (Namiki et al 2011)
+- Mira (Chevreux et al 1999)
+- RayMeta (Boisvert et al 2012) 
+- SGA (Simpson et al 2012)
+- SOAPdenovo2 (Luo et al 2012)
+- SPAdes (Bankevich et al 2012)
+- SparseAssembler (Ye et al 2012)
+- Velvet (Zerbino et al 2008)
+- Velvet-SC (Chitsaz et al 2011)
+
+[MapReads]
+- Bowtie (Langmead  et al 2009) 
+- Bowtie2 (Langmead  et al 2012) 
+
+[Validate]
+- ALE (Clark et al 2013)
+- CGAL (Rahman et al 2013)
+- FRCbam (Vezzi et al 2013)
+- FreeBayes (Garrison et al 2012)
+- LAP (Ghodsi et al 2013)
+- QUAST (Gurevich et al 2013)
+- REAPR (Hunt et al 2013)
+
+[FindORFS/Annotate]
+- Prokka (Seemann, 2013)
+
+thanks!

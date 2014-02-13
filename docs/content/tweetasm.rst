@@ -17,7 +17,7 @@ Limitations
 
 Before proceeding, its important to higlight a few important points:
 
-- The TweetAssembler server is only able to assemble a couple of requests (at best) per day
+- The TweetAssembler server is only able to assemble a couple of requests (at best) per day. Specs are: 32GB RAM & 32GhZ of compute.
 - There exists limitations on the size of the input data. i.e. MiSeq ok, HiSeq not ok.
 - TweetAssembler is nothing more than a tweet-based interface to an iMetAMOS webserver.
 - Given the limited resources, job queue management is disabled. You will only be able to run a job if no other jobs are active.
@@ -29,7 +29,10 @@ Quick Start
 
 .. image:: f0.png
 
-2) Next, contact the developers (treangen@gmail.com) to get your twitter account added to the `allowed accounts` list.
+2) Next, contact the developers to get your twitter account added to the `allowed accounts` list:
+
+- Todd J Treangen (treangen@gmail.com)
+- Sergey Koren (sergek@gmail.com)
 
 3) Once approved, compose a tweet to @imetamos using the following syntax:
 
@@ -37,8 +40,10 @@ Quick Start
 
     @imetamos [fastq_pair_1] [fastq_pair_2] [#ASSEMBLE] [id]
 
+- Think of an automated #icanhazpdf but for genome assemblies (#icanhazasm). 
 - Currently reads need to be in non-interleaved fastq format. Support exists but untested for SRA ids. 
 - id simply needs to be a job-unique integer to avoid duplicate tweets in case you have to submit your job multiple times before it is ran. 
+- You should notice that no parameters are required (except for the input data). In practice this works thanks to several software packages, e.g. kmergenie (http://kmergenie.bx.psu.edu/), and an ensemble assembly approach (powered by several assembly and assembly validation tools). 
 
 .. image:: f1.png
 
@@ -58,4 +63,4 @@ Quick Start
 
 .. image:: f5.png
 
-8) Suggestions & comments welcome!
+8) Suggestions & comments welcome! 

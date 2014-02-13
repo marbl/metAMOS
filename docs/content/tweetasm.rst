@@ -78,11 +78,13 @@ Supported Software
 Last but not least, we would like to acknowledge all of the wonderful software that provides the firepower behind TweetAssembler and iMetAMOS:
 
 [Preprocess]
+
 - ea-utils (code.google.com/p/ea-utils)
 - FastQC (bioinformatics.babraham.ac.uk)
 - KmerGenie (Chikhi et al 2014)
 
 [Assemble]
+
 - ABySS (Simpson et al 2009)
 - CABOG (Miller et al 2008)
 - IDBA-UD (Peng et al 2012)
@@ -98,10 +100,12 @@ Last but not least, we would like to acknowledge all of the wonderful software t
 - Velvet-SC (Chitsaz et al 2011)
 
 [MapReads]
+
 - Bowtie (Langmead  et al 2009) 
 - Bowtie2 (Langmead  et al 2012) 
 
 [Validate]
+
 - ALE (Clark et al 2013)
 - CGAL (Rahman et al 2013)
 - FRCbam (Vezzi et al 2013)
@@ -111,6 +115,7 @@ Last but not least, we would like to acknowledge all of the wonderful software t
 - REAPR (Hunt et al 2013)
 
 [FindORFS/Annotate]
+
 - Prokka (Seemann, 2013)
 
 thanks!

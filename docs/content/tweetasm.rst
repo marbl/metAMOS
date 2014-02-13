@@ -12,6 +12,12 @@ TweetAssembler is a twitter-based interface to an isolate genome assembly server
      bioRxiv doi: 10.1101/002469
      http://biorxiv.org/content/early/2014/02/07/002469
 
+Why Twitter?
+==============
+
+- Good question! One of the main (or the) raison d'etre of TweetAssembler is to highlight the utilitly of iMetAMOS in that most all parameters are optimized/set for the user; it really is just point and shoot. This enables the submit command to be readily constructed in fewer than 140 chars. 
+
+
 Limitations
 ===============
 
@@ -21,6 +27,7 @@ Before proceeding, its important to higlight a few important points:
 - There exists limitations on the size of the input data. i.e. MiSeq ok, HiSeq not ok. be gentle!
 - TweetAssembler is nothing more than a tweet-based interface to an iMetAMOS webserver.
 - Given the limited resources, job queue management is disabled. You will only be able to run a job if no other jobs are active; your only indication that your job was accepted is the confirmation tweet (see below). 
+- Twitter has a maximum # of tweets allowed per day (1000), as well hourly limits. If TweetAssembler goes over any of these limits it will be deactivated for approx. 1 hour, potentially longer.
 
 Quick Start
 ===============

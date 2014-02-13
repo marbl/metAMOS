@@ -15,8 +15,7 @@ TweetAssembler is a twitter-based interface to an isolate genome assembly server
 Why Twitter?
 ==============
 
-- Good question! One of the main (or the) raison d'etre of TweetAssembler is to highlight the utilitly of iMetAMOS in that most all parameters are optimized/set for the user; it really is just point and shoot. This enables the submit command to be readily constructed in fewer than 140 chars. 
-
+- Good question! The main Raison d'être of TweetAssembler is to highlight the utilitly of iMetAMOS in that most parameters are optimized/set for the user; it really is just point and shoot. This enables the submit command to be readily constructed in fewer than 140 chars. 
 
 Limitations
 ===============

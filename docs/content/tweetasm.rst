@@ -27,6 +27,7 @@ Before proceeding, its important to higlight a few important points:
 - TweetAssembler is nothing more than a tweet-based interface to an iMetAMOS webserver.
 - Given the limited resources, job queue management is disabled. You will only be able to run a job if no other jobs are active; your only indication that your job was accepted is the confirmation tweet (see below). 
 - Twitter has a maximum # of tweets allowed per day (1000), as well hourly limits. If TweetAssembler goes over any of these limits it will be deactivated for approx. 1 hour, potentially longer.
+- No guarantees on preservation of output! Assemblies & associated output can & will be deleted regularly.
 
 Quick Start
 ===============
@@ -71,6 +72,19 @@ Quick Start
 
 8) Suggestions & comments welcome! 
 
+
+Viewing Output
+===================
+
+Your output will be located at http://www.traingene.com/tweetasm/P_[TIMESTAMP]/out/html/summary.html.
+
+- Example output: http://www.traingene.com/tweetasm/P_2014_02_11_142926937305/out/html/summary.html
+
+To save assembly:
+
+.. code-block:: bash
+
+     wget http://www.traingene.com/tweetasm/P_[TIMESTAMP]/out/proba.ctg.fa 
 
 Supported Software
 ====================

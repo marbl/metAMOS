@@ -27,5 +27,6 @@ Contents:
 
    content/installation
    content/quickstart
+   content/tweetasm
 
 

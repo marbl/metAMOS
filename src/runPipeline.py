@@ -15,7 +15,7 @@ INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
 DEFAULT_KMER  = "31"
 ## Hardcode a default taxonomic classification level
 DEFAULT_TAXA_LEVEL = "class"
-sys.path.append(INITIAL_SRC)
+sys.path.insert(1, INITIAL_SRC)
 validate_install = 0
 if validate_install:
     import check_install

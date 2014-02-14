@@ -8,7 +8,7 @@ INITIAL_SRC   = "%s%ssrc"%(sys.path[0], os.sep)
 HOME_DIR      = "%s"%(sys.path[0])
 UTILS_DIR     = "%s%sUtilities"%(sys.path[0], os.sep) 
 
-sys.path.append(INITIAL_SRC)
+sys.path.insert(1, INITIAL_SRC)
 import utils
 import workflow
 

@@ -20,12 +20,12 @@
         <p class="header">A metagenomic assembly analysis pipeline</p>
 
         <ul>
-          <li class="download"><a class="buttons" href="https://github.com/marbl/metAMOS/archive/v1.5rc1.zip">Download ZIP</a></li>
-          <li class="download"><a class="buttons" href="https://github.com/marbl/metAMOS/archive/v1.5rc1.tar.gz">Download TAR</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/marbl/metAMOS/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/marbl/metAMOS/tarball/master">Download TAR</a></li>
           <li><a class="buttons github" href="https://github.com/marbl/metAMOS">View On GitHub</a></li>
         </ul>
 
-        <p class="header">This project is maintained by <a class="header name" href="https://github.com/marbl">MarBL</a></p>
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/marbl">marbl</a></p>
 
 
       </header>
@@ -133,17 +133,25 @@
 <li>Java 1.6 (or newer)</li>
 <li>Perl 5.8.8 (or newer)</li>
 <li>64-bit *nix OS or Mac OSX 10.7+ (you may need to install MacPorts for full functionality)</li>
-</ul><p>Linux 64-bit: <a>ftp://ftp.cbcb.umd.edu/pub/data/treangen/MA_fb_v1.5rc1_linux.tar.gz</a></p>
+</ul><p>First, select your flavor (DBs below are required but provided separately):</p>
+
+<p>Linux 64-bit: <a>ftp://ftp.cbcb.umd.edu/pub/data/treangen/MA_fb_v1.5rc1_linux.tar.gz</a></p>
 
 <p>OSX 64-bit: <a>ftp://ftp.cbcb.umd.edu/pub/data/treangen/MA_fb_v1.5rc1_OSX.tar.gz</a></p>
 
-<p>Blast DBS: <a>ftp://ftp.cbcb.umd.edu/pub/data/treangen//blastdbs.tar.gz</a></p>
+<p>Then add the toppings:</p>
 
-<p>This binaries are BIG, not only to download but also to run. Please ensure you have ample free space (100GB+) before download &amp; use. Once you've downloaded &amp; installed the tarball, there is NO NEED to redownload the huge package, instead download the runPipeline updates from here:</p>
+<p>ALL DBS: <a>ftp://ftp.cbcb.umd.edu/pub/data/treangen/allDBs.tar.gz</a></p>
 
-<p>Linux 64-bit: <a>ftp://ftp.cbcb.umd.edu/pub/data/treangen/runPipeline_fb.linux.tar.gz</a></p>
+<p>LIGHT DBS: <a>ftp://ftp.cbcb.umd.edu/pub/data/treangen/minDBs.tar.gz</a></p>
 
-<p>OSX 64-bit: <a>ftp://ftp.cbcb.umd.edu/pub/data/treangen/runPipeline_fb.OSX.tar.gz</a></p>
+<p>Finally, run a quick test:</p>
+
+<p>./run_test.sh</p>
+
+<p>This will take a moment to extract. And you will get a "No DBs found ERROR!" if you do not download any DBs. We recommend you try the Light version first, and if you need the extended DBs (for BLAST, FCP, QUAST, etc) grab the "ALL DBS" tarball. This should be a download once and only once operation. In addition, your existing DBs could work (assuming they are same format, etc). Further details on the expected DBs on the readthedocs page.</p>
+
+<p>**Note: please use caution! this binaries eat up disk space quickly. Please ensure you have ample free space (100GB+) before download &amp; use. </p>
 
 <hr><p><a href="#table-of-contents">TOC</a></p>
 

@@ -58,18 +58,26 @@ In attempt to further simplify the MetAMOS installation process, we are happy to
 * Perl 5.8.8 (or newer)
 * 64-bit *nix OS or Mac OSX 10.7+ (you may need to install MacPorts for full functionality)
 
+First, select your flavor (DBs below are required but provided separately):
+
 Linux 64-bit: ftp://ftp.cbcb.umd.edu/pub/data/treangen/MA_fb_v1.5rc1_linux.tar.gz
 
 OSX 64-bit: ftp://ftp.cbcb.umd.edu/pub/data/treangen/MA_fb_v1.5rc1_OSX.tar.gz
 
-Blast DBS: ftp://ftp.cbcb.umd.edu/pub/data/treangen//blastdbs.tar.gz
+Then add the toppings:
 
-This binaries are BIG, not only to download but also to run. Please ensure you have ample free space (100GB+) before download & use. Once you've downloaded & installed the tarball, there is NO NEED to redownload the huge package, instead download the runPipeline updates from here:
+ALL DBS: ftp://ftp.cbcb.umd.edu/pub/data/treangen/allDBs.tar.gz
 
+LIGHT DBS: ftp://ftp.cbcb.umd.edu/pub/data/treangen/minDBs.tar.gz
 
-Linux 64-bit: ftp://ftp.cbcb.umd.edu/pub/data/treangen/runPipeline_fb.linux.tar.gz
+Finally, run a quick test:
 
-OSX 64-bit: ftp://ftp.cbcb.umd.edu/pub/data/treangen/runPipeline_fb.OSX.tar.gz
+./run_test.sh
+
+This will take a moment to extract. And you will get a "No DBs found ERROR!" if you do not download any DBs. We recommend you try the Light version first, and if you need the extended DBs (for BLAST, FCP, QUAST, etc) grab the "ALL DBS" tarball. This should be a download once and only once operation. In addition, your existing DBs could work (assuming they are same format, etc). Further details on the expected DBs on the readthedocs page.
+
+**Note: please use caution! this binaries eat up disk space quickly. Please ensure you have ample free space (100GB+) before download & use. 
+
 
 ----------------------------------------------------------------------------------
 [TOC](#table-of-contents)

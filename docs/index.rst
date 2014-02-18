@@ -26,6 +26,7 @@ Contents:
    :maxdepth: 2
 
    content/installation
+   content/frozenbinary
    content/quickstart
    content/tweetasm
 

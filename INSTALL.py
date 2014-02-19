@@ -686,7 +686,21 @@ if "optional" in enabledWorkflows or manual:
              os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/params-validate.tar.gz -o ./params-validate.tar.gz")
              os.system("tar xvzf params-validate.tar.gz")
              os.system("rm -rf params-validate.tar.gz")
-    
+
+          # download markers dbs
+          if not os.path.exists("./phylosift/share"):
+             markerUrl = utils.getCommandOutput("cat phylosift/phylosiftrc |grep marker_base |awk '{print $NF}' |sed s/\;//g", False)
+             ncbiUrl = utils.getCommandOutput("cat phylosift/phylosiftrc |grep ncbi_url |awk '{print $NF}' |sed s/\;//g", False)
+             os.system("mkdir -p ./phylosift/share/phylosift")
+             os.chdir("./phylosift/share/phylosift")
+             os.system("curl -L %s/markers.tgz -o marker.tgz"%(markerUrl))
+             os.system("tar xvzf marker.tgz")
+             os.system("rm marker.tgz")
+             os.system("curl -L %s -o ncbi.tgz"%(ncbiUrl))
+             os.system("tar xvzf ncbi.tgz") 
+             os.system("rm ncbi.tgz")
+             os.chdir(METAMOS_ROOT)
+
     # check the number of files the DB currently is and see if we have the expected number
     dbResult = ""
     if not nodbs:

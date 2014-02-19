@@ -292,7 +292,7 @@ class Settings:
                runp = False
 
       if _BINARY_DIST and runp:
-          #need to change PROKKA to external db directory
+           #need to change PROKKA to external db directory
            kronalibf = open("%s%scpp%s%s-%s/prokka/bin/prokka"%(Settings.METAMOS_UTILS,os.sep,os.sep, Settings.OSTYPE, Settings.MACHINETYPE))
            data = kronalibf.read()
            if "my $DBDIR = \"$FindBin::RealBin/../db\";" not in data:
@@ -303,6 +303,22 @@ class Settings:
                kronalibf = open("%s%scpp%s%s-%s/prokka/bin/prokka"%(Settings.METAMOS_UTILS,os.sep,os.sep, Settings.OSTYPE, Settings.MACHINETYPE), 'w')
                kronalibf.write(dd)
                kronalibf.close()
+
+
+           # also need to change phylosift to external DB
+           os.system("cp %s%sphylosift%sphylosiftrc %s%sphylosift%sphylosiftrc.orig"%(Settings.METAMOSDIR, os.sep, os.sep, Settings.METAMOSDIR, os.sep, os.sep))
+           testIn = open("%s%sphylosift%sphylosiftrc.orig"%(Settings.METAMOSDIR, os.sep, os.sep), 'r')
+           testOut = open("%s%sphylosift%sphylosiftrc"%(Settings.METAMOSDIR, os.sep, os.sep), 'w')
+           for line in testIn.xreadlines():
+              if "marker_path" in line:
+                 testOut.write("$marker_path=\"%s%sshare%sphylosift\";\n"%(Settings.DB_DIR, os.sep, os.sep))
+              elif "ncbi_path" in line:
+                 testOut.write("$ncbi_path=\"%s%sshare%sphylosift\";\n"%(Settings.DB_DIR, os.sep, os.sep))
+              else:
+                 testOut.write(line.strip() + "\n")
+           testIn.close()
+           testOut.close()
+
       Settings.SIGNALP       = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
 
       Settings.FCP           = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)

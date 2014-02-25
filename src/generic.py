@@ -10,7 +10,7 @@ from task import JobSignalledBreak
 
 LIBRARY_TYPES = enum("PAIRED", "MATED")
 TECHNOLOGY_TYPES = enum("SOLEXA", "SANGER", "PACBIO", "454")
-SYSTEM_COMMANDS = [ "mkdir", "mv", "bash", "ln", "rm", "cp", "ls" ]
+SYSTEM_COMMANDS = [ "mkdir", "mv", "bash", "ln", "rm", "cp", "ls", "echo" ]
 
 _readlibs = []
 _skipsteps = []

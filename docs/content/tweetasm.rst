@@ -39,7 +39,7 @@ Quick Start
 2) Next, contact the developers to get your twitter account added to the `allowed accounts` list:
 
 - Todd J Treangen (treangen@gmail.com)
-- Sergey Koren (sergek@gmail.com)
+- Sergey Koren (sergekoren@gmail.com)
 
 3) Once approved, compose a tweet to @imetamos using the following syntax:
 

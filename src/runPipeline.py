@@ -6,7 +6,7 @@
 ## runPipeline.py - main pipeline driver for metAMOS
 #########################
 ##first imports
-import os,sys
+import os,sys,traceback
 sys.tracebacklimit = 0
 shellv = os.environ["SHELL"]
 ## Setting up paths
@@ -978,4 +978,8 @@ if __name__ == "__main__":
        print "done! pipeline took %.2f minutes"%(float(elapsed)/float(60.0))
     except Exception, e:
        print "Oops, MetAMOS finished with errors! see text in red above for details."
+       if utils.Settings.VERBOSE:
+          exc_type, exc_value, exc_traceback = sys.exc_info()
+          traceback.print_exception(exc_type, exc_value, exc_traceback,
+                              limit=100, file=sys.stderr)
        sys.exit()

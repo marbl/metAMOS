@@ -519,7 +519,7 @@ if not os.path.exists("KronaTools/taxonomy/taxonomy.tab") or 0:
     if (dl == 'y' or dl == 'Y') and not nodbs:
         os.system("cd KronaTools && ./updateTaxonomy.sh")
         os.chdir("%s"%(METAMOS_ROOT))
-        os.system("cat KronaTools/taxonomy/taxonomy.tab |awk -F \"\\t\" '{print $1\"\\\t\"$NF}' > ./Utilities/DB/tax_key.tab")
+        os.system("cat KronaTools/taxonomy/taxonomy.tab |awk -F \"\\t\" '{print $1\"\\t\"$NF}' > ./Utilities/DB/tax_key.tab")
 
 if not os.path.exists("./FastQC"):
     if "fastqc" in packagesToInstall:

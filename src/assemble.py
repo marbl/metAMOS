@@ -320,8 +320,9 @@ def Assemble(input,output):
    asmPrefix = asmPrefix.replace(".asm.contig", "")
    asmName = input.replace("%s/Assemble/out/"%(_settings.rundir), "")
    asmName = asmName.replace(".run", "")
+   isContig = os.path.exists("%s/Preprocess/out/%s.asm.contig"%(_settings.rundir, asmName))
 
-   if (len(asmName.split(".")) > 1):
+   if (len(asmName.split(".")) > 1) and not isContig:
       (asmName, kmer) = asmName.split(".")
       _settings.kmer = int(kmer)
    _settings.PREFIX = asmPrefix
@@ -556,6 +557,9 @@ def CheckAsmResults (input_file_names, output_file_name):
       kmers = _settings.kmer.split(",")
 
       for assembler in assemblers:
+         if assembler == "none" or assembler == None:
+            continue
+
          successAsm = 0
          for kmer in kmers:
             if not os.path.exists("%s/Assemble/out/%s.%s.asm.contig"%(_settings.rundir, assembler, kmer)) or os.path.getsize("%s/Assemble/out/%s.%s.asm.contig"%(_settings.rundir, assembler, kmer)) == 0:

@@ -461,11 +461,24 @@ class readLib:
 
 def getDefaultWeight(sa):
     if sa == SCORE_TYPE.LAP or sa == SCORE_TYPE.ALE or sa == SCORE_TYPE.CGAL:
-       return 0.33
+       return 0.333333333
     elif sa == SCORE_TYPE.ORF:
        return 0
     else:
        return 1
+
+def nearlyEqual(a, b, epsilon = 0.0001):
+    absA = abs(float(a))
+    absB = abs(float(b))
+    diff = abs(float(a) - float(b))
+
+    if a == b:
+        return True
+    elif (a * b == 0): # a or b or both are zero
+        # relative error is not meaningful here
+        return diff < (epsilon * epsilon)
+    else: # use relative error
+        return diff / (absA + absB) < epsilon
 
 def initValidationScores(weights = dict()):
    for score in SCORE_TYPE.reverse_mapping.keys():

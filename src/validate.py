@@ -606,7 +606,7 @@ def Validate (input_file_names, output_file_name):
 
       # check for ties
       for assembler in assemblerVotes:
-         if assemblerVotes[assembler] == currMaxVote:
+         if nearlyEqual(assemblerVotes[assembler], currMaxVote):
             ties[assembler] = tieBreakingScores[assembler]
       if len(ties) > 1:
          if _settings.VERBOSE:
@@ -622,10 +622,11 @@ def Validate (input_file_names, output_file_name):
       # sanity check, ensure we picked the same assembly file as assembler. This must always be true as we vote for both at the same time
       currMaxVote = 0
       for assembly in assemblyVotes:
-         if assemblyVotes[assembly] > currMaxVote:
-            bestAssembly = assembly
-            currMaxVote = assemblyVotes[assembly]
-         elif assemblyVotes[assembly] == currMaxVote and getAsmName(assembly) == bestAssembler:
+         if nearlyEqual(assemblyVotes[assembly], currMaxVote):
+            if getAsmName(assembly) == bestAssembler:
+               bestAssembly = assembly
+               currMaxVote = assemblyVotes[assembly]
+         elif assemblyVotes[assembly] > currMaxVote:
             bestAssembly = assembly
             currMaxVote = assemblyVotes[assembly]
       if getAsmName(bestAssembly) != bestAssembler:

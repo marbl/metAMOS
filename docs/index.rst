@@ -36,6 +36,7 @@ Contents:
    content/testsuite
    content/output
    content/contact
+   content/faqs
    content/tweetasm
 
 

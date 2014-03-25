@@ -1,5 +1,5 @@
 =================================================================
-**MetAMOS**: *a cohesive framework for isolate and metagenomic assembly and analysis*
+MetAMOS: *a cohesive framework for isolate and metagenomic assembly and analysis*
 =================================================================
 
 =================

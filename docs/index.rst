@@ -29,6 +29,7 @@ Contents:
    content/hardware
    content/frozenbinary
    content/quickstart
+   content/directory
    content/imetamos
    content/workflows
    content/generictools

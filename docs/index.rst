@@ -23,12 +23,19 @@ If you use MetAMOS in your research, please cite the following manuscript::
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    content/installation
    content/hardware
    content/frozenbinary
    content/quickstart
+   content/imetamos
+   content/workflows
+   content/generictools
+   content/testsuite
+   content/output
+   content/contact
+   content/cite
    content/tweetasm
 
 

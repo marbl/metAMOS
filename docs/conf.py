@@ -41,7 +41,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'MetAMOS'
-copyright = u'2014, Sergey Koren & Todd J Treangen'
+copyright = u'2014, MetAMOS development team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

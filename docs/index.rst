@@ -13,7 +13,7 @@ Please see the original `manuscript <http://genomebiology.com/2013/14/1/R2>`_.
 =================
 Citation
 =================
-If you use MetAMOS in your research, please cite the following manuscript::
+If you use MetAMOS in your research, please cite the following manuscript (in addition to the individual software component citations listed in stdout)::
 
     TJ Treangen, S Koren, DD Sommer, B Liu, I Astrovskaya, B Ondov, Irina Astrovskaya, Brian Ondov, Aaron E Darling, Adam M Phillippy, Mihai Pop
     MetAMOS: a modular and open source metagenomic assembly and analysis pipeline

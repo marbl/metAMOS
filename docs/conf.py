@@ -184,7 +184,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
   ('index', 'MetAMOS.tex', u'MetAMOS Documentation',
-   u'Sergey Koren \\& Todd J Treangen', 'manual'),
+   u'MetAMOS development team', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -214,7 +214,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'metamos', u'MetAMOS Documentation',
-     [u'Sergey Koren & Todd J Treangen'], 1)
+     [u'MetAMOS development team'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -228,7 +228,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'MetAMOS', u'MetAMOS Documentation',
-   u'Sergey Koren & Todd J Treangen', 'MetAMOS', 'One line description of project.',
+   u'MetAMOS development team', 'MetAMOS', 'One line description of project.',
    'Miscellaneous'),
 ]
 

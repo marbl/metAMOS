@@ -38,5 +38,6 @@ Contents:
    content/contact
    content/faqs
    content/tweetasm
+   content/programs
 
 

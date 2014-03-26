@@ -6,6 +6,10 @@ Description
 ------------
 MetAMOS allows new tools to be added to the ASSEMBLE and ANNOTATE steps without requiring code changes. 
 
+Contributing to metAMOS
+~~~~~~~~~~~~~~~~~~~~~~
+If you add an assembler or classifier that you believe will benefit the community, please post the required spec file and citation either as a new `issue <https://github.com/marbl/metAMOS/issues?state=open>`_ through a `pull <https://github.com/marbl/metAMOS/pulls>`_ request. 
+
 How-to-use
 ----------
 

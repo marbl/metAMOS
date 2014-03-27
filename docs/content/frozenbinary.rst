@@ -2,7 +2,7 @@
 Single binary
 ############
 
-MetAMOS PyInstaller single file binary
+MetAMOS PyInstaller single file binary 
 ======================
 
 In attempt to further simplify the MetAMOS installation process, we are happy to announce the availability of a 'frozen' MetAMOS binary for Linux-x68_64 platforms. Along with this binary comes a significantly reduced list of prerequisites:
@@ -20,7 +20,7 @@ In attempt to further simplify the MetAMOS installation process, we are happy to
 * R 2.11.1 (or newer)
 * 64-bit *nix OS or Mac OSX 10.7+ (you may need to install MacPorts for full functionality)
 
-Disclaimer: The frozen binary is provided as-is and has limited support, functionality and features (compared to latest release). If you encouter issues with a frozen binary, please try installing the latest release.
+**Disclaimer: The frozen binary is provided as-is and has limited support and reduced functionality/features compared to installing from source. If you encouter issues with a frozen binary, please try installing the latest release.**
 
 First, select your flavor (DBs below are required but provided separately):
 

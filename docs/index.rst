@@ -1,14 +1,15 @@
 =================================================================
-MetAMOS: *a cohesive framework for isolate and metagenomic assembly and analysis*
+MetAMOS: *a modular framework for (meta)genomic assembly, analysis and validation*
 =================================================================
+.. image:: m1_logo.png
+    :width: 800px
+    :scale: 80 %
 
 =================
 Overview
 =================
 
-MetAMOS is an open source, modular metagenomic (and isolate) genome assembly and analysis toolkit. MetAMOS represents a focused effort to create automated, reproducible, traceable assembly & analysis infused with the current best practices and state-of-the-art methods. MetAMOS for input can start with next-generation sequencing reads or assemblies, and as output, produces: assembly reports, genomic scaffolds, open-reading frames, variant motifs, taxonomic or functional annotations, Krona charts and HTML report. 
-
-Please see the original `manuscript <http://genomebiology.com/2013/14/1/R2>`_.
+MetAMOS represents a focused effort to create automated, reproducible, traceable assembly & analysis infused with current best practices and state-of-the-art methods. MetAMOS for input can start with next-generation sequencing reads or assemblies, and as output, produces: assembly reports, genomic scaffolds, open-reading frames, variant motifs, taxonomic or functional annotations, Krona charts and HTML report. 
 
 =================
 Citation
@@ -25,19 +26,20 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   content/installation
    content/hardware
+   content/installation
    content/frozenbinary
+   content/testsuite
    content/quickstart
    content/imetamos
-   content/directory
    content/workflows
    content/generictools
-   content/testsuite
+   content/directory
    content/output
-   content/contact
-   content/faqs
-   content/tweetasm
    content/programs
+   content/faqs
+   content/contact
+   content/tweetasm
+
 
 

@@ -235,7 +235,7 @@ def Validate (input_file_names, output_file_name):
             for score in scores:
                if i in scoreOrder:
                    asmScores[scoreOrder[i]] = minScore() if score.lower() == "none" else float(score)
-                   if (scoreOrder[i] == SCORE_TYPE.FRCBAM or scoreOrder[i] == SCORE_TYPE.SNP):
+                   if (scoreOrder[i] == SCORE_TYPE.FRCBAM or scoreOrder[i] == SCORE_TYPE.SNP) and asmScores[scoreOrder[i]] != minScore():
                       asmScores[scoreOrder[i]] = -1 * asmScores[scoreOrder[i]]
                i += 1 
             validatedAsms[scores[0].lower()] = asmScores
@@ -537,7 +537,7 @@ def Validate (input_file_names, output_file_name):
          sorted_scores = sorted(validationScores[type].iteritems(), key=itemgetter(1), reverse=True)
           
          for tup in sorted_scores:
-            if counter <= numCandidatesPerType:
+            if counter < numCandidatesPerType:
                if tup[0] not in candidates:
                   candidates[tup[0]] = 0
                candidates[tup[0]] += 1

@@ -369,7 +369,7 @@ Expected output
 
 * Multi-fasta file of ORFs as fna,faa
 
-Classify (a.k.a Bin)
+Classify (a.k.a Taxonomic Binning)
 -------------
 
 Required step?

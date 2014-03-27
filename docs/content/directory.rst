@@ -219,6 +219,36 @@ Expected output
 
 * List of contigs likely to be repeats
 
+Annotate (a.k.a Taxonomic classifcation)
+-------------
+
+Required step?
+^^^^^^^
+
+* Yes
+
+Software currently supported
+^^^^^^^
+
+* FCP
+* Kraken
+* Phylosift
+
+What it does
+^^^^^^^
+
+* Labels contigs with taxonomic id
+
+Expected input
+^^^^^^
+
+* Multi-fasta file of contigs
+
+Expected output
+^^^^^^
+
+* Text file containing contig id to taxonomic id 1-to-1 mapping
+
 FunctionalAnnotation
 -------------
 
@@ -279,6 +309,96 @@ Expected output
 * scaffolds in fasta format
 * motifs/variants 
 * longer contigs in fasta format
+
+Propagate
+-------------
+
+Required step?
+^^^^^^^
+
+* Yes
+
+Software currently supported
+^^^^^^^
+
+* NA
+
+What it does
+^^^^^^^
+
+* Propagate taxonomic labels along scaffolds
+
+Expected input
+^^^^^^
+
+* Scaffolds in agp format
+* Contig taxonomic labels
+
+Expected output
+^^^^^^
+
+* contig taxonomic labels
+
+FindScaffoldORFs
+-------------
+
+Required step?
+^^^^^^^
+
+* No
+
+Software currently supported
+^^^^^^^
+
+* FragGeneScan
+* MetaGeneMark
+
+
+What it does
+^^^^^^^
+
+* Find ORFs in scaffolds, mainly serves as an extra validation step after Scaffold.
+
+Expected input
+^^^^^^
+
+* Scaffolds in agp format
+
+Expected output
+^^^^^^
+
+* Multi-fasta file of ORFs as fna,faa
+
+Classify (a.k.a Bin)
+-------------
+
+Required step?
+^^^^^^^
+
+* Yes
+
+Software currently supported
+^^^^^^^
+
+* NA
+
+
+What it does
+^^^^^^^
+
+* Bins contigs/scaffold by taxonomic label
+
+Expected input
+^^^^^^
+
+* Multi-fasta file of contigs
+* Multi-fasta file of scaffolds
+
+Expected output
+^^^^^^
+
+* Binned out contigs/scaffolds by directory
+
 
 Postprocess
 -------------

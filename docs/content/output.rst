@@ -2,6 +2,12 @@
 Output
 ############
 
+.. raw:: html
+
+    <style> .red {background-color:red} </style>
+    <style> .yellow {background-color:yellow} </style>
+    <style> .green {background-color:lightgreen} </style>
+
 Full listing of expected output files
 ===============================
 
@@ -10,7 +16,21 @@ MetAMOS generates an interactive web page once a run successfully completes::
      http://www.cbcb.umd.edu/~sergek/imetamos/gageb/Postprocess/out/html/summary.html
 
 This includes summary statistics and taxonomic information based on Krona [1].
-The easiest way to interact with the results is through the web interface.
+The easiest way to interact with the results is through the web interface. The web interface has
+been tested in several browsers. The currently known issues are:
+
+.. role:: yellow
+.. role:: red
+.. role:: green
+==================  ==============  ====================================
+Browser             Version         Issues
+==================  ==============  ====================================
+:yellow:`Chrome`     33.0.1750.152   MapReads and Assemble steps do not show
+:green:`Safari`      6.1.2           None
+:yellow:`Firefox`    28              QUAST reports do not show for Validate
+:red:`IE`            9               Not Tested
+==================  ==============  ====================================
+
 The Postprocess/out directory contains the results of the analysis. By default, 
 metAMOS uses the prefix "proba" (Galician for test). Thus, files will have the name "proba".*.
 

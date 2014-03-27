@@ -10,13 +10,13 @@ In attempt to further simplify the MetAMOS installation process, we are happy to
 * Java 1.6 (or newer)
 * Perl 5.8.8
 	- Newer versions of Perl are not backwards compatible so if you have Perl 5.10 (or newer) you may need to install the following packages for the frozen binary to work:
-		* Statistics::Descriptive
-		* Bio::Seq
-		* Time::Piece
-		* XML::Simple
-		* Storable
-		* XML::Parser
-		* File\:\:Spec
+		- Statistics::Descriptive
+		- Bio::Seq
+		- Time::Piece
+		- XML::Simple
+		- Storable
+		- XML::Parser
+		- File\:\:Spec
 
 * R 2.11.1 (or newer)
 * 64-bit \*nix OS or Mac OSX 10.7+ (you may need to install MacPorts for full functionality)

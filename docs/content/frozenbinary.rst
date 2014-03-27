@@ -18,7 +18,7 @@ In attempt to further simplify the MetAMOS installation process, we are happy to
 		* XML::Parser
 		* File::Spec
 * R 2.11.1 (or newer)
-* 64-bit *nix OS or Mac OSX 10.7+ (you may need to install MacPorts for full functionality)
+* 64-bit \*nix OS or Mac OSX 10.7+ (you may need to install MacPorts for full functionality)
 
 **Disclaimer: The frozen binary is provided as-is and has limited support and reduced functionality/features compared to installing from source. If you encouter issues with a frozen binary, please try installing the latest release.**
 
@@ -41,9 +41,9 @@ OSX 64-bit:
     $ chmod u+rwx metAMOS/*
 
 Then add the toppings. The light DB is recommended if you are testing/getting started with metAMOS installation. If you are planning to do analysis, the full DB download is recommended. The full DB adds support for:
-* FCP classifier
-* BLAST databases required for BLAST-based classification
-* RefSeq database for required to recruit references for validation
+	* FCP classifier
+	* BLAST databases required for BLAST-based classification
+	* RefSeq database for required to recruit references for validation
 
 When using the miniature DB, some features will be automatically disabled. Only Kraken can be used as the classifier with its miniature database and QUAST cannot be used as no reference will be available for recruitment. This should be a download once and only once operation. Updated frozen binaries will be backwards compatible with a previous DB download. Further details on the expected DBs on the readthedocs page.
 
@@ -69,10 +69,12 @@ Finally, run a quick test:
     $ ./run_pipeline_test.sh
 
 The frozen binary is actually a collection of programs that extracts/runs/cleans up automatically using `PyInstaller <http://www.pyinstaller.org/>`_. By default, PyInstaller will use the following directories to extract into:
+
  * The directory named by the TMPDIR environment variable.
  * The directory named by the TEMP environment variable.
  * The directory named by the TMP environment variable.
+
 If your system is missing all of the above, does not have sufficient space, or is missing write-premissions, runPipeline will not be able to extract itself and will report: INTERNAL ERROR: cannot create temporary directory!. The extracted runPipeline requires at least 4GB of free temporary disk space. You will get a "No DBs found ERROR!" if you do not download any DBs. The DB dir needs to be placed inside of the frozen binary install dir. 
 
-**Note: please use caution! this binaries eat up disk space quickly. Please ensure you have ample free space (100GB+) before download & use. 
+**Note: please use caution! this binaries eat up disk space quickly. Please ensure you have ample free space (100GB+) before download & use.** 
 

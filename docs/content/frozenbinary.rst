@@ -16,7 +16,7 @@ In attempt to further simplify the MetAMOS installation process, we are happy to
 		* XML::Simple
 		* Storable
 		* XML::Parser
-		* File::Speck
+		* File::Spec
 * R 2.11.1 (or newer)
 * 64-bit *nix OS or Mac OSX 10.7+ (you may need to install MacPorts for full functionality)
 

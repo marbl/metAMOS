@@ -7,8 +7,8 @@ MetAMOS PyInstaller single file binary
 
 In attempt to further simplify the MetAMOS installation process, we are happy to announce the availability of a 'frozen' MetAMOS binary for Linux-x68_64 platforms. Along with this binary comes a significantly reduced list of prerequisites:
 
-* Java 1.6 (or newer)
-* Perl 5.8.8
+- Java 1.6 (or newer)
+- Perl 5.8.8
 	- Newer versions of Perl are not backwards compatible so if you have Perl 5.10 (or newer) you may need to install the following packages for the frozen binary to work:
 		- Statistics::Descriptive
 		- Bio::Seq
@@ -18,8 +18,8 @@ In attempt to further simplify the MetAMOS installation process, we are happy to
 		- XML::Parser
 		- File\:\:Spec
 
-* R 2.11.1 (or newer)
-* 64-bit \*nix OS or Mac OSX 10.7+ (you may need to install MacPorts for full functionality)
+- R 2.11.1 (or newer)
+- 64-bit \*nix OS or Mac OSX 10.7+ (you may need to install MacPorts for full functionality)
 
 **Disclaimer: The frozen binary is provided as-is and has limited support and reduced functionality/features compared to installing from source. If you encouter issues with a frozen binary, please try installing the latest release.**
 

@@ -29,8 +29,8 @@ Contents:
    content/hardware
    content/frozenbinary
    content/quickstart
-   content/directory
    content/imetamos
+   content/directory
    content/workflows
    content/generictools
    content/testsuite

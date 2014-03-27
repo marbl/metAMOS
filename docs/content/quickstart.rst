@@ -11,11 +11,6 @@ help clarify its intended use. MetAMOS gas two main components:
 1. initPipeline
 2. runPipeline
 
-Below is a simple example of running of iMetAMOS to assemble an SRA dataset::
-
-    initPipeline -q -1 SRR987657 -d projectDir -W iMetAMOS
-    runPipeline -d projectDir -p 16
-
 initPipeline
 ===============
 

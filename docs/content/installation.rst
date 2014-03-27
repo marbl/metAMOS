@@ -25,7 +25,7 @@ And if ``wget`` not available, you can use ``curl`` instead:
 
 .. code-block:: bash
 
-    $ curl https://github.com/marbl/metAMOS/archive/v1.5rc1 > Release1.5.zip
+    $ curl -L https://github.com/marbl/metAMOS/archive/v1.5rc1.zip > v1.5rc1.zip
 
 You can also browse the https://github.com/marbl/MetAMOS/tree/v1.5rc1
 and click on Downloads. 
@@ -41,18 +41,6 @@ Change to MetAMOS directory:
 .. code-block:: bash
 
     $ cd metAMOS-v1.5rc1
-
-Alternatively, you can download the INSTALL.py directly from:
-
-.. code-block:: bash
-
-    $ wget https://raw2.github.com/marbl/metAMOS/master/INSTALL.py
-
-Again, if ``wget`` isn't available, you can use ``curl`` instead:
-
-.. code-block:: bash
-
-    $ curl https://raw2.github.com/marbl/metAMOS/master/INSTALL.py > INSTALL.py
 
 Once inside the MetAMOS directory, run:
 
@@ -90,6 +78,7 @@ core workflow plus PhyloSift, run:
 To install the programs which are part of the optional workflow run:
 
 .. code-block:: bash
+
     $ python INSTALL.py optional
 
 
@@ -98,9 +87,11 @@ quite awhile to complete (plan on a few hours to 2 days).
 
 Running the test suite
 ===========================
-MetAMOS comes with a comprehensive test suite to make sure that installation has succeeded
-on your system. 
+MetAMOS comes with a comprehensive `test suite <testsuite.html>`_ to make sure that installation has succeeded
+on your system. To run a quick test and very installation succeeded run: 
 
 .. code-block:: bash
 
-    $ bash run_master_test.sh
+    $ cd ./Test
+    $ ./run_pipeline_test.sh
+

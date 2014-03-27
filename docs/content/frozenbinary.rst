@@ -9,7 +9,7 @@ In attempt to further simplify the MetAMOS installation process, we are happy to
 
 * Java 1.6 (or newer)
 * Perl 5.8.8
-	* Newer versions of Perl are not backwards compatible so if you have Perl 5.10 (or newer) you may need to install the following packages for the frozen binary to work:
+	Newer versions of Perl are not backwards compatible so if you have Perl 5.10 (or newer) you may need to install the following packages for the frozen binary to work:
 		* Statistics::Descriptive
 		* Bio::Seq
 		* Time::Piece
@@ -38,7 +38,7 @@ OSX 64-bit:
 
     $ wget ftp://ftp.cbcb.umd.edu/pub/data/treangen/MA_fb_v1.5rc1_OSX.tar.gz
     $ tar -xf MA_fb_v1.5rc1_OSX.tar.gz
-    $ chmod u+rwx metAMOS/*
+    $ chmod u+rwx metAMOS/\*
 
 Then add the toppings. The light DB is recommended if you are testing/getting started with metAMOS installation. If you are planning to do analysis, the full DB download is recommended. The full DB adds support for:
 	* FCP classifier

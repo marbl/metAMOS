@@ -12,6 +12,9 @@ Preprocess/Filtering
         PBcR:
         Koren S, Harhay GP, Smith TPL, Bono JL, Harhay DM, Mcvey SD, Radune D, Bergman NH, Phillippy AM. Reducing assembly complexity of microbial genomes with single-molecule sequencing. Genome Biology 14:R101 2013.
 
+        KmerGenie:
+        Chikhi, R, Medvedev, P. Informed and Automated k-Mer Size Selection for Genome Assembly. Bioinformatics btt310, 2013.
+
 Assemblers
 ================================
         SPAdes:
@@ -131,9 +134,6 @@ the accuracy of genome and metagenome assemblies. Bioinformatics, 29(4) 435-443,
 
         FreeBayes:
         Garrison, E, Marth, G. Haplotype-based variant detection from short-read sequencing. arXiv preprint arXiv:1207.3907, 2012.
-
-        KmerGenie:
-        Chikhi, R, Medvedev, P. Informed and Automated k-Mer Size Selection for Genome Assembly. Bioinformatics btt310, 2013.
 
         REAPR:
         Hunt, M, Kikuchi, T, Sanders, M, Newbold, C, Berriman, M, & Otto, TD. REAPR: a universal tool for genome assembly evaluation. Genome biology, 14(5), R47, 2013.

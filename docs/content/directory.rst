@@ -100,8 +100,9 @@ Required step?
 Software currently supported
 ^^^^^^^
 
-* FragGeneScan
-* MetaGeneMark
+* FragGeneScan (Rho, 2010)
+* MetaGeneMark (Zhu, 2010)
+* Prokka (Seemann, 2013)
 
 What it does
 ^^^^^^^
@@ -261,7 +262,6 @@ Required step?
 Software currently supported
 ^^^^^^^
 
-* Prokka (Seemann, 2013)
 * BLAST
 
 What it does

@@ -37,12 +37,12 @@ metAMOS uses the prefix "proba" (Galician for test). Thus, files will have the n
 abundance.krona.html
 --------------------
     
-Krona [1] plot of abundances using the tool selected for abundance (MetaPhyler [2] by default)
+   Krona [1] plot of abundances using the tool selected for abundance (MetaPhyler [2] by default)
 
 annotate.krona.html
 -------------------
 
-Krona [1] plot of abundances using the tool selected for classification (Kraken [3] by default)
+   Krona [1] plot of abundances using the tool selected for classification (Kraken [3] by default)
 
 
 asm.scores
@@ -58,7 +58,7 @@ best.asm
 <taxonomy>.classified
 ---------------------
 
-Subdirectory containing each level of the selected taxonomy (class by default) and the contigs/reads/orfs belonging to each
+   Subdirectory containing each level of the selected taxonomy (class by default) and the contigs/reads/orfs belonging to each
 
 <taxonomy>.original.annots
 --------------------------
@@ -68,17 +68,17 @@ Subdirectory containing each level of the selected taxonomy (class by default) a
 <taxonomy>.original.reads.annots
 --------------------------------
 
-Tab-delimited taxonomic level assignments as above, where contigs are replaced with their constituent sequences.
+   Tab-delimited taxonomic level assignments as above, where contigs are replaced with their constituent sequences.
 
 <taxonomy>.propagated.annots
 ----------------------------
 
-Tab-delimited file as above after assembly graph-based propagation of assignments to contigs.
+   Tab-delimited file as above after assembly graph-based propagation of assignments to contigs.
 
 <taxonomy>.propagated.reads.annots
 ----------------------------------
 
-Tab-delimited file as above after propagation and having contigs replaced with their constituent reads.
+   Tab-delimited file as above after propagation and having contigs replaced with their constituent reads.
 
 html (directory)
 ----------------

@@ -87,7 +87,7 @@ The [CONFIG] section is the generic configuration section, you can specify step-
  * mated - how to pass mate-pair data (assumed outtie) non-interleaved data (FIRST refers to left mates, SECOND to right)
  * mated_interleaved - how to pass mate-pair data (assumed outtie) interleaved mates
  * unpaired - how to pass fragment data to the program. FIRST refers to the unmated file.
- * commands - an arbitrary list of commands to run to execute the tool. Multiple lines are supported with the \ character. Multiple commands can be specified using &&. In the above example, rm -rf will run first followed by Ray. Common useful keywords are:
+ * commands - a list of commands to run to execute the tool. Multiple lines are supported with the \ character. Multiple commands can be specified using &&. A limited set of system commands is supported (mkdir, mv, bash, ln, rm, cp, ls, echo). Other system commands are currently not supported. In the above example, rm -rf will run first followed by Ray. Common useful keywords are:
     * [PREFIX] - the prefix to use for output 
     * [RUNDIR] where the program is running
     * [KMER] - the selected k-mer to use for assembly

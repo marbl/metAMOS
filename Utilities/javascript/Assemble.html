@@ -23,6 +23,7 @@ body {
 </style>
 <body>
 <script src="http://d3js.org/d3.v3.js"></script>
+<script src="assemble.js"></script>
 <script>
 
 var margin = {top: 20, right: 20, bottom: 30, left: 50},
@@ -55,11 +56,14 @@ var svg = d3.select("body").append("svg")
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-d3.tsv("assemble.tsv", function(error, data) {
+var data = d3.tsv.parse(contiglens);//, function(data) { //);//, function(error, data) {
+//datas.forEach(function(data) {
+
   data.forEach(function(d) {
     d.total = +d.total;
     d.contig = +d.contig;
   });
+
 
   x.domain(d3.extent(data, function(d) { return d.contig; }));
   y.domain(d3.extent(data, function(d) { return d.total; }));
@@ -90,6 +94,8 @@ d3.tsv("assemble.tsv", function(error, data) {
       .datum(data)
       .attr("class", "line")
       .attr("d", line);
-});
+
+
+//});
 
 </script>

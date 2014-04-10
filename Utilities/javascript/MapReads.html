@@ -37,6 +37,7 @@ label {
 </style>
 <label><input type="checkbox"> Sort values</label>
 <script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="mapreads.js"></script>
 <script>
 
 var margin = {top: 20, right: 20, bottom: 30, left: 40},
@@ -65,7 +66,7 @@ var svg = d3.select("body").append("svg")
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-d3.tsv("mapreads.tsv", function(error, data) {
+var data = d3.tsv.parse(contiglens);//, function(error, data) {
 
   data.forEach(function(d) {
     d.frequency = +d.frequency;
@@ -96,7 +97,8 @@ d3.tsv("mapreads.tsv", function(error, data) {
       .attr("x", function(d) { return x(d.cov); })
       .attr("width", x.rangeBand())
       .attr("y", function(d) { return y(d.frequency); })
-      .attr("height", function(d) { return height - y(d.frequency); });
+      .attr("height", function(d) { return height - y(d.frequency); 
+//});
 
   d3.select("input").on("change", change);
 

@@ -25,7 +25,7 @@ been tested in several browsers. The currently known issues are:
 ==================  ==============  ====================================
 Browser             Version         Issues
 ==================  ==============  ====================================
-:yellow:`Chrome`     33.0.1750.152   MapReads and Assemble steps do not show
+:green:`Chrome`     33.0.1750.152    None
 :green:`Safari`      6.1.2           None
 :yellow:`Firefox`    28              QUAST reports do not show for Validate
 :red:`IE`            9               Not Tested

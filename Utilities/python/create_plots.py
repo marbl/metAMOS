@@ -231,17 +231,20 @@ def create_plots(handlef,TITLE):
     
     if c > 0:
        n, bins, patches = plt.hist(h,  20)
-       ff2 = open("mapreads.tsv","w")
-       ff2.write("cov\tfrequency\n")
+       ff2 = open("mapreads.js","w")
+            
+       ff2s = "var contiglens = \"cov\tfrequency\\n\" + \n"
        i = 0
        while i < len(n):
            try:
-               ff2.write("%.2f\t%f\n"%(bins[i],n[i]))
+               ff2s += "\"%.2f\t%f\\n\" + \n"%(bins[i],n[i])
            except TypeError:
                #incorrect matplotlib version? skip..
-               ff2.write("%.2f\t%f\n"%("0.0","0.0"))
+               ff2s += "\"%.2f\t%f\\n\" + \n"%("0.0","0.0")
                #continue
            i+=1
+       ff2s += "\"\";"
+       ff2.write(ff2s)
        ff2.close()
        plt.ylabel('Contig Count')
        plt.xlabel('Contig Coverage')
@@ -302,8 +305,10 @@ def create_plots(handlef,TITLE):
                     tsvdata[ref_cuml[i]] = [s.list_sizes[i]]
             i+=1
         c += 1
-    ff = open("assemble.tsv", 'w')
-    ff.write("total\tcontig\n")#%(sample_ids[0]))
+    ff = open("assemble.js", 'w')
+
+    ff1 = "var contiglens = \"total\tcontig\\n\" + \n"
+    #ff.write("total\tcontig\n")#%(sample_ids[0]))
     #if len(sample_ids) > 1:
     #    for id in sample_ids[1:]:
     #        ff.write("\t%s"%(id))
@@ -312,17 +317,21 @@ def create_plots(handlef,TITLE):
     tkeys = tsvdata.keys()
     tkeys.sort()
     if len(tkeys) == 1:
-       ff.write("0\t0\n")
-
+       #ff.write("0\t0\n")
+       ff1 += "\"0\t0\\n\" + \n"
+ 
     for row in tkeys:
         
         i = 0
-        ff.write("%d\t"%(int(row)))
+        #ff.write("%d\t"%(int(row)))
+        ff1 += "\"%d\t"%(int(row))
         while i < len(tsvdata[row])-1:
             ff.write("%d\t"%(tsvdata[row][i+1]))
             i+=1
-        ff.write("%d\n"%(tsvdata[row][-1]))
-    
+        #ff.write("%d\n"%(tsvdata[row][-1]))
+        ff1 += "%d\\n\" + \n"%(tsvdata[row][-1])
+    ff1+="\"\";"
+    ff.write(ff1)
     ff.close()
     ax = plt.gca()
     ax.set_xlim(ax.get_xlim()[::-1])

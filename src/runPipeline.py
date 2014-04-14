@@ -362,7 +362,7 @@ if wfName != "":
       availableWorkflows[wf.name] = wf
 
    if wfName.lower() not in availableWorkflows.keys():
-      print "Error: unknown wofkflow %s specified. Please choose one of %s."%(wfName, ",".join(availableWorkflows.keys()))
+      print "Error: unknown workflow %s specified. Please choose one of %s."%(wfName, ",".join(availableWorkflows.keys()))
       sys.exit(1)
    wf = availableWorkflows[wfName]
    try:

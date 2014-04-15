@@ -465,8 +465,8 @@ if not os.path.exists("./Utilities/DB/kraken"):
           # kraken needs jellyfish, if we don't find it build it and add to path
           jellyfish = utils.getFromPath("jellyfish", "Jellyfish", False)
           if jellyfish == "":
-             archive = jellyfish.tar.gz
-             os.system("curl -L http://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.11.tar.gz -o %s"%(archive, archive))
+             archive = "jellyfish.tar.gz"
+             os.system("curl -L http://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.11.tar.gz -o %s"%(archive))
              os.system("tar xvzf %s"%(archive))
              os.system("mv jellyfish-1.1.11 ./Utilities/cpp%s%s-%s%s/jellyfish"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.chdir("./Utilities/cpp%s%s-%s%s/jellyfish"%(os.sep, OSTYPE, MACHINETYPE, os.sep))

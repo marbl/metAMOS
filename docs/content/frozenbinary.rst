@@ -29,16 +29,16 @@ Linux 64-bit:
 
 .. code-block:: bash
     
-    $ wget ftp://ftp.cbcb.umd.edu/pub/data/treangen/MA_fb_v1.5rc1_linux.tar.gz
-    $ tar -xf MA_fb_v1.5rc1_linux.tar.gz
-    $ chmod u+rwx metAMOS_v1.5rc1_binary
+    $ wget ftp://ftp.cbcb.umd.edu/pub/data/treangen/MA_fb_v1.5rc2_linux.tar.gz
+    $ tar -xf MA_fb_v1.5rc2_linux.tar.gz
+    $ chmod u+rwx metAMOS_v1.5rc2_binary
 
 OSX 64-bit: 
 
 .. code-block:: bash
 
-    $ wget ftp://ftp.cbcb.umd.edu/pub/data/treangen/MA_fb_v1.5rc1_OSX.tar.gz
-    $ tar -xf MA_fb_v1.5rc1_OSX.tar.gz
+    $ wget ftp://ftp.cbcb.umd.edu/pub/data/treangen/MA_fb_v1.5rc2_OSX.tar.gz
+    $ tar -xf MA_fb_v1.5rc2_OSX.tar.gz
     $ chmod u+rwx metAMOS/*
 
 

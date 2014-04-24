@@ -71,7 +71,7 @@ foreach my $file (@files)
        open(IN, "$file") || die ("Cannot open $file\n");
     }
     my $fr = new AMOS::ParseFasta(\*IN);
-    if (! defined $fr){ die ("Cannot parse file\n");}
+    if (! defined $fr){ print STDERR ("Cannot parse file\n"); exit 0;}
 
     my @sizes = ();
     my $stats = new Statistics::Descriptive::Full;

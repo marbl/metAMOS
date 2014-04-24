@@ -41,7 +41,7 @@ def init(reads, skipsteps, cls, low, mintrust):
 @posttask(touch_file("%s/Logs/classify.ok"%(_settings.rundir)))
 @files("%s/Propagate/out/%s.clusters"%(_settings.rundir,_settings.PREFIX),"%s/Logs/classify.ok"%(_settings.rundir))
 def Classify(input,output):
-   if "Classify" in _skipsteps or _cls == None:
+   if "Classify" in _skipsteps or _cls == None or "Assemble" in _skipsteps or "assemble" in _skipsteps:
        run_process(_settings, "touch %s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), "Classify")
        run_process(_settings, "touch %s/Logs/classify.skip"%(_settings.rundir), "Classify")       
        return 0

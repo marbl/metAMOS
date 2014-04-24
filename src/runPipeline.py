@@ -468,8 +468,13 @@ for o, a in opts:
            skipsteps.discard(step)
     elif o in ("-n", "--skipsteps"):
         for step in a.split(","):
-           skipsteps.add(step)
-           forcesteps.discard(step)
+           if (step.lower() in "mapreads"):
+              print "Warning: MapReads cannot currently be skipped, re-enabling step!"
+           elif (step.lower() in "assemble"):
+              print "Warning: Assemble step cannot be skipped when no contigs are specified, re-enabling step! Please specify contigs with -c to initPipeline to skip assembly." 
+           else:
+              skipsteps.add(step)
+              forcesteps.discard(step)
     elif o in ("-p", "--threads"):
         if int(a) > 0:
             utils.Settings.threads = int(a)

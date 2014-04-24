@@ -249,8 +249,17 @@ def Validate (input_file_names, output_file_name):
 
    if "Validate" in _skipsteps or "validate" in _skipsteps:
       run_process(_settings, "touch %s/Logs/validate.skip"%(_settings.rundir), "Validate")
-      bestAssembler = getAsmName(input_file_names[0])
-      bestAssembly = "%s/Assemble/out/%s.asm.contig"%(_settings.rundir, bestAssembler)
+      if len(input_file_names) > 0:
+         bestAssembler = getAsmName(input_file_names[0])
+         bestAssembly = "%s/Assemble/out/%s.asm.contig"%(_settings.rundir, bestAssembler)
+      else:
+         bestAssembler = "none"
+         bestAssembly = "%s/Assemble/out/%s.asm.contig"%(_settings.rundir, bestAssembler)
+         run_process(_settings, "touch %s/Assemble/out/%s.asm.contig"%(_settings.rundir, bestAssembler), "Validate")
+         run_process(_settings, "touch %s/Assemble/out/%s.contig.cvg"%(_settings.rundir, bestAssembler), "Validate")
+         for lib in _readlibs:
+            run_process(_settings, "touch %s/Assemble/out/%s.lib%dcontig.reads"%(_settings.rundir, bestAssembler, lib.id), "Validate")
+
    elif len(input_file_names) == 1 and len(_validators) == 1:
       run_process(_settings, "touch %s/Logs/validate.skip"%(_settings.rundir), "Validate")
       bestAssembler = getAsmName(input_file_names[0])

@@ -508,7 +508,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
         rdata.append(line)
        
     if not os.path.exists(html_prefix+"covstats.out"):
-        run_process(_settings,"%s/analyze-read-depth -x 2 %s > %scovstats.out"%(rund,amosbnk,html_prefix),"Classify")
+        run_process(_settings,"%s/analyze-read-depth -x 2 %s > %scovstats.out"%(rund,amosbnk,html_prefix),"Postprocess")
     ff = open(html_prefix+"covstats.out",'r')
     covdata = []
     #covdata = ff.readlines()
@@ -517,8 +517,11 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
         covdata.append(line)
     
     if not os.path.exists(html_prefix+"stats.out"):
-        #os.system("%s/astats %s > %sstats.out"%(rund,amosbnk,html_prefix))
-        run_process(_settings,"%s/astats %s > %sstats.out"%(rund,amosbnk,html_prefix),"Classify")
+       if os.path.getsize("%s/Assemble/out/proba.asm.contig"%(MA_dir)) == 0:
+          run_process(_settings, "touch %sstats.out"%(html_prefix), "Postprocess")
+       else:
+          #os.system("%s/astats %s > %sstats.out"%(rund,amosbnk,html_prefix))
+          run_process(_settings,"%s/astats %s > %sstats.out"%(rund,amosbnk,html_prefix),"Postprocess")
     dd = open(html_prefix+"stats.out",'r')
     ddata = dd.readlines()
 

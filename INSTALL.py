@@ -1041,8 +1041,9 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
                 prodigal = ""
 
           if prodigal == "":
-             os.system("curl -L https://prodigal.googlecode.com/files/prodigal.v2_60.tar.gz -o prodigal.tar.gz")
+             os.system("curl -L https://prodigal.googlecode.com/files/Prodigal-2.60.tar.gz -o prodigal.tar.gz")
              os.system("tar xvzf prodigal.tar.gz")
+             os.system("mv Prodigal-2.60 prodigal.v2_60") 
              os.system("rm -rf prodigal.tar.gz")
              os.system("curl -L https://prodigal.googlecode.com/files/prodigal_v2.60.bugfix1.tar.gz -o prodigal.tar.gz")
              os.system("tar xvzf prodigal.tar.gz")
@@ -1604,9 +1605,9 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
            print "FRCbam tool not found, optional for Validate step, download now?"
            dl = raw_input("Enter Y/N: ")
         if dl == 'y' or dl == 'Y':
-            os.system("curl -L https://github.com/vezzi/FRC_align/archive/master.zip -o frcbam.zip")
+            os.system("curl -L ftp://cbcb.umd.edu/pub/data/metamos/FRC_align-master.zip -o frcbam.zip")
             os.system("unzip frcbam.zip")
-            os.system("mv FRC_align-master ./Utilities/cpp/%s%s-%s%sFRCbam"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+            os.system("mv FRC_align-3398ca469b2077d6672b85317eee6fea171b6a27 ./Utilities/cpp/%s%s-%s%sFRCbam"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
             os.chdir("./Utilities/cpp/%s%s-%s%sFRCbam/src/samtools"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
             # samtools which frcbam includes uses curses lib which is optional so disable it if not found
             os.system("echo \"#include <curses.h>\" > .test.h")

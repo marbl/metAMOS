@@ -728,7 +728,7 @@ if selected_programs["preprocess"] == "pbcr":
    selected_programs["mapreads"] = "bowtie2"
    selected_programs["assemble"] = selected_programs["assemble"] + ",ca"
 
-if userKmerSupplied == False:
+if userKmerSupplied == False and isolate_genome:
    always_run_programs.append("kmergenie")
 
 inf.close()
@@ -907,7 +907,7 @@ if __name__ == "__main__":
 
     # initialize submodules
     preprocess.init(readlibs, asmcontigs, skipsteps, selected_programs["assemble"], run_fastqc,selected_programs["preprocess"])
-    assemble.init(readlibs, skipsteps, selected_programs["assemble"], asmcontigs, userKmerSupplied == False)
+    assemble.init(readlibs, skipsteps, selected_programs["assemble"], asmcontigs, (userKmerSupplied == False and isolate_genome))
     mapreads.init(readlibs, skipsteps, selected_programs["mapreads"], savebtidx,ctgbpcov,lowmem)
     validate.init(readlibs, skipsteps, selected_programs["validate"], asmScores)
     findorfs.init(readlibs, skipsteps, selected_programs["findorfs"], min_ctg_len, min_ctg_cvg,read_orfs)

@@ -46,4 +46,4 @@ edena	Edena	Hernandez D, Tewhey R, Veyrieras J, Farinelli L, Østerås M, Franç
 eautils	EA-UTILS	Aronesty E. TOBioiJ : "Comparison of Sequencing Utility Programs", DOI:10.2174/1875036201307010001, 2013.
 pbcr	PBcR	Koren S, Harhay GP, Smith TPL, Bono JL, Harhay DM, Mcvey SD, Radune D, Bergman NH, Phillippy AM. Reducing assembly complexity of microbial genomes with single-molecule sequencing. Genome Biology 14:R101 2013.
 metamos	MetAMOS	Treangen, TJ ⇔  Koren, S, Sommer, DD, Liu, B, Astrovskaya, I, Ondov, B, Darling AE, Phillippy AM, Pop, M. MetAMOS: a modular and open source metagenomic assembly and analysis pipeline. Genome biology, 14(1), R2, 2013.
-metamos_isolate	iMetAMOS	Koren, S, Treangen, TJ, Hill, CM, Pop, M, Phillippy, AM. Automated ensemble assembly and validation of microbial genomes. bioRxiv preprint, 2014. 
+metamos_isolate	iMetAMOS	Koren, S, Treangen, TJ, Hill, CM, Pop, M, Phillippy, AM. Automated ensemble assembly and validation of microbial genomes. BMC Bioinformatics 15:126, 2014.

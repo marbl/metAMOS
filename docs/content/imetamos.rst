@@ -7,8 +7,8 @@ iMetAMOS is an extension of metAMOS to isolate genome assembly. It is a `workflo
 
 If you have used iMetAMOS for analyzing your, please cite (in addition to the individual software component citations listed in main output):
    Koren S, Treangen TJ, Hill CM, Pop M, Phillippy AM
-   Automated ensemble assembly and validation of microbial genomes
-   bioRxivdoi: 10.1101/002469
+   Automated ensemble assembly and validation of microbial genomes.
+   BMC Bioinformatics 15:126, 2014.
 
 Please also consider citing the original metAMOS publication:
     Treangen TJ\*, Koren S\*, Sommer DD, Liu B, Astrovskaya I, Ondov B, Darling AE, Phillippy AM, Pop M.

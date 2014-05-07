@@ -6,8 +6,16 @@ Prerequisites
 ==============
 
 MetAMOS has several dependencies/prerequisites, the large majority of which are automatically downloaded
-and installed when running INSTALL.py (see next section). Here is a current list of required packages/libs installed by metAMOS:
+and installed when running INSTALL.py (see next section). In addition, several dependences/prerequisites 
+are not installed by INSTALL.py and must be available on your system:
+    * perl (5.8.8+)
+    * python (2.7.3+)
+    * R (2.11.1+ with PNG support)
+    * gcc (4.7+ for full functionality)
+    * curl 
+    * wget
 
+Here is a current list of required packages/libs installed by metAMOS:
 1. Perl 
     * File::Copy::Link
     * Statistics::Descriptive 
@@ -26,16 +34,8 @@ and installed when running INSTALL.py (see next section). Here is a current list
 3. Other
     * Boost
     * CMAKE
-    * git
     * Jellyfish
     * SparseHash
-    * wget
-
-In addition, several dependences/prerequisites are not installed by INSTALL.py and must be available on your system:
-    * perl (5.8.8+)
-    * python (2.7.3+)
-    * R (2.11.1+ with PNG support)
-    * gcc (4.7+ for full functionality)
 
 Automated installation
 ======================

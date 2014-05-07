@@ -2,12 +2,18 @@
 Installation
 ############
 
+Before your start
+=================
+The most common cause of a failed run is a missing package or dependency. We provide two paths to simplify the task of
+downloading and manual install of all required dependencies: an install script (INSTALL.py) and a frozen binary.
+See below sections for further details.
+
 Prerequisites
 ==============
-
 MetAMOS has several dependencies/prerequisites, the large majority of which are automatically downloaded
 and installed when running INSTALL.py (see next section). In addition, several dependences/prerequisites 
 are not installed by INSTALL.py and must be available on your system:
+
     * perl (5.8.8+)
     * python (2.7.3+)
     * R (2.11.1+ with PNG support)
@@ -15,7 +21,12 @@ are not installed by INSTALL.py and must be available on your system:
     * curl 
     * wget
 
-Here is a current list of required packages/libs installed by metAMOS:
+Here is a list of currently supported Operating Systems:
+
+1. Mac OSX (10.7 or newer)
+2. Linux 64-bit (tested on CentOS, Fedora, RedHat, OpenSUSE and Ubuntu)
+
+And here is a current list of required packages/libs installed by metAMOS:
 
 1. Perl 
     * File::Copy::Link
@@ -34,7 +45,7 @@ Here is a current list of required packages/libs installed by metAMOS:
 
 3. Other
     * Boost
-    * CMAKE
+    * cmake
     * Jellyfish
     * SparseHash
 

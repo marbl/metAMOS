@@ -414,19 +414,16 @@ if not os.path.exists("./AMOS") or 0:
         # descriptive perl module
         stat = utils.getCommandOutput("perl -MStatistics::Descriptive -e 0 && echo $?", True)
         if stat == "":
-           os.system("curl -L https://bitbucket.org/shlomif/perl-statistics-descriptive/get/releases/3.0203.tar.gz -o stat.tar.gz")
+           os.system("curl -L ftp://cbcb.umd.edu/pub/data/metamos/Statistics-Descriptive-3.0203.tar.gz -o stat.tar.gz")
            os.system("tar -xvzf stat.tar.gz")
-           os.system("mv shlomif-perl-statistics-descriptive-b6a731a093ed/Statistics-Descriptive Statistics-Descriptive-3.0607")
-           os.system("rm -rf shlomif-perl-statistics-descriptive-b6a731a093ed")
-           os.chdir("Statistics-Descriptive-3.0607")
-           os.system("perl Build.PL")
-           os.system("./Build")
-           os.system("./Build install --prefix=`pwd`/install")
+           os.chdir("Statistics-Descriptive-3.0203")
+           os.system("perl Makefile.PL PREFIX=`pwd`/build")
+           os.system("make install")
            os.chdir("%s"%(METAMOS_ROOT))
-           pathToCopy = utils.getCommandOutput("find Statistics-Descriptive-3.0607/install -type d -name \"Statistics\" |grep -v auto", False)
+           pathToCopy = utils.getCommandOutput("find Statistics-Descriptive-3.0203/build -type d -name \"Statistics\" |grep -v auto", False)
            copyPerlLib(pathToCopy, "AMOS%s%s-%s%slib"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
            os.system("rm -rf stat.tar.gz")
-           os.system("rm -rf Statistics-Descriptive-3.0607")
+           os.system("rm -rf Statistics-Descriptive-3.0203")
 
 if not os.path.exists("./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
     if "kraken" in packagesToInstall:

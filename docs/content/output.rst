@@ -178,4 +178,4 @@ Sep 30;12:385.  PMID: 21961884
 
 [2] Liu B, Gibbons T, Ghodsi M, Treangen T, Pop M. Accurate and fast estimation of taxonomic profiles from metagenomic shotgun sequences. BMC Genomics. 2011;12 Suppl 2:S4. Epub 2011 Jul 27.
 
-[3] Wood DE, Salzberg SL. Rapid phylogenetic sequence classification through repeated exact alignment. In preparation.
+[3] Wood DE, Salzberg SL: Kraken: ultrafast metagenomic sequence classification using exact alignments. Genome Biology 2014, 15:R46.

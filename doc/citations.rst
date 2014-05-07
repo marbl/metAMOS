@@ -26,7 +26,7 @@ newbler	Newbler
 velvet-sc	Velvet-SC	Chitsaz H, Yee-Greenbaum JL, Tesler G, Lombardo MJ, Dupont CL, Badger JH, Novotny M, Rusch DB, Fraser LJ, Gormley NA, Schulz-Trieglaff O, Smith GP, Evers DJ, Pevzner PA, Lasken RL. Efficient de novo assembly of single-cell bacterial genomes from short-read data sets. Nature Biotechnology, vol. 29, no. 11, pp. 915-921 (2011) 
 krona	Krona	Ondov BD, Bergman NH, Phillippy AM. Interactive metagenomic visualization in a Web browser. BMC Bioinformatics. 2011 Sep 30;12:385.
 spades	SPAdes	Anton Bankevich, Sergey Nurk, Dmitry Antipov, Alexey A. Gurevich, Mikhail Dvorkin, Alexander S. Kulikov, Valery M. Lesin, Sergey I. Nikolenko, Son Pham, Andrey D. Prjibelski, Alexey V. Pyshkin, Alexander V. Sirotkin, Nikolay Vyahhi, Glenn Tesler, Max A. Alekseyev, and Pavel A. Pevzner. Journal of Computational Biology. May 2012, 19(5): 455-477. doi:10.1089/cmb.2012.0021.
-kraken	Kraken	Wood DE, Salzberg SL. Rapid phylogenetic sequence classification through repeated exact alignment. In preparation.
+kraken	Kraken	Wood DE, Salzberg SL: Kraken: ultrafast metagenomic sequence classification using exact alignments. Genome Biology 2014, 15:R46.
 lap	LAP	Ghodsi M, Hill CM, Astrovskaya I, Lin H, Sommer DD, Koren S, Pop M. De novo likelihood-based measures for comparing genome assemblies. BMC research notes 6:334, 2013.
 ale	ALE	Clark, SC, Egan, R, Frazier, PI, Wang, Z. ALE: a generic assembly likelihood evaluation framework for assessing the accuracy of genome and metagenome assemblies. Bioinformatics, 29(4) 435-443, 2013.
 quast	QUAST	Gurevich, A, Saveliev, V, Vyahhi, N, Tesler, G. QUAST: quality assessment tool for genome assemblies. Bioinformatics, 29(8), 1072-1075, 2013.	

@@ -16,6 +16,7 @@ are not installed by INSTALL.py and must be available on your system:
     * wget
 
 Here is a current list of required packages/libs installed by metAMOS:
+
 1. Perl 
     * File::Copy::Link
     * Statistics::Descriptive 

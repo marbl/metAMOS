@@ -2,6 +2,37 @@
 Installation
 ############
 
+Prerequisites
+==============
+
+MetAMOS has several dependencies/prerequisites, the large majority of which are automatically downloaded
+and installed when running INSTALL.py (see next section). Here is a current list of required packages/libs:
+
+1. Perl 
+    * File::Copy::Link
+    * Statistics::Descriptive 
+    * Time::Piece
+    * XML::Parser
+    * XML::Simple
+    
+2. Python
+    * Cython
+    * matplolib
+    * NumPy
+    * psutil
+    * PySam
+    * setuptools
+
+3. Other
+    * AMOS
+    * Boost
+    * CMAKE
+    * git
+    * Jellyfish
+    * R
+    * SparseHash
+    * wget
+
 Automated installation
 ======================
 

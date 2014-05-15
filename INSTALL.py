@@ -387,7 +387,7 @@ if 1:
    if "matplotlib" in packagesToInstall:
        dl = 'y'
    elif fail:
-       print "Matplot lib version %s is incompatible with metAMOS. Need version 1.1.0+, download now?"%(matplotlib.__version__) 
+       print "Current matplot lib version is incompatible with metAMOS or matplotlib is not installed. Need version 1.1.0+, download now?" 
        dl = raw_input("Enter Y/N: ")
    if fail and (dl == 'y' or dl == "Y"):
        os.system("curl -L http://downloads.sourceforge.net/project/matplotlib/matplotlib/matplotlib-1.1.0/matplotlib-1.1.0.tar.gz -o ./matplotlib.tar.gz")

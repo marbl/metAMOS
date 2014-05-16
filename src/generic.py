@@ -39,6 +39,7 @@ def init(skipsteps, readlibs):
 #   - MAX - replaced with max
 #   - THREADS - replaced with thread parameter specified
 #   - KMER - the kmer requested
+#   - READLEN - the length of the reads in shortest library
 #   - OFFSET - the phred offset (33/64)
 #   - PREFIX - the desied output name
 #   - DB - the location of dbs
@@ -64,6 +65,7 @@ class GenericProgram:
    requiredLibs = dict() 
    maxLibs = 0
    maxLibIDLen = 0
+   readLen = 0
    config = None
    allowPartition = False
    commandList = []
@@ -232,6 +234,7 @@ class GenericProgram:
          havePE = haveMP = False
          pelist = ""
          mplist = ""
+         self.readLen = 251
 
          if self.maxLibs == 0:
             self.maxLibs = len(_readlibs)
@@ -242,10 +245,16 @@ class GenericProgram:
                print "Warning: selected assembler %s only supports a maximum of %d libs, not using all libraries"%(self.name, self.maxLibs)
                break
 
+            run_process(_settings, "head -n 4 %s/Preprocess/out/lib%d.%s > %s/Preprocess/out/tmp.%s"%(_settings.rundir, lib.id, suffix, _settings.rundir, suffix), STEP_NAMES.reverse_mapping[self.stepName].title())
+            libReadLen = getCommandOutput("java -cp %s SizeFasta %s/Preprocess/out/tmp.%s |awk '{print $NF}'"%(_settings.METAMOS_JAVA, _settings.rundir, suffix), False)
+            run_process(_settings, "rm -f %s/Preprocess/out/tmp.%s"%(_settings.rundir, suffix), STEP_NAMES.reverse_mapping[self.stepName].title())
+            if (int(libReadLen) < self.readLen):
+               self.readLen = int(libReadLen)
+
             for read in lib.reads:
                if offset == "":
-                  offset = read.qformat
-               elif not offset == read.qformat:
+                  offset = read.qformat.lower()
+               elif not offset.lower() == read.qformat.lower():
                   print "Error: inconsistent PHRED offsets in libraries. Previous library had %s and current library %d has %s\n"%(offset, lib.id, read.qformat)
                   raise(JobSignalledBreak)
 
@@ -303,7 +312,7 @@ class GenericProgram:
                   for l in libs.strip().split("\\n"):
                      spec.write(l.strip() + "\n")
                else:
-                  line = line.replace("[TECHNOLOGY_PARAMETERS]", techParams).replace("[MACHINE]", "%s-%s"%(_settings.OSTYPE, _settings.MACHINETYPE)).replace("[MACHINE-CA]", "%s-%s"%(_settings.OSTYPE, _settings.MACHINETYPE.replace("x86_64", "amd64"))).replace("[MPI]", _settings.MPI).replace("[PELIST]", pelist).replace("[MPLIST]", mplist).replace("[PREFIX]", _settings.PREFIX).replace("[DB]", _settings.DB_DIR).replace("[MEM]", "%d"%(avram)).replace("[THREADS]",self.getThreadParams()).replace("[OFFSET]", "33" if offset.lower() == "sanger" else "64").replace("[OUTPUT]", "%s%s%s%sout%s%s"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep, os.sep, self.output.replace("[PREFIX]", _settings.PREFIX))).replace("[RUNDIR]", "%s%s%s%sout"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep)).replace("[KMER]", "%s"%(_settings.kmer)).replace("[LOCATION]", "%s%s"%(self.location,os.sep))
+                  line = line.replace("[TECHNOLOGY_PARAMETERS]", techParams).replace("[MACHINE]", "%s-%s"%(_settings.OSTYPE, _settings.MACHINETYPE)).replace("[MACHINE-CA]", "%s-%s"%(_settings.OSTYPE, _settings.MACHINETYPE.replace("x86_64", "amd64"))).replace("[MPI]", _settings.MPI).replace("[PELIST]", pelist).replace("[MPLIST]", mplist).replace("[PREFIX]", _settings.PREFIX).replace("[DB]", _settings.DB_DIR).replace("[MEM]", "%d"%(avram)).replace("[THREADS]",self.getThreadParams()).replace("[OFFSET]", "33" if offset.lower() == "sanger" else "64").replace("[OUTPUT]", "%s%s%s%sout%s%s"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep, os.sep, self.output.replace("[PREFIX]", _settings.PREFIX))).replace("[RUNDIR]", "%s%s%s%sout"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep)).replace("[KMER]", "%s"%(_settings.kmer)).replace("[READLEN]", "%d"%(self.readLen)).replace("[LOCATION]", "%s%s"%(self.location,os.sep))
                   spec.write(line + "\n")
             template.close()
             spec.close()
@@ -397,8 +406,8 @@ class GenericProgram:
                      suffix = "fastq"
                   command = command.replace("[FIRST]", "%s/Preprocess/out/lib%d.1.%s"%(_settings.rundir, 1, suffix)).replace("[SECOND]", "%s/Preprocess/out/lib%d.2.%s"%(_settings.rundir, 1, suffix))
 
-            param = param + " " + getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(self.name.lower()), commandName, "-").replace("[KMER]", "%s"%(_settings.kmer))
-            command = command.replace("[TECHNOLOGY_PARAMETERS]", techParams).replace(commandName, theCommand, 1).replace("[MPI]", _settings.MPI).replace("[INPUT]", param).replace("[PELIST]", pelist).replace("[MPLIST]", mplist).replace("[PREFIX]", _settings.PREFIX).replace("[DB]", _settings.DB_DIR).replace("[MEM]", "%d"%(avram)).replace("[THREADS]", self.getThreadParams()).replace("[OFFSET]", "33" if offset.lower() == "sanger" else "64").replace("[OUTPUT]", self.output.replace("[PREFIX]", outputs[i]) if len(outputs) > i else "%s%s%s%sout%s%s"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep, os.sep, self.output.replace("[PREFIX]", _settings.PREFIX))).replace("[RUNDIR]", "%s%s%s%sout"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep)).replace("[KMER]", "%s"%(_settings.kmer))
+            param = param + " " + getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(self.name.lower()), commandName, "-").replace("[KMER]", "%s"%(_settings.kmer)).replace("[READLEN]", "%d"%(self.readLen))
+            command = command.replace("[TECHNOLOGY_PARAMETERS]", techParams).replace(commandName, theCommand, 1).replace("[MPI]", _settings.MPI).replace("[INPUT]", param).replace("[PELIST]", pelist).replace("[MPLIST]", mplist).replace("[PREFIX]", _settings.PREFIX).replace("[DB]", _settings.DB_DIR).replace("[MEM]", "%d"%(avram)).replace("[THREADS]", self.getThreadParams()).replace("[OFFSET]", "33" if offset.lower() == "sanger" else "64").replace("[OUTPUT]", self.output.replace("[PREFIX]", outputs[i]) if len(outputs) > i else "%s%s%s%sout%s%s"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep, os.sep, self.output.replace("[PREFIX]", _settings.PREFIX))).replace("[RUNDIR]", "%s%s%s%sout"%(_settings.rundir, os.sep, STEP_NAMES.reverse_mapping[self.stepName].title(), os.sep)).replace("[KMER]", "%s"%(_settings.kmer)).replace("[READLEN]", "%d"%(self.readLen))
             run_process(_settings, command, STEP_NAMES.reverse_mapping[self.stepName].title())
          i+=1
 

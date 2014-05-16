@@ -1228,6 +1228,8 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.chdir("./Utilities/cpp%s%s-%s%sidba"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("mv src/sequence/short_sequence.h src/sequence/short_sequence.orig")
              os.system("cat src/sequence/short_sequence.orig |awk '{if (match($0, \"kMaxShortSequence = 128\")) print \"static const uint32_t kMaxShortSequence = 32768;\"; else print $0}' > src/sequence/short_sequence.h")
+             os.system("mv src/basic/kmer.h src/basic/kmer.orig")
+             os.system("cat src/basic/kmer.orig |awk '{if (match($0, \"kNumUint64 = 4\")) print \"    static const uint32_t kNumUint64 = 16;\"; else print $0}' > src/basic/kmer.h")
              os.system("./configure")
              os.system("make")
              os.chdir("%s"%(METAMOS_ROOT))

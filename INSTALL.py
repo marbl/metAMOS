@@ -657,7 +657,7 @@ if "optional" in enabledWorkflows or manual:
             os.system("tar -C ./Utilities/ -xvf %s" % archive)
             os.system("rm %s"%archive)
 
-    if not os.path.exists("./phylosift") or not os.path.exists("./phylosift/lib/version.pm") or not os.path.exists("./phylosift/lib/Params"):
+    if not os.path.exists("./phylosift") or not os.path.exists("./phylosift/legacy/version.pm") or not os.path.exists("./phylosift/lib/Params"):
        if "phylosift" in packagesToInstall:
           dl = 'y'
        else:
@@ -678,7 +678,7 @@ if "optional" in enabledWorkflows or manual:
              os.chdir("./version-0.9903/")
              os.system("perl Makefile.PL")
              os.system("make")
-             os.system("cp -r blib/lib/* ../phylosift/lib")
+             os.system("cp -r blib/lib/* ../phylosift/legacy")
              os.chdir(METAMOS_ROOT)
              os.system("rm -rf version.tar.gz")
              os.system("rm -rf version-0.9903")

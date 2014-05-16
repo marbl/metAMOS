@@ -35,7 +35,7 @@ cgal	CGAL	Rahman, A, Pachter, L CGAL: computing genome assembly likelihoods. Gen
 masurca	MaSuRCA	Zimin, A, Marçais, G, Puiu, D, Roberts, M, Salzberg, SL, Yorke, JA. The MaSuRCA genome assembler. Bioinformatics, btt476, 2013.
 ray	Ray	Boisvert, S, Raymond, F, Godzaridis, É, Laviolette, F, Corbeil, J. Ray Meta: scalable de novo metagenome assembly and profiling. Genome biology, 13(12), R122, 2013.
 freebayes	FreeBayes	Garrison, E, Marth, G. Haplotype-based variant detection from short-read sequencing. arXiv preprint arXiv:1207.3907, 2012.
-prokka	Prokka	Prokka: Prokaryotic Genome Annotation System - http://vicbioinformatics.com/
+prokka	Prokka	Seemann, T. Prokka: rapid prokaryotic genome annotation. Bioinformatics, btu153. 2014.
 abyss	ABySS	Simpson, JT, Wong, K, Jackman, SD, Schein, JE, Jones, SJ, Birol, İ. ABySS: a parallel assembler for short read sequence data. Genome research, 19(6), 1117-1123, 2009.
 sga	SGA	Simpson, JT, Durbin, R. Efficient de novo assembly of large genomes using compressed data structures. Genome Research, 22(3), 549-556, 2012.
 mira	MIRA	Chevreux, B, Wetter, T, Suhai, S. Genome Sequence Assembly Using Trace Signals and Additional Sequence Information. In German Conference on Bioinformatics (pp. 45-56), 1999.

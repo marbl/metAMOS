@@ -1,57 +1,54 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
+
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>MetAMOS by marbl</title>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="MetAMOS : A metagenomic assembly analysis pipeline" />
 
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <script src="javascripts/scale.fix.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>MetAMOS</title>
   </head>
+
   <body>
-    <div class="wrapper">
-      <header>
-        <h1 class="header">MetAMOS</h1>
-        <p class="header">A metagenomic assembly analysis pipeline</p>
 
-        <ul>
-          <li class="download"><a class="buttons" href="https://github.com/marbl/metAMOS/archive/v1.5rc2.zip">Download ZIP</a></li>
-          <li class="download"><a class="buttons" href="https://github.com/marbl/metAMOS/archive/v1.5rc2.tar.gz">Download TAR</a></li>
-          <li><a class="buttons github" href="https://github.com/marbl/metAMOS">View On GitHub</a></li>
-        </ul>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/marbl/metAMOS">View on GitHub</a>
 
-        <p class="header">This project is maintained by <a class="header name" href="https://github.com/marbl">marbl</a></p>
+          <h1 id="project_title">MetAMOS</h1>
+          <h2 id="project_tagline">A metagenomic assembly analysis pipeline</h2>
 
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/marbl/metAMOS/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/marbl/metAMOS/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
 
-      </header>
-      <section>
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
         <h1>
-<a name="metamos-v15rc2-praline-brownie-readme" class="anchor" href="#metamos-v15rc2-praline-brownie-readme"><span class="octicon octicon-link"></span></a>MetAMOS v1.5rc2 "Praline Brownie" README</h1>
+<a name="metamos-v15rc3-praline-brownie-readme" class="anchor" href="#metamos-v15rc3-praline-brownie-readme"><span class="octicon octicon-link"></span></a>MetAMOS v1.5rc3 "Praline Brownie" README</h1>
 
-<p>Last updated: April 18th, 2014</p>
+<p>Last updated: May 16th, 2014</p>
 
-<hr><p>We are happy to announce version 1.5rc2, a.k.a. Praline Brownie </p>
+<hr><p>We are happy to announce version 1.5rc3, a.k.a. Praline Brownie </p>
 
 <h2>
 <a name="news" class="anchor" href="#news"><span class="octicon octicon-link"></span></a>NEWS</h2>
 
-<pre><code>1. SRA download now working within frozen binary
-2. kmergenie bug fixed within frozen binary
-3. SPAdes bug fixed within frozen binary
-4. file warning messages removed within frozen binary
-5. OutputScaffold AMOS bug fixed and AMOS binaries updated
-6. MapReads &amp; Assemble plots now display correctly in Chrome
-7. Fix rounding error when tiebreaking a winning assembly
-8. Allow pre-assembled contigs with dots in file name
-9. Enable stacktrace in verbose mode
-10. Add echo as a supported command in the generics workflow
-11. Fix phylosift installation
-12. Fix jellyfish installation
+<pre><code>1. Fix matplotlib check in INSTALL.py
+2. Update IDBA-UD parameters
+3. Support read length as a new parameter for generic programs
+4. Updated Kraken release
+5. Fix EA-UTILS filtering in preprocess
+6. Fix Statistics::Descriptive installation
+7. Disable k-mer genie for metagenomes
+8. Allow assembly to be disabled in isolate mode with -a none.
 </code></pre>
 
 <h2>
@@ -65,12 +62,17 @@
 
 <p><a href="https://media.readthedocs.org/pdf/metamos/latest/metamos.pdf">https://media.readthedocs.org/pdf/metamos/latest/metamos.pdf</a></p>
       </section>
-      <footer>
-        <p><small>Hosted on <a href="http://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">MetAMOS maintained by <a href="https://github.com/marbl">marbl</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
       </footer>
     </div>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
-		          <script type="text/javascript">
+
+              <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
             document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
           </script>
@@ -80,6 +82,7 @@
             pageTracker._trackPageview();
             } catch(err) {}
           </script>
+
 
   </body>
 </html>

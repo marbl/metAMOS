@@ -387,7 +387,7 @@ if 1:
    if "matplotlib" in packagesToInstall:
        dl = 'y'
    elif fail:
-       print "Matplot lib version %s is incompatible with metAMOS. Need version 1.1.0+, download now?"%(matplotlib.__version__) 
+       print "Current matplot lib version is incompatible with metAMOS or matplotlib is not installed. Need version 1.1.0+, download now?" 
        dl = raw_input("Enter Y/N: ")
    if fail and (dl == 'y' or dl == "Y"):
        os.system("curl -L http://downloads.sourceforge.net/project/matplotlib/matplotlib/matplotlib-1.1.0/matplotlib-1.1.0.tar.gz -o ./matplotlib.tar.gz")
@@ -433,14 +433,15 @@ if not os.path.exists("./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINET
        dl = raw_input("Enter Y/N: ")
     if dl == 'y' or dl == 'Y':
         archive = "kraken.tar.gz"
-        os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/kraken-0.10.3-beta.tgz -o %s"%(archive))
+        os.system("curl -L http://ccb.jhu.edu/software/kraken/dl/kraken-0.10.4-beta.tgz -o %s"%(archive))
         os.system("rm -rf ./Utilities/cpp%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.system("tar -xvzf %s"%(archive))
-        os.system("mv kraken-0.10.3-beta ./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+        os.system("mv kraken-0.10.4-beta ./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.chdir("./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
         os.system("./install_kraken.sh `pwd`/bin")
         os.chdir("%s"%(METAMOS_ROOT))
         os.system("rm %s"%archive)
+        os.system("rm -rf ./Utilities/DB/kraken")
 
 if not os.path.exists("./Utilities/DB/kraken"):
     if "kraken" in packagesToInstall:
@@ -456,7 +457,7 @@ if not os.path.exists("./Utilities/DB/kraken"):
        if (mem < 100) and not nodbs:
           print "Insufficient memory to build full Kraken database. Requires at least 100GB of memory, using mini DB"
           archive = "minikraken.tgz"
-          os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -o %s"%(archive, archive))
+          os.system("curl -L http://ccb.jhu.edu/software/kraken/dl/%s -o %s"%(archive, archive))
           os.system("tar xvzf %s"%(archive))
           os.system("mv minikraken_* ./Utilities/DB/kraken")
           os.system("rm %s"%(archive))
@@ -671,7 +672,7 @@ if "optional" in enabledWorkflows or manual:
              os.system("rm -rf phylosift.tar.bz2")
              os.system("mv phylosift_20130829 phylosift")
 
-          if not os.path.exists("./phylosift/legacy/version.pm"):
+          if not os.path.exists("./phylosift/lib/version.pm"):
              #phylosift needs version but doesn't include it
              os.system("curl -L http://www.cpan.org/authors/id/J/JP/JPEACOCK/version-0.9903.tar.gz -o version.tar.gz")
              os.system("tar xvzf version.tar.gz")

@@ -62,7 +62,7 @@ To download the software release package:
 
 .. code-block:: bash
 
-    $ wget https://github.com/marbl/metAMOS/archive/v1.5rc2.zip
+    $ wget https://github.com/marbl/metAMOS/archive/v1.5rc3.zip
 
 If you see a certificate not trusted error, you can add the following option to wget:
 
@@ -74,22 +74,22 @@ And if ``wget`` not available, you can use ``curl`` instead:
 
 .. code-block:: bash
 
-    $ curl -L https://github.com/marbl/metAMOS/archive/v1.5rc2.zip > v1.5rc2.zip
+    $ curl -L https://github.com/marbl/metAMOS/archive/v1.5rc3.zip > v1.5rc3.zip
 
-You can also browse the https://github.com/marbl/MetAMOS/tree/v1.5rc2
+You can also browse the https://github.com/marbl/MetAMOS/tree/v1.5rc3
 and click on Downloads. 
 
 Once downloaded, extract to unpack:
 
 .. code-block:: bash
 
-    $ unzip v1.5rc2.zip
+    $ unzip v1.5rc3.zip
 
 Change to MetAMOS directory:
 
 .. code-block:: bash
 
-    $ cd metAMOS-v1.5rc2
+    $ cd metAMOS-v1.5rc3
 
 Once inside the MetAMOS directory, run:
 

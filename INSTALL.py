@@ -387,7 +387,7 @@ if 1:
    if "matplotlib" in packagesToInstall:
        dl = 'y'
    elif fail:
-       print "Matplot lib version %s is incompatible with metAMOS. Need version 1.1.0+, download now?"%(matplotlib.__version__) 
+       print "Current matplot lib version is incompatible with metAMOS or matplotlib is not installed. Need version 1.1.0+, download now?" 
        dl = raw_input("Enter Y/N: ")
    if fail and (dl == 'y' or dl == "Y"):
        os.system("curl -L http://downloads.sourceforge.net/project/matplotlib/matplotlib/matplotlib-1.1.0/matplotlib-1.1.0.tar.gz -o ./matplotlib.tar.gz")
@@ -672,7 +672,7 @@ if "optional" in enabledWorkflows or manual:
              os.system("rm -rf phylosift.tar.bz2")
              os.system("mv phylosift_20130829 phylosift")
 
-          if not os.path.exists("./phylosift/legacy/version.pm"):
+          if not os.path.exists("./phylosift/lib/version.pm"):
              #phylosift needs version but doesn't include it
              os.system("curl -L http://www.cpan.org/authors/id/J/JP/JPEACOCK/version-0.9903.tar.gz -o version.tar.gz")
              os.system("tar xvzf version.tar.gz")

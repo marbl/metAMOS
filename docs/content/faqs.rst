@@ -26,12 +26,19 @@ FAQs
 **A**:
     Most of them! required steps are currently: Preprocess, Scaffold, and Postprocess.
 
-
 **Q**:
     Should I trim my input data?
 
 **A**:
-    iMetAMOS support EA-UTILS as a trimming option, though it is disabled by default. We have found that some assemblers that build-in their own trimming module are hampered by pre-trimming the data. In contrast, assembler that do not have a trimming module can benefit from trimming input sequences. Generally, the following assemblers can benefit from trimming data: IDBA-UD, SGA, SparseAssembler, Velvet-SC, and Velvet. Assemblers that performed better on un-trimmed data were:: ABySS, MaSuRCA, MIRA, Ray, SOAPdenovo2, and SPAdes.
+    iMetAMOS support EA-UTILS as a trimming option, though it is disabled by default. We have found that some assemblers that build-in their own trimming module are hampered by pre-trimming the data. In contrast, assembler that do not have a trimming module can benefit from trimming input sequences. 
+	* On a GAGE-B dataset, the assemblers that benefited were::
+
+		IDBA-UD, SGA, SparseAssembler, Velvet-SC, and Velvet.
+
+	* Assembler that performed better on un-trimmed data were::
+
+		ABySS, MaSuRCA, MIRA, Ray, SOAPdenovo2, and SPAdes.
+
 **Q**:
     What taxonomic classification method should I be using?
 

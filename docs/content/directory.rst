@@ -23,7 +23,7 @@ Required step?
 Software currently supported
 ^^^^^^^
 
-* ea-utils (code.google.com/p/ea-utils) - optional, off by default, can benefit assemblers that do not perform data correction (i.e. IDBA-UD, Velvet). 
+* ea-utils (code.google.com/p/ea-utils) - optional, off by default. Assemblers that do not perform trimming can benefit from enabling this step. On a GAGE-B dataset, the assemblers that benefited were::IDBA-UD, SGA, SparseAssembler, Velvet-SC, and Velvet. assembler that performed better on un-trimmed data were:: ABySS, MaSuRCA, MIRA, Ray, SOAPdenovo2, and SPAdes .
 * FastQC (bioinformatics.babraham.ac.uk) - optional, on by default for iMetAMOS, used to generate quality reports for the input sequencing data.
 * KmerGenie (Chikhi et al 2014) - optional, on by default for iMetAMOS, used to auto-select a k-mer for isolate genome assembly. Alternatively, a list of k-mers can be specified instead.
 

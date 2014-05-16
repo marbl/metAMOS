@@ -1,21 +1,17 @@
-# MetAMOS v1.5rc2 "Praline Brownie" README
-Last updated: April 18th, 2014
+# MetAMOS v1.5rc3 "Praline Brownie" README
+Last updated: May 16th, 2014
 ***********************************************************************************
-We are happy to announce version 1.5rc2, a.k.a. Praline Brownie 
+We are happy to announce version 1.5rc3, a.k.a. Praline Brownie 
 
 ## NEWS
-	1. SRA download now working within frozen binary
-	2. kmergenie bug fixed within frozen binary
-	3. SPAdes bug fixed within frozen binary
-	4. file warning messages removed within frozen binary
-	5. OutputScaffold AMOS bug fixed and AMOS binaries updated
-	6. MapReads & Assemble plots now display correctly in Chrome
-	7. Fix rounding error when tiebreaking a winning assembly
-	8. Allow pre-assembled contigs with dots in file name
-	9. Enable stacktrace in verbose mode
-	10. Add echo as a supported command in the generics workflow
-	11. Fix phylosift installation
-	12. Fix jellyfish installation
+	1. Fix matplotlib check in INSTALL.py
+	2. Update IDBA-UD parameters
+	3. Support read length as a new parameter for generic programs
+	4. Updated Kraken release
+	5. Fix EA-UTILS filtering in preprocess
+	6. Fix Statistics::Descriptive installation
+	7. Disable k-mer genie for metagenomes
+	8. Allow assembly to be disabled in isolate mode with -a none.
 
 ## DOCS
 

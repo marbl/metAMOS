@@ -17,9 +17,9 @@ We are happy to announce version 1.5rc3, a.k.a. Praline Brownie
 
 For MetAMOS user guide please see:
 
-http://metamos.readthedocs.org/en/latest/
+http://metamos.readthedocs.org/en/v1.5rc3/
 
 or:
 
-https://media.readthedocs.org/pdf/metamos/latest/metamos.pdf
+https://media.readthedocs.org/pdf/metamos/v1.5rc3/metamos.pdf
 

@@ -24,11 +24,11 @@ To install iMetAMOS without using a frozen binary, run:
 
 .. code-block:: bash
 
-    $ curl -L https://github.com/marbl/metAMOS/archive/v1.5rc2 > v1.5rc2.zip
+    $ curl -L https://github.com/marbl/metAMOS/archive/v1.5rc3 > v1.5rc3.zip
 
-    $ unzip v1.5rc2.zip
+    $ unzip v1.5rc3.zip
 
-    $ cd metAMOS-v1.5rc2
+    $ cd metAMOS-v1.5rc3
 
     $ python INSTALL.py iMetAMOS
 

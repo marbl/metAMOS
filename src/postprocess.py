@@ -4,7 +4,7 @@ import os, sys, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser
 from operator import itemgetter
 
 from utils import *
-from classify import Classify
+from bin import Bin
 
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
@@ -54,7 +54,7 @@ def validate_run(dir):
                         print "%s failed"%(dir)
                         sys.exit(1)
 
-@follows(Classify)
+@follows(Bin)
 @posttask(touch_file("%s/Logs/postprocess.ok"%(_settings.rundir)))
 @files("%s/Assemble/out/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%s/Postprocess/%s.scf.fa"%(_settings.rundir,_settings.PREFIX))
 def Postprocess(input,output):
@@ -78,43 +78,29 @@ def Postprocess(input,output):
        run_process(_settings, "%s/ktImportBLAST %s -c -i %s/Postprocess/in/%s.hits:%s/FindORFS/out/%s.ctg.gene.cvg"%(_settings.KRONA,"-l" if _settings.local_krona else "",_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Postprocess")
        run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")
        run_process(_settings, "ln %s/Postprocess/out/blast.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
-       #run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")
-       #run_process(_settings, "ln %s/Annotate/out/phymmbl.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
    elif _cls == 'fcp':
        # now ran in Annotate step
        pass
-       #if not os.path.exists(_settings.KRONA + os.sep + "ImportFCP.pl"):
-       #   print "Error: Krona importer for FCP not found in %s. Please check your path and try again.\n"%()
-       #   raise(JobSignalledBreak)
-       #run_process(_settings, "perl %s/ImportFCP.pl -c -v -i -p %s/Postprocess/in/%s.epsilon-nb_results.txt"%(_settings.KRONA,_settings.rundir,_settings.PREFIX),"Postprocess")
        run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")
-       run_process(_settings, "ln %s/Annotate/out/report.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
+       run_process(_settings, "ln %s/Classify/out/report.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
    elif _cls == 'phymm':
        run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")
-       run_process(_settings, "ln %s/Annotate/out/phymmbl.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
-       #if not os.path.exists(_settings.KRONA + os.sep + "ImportPHYMM.pl"):
-       #   print "Error: Krona importer for PHYMM not found in %s. Please check your path and try again.\n"%()
-       #   raise(JobSignalledBreak)
-       #run_process(_settings, "perl %s/ImportPhymmBL.pl -c -v -i %s/Postprocess/in/%s.hits"%(_settings.KRONA,_settings.rundir,_settings.PREFIX),"Postprocess")
+       run_process(_settings, "ln %s/Classify/out/phymmbl.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
    elif _cls == 'phylosift':
        #now ran in Annotate step to generate file for Propogate/Classsify
        pass
-       #if not os.path.exists(_settings.KRONA + os.sep + "ImportPhyloSift.pl"):
-       #    print "Error: Krona importer for PhyloSift not found in %s. Please check your path and try again.\n"%()
-       #    raise(JobSignalledBreak)
-       #run_process(_settings, "perl %s/ImportPhyloSift.pl -c -v -i %s/Postprocess/in/%s.hits:%s/Assemble/out/%s.contig.cvg"%(_settings.KRONA,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX), "Postprocess") 
        run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")
-       run_process(_settings, "ln %s/Annotate/out/report.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
+       run_process(_settings, "ln %s/Classify/out/report.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
    else:
        run_process(_settings, "unlink %s/Postprocess/out/annotate.krona.html"%(_settings.rundir), "Postprocess")
-       run_process(_settings, "ln %s/Annotate/out/report.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
+       run_process(_settings, "ln %s/Classify/out/report.krona.html %s/Postprocess/out/annotate.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
 
    # create sym links
    run_process(_settings, "unlink %s/Postprocess/out/abundance.krona.html"%(_settings.rundir), "Postprocess")
    run_process(_settings, "ln %s/Abundance/out/report.krona.html %s/Postprocess/out/abundance.krona.html"%(_settings.rundir, _settings.rundir), "Postprocess")
 
    run_process(_settings, "unlink %s/Postprocess/out/%s.classified"%(_settings.rundir, _settings.taxa_level), "Postprocess")
-   run_process(_settings, "ln -s %s/Classify/out %s/Postprocess/out/%s.classified"%(_settings.rundir, _settings.rundir, _settings.taxa_level), "Postprocess")
+   run_process(_settings, "ln -s %s/Bin/out %s/Postprocess/out/%s.classified"%(_settings.rundir, _settings.rundir, _settings.taxa_level), "Postprocess")
 
    run_process(_settings, "unlink %s/Postprocess/out/asm.scores"%(_settings.rundir), "Postprocess")
    run_process(_settings, "ln %s/Validate/out/%s.lap %s/Postprocess/out/asm.scores"%(_settings.rundir, _settings.PREFIX, _settings.rundir), "Postprocess")
@@ -134,10 +120,10 @@ def Postprocess(input,output):
 
    # add annotations for contigs and reads
    run_process(_settings, "unlink %s/Postprocess/out/%s.original.annots"%(_settings.rundir, _settings.taxa_level), "Postprocess")
-   run_process(_settings, "ln %s/Annotate/out/%s.annots %s/Postprocess/out/%s.original.annots"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.taxa_level), "Postprocess")
+   run_process(_settings, "ln %s/Classify/out/%s.annots %s/Postprocess/out/%s.original.annots"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.taxa_level), "Postprocess")
 
    run_process(_settings, "unlink %s/Postprocess/out/%s.original.reads.annots"%(_settings.rundir, _settings.taxa_level), "Postprocess")
-   run_process(_settings, "ln %s/Annotate/out/%s.reads.annots %s/Postprocess/out/%s.original.reads.annots"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.taxa_level), "Postprocess")
+   run_process(_settings, "ln %s/Classify/out/%s.reads.annots %s/Postprocess/out/%s.original.reads.annots"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.taxa_level), "Postprocess")
 
    #unlink to krona taxonomy files to avoid clobber in binary dist
    if _settings.BINARY_DIST:
@@ -252,8 +238,8 @@ def Postprocess(input,output):
    # create necessary links to higher-level dir
    run_process(_settings, "unlink %s/Postprocess/out/html/%s.classified"%(_settings.rundir, _settings.taxa_level), "Postprocess")
    run_process(_settings, "ln %s/Postprocess/out/%s.classified %s/Postprocess/out/html/%s.classified"%(_settings.rundir, _settings.taxa_level, _settings.rundir, _settings.taxa_level), "Postprocess")
-   run_process(_settings, "unlink %s/Postprocess/out/html/Annotate.html"%(_settings.rundir), "Postprocess")
-   run_process(_settings, "ln %s/Postprocess/out/annotate.krona.html %s/Postprocess/out/html/Annotate.html"%(_settings.rundir, _settings.rundir), "Postprocess")
+   run_process(_settings, "unlink %s/Postprocess/out/html/Classify.html"%(_settings.rundir), "Postprocess")
+   run_process(_settings, "ln %s/Postprocess/out/annotate.krona.html %s/Postprocess/out/html/Classify.html"%(_settings.rundir, _settings.rundir), "Postprocess")
    run_process(_settings, "unlink %s/Postprocess/out/html/Abundance.html"%(_settings.rundir), "Postprocess")
    run_process(_settings, "ln %s/Postprocess/out/abundance.krona.html %s/Postprocess/out/html/Abundance.html"%(_settings.rundir, _settings.rundir), "Postprocess")
 

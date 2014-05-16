@@ -63,8 +63,8 @@ def usage():
     print "\n[pipeline_opts]: options that affect the pipeline execution"
 
     print "Pipeline consists of the following steps:"
-    print "  Preprocess, Assemble, FindORFS, MapReads, Abundance, Annotate,"
-    print "  FunctionalAnnotation, Scaffold, Propagate, Classify, Postprocess"
+    print "  Preprocess, Assemble, FindORFS, MapReads, Abundance, Classify,"
+    print "  FunctionalAnnotation, Scaffold, Propagate, Bin, Postprocess"
 
     print "Each of these steps can be referred to by the following options:" 
     print "   -f = <string>: force this step to be run (default = NONE)"
@@ -91,11 +91,11 @@ def usage():
     print "[Validate]"
     print "   -X = <string>: comma-separated list of validators to run on the assembly. (default = %s, supported = %s)"%(selected_programs["validate"], ",".join(supported_programs["validate"]))
     print "   -S = <string>: comma-separated list of scores to use to select the winning assembly. By default, all validation tools specified by -X will be run. For each score, an optional weight can be specified as SCORE:WEIGHT. For example, LAP:1,CGAL:2 (supported = %s)"%(",".join(utils.SCORE_TYPE.reverse_mapping.values()).lower())
-    print "[Annotate]"
-    print "   -c = <string>: classifier to use for annotation (default = %s, supported = %s"%(selected_programs["annotate"], ",".join(supported_programs["annotate"]))
-    print "   -u = <bool>:   annotate unassembled reads? (default = NO)"
-
     print "[Classify]"
+    print "   -c = <string>: classifier to use for annotation (default = %s, supported = %s"%(selected_programs["classify"], ",".join(supported_programs["classify"]))
+    print "   -u = <bool>:   classify unassembled reads? (default = NO)"
+
+    print "[Bin]"
     print "   -z = <string>: taxonomic level to categorize at (default = %s)"%(DEFAULT_TAXA_LEVEL)
 
     print "\n[misc_opts]: Miscellaneous options"
@@ -259,7 +259,7 @@ supported_abundance = ["metaphyler"]
 supported_aligners = ["mgcat"]
 supported_classifiers = ["fcp","phylosift","phmmer","blast",\
                              "metaphyler", "phymm"]
-supported_classifiers.extend(generic.getSupportedList(utils.INITIAL_UTILS, utils.STEP_NAMES.ANNOTATE))
+supported_classifiers.extend(generic.getSupportedList(utils.INITIAL_UTILS, utils.STEP_NAMES.CLASSIFY))
 supported_validators = ["reapr", "orf", "lap", "ale", "quast", "frcbam", "freebayes", "cgal", "n50"]
 supported_fannotate = ["blast"]
 supported_scaffolders = ["bambus2"]
@@ -268,7 +268,7 @@ supported_programs["findorfs"] = supported_genecallers
 supported_programs["assemble"] = supported_assemblers
 supported_programs["mapreads"] = supported_mappers
 supported_programs["abundance"] = supported_abundance
-supported_programs["annotate"] = supported_classifiers
+supported_programs["classify"] = supported_classifiers
 supported_programs["fannotate"] = supported_fannotate
 supported_programs["scaffold"] = supported_scaffolders
 supported_programs["multialign"] = supported_aligners
@@ -282,7 +282,7 @@ selected_programs["assemble"] = "soapdenovo"
 selected_programs["findorfs"] = "fraggenescan"
 selected_programs["mapreads"] = "bowtie"
 selected_programs["abundance"] = "metaphyler"
-selected_programs["annotate"] = "kraken"
+selected_programs["classify"] = "kraken"
 selected_programs["fannotate"] = "blast"
 selected_programs["scaffold"] = "bambus2"
 selected_programs["multialign"] = "mgcat"
@@ -291,8 +291,8 @@ selected_programs["validate"] = "lap"
 always_run_programs = ["krona"]
 
 
-allsteps = ["Preprocess","Assemble","MapReads","MultiAlign","FindORFS","FindRepeats","Abundance","Annotate",\
-                "FunctionalAnnotation","Scaffold","FindScaffoldORFS","Propagate","Classify","Postprocess"]
+allsteps = ["Preprocess","Assemble","MapReads","MultiAlign","FindORFS","FindRepeats","Abundance","Classify",\
+                "FunctionalAnnotation","Scaffold","FindScaffoldORFS","Propagate","Bin","Postprocess"]
 
 ## Need comments here and further down
 
@@ -435,7 +435,7 @@ for o, a in opts:
         sys.exit(0)
                 
     elif o in ("-u","--unassembledreads"):
-        utils.Settings.annotate_unmapped = 1
+        utils.Settings.classify_unmapped = 1
     elif o in ("-x","--xcov"):
         min_ctg_cvg = int(a)
     elif o in ("-l","--lencontigorf"):
@@ -535,22 +535,22 @@ for o, a in opts:
     elif o in ("-r", "--retainBank"):
         retainBank = True
     elif o in ("-c", "--classifier"):
-        selected_programs["annotate"] = a.lower()
+        selected_programs["classify"] = a.lower()
         foundit = False
         for sc in supported_classifiers:
-            if selected_programs["annotate"] not in sc:
+            if selected_programs["classify"] not in sc:
                 continue
             else:
-                selected_programs["annotate"] = sc
+                selected_programs["classify"] = sc
                 foundit = True
                 break
         if sc == "metaphyler":
             #not quite ready for primetime, need krona import script and annots file
             skipsteps.add("Propagate")
-            skipsteps.add("Classify")
+            skipsteps.add("Bin")
         if not foundit:
-            print "!!Sorry, %s is not a supported classification method. Using FCP instead"%(selected_programs["annotate"])
-            selected_programs["annotate"] = "fcp"
+            print "!!Sorry, %s is not a supported classification method. Using FCP instead"%(selected_programs["classify"])
+            selected_programs["classify"] = "fcp"
     elif o in ("-z", "--taxalevel"):
         utils.Settings.taxa_level = a.lower()
 
@@ -681,9 +681,9 @@ for o, a in opts:
 
 if (settings.noblastdb or noblastdb):
     print "**no blast DB directory available, disabling steps requiring BLAST DB"
-    if (selected_programs["annotate"] == "blast"):
+    if (selected_programs["classify"] == "blast"):
         print "Cannot run blast for classification (model files in DB dir). replacing with kraken!"
-        selected_programs["annotate"] = "kraken"
+        selected_programs["classify"] = "kraken"
     skipsteps.add("FunctionalAnnotation")
     nofcpblast = True
 
@@ -777,7 +777,7 @@ utils.Settings.asmfiles = asmfiles
 
 if "Propagate" in forcesteps:
     utils.run_process(settings, "rm %s/Logs/propagate.ok"%(settings.rundir), "RunPipeline")
-    utils.run_process(settings, "touch %s/Annotate/out/%s.annots"%(settings.rundir, settings.PREFIX),\
+    utils.run_process(settings, "touch %s/Classify/out/%s.annots"%(settings.rundir, settings.PREFIX),\
                       "RunPipeline")
 
 if "FindScaffoldORFS" in forcesteps:
@@ -798,9 +798,9 @@ if "Abundance" in forcesteps:
           "rm %s/Abundance/out/%s.taxprof.pct.txt"%(settings.rundir,settings.PREFIX),\
           "RunPipeline")
 
-if "Annotate" in forcesteps:
+if "Classify" in forcesteps:
    utils.run_process(settings, \
-          "rm %s/Annotate/out/%s.hits"%(settings.rundir,settings.PREFIX),"RunPipeline")
+          "rm %s/Classify/out/%s.hits"%(settings.rundir,settings.PREFIX),"RunPipeline")
 
 if "Validate" in forcesteps:
    utils.run_process(settings, \
@@ -826,16 +826,16 @@ if "Assemble" not in skipsteps and "Assemble" in forcesteps:
           "rm %s/Assemble/out/*.asm.contig"%(settings.rundir),\
            "RunPipeline")
 
-if "Classify" not in skipsteps and "Classify" in forcesteps:
+if "Bin" not in skipsteps and "Bin" in forcesteps:
     utils.run_process(settings, \
-          "rm %s/Logs/classify.ok"%(settings.rundir), \
+          "rm %s/Logs/bin.ok"%(settings.rundir), \
           "RunPipeline")
 
 if __name__ == "__main__":
     print "Starting metAMOS pipeline"
     if settings.threads < 1:
         settings.threads = 1
-    settings = utils.initConfig(settings.kmer, settings.threads, settings.rundir, settings.taxa_level, settings.local_krona, settings.annotate_unmapped, settings.doscaffolding, settings.VERBOSE, settings.OUTPUT_ONLY)
+    settings = utils.initConfig(settings.kmer, settings.threads, settings.rundir, settings.taxa_level, settings.local_krona, settings.classify_unmapped, settings.doscaffolding, settings.VERBOSE, settings.OUTPUT_ONLY)
     # add krona to system path
     currPath = os.environ["PATH"]
     if utils.Settings.KRONA not in currPath:
@@ -890,6 +890,7 @@ if __name__ == "__main__":
     utils.initValidationScores(asmScoreWeights)
 
     import preprocess
+    import benchmark
     import assemble
     import mapreads
     import validate
@@ -897,30 +898,31 @@ if __name__ == "__main__":
     import findorfs
     import findreps
     import abundance
-    import annotate
+    import classify
     import fannotate
     import scaffold
     import findscforfs
     import propagate
-    import classify
+    import bin
     import postprocess
 
     # initialize submodules
     preprocess.init(readlibs, asmcontigs, skipsteps, selected_programs["assemble"], run_fastqc,selected_programs["preprocess"])
     assemble.init(readlibs, skipsteps, selected_programs["assemble"], asmcontigs, (userKmerSupplied == False and isolate_genome))
     mapreads.init(readlibs, skipsteps, selected_programs["mapreads"], savebtidx,ctgbpcov,lowmem)
+    benchmark.init(readlibs, skipsteps, selected_programs["benchmark"], asmScores)
     validate.init(readlibs, skipsteps, selected_programs["validate"], asmScores)
     findorfs.init(readlibs, skipsteps, selected_programs["findorfs"], min_ctg_len, min_ctg_cvg,read_orfs)
     findreps.init(readlibs, skipsteps)
     multialign.init(readlibs, skipsteps, forcesteps, selected_programs["multialign"],refgenomes)
-    annotate.init(readlibs, skipsteps, selected_programs["annotate"], nofcpblast)
+    classify.init(readlibs, skipsteps, selected_programs["classify"], nofcpblast)
     fannotate.init(skipsteps)
-    abundance.init(readlibs, skipsteps, forcesteps, selected_programs["annotate"])
+    abundance.init(readlibs, skipsteps, forcesteps, selected_programs["classify"])
     scaffold.init(readlibs, skipsteps, retainBank)
     findscforfs.init(readlibs, skipsteps, selected_programs["findorfs"])
-    propagate.init(readlibs, skipsteps, selected_programs["annotate"])
-    classify.init(readlibs, skipsteps, selected_programs["annotate"], lowmem, 0 if not isolate_genome else 100)
-    postprocess.init(readlibs, skipsteps, selected_programs["annotate"])
+    propagate.init(readlibs, skipsteps, selected_programs["classify"])
+    bin.init(readlibs, skipsteps, selected_programs["classify"], lowmem, 0 if not isolate_genome else 100)
+    postprocess.init(readlibs, skipsteps, selected_programs["classify"])
     generic.init(skipsteps, readlibs)
 
     try:
@@ -943,10 +945,10 @@ if __name__ == "__main__":
 
        pipeline_printout(sys.stdout,[preprocess.Preprocess,assemble.Assemble, \
                          mapreads.MapReads, \
-                         findorfs.FindORFS, findreps.FindRepeats, annotate.Annotate, \
+                         findorfs.FindORFS, findreps.FindRepeats, classify.Classify, \
                          abundance.Abundance, fannotate.FunctionalAnnotation, scaffold.Scaffold, \
                          findscforfs.FindScaffoldORFS, propagate.Propagate, \
-                         classify.Classify, postprocess.Postprocess], verbose=1)
+                         bin.Bin, postprocess.Postprocess], verbose=1)
 
        if not utils.getFromPath("dot", "Graphviz") == "":
           pipeline_printout_graph (   'flowchart.svg',
@@ -970,9 +972,9 @@ if __name__ == "__main__":
 
        pipeline_run([preprocess.Preprocess, assemble.Assemble,findorfs.FindORFS, \
                     mapreads.MapReads, \
-                    findreps.FindRepeats, annotate.Annotate, abundance.Abundance, \
+                    findreps.FindRepeats, classify.Classify, abundance.Abundance, \
                     fannotate.FunctionalAnnotation, scaffold.Scaffold, findscforfs.FindScaffoldORFS, \
-                    propagate.Propagate, classify.Classify, postprocess.Postprocess],\
+                    propagate.Propagate, bin.Bin, postprocess.Postprocess],\
                     verbose = 1)
 
        #multiprocess threads

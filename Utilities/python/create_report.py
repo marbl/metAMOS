@@ -209,9 +209,9 @@ if __name__ == "__main__":
     page.p("<a href=\"./html/scaffold.html\">Scaffold</a>:<br> <font color=\"green\">OK</font>")
     page.p("<a href=\"./html/findscaffoldorfs\">FindScaffoldORFS</a>:<br> <font color=\"green\">OK</font>")
     page.p("<a href=\"./html/abundance.html\">Abundance</a>:<br> <font color=\"red\">FAIL</font>")
-    page.p("<a href=\"./html/annotate.html\">Annotate</a>:<br> <font color=\"red\">FAIL</font>")
+    page.p("<a href=\"./html/classify.html\">Classify</a>:<br> <font color=\"red\">FAIL</font>")
     page.p("<a href=\"./html/propagate.html\">Propagate</a>:<br> <font color=\"gray\">NA</font>")
-    page.p("<a href=\"./html/classify.html\">Classify</a>:<br> <font color=\"gray\">NA</font>")
+    page.p("<a href=\"./html/bin.html\">Bin</a>:<br> <font color=\"gray\">NA</font>")
     #page.ul.close()
     page.div.close()
     #page.li("<a href=\"http://cbcb.umd.edu/software/metamos\">metAMOS website</a>")    
@@ -249,16 +249,6 @@ if __name__ == "__main__":
         page.table.close()
         page.br()
     
-    # TODO: do we want this? also, test -BDO
-    #if os.path.exists("%s/Annotate/out/report.krona.html"%prefix):
-    #    page.iframe(src="%s/Annotate/out/report.krona.html"%prefix, width="100%", height="600px")
-
-    #page.div( id_='wrapper')
-    #page.div( id_="content")
-    
-    #page.a( "Reference assembly:", class_='internal', href='%s'%(ref_asm) )          
-
-    #paragraphs = ( ddf )
     cnt = 0
     #table_html = ""
     if 0:

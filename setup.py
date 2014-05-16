@@ -5,7 +5,7 @@ from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
 
-ext_modules = [Extension("preprocess", ["./src/preprocess.py"]),Extension("annotate",["./src/annotate.py"]), Extension("fannotate",["./src/fannotate.py"]), Extension("mapreads",["./src/mapreads.py"]),Extension("findorfs",["./src/findorfs.py"]),Extension("findscforfs",["./src/findscforfs.py"]),Extension("scaffold",["./src/scaffold.py"])]
+ext_modules = [Extension("preprocess", ["./src/preprocess.py"]),Extension("classify",["./src/classify.py"]), Extension("fannotate",["./src/fannotate.py"]), Extension("mapreads",["./src/mapreads.py"]),Extension("findorfs",["./src/findorfs.py"]),Extension("findscforfs",["./src/findscforfs.py"]),Extension("scaffold",["./src/scaffold.py"])]
 
 # Utility function to read the README file.
 # Used for the long_description.  It's nice, because now 1) we have a top level

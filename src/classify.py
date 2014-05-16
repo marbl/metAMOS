@@ -2,103 +2,492 @@
 
 import os, sys, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser
 from operator import itemgetter
+from math import ceil
 
 from utils import *
-from propagate import Propagate
+from findreps import FindRepeats
+#from findorfs import FindORFS
 
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
-from sort_contigs import *
+from splitfasta import *
+
+from multiprocessing import *
+
+import generic
+
+_MIN_SEQ_LENGTH = 10000000
+_USE_GRID = 0
+
 _readlibs = []
 _skipsteps = []
-_cls = None
-_lowmem = False
-_checkForContaminant = False
-_minContaminantTrustedLen = 0
-_minPercentageInOne = 0.9751
-_minPercentageWithAsmSize = 0.99
-_maxAsm = 1.2
 _settings = Settings()
+_cls = None
+_noblast = False
 
-def init(reads, skipsteps, cls, low, mintrust):
+_FCP_MODELS = "%s"%(_settings.METAMOS_UTILS)
+if _settings.BINARY_DIST:
+   _FCP_MODELS = "%s"%(_settings.DB_DIR)
+def init(reads, skipsteps, cls, noblast):
    global _readlibs
    global _skipsteps
    global _cls
-   global _lowmem
-   global _minContaminantTrustedLen
-   global _checkForContaminant
-
+   global _noblast
    _readlibs = reads
    _skipsteps = skipsteps
    _cls = cls
-   _lowmem = low
+   _noblast = noblast
 
-   if mintrust != None and mintrust != 0:
-      _minContaminantTrustedLen = mintrust
-      _checkForContaminant = True
+def parse_phmmerout(phmmerout):
 
-@follows(Propagate)
-@posttask(touch_file("%s/Logs/classify.ok"%(_settings.rundir)))
-@files("%s/Propagate/out/%s.clusters"%(_settings.rundir,_settings.PREFIX),"%s/Logs/classify.ok"%(_settings.rundir))
+    hit_dict = {}
+    #phmout = open("%s.phm.tbl"%(prefix),'r')
+    phmout = open(phmmerout,'r')
+    phmmer_hits = {}
+    ctghits = {}
+    annot = {}
+    for line in phmout:
+        line = line.replace("\n","")
+
+        if "gene" in line:
+            tts = line.split("[",1)
+            if len(tts) < 2:
+                 phage_annot = "NA"
+            else:
+                 line,phage_annot = line.split("[",1)
+            phage_annot = phage_annot.replace("]","")
+            data = line.split(" ")
+            data2 = []
+            for item in data:
+                if item == "" or item == "-" or item == "\n":
+                    continue
+                else:
+                    data2.append(item)
+            try:
+                data2[16]
+                for git in data2[16:]:
+                    phage_annot += " "+git + " "
+
+            except IndexError:
+                pass
+
+            data2 = data2[:15]
+            #print phage_annot
+            #print data2
+            #print data2[1].split("_",1)[0]
+            try:
+                ctghits[data2[1]]
+                continue
+            except KeyError:
+                ctghits[data2[1]] = 1
+                pass
+            phage_annot = phage_annot.replace(",","")
+            try:
+                annot[data2[1].split("_",1)[0]] += phage_annot
+            except KeyError:
+                annot[data2[1].split("_",1)[0]] = phage_annot
+            try:
+                phmmer_hits[data2[1].split("_",1)[0]] +=1
+            except KeyError:
+                phmmer_hits[data2[1].split("_",1)[0]] = 1
+            try:
+                hit_dict[data2[1]]
+            except KeyError:
+                hit_dict[data2[1]] = [float(data2[2]),int(float(data2[3])),phage_annot]
+    #print len(hit_dict.keys())
+    #for key in hit_dict.keys():
+    #    print hit_dict[key]
+
+
+def annotateSeq(cls, contigs, orfAA, orfFA, output):
+   #annotate contigs > 1000bp with FCP
+   #lets start by annotating ORFs with phmmer
+
+   if cls == "phmmer":
+       if not os.path.exists(_settings.PHMMER + os.sep + "phmmer"):
+          print "Error: PHMMER not found in %s. Please check your path and try again.\n"%(_settings.PHMMER)
+          raise(JobSignalledBreak)
+
+       if not os.path.exists("%s/allprots.faa"%(_settings.BLASTDB_DIR)):
+          print "Error: You indicated you would like to run phmmer but DB allprots.faa not found in %s. Please check your path and try again.\n"%(_settings.BLASTDB_DIR)
+          raise(JobSignalledBreak)
+
+       run_process(_settings, "%s/phmmer --cpu %d -E 0.0000000000000001 -o %s/Classify/out/%s.phm.out --tblout %s/Classify/out/%s.phm.tbl --notextw %s %s/allprots.faa"%(_settings.PHMMER, _settings.threads,_settings.rundir,output,_settings.rundir,output,orfAA,_settings.BLASTDB_DIR),"Classify")
+       parse_phmmerout("%s/Classify/out/%s.phm.tbl"%(_settings.rundir,output))
+       run_process(_settings, "mv %s/Classify/out/%s.phm.tbl  %s/Classify/out/%s.intermediate.hits"%(_settings.rundir,output,_settings.rundir,output),"Classify")
+
+   elif cls == "metaphyler":
+       if not os.path.exists(_settings.BLAST + os.sep + "blastall"):
+           print "Error: BLAST not found in %s. Please check your path and try again.\n"%(_settings.BLAST)
+           raise(JobSignalledBreak)
+
+       #run_process(_settings, "perl %s/perl/installMetaphyler.pl"%(_settings.METAMOS_UTILS)
+       run_process(_settings,"%s/blastall -p blastx -a %d -m 8 -b 1 -e 1e-2 -i %s -d %s/perl/metaphyler/test/test.ref.protein > %s/Classify/out/%s.query.blastx"%(_settings.BLAST,_settings.threads,orfFA,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX))
+       run_process(_settings, "%s/metaphylerClassify %s/perl/metaphyler/markers/markers.blastx.classifier %s/perl/metaphyler/markers/markers.taxonomy %s/Classify/out/%s.query.blastx > %s/Classify/out/%s.classification"%(_settings.METAPHYLER,_settings.METAMOS_UTILS,_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,output) )
+       #Krona import Metaphyler script!
+       run_process(_settings, "mv %s/Classify/out/%s.classification  %s/Classify/out/%s.intermediate.hits"%(_settings.rundir,output,_settings.rundir,output),"Classify")
+
+   elif cls == "blast":
+       if not os.path.exists(_settings.BLAST + os.sep + "blastall"):
+          print "Error: BLAST not found in %s. Please check your path and try again.\n"%(_settings.BLAST)
+          raise(JobSignalledBreak)
+
+       run_process(_settings, "%s/blastall -v 1 -b 1 -a %d -p blastp -m 8 -e 0.00001 -i %s -d %s/refseq_protein -o %s/Classify/out/%s.blastout"%(_settings.BLAST, _settings.threads,orfAA,_settings.BLASTDB_DIR,_settings.rundir,output),"Classify")
+       run_process(_settings, "mv %s/Classify/out/%s.blastout  %s/Classify/out/%s.intermediate.hits"%(_settings.rundir,output,_settings.rundir,output),"Classify")
+   elif cls == "phylosift":
+       if _settings.PHYLOSIFT == "" or not os.path.exists(_settings.PHYLOSIFT + os.sep + "bin" + os.sep + "phylosift"):
+          print "Error: PhyloSift not found in %s. Please check your path and try again.\n"%(_settings.PHYLOSIFT)
+          raise(JobSignalledBreak)
+
+       phylosiftCmd =  "%s/bin/phylosift all --threads=%d"%(_settings.PHYLOSIFT, _settings.threads)
+       phylosiftCmd += " %s"%(getProgramParams("phylosift.spec", "", "--"))
+       # run on contigs for now
+       #for lib in readlibs:
+       #   if lib.mated:
+       #       if not lib.innie or lib.interleaved:
+       #          print "Warning: PhyloSift only supports innie non-interleaved libraries now, skipping library %d"%(lib.id)
+       #       else:
+       #          run_process(_settings, "%s -paired %s/Preprocess/in/%s %s/Preprocess/in/%s"%(phylosiftCmd,_settings.rundir,lib.f1.fname,_settings.rundir,lib.f2.fname), "Classify")
+       #   else:
+       #      run_process(_settings, "%s %s/Preprocess/out/lib%d.seq"%(phylosiftCmd,_settings.rundir,lib.id), "Classify")
+
+       run_process(_settings, "rm -rf %s/Classify/out/PS_temp"%(_settings.rundir), "Classify")
+       run_process(_settings, "%s %s --coverage=%s/Assemble/out/%s.contig.cnt "%(phylosiftCmd, contigs, _settings.rundir,_settings.PREFIX), "Classify")
+
+       # save the results
+       run_process(_settings, "unlink %s/Classify/out/%s.intermediate.hits"%(_settings.rundir, output), "Classify")
+       run_process(_settings, "ln %s/Classify/out/PS_temp/%s/sequence_taxa_summary.txt %s/Classify/out/%s.intermediate.hits"%(_settings.rundir, os.path.basename(contigs), _settings.rundir, output), "Classify") 
+       
+   elif cls == "fcp":
+       run_process(_settings, "ln -s %s/models"%(_FCP_MODELS), "Classify")
+       run_process(_settings, "ln -s %s/models/taxonomy.txt"%(_FCP_MODELS), "Classify")
+
+       # normal nb classify
+       run_process(_settings, "%s/nb-classify -q %s -m %s/models/models.txt -r %s/Classify/out/%s.nb_results.txt -e %s"%(_settings.FCP,contigs,_FCP_MODELS,_settings.rundir,output,output), "Classify")
+
+       # for blast options
+       if not _noblast and os.path.exists("%s/blast_data/BacteriaAndArchaeaGenomesDB.nin"%(_settings.BLASTDB_DIR)):
+          run_process(_settings, "ln -s %s/blast_data blast_data"%(_settings.BLASTDB_DIR), "Classify")
+          #run_process(_settings, "python %s/python/BLASTN.py %s/blastn %s %s/Classify/out/%s.bl_results.txt %d"%(_settings.METAMOS_UTILS, _settings.BLAST, contigs, _settings.rundir, output, _settings.threads), "Classify") 
+          run_process(_settings, "%s/blastn -query %s -out  %s/Classify/out/%s.bl_results.txt -db %s/blast_data/BacteriaAndArchaeaGenomesDB -evalue 10 -outfmt 7 -task blastn -num_threads %d"%(_settings.BLAST,contigs,_settings.rundir,output,_settings.BLASTDB_DIR,_settings.threads),"Classify")
+          #os.system(blastnEXE + ' -query ' + queryFile + ' -db ./blast_data/BacteriaAndArchaeaGenomesDB -evalue 10 -outfmt 7 -task blastn -num_threads %s -out '%(threads) + resultsFile)
+          #combine the results
+          if _settings.BINARY_DIST:
+              run_process(_settings, "%s/NB-BL %s/Classify/out/%s.nb_results.txt %s/Classify/out/%s.bl_results.txt %s/Classify/out/%s.intermediate.epsilon-nb_results.txt"%(_settings.FCP, _settings.rundir, output, _settings.rundir, output, _settings.rundir, output), "Classify")
+          else:
+              run_process(_settings, "python %s/python/NB-BL.py %s/Classify/out/%s.nb_results.txt %s/Classify/out/%s.bl_results.txt %s/Classify/out/%s.intermediate.epsilon-nb_results.txt"%(_settings.METAMOS_UTILS, _settings.rundir, output, _settings.rundir, output, _settings.rundir, output), "Classify")
+
+       else:
+          if _settings.BINARY_DIST:
+              run_process(_settings, "%s/Epsilon-NB %s/Classify/out/%s.nb_results.txt 1E5 %s/Classify/out/%s.intermediate.epsilon-nb_results.txt"%(_settings.FCP,_settings.rundir,output,_settings.rundir,output),"Classify")
+          else:
+              run_process(_settings, "python %s/python/Epsilon-NB.py %s/Classify/out/%s.nb_results.txt 1E5 %s/Classify/out/%s.intermediate.epsilon-nb_results.txt"%(_settings.METAMOS_UTILS,_settings.rundir,output,_settings.rundir,output),"Classify")
+
+       #need python TaxonomicSummary.py test.fasta nb_topModels.txt nb_taxonomicSummary.txt
+       #run_process(_settings, "python %s/python/TaxonomicSummary.py %s/Classify/in/%s.fna %s/Classify/out/%s.nb_results.txt %s/Classify/out/%s.epsilon-nb_results.txt"%(_settings.METAMOS_UTILS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Classify")
+
+       run_process(_settings, "unlink %s/Classify/out/%s.intermediate.hits"%(_settings.rundir, output), "Classify")
+       run_process(_settings, "unlink %s/Classify/out/%s.nb_results.txt"%(_settings.rundir, output), "Classify")
+       run_process(_settings, "unlink %s/Classify/out/%s.bl_results.txt"%(_settings.rundir, output), "Classify")
+       run_process(_settings, "ln %s/Classify/out/%s.intermediate.epsilon-nb_results.txt %s/Classify/out/%s.intermediate.hits"%(_settings.rundir, output, _settings.rundir, output), "Classify")
+
+   elif cls == "phymm":
+       if not os.path.exists("%s"%(_settings.PHYMM)):
+           print "Error: Phymm not found in %s but selected as classifier. Please check your path and try again.\n"%(_settings.PHYMM)
+           raise(JobSignalledBreak)
+       # link to the files phymm expects locally
+       run_process(_settings, "ln -s %s/.blastData"%(_settings.PHYMM), "Classify")
+       run_process(_settings, "ln -s %s/.genomeData"%(_settings.PHYMM), "Classify")
+       run_process(_settings, "ln -s %s/.scripts"%(_settings.PHYMM), "Classify")
+       run_process(_settings, "ln -s %s/.taxonomyData"%(_settings.PHYMM), "Classify")
+       run_process(_settings, "mkdir -f %sClassify/out/.logs"%(_settings.rundir), "Classify")
+
+       run_process(_settings, "perl %s/scoreReads.pl %s > %s/Classify/out/%s.phymm.err"%(_settings.PHYMM, contigs,_settings.rundir,output),"Classify")
+       run_process(_settings, "cat results.03.phymmBL_%s.txt | grep -v \"QUERY_ID\" > %s/Classify/out/%s.intermediate.phymm.out"%(contigs.replace(os.sep, "_").replace(".", "_"), _settings.rundir, output), "Classify")
+       run_process(_settings, "ln %s/Classify/out/%s.intermediate.phymm.out %s/Classify/out/%s.intermediate.hits"%(_settings.rundir, output, _settings.rundir, output), "Classify")
+       run_process(_settings, "rm %s/Classify/out/*_%s.txt "%(_settings.rundir, contigs.replace(os.sep, "_").replace(".","_")),"Classify")
+       
+   elif cls == None:
+       print "No method specified, skipping"
+
+def parallelWrapper(params):
+   try:
+      jobID = params["jobID"]
+      result = {}
+      result["jobID"] = jobID
+      result["status"] = 0
+ 
+      annotateSeq(params["cls"], params["contigs"], params["orfAA"], params["orfFA"], params["out"])
+
+      result["status"] = 1
+      return result
+   except KeyboardInterrupt:
+      result["status"] = 0
+      print "Keyboard error in thread %d, quitting\n"%(jobID)
+      return result
+   except Exception:
+      result["status"] = 0
+      print "Other error in thread %d, quitting\n"%(jobID)
+      return result
+
+@follows(FindRepeats)
+@posttask(touch_file("%s/Logs/annotate.ok"%(_settings.rundir)))
+@files("%s/Classify/in/%s.faa"%(_settings.rundir,_settings.PREFIX),"%s/Classify/out/%s.hits"%(_settings.rundir,_settings.PREFIX))
 def Classify(input,output):
-   if "Classify" in _skipsteps or _cls == None or "Assemble" in _skipsteps or "assemble" in _skipsteps:
-       run_process(_settings, "touch %s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX), "Classify")
-       run_process(_settings, "touch %s/Logs/classify.skip"%(_settings.rundir), "Classify")       
-       return 0
+   if "Classify" in _skipsteps or _cls == None:
+      run_process(_settings, "touch %s/Logs/annotate.skip"%(_settings.rundir), "Classify")
+      run_process(_settings, "touch %s/Classify/out/%s.hits"%(_settings.rundir, _settings.PREFIX), "Classify")
+      run_process(_settings, "touch %s/Classify/out/%s.annots"%(_settings.rundir, _settings.PREFIX), "Classify")
+      return 0
 
-   if _cls.lower() != "metaphyler":
-       #run_process(_settings, "python %s/python/sort_contigs.py %s/Propagate/in/%s.clusters %s/Propagate/out/%s.clusters %s/Propagate/out/%s.reads.clusters %s/tax_key.tab %s/FindORFS/out/%s.fna.bnk %s/FindORFS/out/%s.faa.bnk %s/FindORFS/out/%s.gene.map %s/Classify/out %s/Scaffold/in/%s.bnk %s"%(_settings.METAMOS_UTILS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.DB_DIR, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.rundir, _settings.PREFIX,_settings.AMOS),"Classify")
-       sort_contigs("%s/Propagate/in/%s.clusters"%(_settings.rundir,_settings.PREFIX),"%s/Propagate/out/%s.clusters"%(_settings.rundir,_settings.PREFIX),"%s/Propagate/out/%s.reads.clusters"%(_settings.rundir,_settings.PREFIX),"%s/tax_key.tab"%(_settings.DB_DIR),"%s/FindORFS/out/%s.fna.bnk"%(_settings.rundir,_settings.PREFIX),"%s/FindORFS/out/%s.faa.bnk"%(_settings.rundir,_settings.PREFIX),"%s/FindORFS/out/%s.gene.map"%(_settings.rundir,_settings.PREFIX),"%s/Classify/out"%(_settings.rundir),"%s/Scaffold/in/%s.bnk"%(_settings.rundir,_settings.PREFIX),"%s"%(_settings.AMOS), _lowmem)
+   listOfFiles = "%s/Classify/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX)
+
+   # clean up any existing files
+   run_process(_settings, "touch %s/Classify/out/%s.annots"%(_settings.rundir, _settings.PREFIX), "Classify")
+   run_process(_settings, "unlink %s/Classify/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "Classify")
+   run_process(_settings, "ln %s/Assemble/out/%s.asm.contig %s/Classify/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Classify")
+   run_process(_settings, "unlink %s/Classify/out/%s.hits"%(_settings.rundir, _settings.PREFIX), "Classify")
+   run_process(_settings, "rm -f %s/Classify/out/*.hits"%(_settings.rundir), "Classify")
+   run_process(_settings, "rm -f %s/Classify/out/*.epsilon-nb_results.txt"%(_settings.rundir), "Classify")
+   run_process(_settings, "rm -f %s/Classify/out/*.phymm.out"%(_settings.rundir), "Classify")
+
+   pool = Pool(processes=_settings.threads)
+   tasks = []
+
+   if "fcp" in _cls or "phymm" in _cls:
+      # hack to use gridX
+      if _USE_GRID:
+         size = sizeFastaFile("%s/Classify/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX))
+         perThread = ceil(float(size) / 200)
+         #print "The size of the contigs is %d per thread %d\n"%(size, perThread)
+         #run_process(_settings, "python %s/python/splitfasta.py %s/Classify/in/%s.asm.contig %d %s/Classify/in/%s %d"%(_settings.METAMOS_UTILS, _settings.rundir, _settings.PREFIX, perThread, _settings.rundir, _settings.PREFIX, 1), "Classify")
+         splitfasta("%s/Classify/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%d"%(perThread),"%s/Classify/in/%s"%(_settings.rundir,_settings.PREFIX),"%d"%(1))
+         totalJobs = 0
+         for partFile in os.listdir("%s/Classify/in/"%(_settings.rundir)):
+            if "_part" in partFile and "%s_part"%(_settings.PREFIX) in partFile:
+               print "A file I have to process is %s\n"%(partFile)
+               totalJobs += 1
+
+         for lib in _readlibs:
+            listOfFiles += ":%s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id)
+            run_process(_settings, "ln %s/Assemble/out/lib%d.unaligned.fasta %s/Classify/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id, _settings.rundir, lib.id), "Classify")
+            size = sizeFastaFile("%s/Classify/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id))
+            perThread = ceil(float(size) / 200)
+            #print "The size of the lib %d is %d per one %d\n"%(lib.id, size, perThread)
+            #run_process(_settings, "python %s/python/splitfasta.py %s/Classify/in/lib%d.unaligned.fasta %d %s/Classify/in/%s %d"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, perThread, _settings.rundir, _settings.PREFIX, totalJobs+1), "Classify")
+            #splitfasta("%s/Classify/in/%s.asm.contig,%d,%s/Classify/in/%s,%d"%(_settings.rundir,_settings.PREFIX,perThread,_settings.rundir,_settings.PREFIX,totalJobs+1))
+            splitfasta("%s/Classify/in/lib%d.unaligned.fasta"%(_settings.rundir,lib.id),"%d"%(perThread),"%s/Classify/in/%s"%(_settings.rundir,_settings.PREFIX),"%d"%(totalJobs+1))
+
+         totalJobs = 0
+         for partFile in os.listdir("%s/Classify/in/"%(_settings.rundir)):
+            if "_part" in partFile and "%s_part"%(_settings.PREFIX) in partFile:
+               #print "A file I have to process is %s\n"%(partFile)
+               totalJobs += 1
+
+         cmdfile = open("%s/Classify/out/runAnnot.sh"%(_settings.rundir), "w")
+         cmdfile.write("#!/bin/sh\n")
+         cmdfile.write("\n")
+         cmdfile.write("jobid=$GRID_TASK\n")
+         cmdfile.write("if [ x$jobid = x -o x$jobid = xundefined -o x$jobid = 0 ]; then\n")
+         cmdfile.write("   jobid=$1\n")
+         cmdfile.write("fi\n")
+         cmdfile.write("if test x$jobid = x; then\n")
+         cmdfile.write("  echo Error: I need a job index on the command line\n")
+         cmdfile.write("  exit 1\n")
+         cmdfile.write("fi\n")
+         cmdfile.write("if [ $jobid -gt %d ]; then\n"%(totalJobs))
+         cmdfile.write("   echo Job id $jobid is out of range %d\n"%(totalJobs))
+         cmdfile.write("   exit 0\n")
+         cmdfile.write("fi\n")
+         cmdfile.write("if test -e %s/Classify/out/$jobid.success ; then\n"%(_settings.rundir))
+         cmdfile.write("   echo Job previously completed successfully.\n")
+         cmdfile.write("else\n")
+         cmdfile.write("ln -s %s/.blastData\n"%(_settings.PHYMM))
+         cmdfile.write("ln -s %s/.genomeData\n"%(_settings.PHYMM))
+         cmdfile.write("ln -s %s/.scripts\n"%(_settings.PHYMM))
+         cmdfile.write("ln -s %s/.taxonomyData\n"%(_settings.PHYMM))
+         cmdfile.write("mkdir .logs\n")
+         cmdfile.write("perl %s/scoreReads.pl %s/Classify/in/%s_part$jobid.fa"%(_settings.PHYMM,_settings.rundir,_settings.PREFIX))
+         cmdfile.write(" && touch %s/Classify/out/$jobid.success\n"%(_settings.rundir))
+         cmdfile.write("fi\n")
+         cmdfile.close()
+         run_process(_settings, "chmod u+x %s/Classify/out/runAnnot.sh"%(_settings.rundir), "Classify")
+
+         #run_process(_settings, "gridx -p %d -r %d -T -c %s/Classify/out/runAnnot.sh"%(min(totalJobs+1, 200), totalJobs+1, _settings.rundir), "Classify")
+         run_process(_settings, "cat %s/Classify/out/gridx-ibissub00*/wrk_*/results.03.phymmBL_%s_Annotate_in_*%s* | grep -v \"QUERY_ID\" > %s/Classify/out/%s.phymm.out"%(_settings.rundir, _settings.rundir.replace(os.sep, "_").replace(".", "_"), _settings.PREFIX, _settings.rundir, _settings.PREFIX))
+         run_process(_settings, "ln %s/Classify/out/%s.phymm.out %s/Classify/out/%s.hits"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX))
+
+         # for now we only work as phymm
+         # generate Krona output ImportPhymmBL.pl
+         importPhymm = "%s%sperl%sImportPhymmBL.pl"%(_settings.METAMOS_UTILS, os.sep, os.sep)
+         if not os.path.exists(importPhymm):
+            print "Error: Krona importer for Phymm not found in %s. Please check your path and try again.\n"%(importPhymm)
+            raise(JobSignalledBreak)
+         run_process(_settings, "perl %s %s -f %s %s/Classify/out/%s.phymm.out:%s/Assemble/out/%s.contig.cnt:%s"%(importPhymm, "-l" if _settings.local_krona else "", listOfFiles,_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.taxa_level),"Classify") # TODO: local url (after next KronaTools release)
+
+         # generate taxonomic-level annots
+         readctg_dict = {}
+         for lib in _readlibs:
+            ctgfile = open("%s/Assemble/out/%s.lib%dcontig.reads"%(_settings.rundir, _settings.PREFIX, lib.id), 'r')
+            for line in ctgfile.xreadlines():
+               line = line.replace("\n","")
+               read, ctg = line.split()
+               if ctg in readctg_dict:
+                  readctg_dict[ctg].append(read)
+               else:
+                  readctg_dict[ctg] = [read,]
+            ctgfile.close()
+
+         annotsfile = open("%s/Classify/out/%s.annots"%(_settings.rundir, _settings.PREFIX), 'r')
+         annotreads = open("%s/Classify/out/%s.reads.annots"%(_settings.rundir, _settings.PREFIX), 'w')
+         for line in annotsfile.xreadlines():
+            line = line.replace("\n", "")
+            ctg, annot = line.split()
+            if ctg in readctg_dict:
+               for x in readctg_dict[ctg]:
+                  annotreads.write("%s\t%s\n"%(x, annot))
+            else:
+               annotreads.write("%s\t%s\n"%(ctg, annot))
+         annotsfile.close()
+         annotreads.close()
+         readctg_dict.clear()
+
+         return 
+      # we should also split the fna and faa file but for now this is good enough
+      size = sizeFastaFile("%s/Classify/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX))
+      perThread = max(ceil(float(size) / _settings.threads), _MIN_SEQ_LENGTH)
+      #print "The size of the contigs is %d per thread %d\n"%(size, perThread)
+      #run_process(_settings, "python %s/python/splitfasta.py %s/Classify/in/%s.asm.contig %d"%(_settings.METAMOS_UTILS, _settings.rundir, _settings.PREFIX, perThread), "Classify")
+      #splitfasta("%s/Classify/in/%s.asm.contig,%d,%s/Classify/in/%s,%d"%(_settings.rundir,_settings.PREFIX,perThread,_settings.rundir,_settings.PREFIX,1))
+      splitfasta("%s/Classify/in/%s.asm.contig"%(_settings.rundir,_settings.PREFIX),"%d"%(perThread))
+      for partFile in os.listdir("%s/Classify/in/"%(_settings.rundir)):
+         if "_part" in partFile and "%s.asm.contig"%(_settings.PREFIX) in partFile:
+            partStart = partFile.find("_part")+5
+            partEnd = partFile.find(".fa", partStart, len(partFile))
+            partNumber = int(partFile[partStart:partEnd])
+            params = {}
+            params["jobID"] = len(tasks) 
+            params["cls"] = _cls
+            params["contigs"] = "%s/Classify/in/%s"%(_settings.rundir, partFile)
+            params["orfAA"] = ""
+            params["orfFA"] = ""
+            params["out"] = "%s.ctg_%d"%(_settings.PREFIX, partNumber)
+            tasks.append(params) 
    else:
-       #run_process(_settings, "python %s/python/sort_contigs.py %s/Propagate/in/%s.clusters %s/Propagate/out/%s.clusters %s/Propagate/out/%s.reads.clusters %s/class_key.tab %s/FindORFS/out/%s.fna.bnk %s/FindORFS/out/%s.faa.bnk %s/FindORFS/out/%s.gene.map %s/Classify/out %s/Scaffold/in/%s.bnk %s"%(_settings.METAMOS_UTILS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.DB_DIR, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.rundir, _settings.PREFIX,_settings.AMOS),"Classify")
-       sort_contigs("%s/Propagate/in/%s.clusters"%(_settings.rundir,_settings.PREFIX),"%s/Propagate/out/%s.clusters"%(_settings.rundir,_settings.PREFIX),"%s/Propagate/out/%s.reads.clusters"%(_settings.rundir,_settings.PREFIX),"%s/class_key.tab"%(_settings.DB_DIR),"%s/FindORFS/out/%s.fna.bnk"%(_settings.rundir,_settings.PREFIX),"%s/FindORFS/out/%s.faa.bnk"%(_settings.rundir,_settings.PREFIX),"%s/FindORFS/out/%s.gene.map"%(_settings.rundir,_settings.PREFIX),"%s/Classify/out"%(_settings.rundir),"%s/Scaffold/in/%s.bnk"%(_settings.rundir,_settings.PREFIX),"%s"%(_settings.AMOS), _lowmem)
+      annotateSeq(_cls, "%s/Classify/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "%s/Classify/in/%s.faa"%(_settings.rundir, _settings.PREFIX), "%s/Classify/in/%s.fna"%(_settings.rundir, _settings.PREFIX), "%s.ctg"%(_settings.PREFIX))
 
-   # look for contaminant if requested
-   if _checkForContaminant == True:
-      run_process(_settings, "java -cp %s SizeFasta %s/Assemble/out/%s.asm.contig |awk '{if ($NF >= %s) { print $1} }' > %s/Classify/out/%s.ctg.iids"%(_settings.METAMOS_JAVA, _settings.rundir, _settings.PREFIX, _minContaminantTrustedLen, _settings.rundir, _settings.PREFIX), "Classify")
-
-      run_process(_settings, "unlink %s/Classify/out/%s.read.iids"%(_settings.rundir, _settings.PREFIX), "Classify")
+   # annotate all the unmapped sequences using FCP
+   if _cls == "blast" or _cls == "phmmer" or _cls == "metaphyler" or not _settings.annotate_unmapped:
+      #print "Warning: blast, PHMMER, and metaphyler is not supported for annotating unmapped sequences"
+      #print "Warning: unmapped/unaligned sequences will not be annotated!"
+      pass
+   else:
       for lib in _readlibs:
-         run_process(_settings, "java -cp %s SizeFasta %s/Assemble/out/lib%d.unaligned.fasta |awk '{if ($NF >= %s) { print $1} }' >> %s/Classify/out/%s.read.iids"%(_settings.METAMOS_JAVA, _settings.rundir, lib.id, _minContaminantTrustedLen, _settings.rundir, _settings.PREFIX), "Classify")
-         run_process(_settings, "java -cp %s SubFile %s/Classify/out/%s.ctg.iids %s/Assemble/out/%s.lib%dcontig.reads 1 >> %s/Classify/out/%s.read.iids"%(_settings.METAMOS_JAVA, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, lib.id, _settings.rundir, _settings.PREFIX), "Classify") 
-      run_process(_settings, "java -cp %s SubFile %s/Classify/out/%s.read.iids %s/Propagate/out/%s.reads.clusters > %s/Classify/out/%s.read.contaminant.clusters"%(_settings.METAMOS_JAVA, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Classify")
+         listOfFiles += ":%s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id)
+         run_process(_settings, "ln %s/Assemble/out/lib%d.unaligned.fasta %s/Classify/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id, _settings.rundir, lib.id), "Classify")
 
-      # now read and figure out percentage
-      counts = {}
-      total = 0
-      filein = open("%s/Classify/out/%s.read.contaminant.clusters"%(_settings.rundir, _settings.PREFIX), 'r')
-      for line in filein.xreadlines():
-         line = line.replace("\n", "")
-         read, annot = line.split()
-         total += 1
-         if annot not in counts:
-            counts[annot] = 0
-         counts[annot] += 1
-      filein.close()
+         if "fcp" in _cls or "phymm" in _cls:
+            size = sizeFastaFile("%s/Classify/in/lib%d.unaligned.fasta"%(_settings.rundir, lib.id))
+            perThread = max(ceil(float(size) / _settings.threads), _MIN_SEQ_LENGTH)
+            #run_process(_settings, "python %s/python/splitfasta.py %s/Classify/in/lib%d.unaligned.fasta %d"%(_settings.METAMOS_UTILS, _settings.rundir, lib.id, perThread), "Classify")
+            splitfasta("%s/Classify/in/lib%d.unaligned.fasta"%(_settings.rundir,lib.id),"%d"%(perThread))
+            for partFile in os.listdir("%s/Classify/in/"%(_settings.rundir)):
+               if "_part" in partFile and "lib%d.unaligned.fasta"%(lib.id) in partFile:
+                  partStart = partFile.find("_part")+5
+                  partEnd = partFile.find(".fa", partStart, len(partFile))
+                  partNumber = int(partFile[partStart:partEnd])
+                  params = {}
+                  params["jobID"] = len(tasks)
+                  params["cls"] = _cls
+                  params["contigs"] = "%s/Classify/in/%s"%(_settings.rundir, partFile)
+                  params["orfAA"] = ""
+                  params["orfFA"] = ""
+                  params["out"] = "%s.lib%d_%d"%(_settings.PREFIX, lib.id, partNumber)
+                  tasks.append(params)
+         else:
+            annotateSeq(_cls, "%s/Assemble/out/lib%d.unaligned.fasta"%(_settings.rundir, lib.id), "", "", "%s.lib%d"%(_settings.PREFIX, lib.id))
+   if "fcp" in _cls or "phymm" in _cls:
+         result = pool.map_async(parallelWrapper, tasks).get(sys.maxint)
+         for i in result:
+            if (i["status"] == 1):
+               run_process(_settings, "rm %s"%(tasks[i["jobID"]]["contigs"]), "Classify")
+            else:
+               print "Error: parallel annotation job %d failed\n"%(i["jobID"])
+               raise(JobSignalledBreak)
+   pool.close()
+   pool.join()
 
-      run_process(_settings, "unlink %s/Classify/out/contaminant.true"%(_settings.rundir), "Classify")
-      majority = 0
-      classID = 1
-      isContaminant = False
-      for annot in counts:
-         percentage = float(counts[annot]) / float(total)
-         if percentage > majority:
-            majority = percentage
-            classID = annot
-      
-      if majority < _minPercentageInOne:
-         isContaminant = True
-      elif majority < _minPercentageWithAsmSize:
-         isContaminant = True
+   if generic.checkIfExists(STEP_NAMES.ANNOTATE, _cls.lower()):
+      generic.execute(STEP_NAMES.ANNOTATE, _cls.lower(), _settings)
+   else:
+      #  merge results
+      run_process(_settings, "cat %s/Classify/out/*.intermediate.hits > %s/Classify/out/%s.hits"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Classify")
+ 
+   if _cls == "phylosift":
+       importPS = "%s%sperl%sImportPhyloSift.pl"%(_settings.METAMOS_UTILS, os.sep, os.sep)
+       if not os.path.exists(importPS):
+           print "Error: Krona importer for PhyloSift not found in %s. Please check your path and try again.\n"%(_settings.KRONA)
+           raise(JobSignalledBreak)
+       run_process(_settings, "perl %s %s -c -i -f %s %s/Classify/out/%s.hits:%s/Assemble/out/%s.contig.cnt:%s"%(importPS,"-l" if _settings.local_krona else "",listOfFiles,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX, _settings.taxa_level), "Classify")
 
-         if os.path.exists("%s/Validate/out/%s.ref.fasta"%(_settings.rundir, _settings.PREFIX)):
-            asmSize=getCommandOutput("java -cp %s SizeFasta %s/Assemble/out/%s.asm.contig |awk '{SUM+=$NF; print SUM}' |tail -n 1"%(_settings.METAMOS_JAVA, _settings.rundir, _settings.PREFIX), False)
-            expectedSize=getCommandOutput("java -cp %s SizeFasta %s/Validate/out/%s.ref.fasta |awk '{SUM+=$NF; print SUM}' |tail -n 1"%(_settings.METAMOS_JAVA, _settings.rundir, _settings.PREFIX), False)
-            if int(float(expectedSize) * _maxAsmSize) >= int(asmSize):
-                isContaminant = False
+   elif _cls == "fcp":
+       # generate Krona output
+       importFCP = "%s%sperl%sImportFCP.pl"%(_settings.METAMOS_UTILS, os.sep, os.sep)
+       if not os.path.exists(importFCP):
+          print "Error: Krona importer for FCP not found in %s. Please check your path and try again.\n"%(importFCP)
+          raise(JobSignalledBreak)
+       run_process(_settings, "cat %s/Classify/out/*.intermediate.epsilon-nb_results.txt | grep -v 'Fragment Id' > %s/Classify/out/%s.epsilon-nb_results.txt"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Classify")
 
-      if isContaminant:
-         name = getCommandOutput("cat %s/tax_key.tab |awk -F \"\\t\" '{if ($1 == %s) print $NF}'"%(_settings.DB_DIR, classID), False)
-         contaminant = open("%s/Classify/out/contaminant.true"%(_settings.rundir), 'w')
-         contaminant.write("%s\t%s\t%s\n"%(majority*100, name, _minContaminantTrustedLen))
-         contaminant.close()
+       run_process(_settings, "perl %s %s -c -i -f %s %s/Classify/out/%s.epsilon-nb_results.txt:%s/Assemble/out/%s.contig.cnt:%s"%(importFCP, "-l" if _settings.local_krona else "", listOfFiles, _settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX, _settings.taxa_level),"Classify") # TODO: local url (after next KronaTools release)
+
+   elif _cls == "phymm":
+       # generate Krona output ImportPhymmBL.pl
+       importPhymm = "%s%sperl%sImportPhymmBL.pl"%(_settings.METAMOS_UTILS, os.sep, os.sep)
+       if not os.path.exists(importPhymm):
+          print "Error: Krona importer for Phymm not found in %s. Please check your path and try again.\n"%(importPhymm)
+          raise(JobSignalledBreak)
+       run_process(_settings, "cat %s/Classify/out/*.intermediate.phymm.out > %s/Classify/out/%s.phymm.out"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Classify")
+       run_process(_settings, "perl %s %s -f %s %s/Classify/out/%s.phymm.out:%s/Assemble/out/%s.contig.cnt:%s"%(importPhymm, "-l" if _settings.local_krona else "", listOfFiles,_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX, _settings.taxa_level),"Classify") # TODO: local url (after next KronaTools release)
+   elif generic.checkIfExists(STEP_NAMES.ANNOTATE, _cls.lower()):
+      genericImport = "%s%sperl%sImport%s.pl"%(_settings.METAMOS_UTILS, os.sep, os.sep, _cls.title())
+      if os.path.exists(genericImport):
+         run_process(_settings, "perl %s %s -c -i -f %s %s/Classify/out/%s.hits:%s/Assemble/out/%s.contig.cnt:%s"%(genericImport, "-l" if _settings.local_krona else "", listOfFiles, _settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX, _settings.taxa_level),"Classify") # TODO: local url (after next KronaTools release)
+      else:
+         genericImport = "%s%sperl%sImportGeneric.pl"%(_settings.METAMOS_UTILS, os.sep, os.sep)
+         if not os.path.exists(genericImport):
+            print "Error: Krona importer for generic classifier not found in %s. Please check your path and try again.\n"%(genericImport)
+            raise(JobSignalledBreak)
+         run_process(_settings, "perl %s %s -c -i -f %s %s/Classify/out/%s.hits:%s/Assemble/out/%s.contig.cnt:%s"%(genericImport, "-l" if _settings.local_krona else "", listOfFiles, _settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX, _settings.taxa_level),"Classify") # TODO: local url (after next KronaTools release)
+
+
+   run_process(_settings, "unlink %s/Postprocess/in/%s.hits"%(_settings.rundir, _settings.PREFIX), "Classify")
+   run_process(_settings, "unlink %s/Postprocess/out/%s.hits"%(_settings.rundir, _settings.PREFIX), "Classify")
+   run_process(_settings, "ln %s/Classify/out/%s.hits %s/Postprocess/in/%s.hits"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Classify")
+   run_process(_settings, "ln %s/Classify/out/%s.hits %s/Postprocess/out/%s.hits"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Classify")
+
+   # generate taxonomic-level annots
+   readctg_dict = {}
+   for lib in _readlibs:
+      ctgfile = open("%s/Assemble/out/%s.lib%dcontig.reads"%(_settings.rundir, _settings.PREFIX, lib.id), 'r')
+      for line in ctgfile.xreadlines():
+         line = line.replace("\n","")
+         read, ctg = line.split()
+         if ctg in readctg_dict:
+            readctg_dict[ctg].append(read)
+         else:
+            readctg_dict[ctg] = [read,]
+      ctgfile.close()
+
+   annotsfile = open("%s/Classify/out/%s.annots"%(_settings.rundir, _settings.PREFIX), 'r')
+   annotreads = open("%s/Classify/out/%s.reads.annots"%(_settings.rundir, _settings.PREFIX), 'w')
+   for line in annotsfile.xreadlines():
+     line = line.replace("\n", "")
+     ctg, annot = line.split()
+     if ctg in readctg_dict:
+        for x in readctg_dict[ctg]:
+           annotreads.write("%s\t%s\n"%(x, annot))
+     else:
+        annotreads.write("%s\t%s\n"%(ctg, annot))
+   annotsfile.close()
+   annotreads.close()
+   readctg_dict.clear()

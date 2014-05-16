@@ -153,7 +153,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
         run_process(_settings,"perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,ref_asm,html_prefix),"Postprocess")
     report = open(html_prefix+"asmstats.out",'r')
 
-    initialStep = "Annotate"
+    initialStep = "Classify"
 
     # get metamos version
     version = "1.0"
@@ -177,10 +177,10 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     steps.append("Scaffold")
     steps.append("FindScaffoldORFS")
     steps.append("Abundance")
-    steps.append("Annotate")
+    steps.append("Classify")
     steps.append("FunctionalAnnotation")
     steps.append("Propagate")
-    steps.append("Classify")
+    steps.append("Bin")
     steps.append("Browse Results")
 
     step_status = {}
@@ -194,10 +194,10 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     step_status["Scaffold"] = "OK"
     step_status["FindScaffoldORFS"] = "OK"
     step_status["Abundance"] = "FAIL"
-    step_status["Annotate"] = "FAIL" 
+    step_status["Classify"] = "FAIL" 
     step_status["FunctionalAnnotation"] = "FAIL" 
     step_status["Propagate"] = "NONE"
-    step_status["Classify"] = "NONE"
+    step_status["Bin"] = "NONE"
     step_status["Browse Results"] = "OK"
     ##get status of each step from Log dir
     for step in steps:
@@ -276,7 +276,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     # generate dynamic java scripts
     # first classify and propagate
     #os.system("python %s/python/get_classify_stats.py %s/propagate.in.clusters %s/propagate.out.clusters %s/DB/tax_key.tab %s Classify.html Propagate.html %s"%(utils, html_prefix, html_prefix, utils, html_prefix, taxa_level)) 
-    get_classify_stats("%s/propagate.in.clusters"%(html_prefix),"%s/propagate.out.clusters"%(html_prefix),"%s/tax_key.tab"%(dbdir),"%s"%(html_prefix),"Classify.html","Propagate.html","%s"%(taxa_level))
+    get_classify_stats("%s/propagate.in.clusters"%(html_prefix),"%s/propagate.out.clusters"%(html_prefix),"%s/tax_key.tab"%(dbdir),"%s"%(html_prefix),"Bin.html","Propagate.html","%s"%(taxa_level))
 
     # generate preprocess
     preprocess = markup.page()
@@ -377,12 +377,12 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
               first = False
            validate.add("Selected reference: %s"%(r))
        ref.close()
-       if os.path.exists("%s/Classify/out/contaminant.true"%(MA_dir)):
-          cont = open("%s/Classify/out/contaminant.true"%(MA_dir), 'r')
+       if os.path.exists("%s/Bin/out/contaminant.true"%(MA_dir)):
+          cont = open("%s/Bin/out/contaminant.true"%(MA_dir), 'r')
           contPercent = cont.read().split()
           cont.close()
           validate.br()
-          validate.add("<b>Sample may have contaminants, only %s%% contigs/reads >%sbp assigned to %s. Check Annotate output</b>"%(contPercent[0], contPercent[2], contPercent[1]))
+          validate.add("<b>Sample may have contaminants, only %s%% contigs/reads >%sbp assigned to %s. Check Classify output</b>"%(contPercent[0], contPercent[2], contPercent[1]))
        validate.br()
        for line in laps:
           line = line.replace("\n","")

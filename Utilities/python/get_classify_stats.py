@@ -87,7 +87,7 @@ def get_classify_stats(ocf,cf,ck,out_dir,outf,outfo,taxa_level):
     
     classify = markup.page()
     classify.init(bodyattrs={'style':"margin:0px"})
-    classify.p("Classified contigs:")
+    classify.p("Binned contigs:")
     classify.table(border="1")
     for key in contigs_by_class:
         try:
@@ -98,15 +98,15 @@ def get_classify_stats(ocf,cf,ck,out_dir,outf,outfo,taxa_level):
         classify.add("<td align=\"left\"><a target=\"_blank\" href=\"../%s.classified/%s/\">%s</a></td><td align=\"right\">%d</td><td align=\"right\">%3.2f%%</td>"%(taxa_level, class_name, class_name, contigs_by_class[key], contigs_by_class[key]/float(classifiedCount)*100))
         classify.tr.close()
     classify.tr()
-    classify.add("<td align=\"left\"Total classified:</td><td align=\"right\">%d</td>"%(classifiedCount))
+    classify.add("<td align=\"left\"Total binned:</td><td align=\"right\">%d</td>"%(classifiedCount))
     classify.tr.close()
     classify.table.close()
     
     additional = classifiedCount - origClassifiedCount 
     if additional >= 0:
-       summary.p("Total additional classified contigs: %d"%(additional))
+       summary.p("Total additional binned contigs: %d"%(additional))
     else:
-       summary.p("Total contigs classified as unknown from known: %d"%(abs(additional)))
+       summary.p("Total contigs binned as unknown from known: %d"%(abs(additional)))
     summary.p.close();
     orig_out.write(summary.__str__())
     out.write(classify.__str__())

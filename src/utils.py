@@ -55,7 +55,7 @@ def enum(*sequential, **named):
     enums['mapping'] = mapping
     return type('Enum', (), enums)
 
-STEP_NAMES = enum("ASSEMBLE", "ANNOTATE", "SCAFFOLD")
+STEP_NAMES = enum("ASSEMBLE", "CLASSIFY", "SCAFFOLD")
 STEP_OUTPUTS = enum(".asm.contig", ".hits", ".linearize.scaffolds.final")
 INPUT_TYPE = enum("FASTQ", "FASTA", "CONTIGS", "SCAFFOLDS", "ORF_FA", "ORF_AA")
 
@@ -87,7 +87,7 @@ class Settings:
    rundir = ""
    taxa_level = "class"
    local_krona = False
-   annotate_unmapped = False
+   classify_unmapped = False
    task_dict = []
    noblastdb = False
    doscaffolding = False
@@ -160,7 +160,7 @@ class Settings:
    nopsutil = False
    nopysam = False
 
-   def __init__(self, kmer = None, threads = None, rundir = None, taxa_level = "", localKrona = False, annotateUnmapped = False, doScaffolding = False, verbose = False, outputOnly = False, update = False):
+   def __init__(self, kmer = None, threads = None, rundir = None, taxa_level = "", localKrona = False, classifyUnmapped = False, doScaffolding = False, verbose = False, outputOnly = False, update = False):
 
       configureEnvironment(INITIAL_UTILS)
 
@@ -202,7 +202,7 @@ class Settings:
       Settings.taxa_level = taxa_level
       Settings.local_krona = localKrona
       Settings.doscaffolding = doScaffolding
-      Settings.annotate_unmapped = annotateUnmapped
+      Settings.classify_unmapped = classifyUnmapped
       Settings.task_dict = []
 
       Settings.PREFIX = "proba"
@@ -741,8 +741,8 @@ def cmdExists(cmd):
 
     return result
 
-def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped, verbose, outputOnly, doScaffolding):
-    Settings(kmer, threads, theRundir, taxaLevel, localKrona, annotateUnmapped, verbose, outputOnly, doScaffolding, True)
+def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, classifyUnmapped, verbose, outputOnly, doScaffolding):
+    Settings(kmer, threads, theRundir, taxaLevel, localKrona, classifyUnmapped, verbose, outputOnly, doScaffolding, True)
 
     getMachineType()
 

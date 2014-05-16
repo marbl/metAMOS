@@ -174,6 +174,7 @@ foreach my $input (@ARGV)
                         $contigID,
 			$taxID,
                         $length,
+                        $conf,
 			$kmers
 
 		) = split /\t/, $line;
@@ -188,20 +189,7 @@ foreach my $input (@ARGV)
                     }
 
                     if ($status eq "C") {
-                       # figure out the confidence as % of kmers agreeing with classification
-                       my @kmerAssignments = split(' ', $kmers);
-                       my $totalCount = 0;
-                       my $goodCount = 0;
-                       foreach my $assignment (@kmerAssignments) {
-                          my ($taxAssign, $kmerCount) = split(":", $assignment);
-                          if ($taxAssign == $taxID) {
-                             $goodCount += $kmerCount;
-                          }
-                          if ($taxAssign > 0) {
-                             $totalCount += $kmerCount;
-                          }
-                       }
-
+                       $conf =~ s/P=//g;  
                        my $parent = $taxID;
                        while ($parent > 1) {
                           if (!defined($outputAnnot{$contigID}) && getTaxRank($parent) eq $taxonomicLevel) {
@@ -209,7 +197,7 @@ foreach my $input (@ARGV)
                           }
                           $parent = getTaxParent($parent);
                        }
-                       addByTaxID(\%tree, $set, $taxID, $contigID, $magnitude, $goodCount/$totalCount);
+                       addByTaxID(\%tree, $set, $taxID, $contigID, $magnitude, $conf);
                        $classified{$contigID} = 0;
                     }
                     else

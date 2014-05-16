@@ -1,21 +1,6 @@
-# MetAMOS v1.5rc2 "Praline Brownie" README
-Last updated: April 18th, 2014
-***********************************************************************************
-We are happy to announce version 1.5rc2, a.k.a. Praline Brownie 
+# MetAMOS Development UNSTABLE README
 
-## NEWS
-	1. SRA download now working within frozen binary
-	2. kmergenie bug fixed within frozen binary
-	3. SPAdes bug fixed within frozen binary
-	4. file warning messages removed within frozen binary
-	5. OutputScaffold AMOS bug fixed and AMOS binaries updated
-	6. MapReads & Assemble plots now display correctly in Chrome
-	7. Fix rounding error when tiebreaking a winning assembly
-	8. Allow pre-assembled contigs with dots in file name
-	9. Enable stacktrace in verbose mode
-	10. Add echo as a supported command in the generics workflow
-	11. Fix phylosift installation
-	12. Fix jellyfish installation
+The master branch of metAMOS is always undergoing development and is likely not stable. Unless you are an expert users, please do not use master. If you would like to try metAMOS,  use the [latest tagged](https://github.com/marbl/metAMOS/releases/tag/v1.5rc3) release.
 
 ## DOCS
 

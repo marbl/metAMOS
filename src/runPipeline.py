@@ -565,6 +565,7 @@ for o, a in opts:
             
         assemblers = a.lower().strip().split(",")
         selected_programs["assemble"] = None 
+        noAsm = False
 
         for assembler in assemblers:
            if assembler == "soap2":
@@ -576,7 +577,13 @@ for o, a in opts:
 
            foundit = False
            for sa in supported_assemblers:
-              if assembler not in sa:
+              if assembler == "none":
+                 selected_programs["assemble"] = "none"
+                 asmSpecified = False
+                 foundit = True
+                 noAsm = True
+                 break
+              elif assembler not in sa:
                  continue
               else:
                  if (assembler != "velvet" and assembler != "soapdenovo" and assembler != "idba") or assembler == sa:
@@ -592,11 +599,12 @@ for o, a in opts:
            if not foundit:
                print "!!Sorry, %s is not a supported assembler."%(assembler)
 
-        if selected_programs["assemble"] == None:
-           print "!!Sorry, no valid assembler specified. Using SOAPdenovo instead"
-           selected_programs["assemble"] = "soapdenovo"
-
-        asmSpecified = True
+           if selected_programs["assemble"] == None:
+              if not noAsm or len(asmcontigs) == 0:
+                 print "!!Sorry, no valid assembler specified. Using SOAPdenovo instead"
+                 selected_programs["assemble"] = "soapdenovo"
+           if not noAsm:
+              asmSpecified = True
         
     elif o in ("-g","--genecaller"):
         selected_programs["findorfs"] = a.lower()

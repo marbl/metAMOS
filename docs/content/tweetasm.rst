@@ -5,12 +5,13 @@ Experimental: TweetAssembler v0.1b
 Introduction
 ===============
 
-TweetAssembler is a twitter-based interface to an isolate genome assembly server powered by iMetAMOS:
+TweetAssembler is a twitter-based interface to an isolate genome assembly server powered by iMetAMOS::
 
-     Automated ensemble assembly and validation of microbial genomes.
-     Sergey Koren, Todd J Treangen, Christopher M Hill, Mihai Pop, Adam M Phillippy
-     bioRxiv doi: 10.1101/002469
-     http://biorxiv.org/content/early/2014/02/07/002469
+	Automated ensemble assembly and validation of microbial genomes.
+	Sergey Koren, Todd J Treangen, Christopher M Hill, Mihai Pop, Adam M Phillippy
+	BMC Bioinformatics 15:126, 2014.
+	http://www.biomedcentral.com/1471-2105/15/126/abstract
+
 
 Why Twitter?
 ==============

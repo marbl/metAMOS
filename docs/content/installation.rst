@@ -56,7 +56,7 @@ MetAMOS contains an automated installation script which installs
 MetAMOS along with required Python dependencies, third party software
 and necessary data files. If you encounter issues during installation, you can 
 try installing the required dependencies manually and re-running INSTALL.py. If you 
-continue to encounter issues, plase provide the output from INSTALL.py as a new `issue <https://github.com/marbl/metAMOS/issues?state=open>`. 
+continue to encounter issues, plase provide the output from INSTALL.py as a new `issue <https://github.com/marbl/metAMOS/issues?state=open>`_.
 
 To download the software release package:
 

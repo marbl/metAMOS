@@ -6,9 +6,5 @@ The master branch of metAMOS is always undergoing development and is likely not 
 
 For MetAMOS user guide please see:
 
-http://metamos.readthedocs.org/en/latest/
-
-or:
-
-https://media.readthedocs.org/pdf/metamos/latest/metamos.pdf
+http://metamos.readthedocs.org/en/
 

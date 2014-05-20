@@ -196,7 +196,7 @@ def runSparseAssembler(sparsePath, name):
    sparseLibLine = sparseLibLine.replace("lib", "Denoised_lib");
 
    # now run the actual assembler
-   run_process(_settings, "%s/SparseAssembler %s %s"%(sparsePath, getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(name), "SparseAssembler", ""), sparseLibLine), "Assemble")
+   run_process(_settings, "%s/SparseAssembler k %d %s %s"%(sparsePath, _settings.kmer, getProgramParams(_settings.METAMOS_UTILS, "%s.spec"%(name), "SparseAssembler", ""), sparseLibLine), "Assemble")
 
    # create symlinks
    run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")

@@ -482,7 +482,11 @@ if not os.path.exists("./Utilities/DB/kraken"):
              os.environ["PATH"]=pathUpdate
 
           os.chdir("./Utilities/cpp/%s%s-%s%skraken"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-          os.system("./bin/kraken-build --standard --threads %d --db %s/Utilities/DB/kraken"%(multiprocessing.cpu_count() - 1, METAMOS_ROOT)) 
+          os.system("./bin/kraken-build --download-taxonomy --db %s/Utilities/DB/kraken"%(METAMOS_ROOT))
+          os.system("./bin/kraken-build --download-library bacteria --db %s/Utilities/DB/kraken"%(METAMOS_ROOT))
+          os.system("./bin/kraken-build --download-library viruses --db %s/Utilities/DB/kraken"%(METAMOS_ROOT))
+          os.system("./bin/kraken-build --download-library human --db %s/Utilities/DB/kraken"%(METAMOS_ROOT))
+          os.system("./bin/kraken-build --build --threads %d --db %s/Utilities/DB/kraken --jellyfish-hash-size \"\" --max-db-size \"\" --minimizer-len 15 --kmer-len 31"%(multiprocessing.cpu_count() - 1, METAMOS_ROOT)) 
           os.chdir("%s"%(METAMOS_ROOT))
 
 if not os.path.exists("./LAP"):

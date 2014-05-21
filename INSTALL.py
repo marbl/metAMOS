@@ -1686,11 +1686,14 @@ if "deprecated" in enabledWorkflows or manual:
            print "Glimmer-MG not found, optional for FindORFS step. Caution, this will take approx. 24 hours to complete, including Phymm download & install. download & install now?"
            dl = raw_input("Enter Y/N: ")
         if (dl == 'y' or dl == 'Y') or not nodbs:
-            archive = "glimmer-mg-0.3.1.tar.gz"
-            os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -o %s" %(archive, archive))
-            os.system("tar -C ./Utilities/ -xvf %s" % archive)
-            os.system("rm %s"%archive)
-            os.system("python ./Utilities/glimmer-mg/install_glimmer.py")
+            print "Glimmer-MG support is deprecated within metAMOS and is no longer supported. You can still run the installation but will have to use Glimmer-MG outside of metAMOS. Are you sure you want to install?"
+            dl = raw_input("Enter Y/N: ")
+            if (dl == 'y' or dl == 'Y') or not nodbs:
+               archive = "glimmer-mg-0.3.2.tar.gz"
+	       os.system("curl -L http://www.cbcb.umd.edu/software/glimmer-mg/downloads/%s -o %s"%(archive, archive))
+               os.system("tar -C ./Utilities/ -xvf %s" % archive)
+               os.system("rm %s"%archive)
+               os.system("python ./Utilities/glimmer-mg/install_glimmer.py")
 
 # should check for success of installation
 workflow.updateSupportedWorkflows(enabledWorkflows)

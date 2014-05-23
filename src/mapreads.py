@@ -121,8 +121,8 @@ def map2contig():
             readcnt += 2
 
     if bowtie_mapping == 1:
-       if _settings.nopysam == True and _mapper == "bowtie2":
-          print "Warning: requested to use Bowtie 2 which requires sam support (pysam). Pysam was not found or could not be imported. Please instal pysam and try again. Defaulting to bowtie"
+        if _settings.nopysam == True and _mapper == "bowtie2":
+           print "Warning: requested to use Bowtie 2 which requires sam support (pysam). Pysam was not found or could not be imported. Please instal pysam and try again. Defaulting to bowtie"
            _mapper = "bowtie"
 
         if _mapper == "bowtie":

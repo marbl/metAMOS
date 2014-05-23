@@ -9,7 +9,6 @@ from preprocess import Preprocess
 from assemble import SplitMappers
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
-import pysam
 
 MAX_ENTRIES = 10000
 MAX_SD = 25
@@ -33,6 +32,9 @@ def init(reads, skipsteps, mapper,savebtidx,ctgbpcov,lowmem):
    _savebtidx = savebtidx
    _ctgbpcov = ctgbpcov
    _lowmem = lowmem
+
+   if _settings.nopysam != True:
+      import pysam
 
 def getMeanSD(libid):
    lmin = sys.maxint
@@ -119,6 +121,10 @@ def map2contig():
             readcnt += 2
 
     if bowtie_mapping == 1:
+       if _settings.nopysam == True and _mapper == "bowtie2":
+          print "Warning: requested to use Bowtie 2 which requires sam support (pysam). Pysam was not found or could not be imported. Please instal pysam and try again. Defaulting to bowtie"
+           _mapper = "bowtie"
+
         if _mapper == "bowtie":
            if "bowtie" not in _skipsteps and not _savebtidx:# and not os.path.exists("%s/Assemble/out/IDX.1.ebwt"%(_settings.rundir)):
                run_process(_settings, "%s/bowtie-build -o 2 %s/Assemble/out/%s.asm.contig %s/Assemble/out/%s.IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX),"MapReads")

@@ -8,7 +8,7 @@ from preprocess import Preprocess
 from annotate import Annotate
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
-import pysam
+
 _skipsteps = []
 _settings = Settings()
 def init(skipsteps):

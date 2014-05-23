@@ -5,7 +5,7 @@ from operator import itemgetter
 
 from utils import *
 from findreps import FindRepeats
-from annotate import Annotate
+from classify import Classify
 from fannotate import FunctionalAnnotation
 sys.path.append(INITIAL_UTILS)
 from ruffus import *

@@ -4,7 +4,7 @@ import os, sys, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser
 from operator import itemgetter
 
 from utils import *
-from annotate import Annotate
+from classify import Classify
 from scaffold import Scaffold
 from findscforfs import FindScaffoldORFS
 from abundance import Abundance
@@ -34,7 +34,7 @@ def init(reads, skipsteps, cls):
 
 @follows(Abundance)
 @posttask(touch_file("%s/Logs/propagate.ok"%(_settings.rundir)))
-@files("%s/Annotate/out/%s.annots"%(_settings.rundir, _settings.PREFIX),"%s/Logs/propagate.ok"%(_settings.rundir))
+@files("%s/Classify/out/%s.annots"%(_settings.rundir, _settings.PREFIX),"%s/Logs/propagate.ok"%(_settings.rundir))
 def Propagate(input,output):
    if _cls == "metaphyler":
        #run_process(_settings, "python %s/python/create_mapping.py %s/class_key.tab %s/Abundance/out/%s.classify.txt %s/Propagate/in/%s.annots"%(_settings.METAMOS_UTILS,_settings.DB_DIR,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Propagate")

@@ -5,7 +5,7 @@ from operator import itemgetter
 
 from utils import *
 from preprocess import Preprocess
-from annotate import Annotate
+from classify import Classify
 sys.path.append(INITIAL_UTILS)
 from ruffus import *
 

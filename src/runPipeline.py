@@ -918,7 +918,7 @@ if __name__ == "__main__":
     preprocess.init(readlibs, asmcontigs, skipsteps, selected_programs["assemble"], run_fastqc,selected_programs["preprocess"])
     assemble.init(readlibs, skipsteps, selected_programs["assemble"], asmcontigs, (userKmerSupplied == False and isolate_genome))
     mapreads.init(readlibs, skipsteps, selected_programs["mapreads"], savebtidx,ctgbpcov,lowmem)
-    benchmark.init(readlibs, skipsteps, selected_programs["benchmark"], asmScores)
+    benchmark.init(readlibs, skipsteps)
     validate.init(readlibs, skipsteps, selected_programs["validate"], asmScores)
     findorfs.init(readlibs, skipsteps, selected_programs["findorfs"], min_ctg_len, min_ctg_cvg,read_orfs)
     findreps.init(readlibs, skipsteps)

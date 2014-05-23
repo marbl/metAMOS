@@ -444,20 +444,20 @@ class GenericProgram:
       return listOfInput
 
 def getSupportedList(path, step):
-   if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ANNOTATE):
+   if ( step not in STEP_NAMES.reverse_mapping.keys()):
       return []
    programs = getProgramParams(path, "%s.generic"%(STEP_NAMES.reverse_mapping[step]))
    return programs.strip().split()
    
 def checkIfExists(step, programName):
-   if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ANNOTATE):
+   if ( step not in STEP_NAMES.reverse_mapping.keys()):
       return False
 
    programs = getSupportedList(_settings.METAMOS_UTILS, step)
    return programName.lower() in programs
 
 def getLocation(step, programName):
-   if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ANNOTATE):
+   if ( step not in STEP_NAMES.reverse_mapping.keys()):
       return "UNKNOWN"
    if not checkIfExists(step, programName):
       return "UNKNOWN" 
@@ -467,7 +467,7 @@ def getLocation(step, programName):
    return dispatch.location
 
 def getName(step, programName):
-   if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ANNOTATE):
+   if ( step not in STEP_NAMES.reverse_mapping.keys()):
       return "UNKNOWN"
    if not checkIfExists(step, programName):
       return "UNKNOWN"

@@ -46,8 +46,6 @@ FAQs
 
                 ABySS, MaSuRCA, MIRA, Ray, SOAPdenovo2, and SPAdes.
 
-
-
 **Q**:
     What taxonomic classification method should I be using?
 

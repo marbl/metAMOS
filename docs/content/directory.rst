@@ -23,17 +23,17 @@ Required step?
 Software currently supported
 ^^^^^^^
 
-* ea-utils (code.google.com/p/ea-utils) - optional, off by default. 
+* ea-utils (code.google.com/p/ea-utils) - optional, off by default. Enabled by specifying -t eautils to runPipeline 
 	* Assemblers that do not perform trimming can benefit from enabling this step. On a GAGE-B dataset, the assemblers that benefited were::
 
-		IDBA-UD, SGA, SparseAssembler, Velvet-SC, and Velvet. 
+		IDBA-UD, SGA, SparseAssembler, SPAdes, Velvet-SC, and Velvet. 
 
 	* Assembler that performed better on un-trimmed data were:: 
 
-		ABySS, MaSuRCA, MIRA, Ray, SOAPdenovo2, and SPAdes.
+		ABySS, MaSuRCA, MIRA, Ray, and SOAPdenovo2.
 
 * FastQC (bioinformatics.babraham.ac.uk) - optional, on by default for iMetAMOS, used to generate quality reports for the input sequencing data.
-* KmerGenie (Chikhi et al 2014) - optional, on by default for iMetAMOS, used to auto-select a k-mer for isolate genome assembly. Alternatively, a list of k-mers can be specified instead.
+* KmerGenie (Chikhi et al 2014) - optional, on by default for iMetAMOS, used to auto-select a k-mer for isolate genome assembly. Alternatively, a list of k-mers can be specified instead. For assemblers using a range of k-mers (i.e. IDBA-UD), KmerGenie is not used but the read length is specified as the maximum k-mer. For assemblers using a set of k-mers (i.e. SPAdes), the KmerGenie selected k-mer along with a set of defaults is used.
 
 What it does
 ^^^^^^^

@@ -30,14 +30,23 @@ FAQs
     Should I trim my input data?
 
 **A**:
-    iMetAMOS support EA-UTILS as a trimming option, though it is disabled by default. We have found that some assemblers that build-in their own trimming module are hampered by pre-trimming the data. In contrast, assembler that do not have a trimming module can benefit from trimming input sequences. 
-	* On a GAGE-B dataset, the assemblers that benefited were::
+    iMetAMOS supports EA-UTILS as a trimming option, though it is disabled by default. We have found that some assemblers that build-in their own trimming module are hampered by pre-trimming the data. In contrast, assembler that do not have a trimming module can benefit from trimming input sequences. To enable trimming using EA-UTILS, specify -t eautils as an option for runPipeline
+ 
+	* We compared assembler performance on trimmed and untrimmed data for the `GAGE-B MiSeq Rhodobacter sphaeroides dataset <http://ccb.jhu.edu/gage_b/datasets/index.html>`_. Overall, the largest corrected N50 was generated using the untrimmed data. The figure below shows assembler performance on untrimmed data
+		.. image:: f1_notrim.png
 
-		IDBA-UD, SGA, SparseAssembler, Velvet-SC, and Velvet.
+	* The figure below shows assembler performance on the same dataset after trimming by EA-UTILS
+                .. image:: f1_trim.png
 
-	* Assembler that performed better on un-trimmed data were::
+	* On this dataset, the assemblers that benefited were::
 
-		ABySS, MaSuRCA, MIRA, Ray, SOAPdenovo2, and SPAdes.
+                IDBA-UD, SGA, SparseAssembler, Velvet-SC, and Velvet.
+
+        * Assembler that performed better on un-trimmed data were::
+
+                ABySS, MaSuRCA, MIRA, Ray, SOAPdenovo2, and SPAdes.
+
+
 
 **Q**:
     What taxonomic classification method should I be using?

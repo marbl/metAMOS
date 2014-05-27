@@ -75,8 +75,8 @@ def outputLibraryInfo(headerArray, dataArray, outputHeader, libcnt, format, mate
    row.append([mmax, "right"])
 
    if outputFastQC and os.path.exists("lib%d.1.fastqc/fastqc_report.html"%(libcnt)):
-      if mated.lower() == "true":
-         if interleaved.lower() == "true":
+      if mated == True:
+         if interleaved == True:
             row.append(["<a target=\"_blank\" href=\"lib%d.1.fastqc/fastqc_report.html\">interleaved</a>"%(libcnt), "left"])
             row.append(["NA", "left"])
          else:
@@ -318,13 +318,13 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
           libadded = False
           format = line.replace("\n","").split("\t")[-1]
        elif "mated:" in line:
-          mated = line.replace("\n","").split("\t")[-1]
+          mated = str2bool(line.replace("\n","").split("\t")[-1])
        elif "innie:" in line:
-         innie = line.replace("\n","").split("\t")[-1]
+         innie = str2bool(line.replace("\n","").split("\t")[-1])
        elif "linker:" in line:
          linkerType = line.replace("\n","").split("\t")[-1]
        elif "interleaved:" in line:
-         interleaved = line.replace("\n","").split("\t")[-1]
+         interleaved = str2bool(line.replace("\n","").split("\t")[-1])
        elif "f1:" in line:
           data = line.split("\t")
 

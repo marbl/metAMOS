@@ -40,11 +40,11 @@ FAQs
 
 	* On this dataset, the assemblers that benefited were::
 
-                IDBA-UD, SGA, SparseAssembler, Velvet-SC, and Velvet.
+                IDBA-UD, SGA, SparseAssembler, SPAdes, Velvet-SC, and Velvet.
 
         * Assembler that performed better on un-trimmed data were::
 
-                ABySS, MaSuRCA, MIRA, Ray, SOAPdenovo2, and SPAdes.
+                ABySS, MaSuRCA, MIRA, Ray, and SOAPdenovo2.
 
 **Q**:
     What taxonomic classification method should I be using?

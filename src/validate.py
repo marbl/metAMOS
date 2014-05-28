@@ -696,10 +696,10 @@ def Validate (input_file_names, output_file_name):
       run_process(_settings, "ln %s/FindORFS/out/%s.fna %s/FindRepeats/in/%s.fna"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
       run_process(_settings, "unlink %s/FindRepeats/in/%s.faa"%(_settings.rundir, _settings.PREFIX), "Validate")
       run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/FindRepeats/in/%s.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
-      run_process(_settings, "unlink %s/Annotate/in/%s.fna"%(_settings.rundir, _settings.PREFIX), "Validate")
-      run_process(_settings, "ln %s/FindORFS/out/%s.fna %s/Annotate/in/%s.fna"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
-      run_process(_settings, "unlink %s/Annotate/in/%s.faa"%(_settings.rundir, _settings.PREFIX), "Validate")
-      run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/Annotate/in/%s.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "unlink %s/Classify/in/%s.fna"%(_settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "ln %s/FindORFS/out/%s.fna %s/Classify/in/%s.fna"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "unlink %s/Classify/in/%s.faa"%(_settings.rundir, _settings.PREFIX), "Validate")
+      run_process(_settings, "ln %s/FindORFS/out/%s.faa %s/Classify/in/%s.faa"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Validate")
 
       for lib in _readlibs: 
          run_process(_settings, "unlink %s/Assemble/out/%s.lib%d.badmates"%(_settings.rundir, _settings.PREFIX, lib.id), "Validate")

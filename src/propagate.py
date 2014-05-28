@@ -57,7 +57,9 @@ def Propagate(input,output):
 
    if "Propagate" in _skipsteps or "propagate" in _skipsteps or "Assemble" in _skipsteps or _cls == None or (_mated == False and numMates == 0):
        run_process(_settings, "touch %s/Logs/propagate.skip"%(_settings.rundir), "Propagate")
-       run_process(_settings, "cp %s/Propagate/in/%s.clusters %s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Propagate")
+       run_process(_settings, "ln %s/Propagate/in/%s.clusters %s/Propagate/out/%s.clusters"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Propagate")
+       run_process(_settings, "ln %s/Classify/out/%s.reads.annots %s/Propagate/out/%s.reads.clusters"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Propagate")
+       return
    else:
       run_process(_settings, "%s/FilterEdgesByCluster -b %s/Scaffold/in/%s.bnk -clusters %s/Propagate/in/%s.clusters -noRemoveEdges > %s/Propagate/out/%s.clusters"%(_settings.AMOS,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX,_settings.rundir,_settings.PREFIX),"Propagate")
 

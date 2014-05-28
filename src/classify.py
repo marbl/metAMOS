@@ -377,7 +377,7 @@ def Classify(input,output):
       annotateSeq(_cls, "%s/Classify/in/%s.asm.contig"%(_settings.rundir, _settings.PREFIX), "%s/Classify/in/%s.faa"%(_settings.rundir, _settings.PREFIX), "%s/Classify/in/%s.fna"%(_settings.rundir, _settings.PREFIX), "%s.ctg"%(_settings.PREFIX))
 
    # annotate all the unmapped sequences using FCP
-   if _cls == "blast" or _cls == "phmmer" or _cls == "metaphyler" or not _settings.annotate_unmapped:
+   if _cls == "blast" or _cls == "phmmer" or _cls == "metaphyler" or not _settings.classify_unmapped:
       #print "Warning: blast, PHMMER, and metaphyler is not supported for annotating unmapped sequences"
       #print "Warning: unmapped/unaligned sequences will not be annotated!"
       pass

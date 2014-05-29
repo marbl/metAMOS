@@ -477,7 +477,7 @@ def getName(step, programName):
    return dispatch.name
 
 def execute(step, programName, settings):
-   if (step < STEP_NAMES.ASSEMBLE or step > STEP_NAMES.ANNOTATE):
+   if ( step not in STEP_NAMES.reverse_mapping.keys()):
       print "Error: unsupported step #%d\n"%(step)
       raise(JobSignalledBreak)
 

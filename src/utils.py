@@ -1153,8 +1153,6 @@ def run_process(settings,command,step=""):
               commandf.close()
 
 def recruitGenomes(settings,query,genomeDir,outDir,stepName, top=1):
-   if not os.path.exists(outDir):
-      run_process(settings, "mkdir -p %s"%(outDir), stepName.title())
    print "recruiting genomes.."
    setFailFast(False)
    run_process(settings, "%s/mgcat -M -r %s -d %s -o %s -p %d"%(settings.MGCAT,query,genomeDir,outDir,settings.threads), stepName.title())

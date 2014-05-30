@@ -30,19 +30,23 @@ FAQs
     Should I trim my input data?
 
 **A**:
-    iMetAMOS supports EA-UTILS as a trimming option, though it is disabled by default. We have found that some assemblers that build-in their own trimming module are hampered by pre-trimming the data. In contrast, assembler that do not have a trimming module can benefit from trimming input sequences. To enable trimming using EA-UTILS, specify -t eautils as an option for runPipeline
- 
+    iMetAMOS supports EA-UTILS as a trimming option, though it is disabled by default. We have found that some assemblers that build-in their own trimming module are hampered by pre-trimming the data. In contrast, assembler that do not have a trimming module can benefit from trimming input sequences. To enable trimming using EA-UTILS, a trimming option can be specified to runPipeline
+
+	.. code-block:: bash
+
+		$ -t eautils
+
 	* We compared assembler performance on trimmed and untrimmed data for the `GAGE-B MiSeq Rhodobacter sphaeroides dataset <http://ccb.jhu.edu/gage_b/datasets/index.html>`_. Overall, the largest corrected N50 was generated using the untrimmed data. The figure below shows assembler performance on untrimmed data
 		.. image:: f1_notrim.png
 
 	* The figure below shows assembler performance on the same dataset after trimming by EA-UTILS
                 .. image:: f1_trim.png
 
-	* On this dataset, the assemblers that benefited were::
+	* On this dataset, the assemblers which had a higher corrected N50 on trimmed data than untrimmed were::
 
                 IDBA-UD, SGA, SparseAssembler, SPAdes, Velvet-SC, and Velvet.
 
-        * Assembler that performed better on un-trimmed data were::
+        * Assembler which had a higher corrected N50 on untrimmed data were::
 
                 ABySS, MaSuRCA, MIRA, Ray, and SOAPdenovo2.
 

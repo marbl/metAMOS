@@ -626,7 +626,8 @@ def Preprocess(input,output):
          for read in lib.reads:
             counter = 1
             rq = open(read.path, 'r')
-            wq = open(read.path.replace("fastq", "renamed.fastq"),'w')
+            newRq = os.path.splitext(read.path)[0]
+            wq = open("%s%srenamed.fastq"%(newRq, os.extsep),'w')
             lines = rq.xreadlines()
             for line in lines:
                seq = lines.next()
@@ -637,7 +638,7 @@ def Preprocess(input,output):
                   header = "lib%dr%d/%d"%(lib.id, counter, 1 if "1.fastq" in read.path else 2)
                else:
                   header = "lib%dr%d"%(lib.id, counter)
-               
+
                wq.write("@%s\n"%(header))
                wq.write("%s"%(seq))
                wq.write("+%s\n"%(header))
@@ -645,14 +646,14 @@ def Preprocess(input,output):
                counter += 1
             rq.close()
             wq.close()
-            read.fname = read.fname.replace("fastq", "renamed.fastq")
-            read.path = read.path.replace("fastq", "renamed.fastq")
+            read.fname = "%s%srenamed.fastq"%(os.path.splitext(read.fname)[0], os.extsep)
+            read.path = "%s%srenamed.fastq"%(newRq, os.extsep)
 
    elif _filter == "pbcr":
       # correct the sequences using self-correction
       # for now, we do not support correction using other libraries, we should in the future though
 
-      if not os.path.exists("%s/pacBioToCA"%(_settings.CA)) or not os.path.exists("%s/blasr"%(_settings.BLASR)):
+      if not os.path.exists("%s/PBcR"%(_settings.CA)) or not os.path.exists("%s/blasr"%(_settings.BLASR)):
          print "*** metAMOS: Error: cannot correct without Celera Assembler and BLASR"
          raise(JobSignalledBreak)
 
@@ -687,13 +688,32 @@ def Preprocess(input,output):
             oldPath = os.environ["PATH"]
             os.environ["PATH"] = _settings.AMOS + os.pathsep + _settings.BLASR + os.pathsep + oldPath
 
-            run_process(_settings, "%s/pacBioToCA -l lib%d -s %s/config/pacbio.blasr.spec -t %d -partitions 100 fastqFile=%s genomeSize=%s longReads=1 ovlThreads=%d merylThreads=%d cnsConcurrency=%d merylMemory=%s ovlStoreMemory=%s"%(_settings.CA, lib.id, _settings.METAMOS_UTILS, _settings.threads, lib.f1.path, genomeSize, _settings.threads, _settings.threads, _settings.threads, availableMem, availableMem), "Preprocess")
-            # subset longest 25X?
+            run_process(_settings, "%s/PBcR -l lib%d -s %s/config/pacbio.blasr.spec -t %d -partitions 100 fastqFile=%s genomeSize=%s longReads=1 ovlThreads=%d merylThreads=%d cnsConcurrency=%d merylMemory=%s ovlMemory=%s ovlStoreMemory=%s"%(_settings.CA, lib.id, _settings.METAMOS_UTILS, _settings.threads, lib.f1.path, genomeSize, _settings.threads, _settings.threads, _settings.threads, availableMem, availableMem, availableMem), "Preprocess")
             # update library format and file names
             lib.f1.path = "%s/Preprocess/out/lib%d.fastq"%(_settings.rundir, lib.id)
             lib.f1.fname = os.path.basename(lib.f1.path)
             lib.format = "fastq"
             lib.offset = "sanger"
+
+            testIn = open("%s/config/asm.spec"%(_settings.METAMOS_UTILS), 'r')
+            testOut = open("%s/Assemble/out/asm.spec"%(_settings.rundir), 'w')
+            for line in testIn.xreadLines():
+               testOut.write(line.strip() + "\n")
+            testIn.close();
+            testOut.write("unitigger=bogart\n")
+            testOut.write("merSie=22\n")
+            testOut.write("ovlErrorRate=0.03\n")
+            testOut.write("cnsErrorRate=0.10\n")
+            testOut.write("cgwErrorRate=0.10\n")
+            testOut.write("utgErrorRate=0.013\n")
+            testOut.write("utgGraphErrorLimit=0\n")
+            testOut.write("utgGraphErrorRate=0.013\n")
+            testOut.write("utgMergeErrorRate=0.02\n")
+            testOut.write("utgMergeErrorLimit=0\n")
+            testOut.write("obtErrorRate=0.03\n")
+            testOut.write("obtErrorLimt=4.5\n")
+            testOut.write("consensus=pbutgcns\n")
+            testOut.close()
             
    elif _filter == "khmer":
       print "*** metAMOS: Not supported yet, stay tuned"

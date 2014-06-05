@@ -1,4 +1,4 @@
-#!python
+#r!python
 
 import os, sys, string, time, BaseHTTPServer, getopt, re, subprocess, webbrowser
 from operator import itemgetter
@@ -502,7 +502,7 @@ def Assemble(input,output):
       frglist = ""
       matedString = ""
       for lib in _readlibs:
-         if not os.path.exists("%s/Preproces/out/lib%d.frg"%(_settings.rundir, lib.id)):
+         if not os.path.exists("%s/Preprocess/out/lib%d.frg"%(_settings.rundir, lib.id)):
             if lib.format == "fastq":
                if lib.mated:
                   matedString = "-insertsize %d %d -%s -mates"%(lib.mean, lib.stdev, "innie" if lib.innie else "outtie") 
@@ -515,7 +515,10 @@ def Assemble(input,output):
                run_process(_settings, "%s/convert-fasta-to-v2.pl -l %s %s -s %s/Preprocess/out/lib%d.seq -q %s/Preprocess/out/lib%d.seq.qual > %s/Preprocess/out/lib%d.frg"%(_settings.CA, lib.sid, matedString, _settings.rundir, lib.id, _settings.rundir, lib.id, _settings.rundir, lib.id),"Assemble")
          frglist += "%s/Preprocess/out/lib%d.frg "%(_settings.rundir, lib.id)
 
-      run_process(_settings, "%s/runCA -p %s -d %s/Assemble/out/ -s %s/config/asm.spec %s %s"%(_settings.CA,_settings.PREFIX,_settings.rundir,_settings.METAMOS_UTILS,"stopAfter=terminator" if _settings.doscaffolding else "stopAfter=utgcns", frglist),"Assemble")
+      specFile="%s/config/asm.spec"%(_settings.METAMOS_UTILS)
+      if os.path.exists("%s/Assemble/out/asm.spec"%(_settings.rundir)):
+         specFile="%s/Assemble/out/asm.spec"%(_settings.rundir)
+      run_process(_settings, "%s/runCA -p %s -d %s/Assemble/out/ -s %s %s %s"%(_settings.CA,_settings.PREFIX,_settings.rundir,specFile,"" if _settings.doscaffolding else "stopAfter=utgcns", frglist),"Assemble")
       #convert CA to AMOS
       run_process(_settings, "%s/gatekeeper -dumpfrg -allreads %s.gkpStore > %s.frg"%(_settings.CA, _settings.PREFIX, _settings.PREFIX),"Assemble")
       if _settings.doscaffolding: 

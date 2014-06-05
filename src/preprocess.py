@@ -626,7 +626,8 @@ def Preprocess(input,output):
          for read in lib.reads:
             counter = 1
             rq = open(read.path, 'r')
-            wq = open(read.path.replace("fastq", "renamed.fastq"),'w')
+            newRq = os.path.splitext(read.path)[0]
+            wq = open("%s%srenamed.fastq"%(newRq, os.extsep),'w')
             lines = rq.xreadlines()
             for line in lines:
                seq = lines.next()
@@ -645,8 +646,8 @@ def Preprocess(input,output):
                counter += 1
             rq.close()
             wq.close()
-            read.fname = read.fname.replace("fastq", "renamed.fastq")
-            read.path = read.path.replace("fastq", "renamed.fastq")
+            read.fname = "%s%srenamed.fastq"%(os.path.splitext(read.fname)[0], os.extsep)
+            read.path = "%s%srenamed.fastq"%(newRq, os.extsep)
 
    elif _filter == "pbcr":
       # correct the sequences using self-correction

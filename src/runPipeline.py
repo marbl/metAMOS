@@ -470,7 +470,7 @@ for o, a in opts:
         for step in a.split(","):
            if (step.lower() in "mapreads"):
               print "Warning: MapReads cannot currently be skipped, re-enabling step!"
-           elif (step.lower() in "assemble"):
+           elif (step.lower() in "assemble" and len(asmcontigs) == 0):
               print "Warning: Assemble step cannot be skipped when no contigs are specified, re-enabling step! Please specify contigs with -c to initPipeline to skip assembly." 
            else:
               skipsteps.add(step)

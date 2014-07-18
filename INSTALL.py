@@ -121,7 +121,7 @@ except:
 OSTYPE="Linux"
 OSVERSION="1"
 MACHINETYPE="x86_64"
-kronaTools = "KronaTools-2.2"
+kronaTools = "KronaTools-2.4"
 
 #identify machine type
 p = subprocess.Popen("echo `uname`", shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

@@ -296,9 +296,21 @@ if 1:
        os.system("tar -C ./Utilities/python -xvf psutil.tar.gz")
        os.system("mv ./Utilities/python/psutil-0.6.1 ./Utilities/python/psutil")
        os.chdir("./Utilities/python/psutil")
+       # dont set static building libs on OSX, sseems to cause compile issues for jellyfish
+       os.environ["CFLAGS"] = oldCFlags
+       os.environ["CPPFLAGS"] = oldCPPFlags
+       os.environ["CXXFLAGS"] = oldCXXFlags
+       os.environ["LDFLAGS"] = oldLDFlags
        os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
        os.chdir("%s"%(METAMOS_ROOT))
        os.system("rm -rf psutil.tar.gz")
+       if OSTYPE == "Darwin":
+          # reset env variables again
+          addEnvironmentVar("CFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("CPPFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("CXXFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("LDFLAGS", " %s "%(addedLDFlags))
+
 if 1:
    fail = 0
    try:
@@ -315,7 +327,18 @@ if 1:
        os.system("unzip ./cython.zip")
        os.system("mv ./cython-master ./Utilities/python/cython")
        os.chdir("./Utilities/python/cython")
+       # dont set static building libs on OSX, sseems to cause compile issues for jellyfish
+       os.environ["CFLAGS"] = oldCFlags
+       os.environ["CPPFLAGS"] = oldCPPFlags
+       os.environ["CXXFLAGS"] = oldCXXFlags
+       os.environ["LDFLAGS"] = oldLDFlags
        os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
+       if OSTYPE == "Darwin":
+          # reset env variables again
+          addEnvironmentVar("CFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("CPPFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("CXXFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("LDFLAGS", " %s "%(addedLDFlags))
        os.chdir(METAMOS_ROOT)
        os.system("rm -rf cython.zip")
 
@@ -344,13 +367,27 @@ if 1:
           if utils.getFromPath("llvm-gcc-4.2", "LLVM GCC"):
              os.system("export CC=llvm-gcc-4.2")
              os.system("export CXX=llvm-g++-4.2")
+             os.environ["CC"]="llvm-gcc-4.2"
+             os.environ["CXX"]="llvm-g++-4.2"
           else:
              print "Warning: Cannot install pysam on your system. Please install LLVM compiler first."
              doInstall=False
        if doInstall:
+          # dont set static building libs on OSX, sseems to cause compile issues for jellyfish
+          os.environ["CFLAGS"] = oldCFlags
+          os.environ["CPPFLAGS"] = oldCPPFlags
+          os.environ["CXXFLAGS"] = oldCXXFlags
+          os.environ["LDFLAGS"] = oldLDFlags
           os.system("python setup.py build_ext --inplace")
           os.system("python setup.py build")
           os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
+          if OSTYPE == "Darwin":
+             # reset env variables again
+             addEnvironmentVar("CFLAGS", " %s "%(addedCFlags))
+             addEnvironmentVar("CPPFLAGS", " %s "%(addedCFlags))
+             addEnvironmentVar("CXXFLAGS", " %s "%(addedCFlags))
+             addEnvironmentVar("LDFLAGS", " %s "%(addedLDFlags))
+
        os.chdir(METAMOS_ROOT)
        os.system("rm -rf pysam.tar.gz")
 
@@ -371,7 +408,17 @@ if 1:
        os.system("tar -C ./Utilities/python -xvf numpy.tar.gz")
        os.system("mv ./Utilities/python/numpy-1.7.1 ./Utilities/python/numpy")
        os.chdir("./Utilities/python/numpy")
+       os.environ["CFLAGS"] = oldCFlags
+       os.environ["CPPFLAGS"] = oldCPPFlags
+       os.environ["CXXFLAGS"] = oldCXXFlags
+       os.environ["LDFLAGS"] = oldLDFlags
        os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
+       if OSTYPE == "Darwin":
+          # reset env variables again
+          addEnvironmentVar("CFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("CPPFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("CXXFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("LDFLAGS", " %s "%(addedLDFlags))
        os.chdir(METAMOS_ROOT)
        os.system("rm -rf numpy.tar.gz")
 
@@ -394,7 +441,16 @@ if 1:
        os.system("tar -C ./Utilities/python -xvf matplotlib.tar.gz")
        os.system("mv ./Utilities/python/matplotlib-1.1.0 ./Utilities/python/matplotlib")
        os.chdir("./Utilities/python/matplotlib")
-       os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
+       os.environ["CFLAGS"] = oldCFlags
+       os.environ["CPPFLAGS"] = oldCPPFlags
+       os.environ["CXXFLAGS"] = oldCXXFlags
+       os.environ["LDFLAGS"] = oldLDFlags
+       if OSTYPE == "Darwin":
+          # reset env variables again
+          addEnvironmentVar("CFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("CPPFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("CXXFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("LDFLAGS", " %s "%(addedLDFlags))
        os.chdir(METAMOS_ROOT)
        os.system("rm -rf matplotlib.tar.gz")
 

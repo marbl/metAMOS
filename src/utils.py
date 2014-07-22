@@ -244,7 +244,7 @@ class Settings:
           if not os.path.exists(_DB_PATH):
               print "Error: cannot find DB directory in %s, was it deleted? oops, it is required to run MetAMOS!"%(_DB_PATH)
               sys.exit(1)
-      else:
+      elsif Settings.rundir != "":
          if "BLASTDB" in os.environ and len(os.environ["BLASTDB"]) != 0:
              _BLASTDB_PATH == os.environ["BLASTDB"]
              if not os.path.exists(_BLASTDB_PATH):

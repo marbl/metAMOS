@@ -661,6 +661,10 @@ def Validate (input_file_names, output_file_name):
       selectedReferences.close()
 
    if not os.path.exists("%s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX)):
+      if bestAssembler == "":
+         bestAssembler = getAsmName(input_file_names[0])
+         bestAssembly = "%s/Assemble/out/%s.asm.contig"%(_settings.rundir, bestAssembler)
+
       selectedAsm = open("%s/Validate/out/%s.asm.selected"%(_settings.rundir, _settings.PREFIX), 'w')
       selectedAsm.write("%s"%(bestAssembler))
       selectedAsm.close()

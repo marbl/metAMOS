@@ -15,6 +15,7 @@ import workflow
 utils.configureEnvironment(utils.INITIAL_UTILS)
 settings = utils.Settings(1, 1, "", "")
 utils.getMachineType()
+settings = utils.initConfig(1, 1, "", "", False, False, False, False, False)
 
 #code to discover frozen binary location
 application_path = ""
@@ -151,7 +152,7 @@ def getFile(inFile, dest):
       inFile = utils.translateToSRAURL(settings, inFile)
       base = os.path.basename(inFile)
       os.system("curl -# -L %s -o %s"%(inFile, base))
-      os.system("%s/cpp%s%s-%s%ssra/bin/fastq-dump --split-3 -O %s %s"%(settings.METAMOS_UTILS, os.sep, settings.OSTYPE, settings.MACHINETYPE, os.sep, os.path.dirname(dest), base))
+      os.system("%s%sfastq-dump --split-3 -O %s %s"%(settings.SRA, os.sep, os.path.dirname(dest), base))
       os.system("rm -rf %s"%(base))
       return
    elif isRemote(inFile):
@@ -355,7 +356,6 @@ else:
     soapf = open("%s/config.txt"%(id),'w')
     soapf.write("max_rd_len=%d\n"%(maxreadlen))
     soapf.close()
-
 
 
 cf = open(id+"/pipeline.ini",'w')

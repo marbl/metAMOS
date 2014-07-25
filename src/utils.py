@@ -105,6 +105,7 @@ class Settings:
    METAMOS_JAVA = ""
 
    FASTQC = ""
+   SRA = ""
    AMOS = ""
    BAMBUS2 = ""
 
@@ -758,6 +759,12 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, classifyUnmapped
        Settings.METAMOS_JAVA  = "%s%sjava:%s"%(Settings.METAMOS_UTILS, os.sep, os.curdir)
        Settings.METAMOS_DOC   = "%s%sdoc"%(Settings.METAMOS_UTILS, os.sep)
 
+    # SRA
+    Settings.SRA = "%s%scpp%s%s-%s%ssra%sbin"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE, os.sep, os.sep)
+    if not os.path.exists(Settings.SRA + os.sep + "srapath"):
+       Settings.SRA = getFromPath("srapath", "SRA")
+    sraMD5 = getMD5Sum(Settings.SRA + os.sep + "srapath")
+
     # FastQC
     Settings.FASTQC = "%s%sFastQC"%(Settings.METAMOSDIR, os.sep)
     if not os.path.exists(Settings.FASTQC + os.sep + "fastqc"):
@@ -989,8 +996,9 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, classifyUnmapped
     mpiMD5 = getMD5Sum(Settings.MPI)
 
     # finally store the configuration 
-    conf = open("%s/pipeline.conf"%(Settings.rundir),'w')
-    if Settings.BINARY_DIST and 1: 
+    if Settings.rundir != "":
+       conf = open("%s/pipeline.conf"%(Settings.rundir),'w')
+       if Settings.BINARY_DIST and 1: 
           prevtmpdirs = []
           try:
               bdf = open("%s/prevruns.tmp"%(application_path),'r')
@@ -1015,46 +1023,47 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, classifyUnmapped
               bdf.write("%s\n"%(sys._MEIPASS))
               bdf.close()
 
-    conf.write("#Configuration summary\n")
-    conf.write("OS:\t\t\t%s\nOS Version:\t\t%s\nMachine:\t\t%s\n"%(Settings.OSTYPE, Settings.OSVERSION, Settings.MACHINETYPE))
-    conf.write("metAMOS main dir:\t%s\nmetAMOS Utilities:\t%s\nmetAMOS Java:\t\t%s\n"%(Settings.METAMOSDIR, Settings.METAMOS_UTILS, Settings.METAMOS_JAVA))
-    conf.write("AMOS:\t\t\t%s\t%s\n"%(Settings.AMOS, amosMD5))
-    conf.write("BAMBUS2:\t\t%s\t%s\n"%(Settings.BAMBUS2, bambusMD5))
-    conf.write("SOAPDENOVO:\t\t\t%s\t%s\n"%(Settings.SOAPDENOVO, soapMD5))
-    conf.write("SOAPDENOVO2:\t\t\t%s\t%s\n"%(Settings.SOAPDENOVO2, soapMD5))
-    conf.write("METAIDBA:\t\t%s\t%s\n"%(Settings.METAIDBA, metaidbaMD5))
-    conf.write("Celera Assembler:\t%s\t%s\n"%(Settings.CA, CAMD5))
-    conf.write("NEWBLER:\t\t%s\t%s\n"%(Settings.NEWBLER, newblerMD5))
-    conf.write("Velvet:\t\t\t%s\t%s\nVelvet-SC:\t\t%s\t%s\n"%(Settings.VELVET, velvetMD5, Settings.VELVET_SC, velvetSCMD5))
-    conf.write("MetaVelvet:\t\t%s\t%s\n"%(Settings.METAVELVET, metaVelvetMD5))
-    conf.write("SparseAssembler:\t%s\t%s\n"%(Settings.SPARSEASSEMBLER, sparseAssemblerMD5))
-    conf.write("metaphylerClassify:\t\t\t%s\t%s\n"%(Settings.METAPHYLER, metaphylerMD5))
-    conf.write("Bowtie:\t\t\t%s\t%s\n"%(Settings.BOWTIE, bowtieMD5))
-    conf.write("Bowtie2:\t\t\t%s\t%s\n"%(Settings.BOWTIE2, bowtie2MD5))
-    conf.write("samtools:\t\t\t%s\t%s\n"%(Settings.SAMTOOLS, samtoolsMD5))
-    conf.write("M-GCAT:\t\t\t%s\t%s\n"%(Settings.MGCAT, mgcatMD5))
-    conf.write("METAGENEMARK:\t\t\t%s\t%s\n"%(Settings.METAGENEMARK, gmhmmpMD5))
-    conf.write("FRAGGENESCAN:\t\t%s\t%s\n"%(Settings.FRAGGENESCAN, fraggenescanMD5))
-    conf.write("PROKKA:\t\t\t%s\t%s\n"%(Settings.PROKKA, prokkaMD5))
-    conf.write("SIGNALP:\t\t\t%s\t%s\n"%(Settings.SIGNALP, signalpMD5))
-    conf.write("FCP:\t\t\t%s\t%s\n"%(Settings.FCP, fcpMD5))
-    conf.write("PHMMER:\t\t\t%s\t%s\n"%(Settings.PHMMER, phmmerMD5))
-    conf.write("PHYMM:\t\t\t%s\t%s\n"%(Settings.PHYMM, phymmMD5))
-    conf.write("BLAST:\t\t\t%s\t%s\n"%(Settings.BLAST, blastMD5))
-    conf.write("PHYLOSIFT:\t\t%s\t%s\n"%(Settings.PHYLOSIFT, phylosiftMD5))
-    conf.write("FASTQC:\t\t\t%s\t%s\n"%(Settings.FASTQC, fastqcMD5))
-    conf.write("EAUTILS:\t\t%s\t%s\n"%(Settings.EAUTILS, eautilsMD5))
-    conf.write("KMERGENIE:\t\t%s\t%s\n"%(Settings.KMERGENIE, kmergenieMD5))
-    conf.write("REPEATOIRE:\t\t%s\t%s\n"%(Settings.REPEATOIRE, repeatoireMD5))
-    conf.write("KRONA:\t\t\t%s\t%s\n"%(Settings.KRONA, kronaMD5))
-    conf.write("LAP:\t\t\t%s\t%s\n"%(Settings.LAP, lapMD5))
-    conf.write("ALE:\t\t\t%s\t%s\n"%(Settings.ALE, aleMD5))
-    conf.write("CGAL:\t\t\t%s\t%s\n"%(Settings.CGAL, cgalMD5))
-    conf.write("REAPR:\t\t\t%s\t%s\n"%(Settings.REAPR, reaprMD5))
-    conf.write("FRCBAM:\t\t\t%s\t%s\n"%(Settings.FRCBAM, frcMD5))
-    conf.write("FREEBAYES:\t\t\t%s\t%s\n"%(Settings.FREEBAYES, freebayesMD5))
-    conf.write("QUAST:\t\t\t%s\t%s\n"%(Settings.QUAST, quastMD5))
-    conf.close()
+       conf.write("#Configuration summary\n")
+       conf.write("OS:\t\t\t%s\nOS Version:\t\t%s\nMachine:\t\t%s\n"%(Settings.OSTYPE, Settings.OSVERSION, Settings.MACHINETYPE))
+       conf.write("metAMOS main dir:\t%s\nmetAMOS Utilities:\t%s\nmetAMOS Java:\t\t%s\n"%(Settings.METAMOSDIR, Settings.METAMOS_UTILS, Settings.METAMOS_JAVA))
+       conf.write("AMOS:\t\t\t%s\t%s\n"%(Settings.AMOS, amosMD5))
+       conf.write("BAMBUS2:\t\t%s\t%s\n"%(Settings.BAMBUS2, bambusMD5))
+       conf.write("SOAPDENOVO:\t\t\t%s\t%s\n"%(Settings.SOAPDENOVO, soapMD5))
+       conf.write("SOAPDENOVO2:\t\t\t%s\t%s\n"%(Settings.SOAPDENOVO2, soapMD5))
+       conf.write("METAIDBA:\t\t%s\t%s\n"%(Settings.METAIDBA, metaidbaMD5))
+       conf.write("Celera Assembler:\t%s\t%s\n"%(Settings.CA, CAMD5))
+       conf.write("NEWBLER:\t\t%s\t%s\n"%(Settings.NEWBLER, newblerMD5))
+       conf.write("Velvet:\t\t\t%s\t%s\nVelvet-SC:\t\t%s\t%s\n"%(Settings.VELVET, velvetMD5, Settings.VELVET_SC, velvetSCMD5))
+       conf.write("MetaVelvet:\t\t%s\t%s\n"%(Settings.METAVELVET, metaVelvetMD5))
+       conf.write("SparseAssembler:\t%s\t%s\n"%(Settings.SPARSEASSEMBLER, sparseAssemblerMD5))
+       conf.write("metaphylerClassify:\t\t\t%s\t%s\n"%(Settings.METAPHYLER, metaphylerMD5))
+       conf.write("Bowtie:\t\t\t%s\t%s\n"%(Settings.BOWTIE, bowtieMD5))
+       conf.write("Bowtie2:\t\t\t%s\t%s\n"%(Settings.BOWTIE2, bowtie2MD5))
+       conf.write("samtools:\t\t\t%s\t%s\n"%(Settings.SAMTOOLS, samtoolsMD5))
+       conf.write("M-GCAT:\t\t\t%s\t%s\n"%(Settings.MGCAT, mgcatMD5))
+       conf.write("METAGENEMARK:\t\t\t%s\t%s\n"%(Settings.METAGENEMARK, gmhmmpMD5))
+       conf.write("FRAGGENESCAN:\t\t%s\t%s\n"%(Settings.FRAGGENESCAN, fraggenescanMD5))
+       conf.write("PROKKA:\t\t\t%s\t%s\n"%(Settings.PROKKA, prokkaMD5))
+       conf.write("SIGNALP:\t\t\t%s\t%s\n"%(Settings.SIGNALP, signalpMD5))
+       conf.write("FCP:\t\t\t%s\t%s\n"%(Settings.FCP, fcpMD5))
+       conf.write("PHMMER:\t\t\t%s\t%s\n"%(Settings.PHMMER, phmmerMD5))
+       conf.write("PHYMM:\t\t\t%s\t%s\n"%(Settings.PHYMM, phymmMD5))
+       conf.write("BLAST:\t\t\t%s\t%s\n"%(Settings.BLAST, blastMD5))
+       conf.write("PHYLOSIFT:\t\t%s\t%s\n"%(Settings.PHYLOSIFT, phylosiftMD5))
+       conf.write("SRA:\t\t\t\t%s\t%s\n"%(Settings.SRA, sraMD5))
+       conf.write("FASTQC:\t\t\t%s\t%s\n"%(Settings.FASTQC, fastqcMD5))
+       conf.write("EAUTILS:\t\t%s\t%s\n"%(Settings.EAUTILS, eautilsMD5))
+       conf.write("KMERGENIE:\t\t%s\t%s\n"%(Settings.KMERGENIE, kmergenieMD5))
+       conf.write("REPEATOIRE:\t\t%s\t%s\n"%(Settings.REPEATOIRE, repeatoireMD5))
+       conf.write("KRONA:\t\t\t%s\t%s\n"%(Settings.KRONA, kronaMD5))
+       conf.write("LAP:\t\t\t%s\t%s\n"%(Settings.LAP, lapMD5))
+       conf.write("ALE:\t\t\t%s\t%s\n"%(Settings.ALE, aleMD5))
+       conf.write("CGAL:\t\t\t%s\t%s\n"%(Settings.CGAL, cgalMD5))
+       conf.write("REAPR:\t\t\t%s\t%s\n"%(Settings.REAPR, reaprMD5))
+       conf.write("FRCBAM:\t\t\t%s\t%s\n"%(Settings.FRCBAM, frcMD5))
+       conf.write("FREEBAYES:\t\t\t%s\t%s\n"%(Settings.FREEBAYES, freebayesMD5))
+       conf.write("QUAST:\t\t\t%s\t%s\n"%(Settings.QUAST, quastMD5))
+       conf.close()
 
     return Settings
 
@@ -1408,8 +1417,7 @@ def translateToSRAURL(settings, name):
    if "DYLD_FALLBACK_LIBRARY_PATH" in os.environ:
       oldDyLD = os.environ["DYLD_FALLBACK_LIBRARY_PATH"]
       del os.environ["DYLD_FALLBACK_LIBRARY_PATH"]
-   command = "%s/cpp%s%s-%s%s/sra/bin"%(settings.METAMOS_UTILS, os.sep, settings.OSTYPE, settings.MACHINETYPE, os.sep)
-   result = getCommandOutput("%s/srapath %s"%(command, name), True)
+   result = getCommandOutput("%s%ssrapath %s"%(Settings.SRA, os.sep, name), True)
    if result == name:
       result = ""
 

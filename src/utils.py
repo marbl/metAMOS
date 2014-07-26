@@ -124,7 +124,7 @@ class Settings:
    KMERGENIE = ""
    R         = ""
 
-   MGCAT = ""
+   PARSNP = ""
 
    METAPHYLER = ""
    BOWTIE = ""
@@ -324,7 +324,7 @@ class Settings:
 
       Settings.FCP           = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.PHMMER        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
-      Settings.MGCAT         = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+      Settings.PARSNP        = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.BLAST         = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
       Settings.PHYLOSIFT     = "%s%sPhyloSift"%(Settings.METAMOSDIR, os.sep)
 
@@ -909,10 +909,10 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, classifyUnmapped
        Settings.PHMMER = getFromPath("phmmer", "PHmmer")
     phmmerMD5 = getMD5Sum(Settings.PHMMER + os.sep + "phmmer")
 
-    Settings.MGCAT = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
-    if not os.path.exists(Settings.MGCAT + os.sep + "mgcat"):
-       Settings.MGCAT = getFromPath("mgcat", "mgcat")
-    mgcatMD5 = getMD5Sum(Settings.MGCAT + os.sep + "mgcat")
+    Settings.PARSNP = "%s%scpp%s%s-%s"%(Settings.METAMOS_UTILS, os.sep, os.sep, Settings.OSTYPE, Settings.MACHINETYPE)
+    if not os.path.exists(Settings.PARSNP + os.sep + "parsnp"):
+       Settings.PARSNP = getFromPath("parsnp", "parsnp")
+    parsnpMD5 = getMD5Sum(Settings.PARSNP + os.sep + "parsnp")
 
     Settings.PHYMM = "%s%sperl%sphymm%s"%(Settings.METAMOS_UTILS, os.sep, os.sep,os.sep)
     if not os.path.exists(Settings.PHYMM + os.sep + "scoreReads.pl"):
@@ -1040,9 +1040,9 @@ def initConfig(kmer, threads, theRundir, taxaLevel, localKrona, classifyUnmapped
        conf.write("Bowtie:\t\t\t%s\t%s\n"%(Settings.BOWTIE, bowtieMD5))
        conf.write("Bowtie2:\t\t\t%s\t%s\n"%(Settings.BOWTIE2, bowtie2MD5))
        conf.write("samtools:\t\t\t%s\t%s\n"%(Settings.SAMTOOLS, samtoolsMD5))
-       conf.write("M-GCAT:\t\t\t%s\t%s\n"%(Settings.MGCAT, mgcatMD5))
        conf.write("METAGENEMARK:\t\t\t%s\t%s\n"%(Settings.METAGENEMARK, gmhmmpMD5))
        conf.write("FRAGGENESCAN:\t\t%s\t%s\n"%(Settings.FRAGGENESCAN, fraggenescanMD5))
+       conf.write("Parsnp:\t\t\t%s\t%s\n"%(Settings.PARSNP, parsnpMD5))
        conf.write("PROKKA:\t\t\t%s\t%s\n"%(Settings.PROKKA, prokkaMD5))
        conf.write("SIGNALP:\t\t\t%s\t%s\n"%(Settings.SIGNALP, signalpMD5))
        conf.write("FCP:\t\t\t%s\t%s\n"%(Settings.FCP, fcpMD5))
@@ -1164,7 +1164,7 @@ def run_process(settings,command,step=""):
 def recruitGenomes(settings,query,genomeDir,outDir,stepName, top=1):
    print "recruiting genomes.."
    setFailFast(False)
-   run_process(settings, "%s/mgcat -M -r %s -d %s -o %s -p %d"%(settings.MGCAT,query,genomeDir,outDir,settings.threads), stepName.title())
+   run_process(settings, "%s/parsnp -M -q %s -d %s -o %s -p %d"%(settings.PARSNP,query,genomeDir,outDir,settings.threads), stepName.title())
    setFailFast(True)
 
    gtr = []

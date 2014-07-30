@@ -39,7 +39,7 @@ And here is a current list of required packages/libs installed by metAMOS:
     * Cython
     * matplolib (1.3.0, newer versions may not work)
     * NumPy
-    * psutil
+    * psutil (0.6.1, newer versions may not work)
     * PySam
     * setuptools
 

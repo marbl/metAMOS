@@ -635,7 +635,7 @@ def Preprocess(input,output):
                qlt = lines.next()
                header = ""
                if lib.mated:
-                  header = "lib%dr%d/%d"%(lib.id, counter, 1 if "1.fastq" in read.path else 2)
+                  header = "lib%dr%d/%d"%(lib.id, counter, 1 if lib.f1.fname in read.path else 2)
                else:
                   header = "lib%dr%d"%(lib.id, counter)
                

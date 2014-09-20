@@ -32,7 +32,7 @@ def init(reads, skipsteps, cls):
          _mated = True
          break
 
-@follows(Abundance)
+@follows(Classify)
 @posttask(touch_file("%s/Logs/propagate.ok"%(_settings.rundir)))
 @files("%s/Classify/out/%s.annots"%(_settings.rundir, _settings.PREFIX),"%s/Logs/propagate.ok"%(_settings.rundir))
 def Propagate(input,output):

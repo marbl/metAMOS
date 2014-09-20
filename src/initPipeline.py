@@ -183,7 +183,7 @@ availableWorkflows = dict()
 for wf in availableWf:
    availableWorkflows[wf.name] = wf
 
-allsteps = ["Preprocess","Assemble","Validate","MultiAlign","FindORFS","FindRepeats","Abundance","Classify","Benchmark","FunctionalAnnotation","Scaffold","Propagate","FindScaffoldORFS","Bin","Postprocess"]
+allsteps = ["Preprocess","Assemble","Validate","MultiAlign","FindORFS","FindRepeats","Abundance","Classify","ClassifyReads","Benchmark","FunctionalAnnotation","Scaffold","Propagate","FindScaffoldORFS","Bin","Postprocess"]
 
 today = datetime.datetime.now()
 #todaytime = date.fromtimestamp(time.time())

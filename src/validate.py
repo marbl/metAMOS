@@ -204,6 +204,7 @@ def runREAPR(pairedFiles, prefix, assembly, min, max, genomeSize):
       reapr_score = minScore()
    return reapr_score
 
+@follows(MapReads)
 @posttask(touch_file("%s/Logs/validate.ok"%(_settings.rundir)))
 @merge(FindORFS, ["%s/Logs/validate.ok"%(_settings.rundir)])
 def Validate (input_file_names, output_file_name):

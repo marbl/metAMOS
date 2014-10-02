@@ -15,6 +15,7 @@ class Workflow:
    name = ""
    programList = set()
    super = []
+   stepList = []
    readlibs = []
    commandList = ""
    path = set()
@@ -26,6 +27,7 @@ class Workflow:
       self.programList = set()
       self.readlibs = []
       self.asmcontigs = []
+      self.stepList = ["Preprocess","Assemble","MapReads","FindORFS","Classify","Abundance","Scaffold","Propagate","Bin","Postprocess"]
       self.commandList = ""
       self.isValid = False
       self.isModifiable = False
@@ -91,6 +93,14 @@ class Workflow:
             splitLine = line.replace("programs:", "").strip().split()
             for prog in splitLine:
                self.programList.add(prog.lower())
+
+         if "steps:" in line:
+            self.stepList = []
+            splitLine = line.replace("steps:", "").strip().split()
+            for step in splitLine:
+               if step not in stepList:
+                   self.stepList.append(step.lower())
+
          elif "md5:" in line:
             self.md5 = line.replace("md5:", "").strip()
          elif "inherit:" in line:

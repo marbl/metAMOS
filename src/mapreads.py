@@ -530,6 +530,7 @@ def MapReads(input,output):
    #check if sucessfully completed   
    _settings.PREFIX = originalPrefix
 
+@follows(Assemble)
 @posttask(touch_file("%s/Logs/mapreads.ok"%(_settings.rundir)))
 @posttask(touch_file("%s/Assemble/out/mapreads.success"%(_settings.rundir)))
 @merge(MapReads, ["%s/Logs/mapreads.ok"%(_settings.rundir)])

@@ -346,6 +346,7 @@ def findFastaORFs(orf, contigs, outputFNA, outputFAA, outputCVG, outputMAP, min_
        return 1
 
 # warning: this is not thread safe so cannot be run in parallel
+@follows(Assemble)
 @posttask(touch_file("%s/Logs/findorfs.ok"%(_settings.rundir)))
 @transform(SplitForORFs, suffix(".contig.cvg"), ".faa")
 def FindORFS(input,output):

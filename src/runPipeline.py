@@ -44,6 +44,7 @@ from task import JobSignalledBreak
 skipsteps = set()
 skipsteps.add("FindRepeats")
 isolate_genome = False
+reads_only = False
 userKmerSupplied = False
 asmScores = "%d"%(utils.SCORE_TYPE.LAP)
 userScoresSupplied = False
@@ -259,6 +260,7 @@ supported_abundance = ["metaphyler"]
 supported_aligners = ["mgcat"]
 supported_classifiers = ["fcp","phylosift","phmmer","blast",\
                              "metaphyler", "phymm"]
+supported_read_classifiers = ["fcp","phylosift","kraken"]
 supported_classifiers.extend(generic.getSupportedList(utils.INITIAL_UTILS, utils.STEP_NAMES.CLASSIFY))
 supported_validators = ["reapr", "orf", "lap", "ale", "quast", "frcbam", "freebayes", "cgal", "n50"]
 supported_fannotate = ["blast"]
@@ -269,6 +271,7 @@ supported_programs["assemble"] = supported_assemblers
 supported_programs["mapreads"] = supported_mappers
 supported_programs["abundance"] = supported_abundance
 supported_programs["classify"] = supported_classifiers
+supported_programs["classifyreads"] = supported_read_classifiers
 supported_programs["fannotate"] = supported_fannotate
 supported_programs["scaffold"] = supported_scaffolders
 supported_programs["multialign"] = supported_aligners
@@ -283,6 +286,7 @@ selected_programs["findorfs"] = "fraggenescan"
 selected_programs["mapreads"] = "bowtie"
 selected_programs["abundance"] = "metaphyler"
 selected_programs["classify"] = "kraken"
+selected_programs["classifyreads"] = "kraken"
 selected_programs["fannotate"] = "blast"
 selected_programs["scaffold"] = "bambus2"
 selected_programs["multialign"] = "mgcat"
@@ -291,7 +295,7 @@ selected_programs["validate"] = "lap"
 always_run_programs = ["krona"]
 
 
-allsteps = ["Preprocess","Assemble","MapReads","MultiAlign","FindORFS","FindRepeats","Abundance","Classify",\
+allsteps = ["Preprocess","Assemble","MapReads","MultiAlign","FindORFS","FindRepeats","Abundance","Classify","ClassifyReads",\
                 "FunctionalAnnotation","Scaffold","FindScaffoldORFS","Propagate","Bin","Postprocess"]
 
 ## Need comments here and further down
@@ -380,6 +384,18 @@ if wfName != "":
        print str(err) # will print something like "option -a not recognized"
        usage()
        sys.exit(2)
+
+rulers = []
+if 1:
+   #parse frag/libs out of pipeline.ini out of rundir
+   availableRulers = ruler.getSupportedRulers("%s/rulers"%(utils.INITIAL_UTILS), True)
+   availableRulers.extend(ruler.getSupportedRulers(os.getcwd(), True))
+   availableRulers_dict = dict()
+   for rl in availableRulers:
+      try:
+          availableRulers_dict[rl.step].append(rl)
+      except KeyError:
+          availableRulers_dict[rl.step] = [rl]
 
 # finally reload any commands we had
 pip = workflow.Workflow("pipeline", settings.rundir + os.sep)
@@ -907,6 +923,7 @@ if __name__ == "__main__":
     import findreps
     import abundance
     import classify
+    import classifyreads
     import fannotate
     import scaffold
     import findscforfs
@@ -918,12 +935,13 @@ if __name__ == "__main__":
     preprocess.init(readlibs, asmcontigs, skipsteps, selected_programs["assemble"], run_fastqc,selected_programs["preprocess"])
     assemble.init(readlibs, skipsteps, selected_programs["assemble"], asmcontigs, (userKmerSupplied == False and isolate_genome))
     mapreads.init(readlibs, skipsteps, selected_programs["mapreads"], savebtidx,ctgbpcov,lowmem)
-    benchmark.init(readlibs, skipsteps)
+    benchmark.init(readlibs, skipsteps,availableRulers_dict["classifyreads"])
     validate.init(readlibs, skipsteps, selected_programs["validate"], asmScores)
     findorfs.init(readlibs, skipsteps, selected_programs["findorfs"], min_ctg_len, min_ctg_cvg,read_orfs)
     findreps.init(readlibs, skipsteps)
     multialign.init(readlibs, skipsteps, forcesteps, selected_programs["multialign"],refgenomes)
     classify.init(readlibs, skipsteps, selected_programs["classify"], nofcpblast)
+    classifyreads.init(readlibs, skipsteps, selected_programs["classifyreads"],nofcpblast)
     fannotate.init(skipsteps)
     abundance.init(readlibs, skipsteps, forcesteps, selected_programs["classify"])
     scaffold.init(readlibs, skipsteps, retainBank)
@@ -951,7 +969,10 @@ if __name__ == "__main__":
        tasks_to_run.append("postprocess.Postprocess")
        #pipeline_printout(sys.stdout,tasks_to_run,verbose=2)                                                                                                                                      
 
-       pipeline_printout(sys.stdout,[preprocess.Preprocess,assemble.Assemble, \
+       if len(wf.stepList) != 0:
+           pipeline_printout(sys.stdout,wf.stepList,verbose=1)
+       else:
+           pipeline_printout(sys.stdout,[preprocess.Preprocess,assemble.Assemble, \
                          mapreads.MapReads, \
                          findorfs.FindORFS, findreps.FindRepeats, classify.Classify, \
                          abundance.Abundance, fannotate.FunctionalAnnotation, scaffold.Scaffold, \
@@ -977,8 +998,10 @@ if __name__ == "__main__":
                forcetasks.append("findorfs.FindORFS")
 
        #pipeline_run(tasks_to_run,forcedtorun_tasks=forcesteps,verbose=2)                                                                                                                         
-
-       pipeline_run([preprocess.Preprocess, assemble.Assemble,findorfs.FindORFS, \
+       if len(wf.stepList) != 0:
+           pipeline_run(wf.stepList,verbose=1)
+       else:
+           pipeline_run([preprocess.Preprocess, assemble.Assemble,findorfs.FindORFS, \
                     mapreads.MapReads, \
                     findreps.FindRepeats, classify.Classify, abundance.Abundance, \
                     fannotate.FunctionalAnnotation, scaffold.Scaffold, findscforfs.FindScaffoldORFS, \

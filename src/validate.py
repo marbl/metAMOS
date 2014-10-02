@@ -559,9 +559,15 @@ def Validate (input_file_names, output_file_name):
       bestAssemblers = dict()
       bestAssemblies = dict()
 
+      # check we didn't eliminate everyone
       for type in validationScores:
          for asm in validationScores[type]:
             if len(candidates) == 0 or (asm in candidates and candidates[asm] >= minNumToQualify):
+               numCandidates = numCandidates + 1
+
+      for type in validationScores:
+         for asm in validationScores[type]:
+            if len(candidates) == 0 or numCandidates == 0 or  (asm in candidates and candidates[asm] >= minNumToQualify):
                if type not in bestScores or float(validationScores[type][asm]) > bestScores[type]:
                   bestScores[type] = float(validationScores[type][asm])
                   bestAssemblers[type] = asm

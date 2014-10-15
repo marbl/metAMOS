@@ -245,8 +245,8 @@ class GenericProgram:
                print "Warning: selected assembler %s only supports a maximum of %d libs, not using all libraries"%(self.name, self.maxLibs)
                break
 
-            run_process(_settings, "head -n 4 %s/Preprocess/out/lib%d.%s > %s/Preprocess/out/tmp.%s"%(_settings.rundir, lib.id, suffix, _settings.rundir, suffix), STEP_NAMES.reverse_mapping[self.stepName].title())
-            libReadLen = getCommandOutput("java -cp %s SizeFasta %s/Preprocess/out/tmp.%s | head -1 | awk '{print $NF}'"%(_settings.METAMOS_JAVA, _settings.rundir, suffix), False)
+            run_process(_settings, "head -n 400 %s/Preprocess/out/lib%d.%s > %s/Preprocess/out/tmp.%s"%(_settings.rundir, lib.id, suffix, _settings.rundir, suffix), STEP_NAMES.reverse_mapping[self.stepName].title())
+            libReadLen = getCommandOutput("java -cp %s SizeFasta %s/Preprocess/out/tmp.%s | awk -v MAX=0 '{if ($NF > MAX) { MAX = $NF; } } END {print MAX}'"%(_settings.METAMOS_JAVA, _settings.rundir, suffix), False)
             run_process(_settings, "rm -f %s/Preprocess/out/tmp.%s"%(_settings.rundir, suffix), STEP_NAMES.reverse_mapping[self.stepName].title())
             if (int(libReadLen) < self.readLen):
                self.readLen = int(libReadLen)

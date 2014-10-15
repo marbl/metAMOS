@@ -255,8 +255,8 @@ def SplitAssemblers(input_file_name, output_files):
          fileList = open("%s/Assemble/out/%s.kmergenie.in"%(_settings.rundir, _settings.PREFIX),'w')
          maxK = 71
          for lib in _readlibs:
-            run_process(_settings, "head -n 4 %s/Preprocess/out/lib%d.fastq > %s/Assemble/out/tmp.fastq"%(_settings.rundir, lib.id, _settings.rundir), "Assemble")
-            readLen = getCommandOutput("java -cp %s SizeFasta %s/Assemble/out/tmp.fastq |awk '{print $NF}'"%(_settings.METAMOS_JAVA, _settings.rundir), False)
+            run_process(_settings, "head -n 400 %s/Preprocess/out/lib%d.fastq > %s/Assemble/out/tmp.fastq"%(_settings.rundir, lib.id, _settings.rundir), "Assemble")
+            readLen = getCommandOutput("java -cp %s SizeFasta %s/Assemble/out/tmp.fastq | awk -v MAX=0 '{if ($NF > MAX) { MAX = $NF; } } END {print MAX}'"%(_settings.METAMOS_JAVA, _settings.rundir), False)
             run_process(_settings, "rm %s/Assemble/out/tmp.fastq"%(_settings.rundir), "Assemble")
             if int(readLen) > maxK:
                maxK = int(readLen)

@@ -149,14 +149,14 @@ def runVelvet(velvetPath, name):
 
    # make symlinks
    run_process(_settings, "rm %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.PREFIX), "Assemble")
-   run_process(_settings, "ln %s/Assemble/out/velvet_asm.afg %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
+   run_process(_settings, "cp %s/Assemble/out/velvet_asm.afg %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
    run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")
 
    if _settings.doscaffolding:
       run_process(_settings, "java -cp %s SplitFastaByLetter %s/Assemble/out/contigs.fa NNN > %s/Assemble/out/%s.asm.contig"%(_settings.METAMOS_JAVA, _settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
-      run_process(_settings, "ln %s/Assemble/out/contigs.fa %s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
+      run_process(_settings, "cp %s/Assemble/out/contigs.fa %s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
    else:
-      run_process(_settings, "ln %s/Assemble/out/contigs.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
+      run_process(_settings, "cp %s/Assemble/out/contigs.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
 
 
 def runSparseAssembler(sparsePath, name):
@@ -200,7 +200,7 @@ def runSparseAssembler(sparsePath, name):
 
    # create symlinks
    run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")
-   run_process(_settings, "ln %s/Assemble/out/Contigs.txt %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
+   run_process(_settings, "cp %s/Assemble/out/Contigs.txt %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
 
 def runMetaVelvet(velvetPath, metavelvetPath, name):
    # check for metavelvet
@@ -235,13 +235,13 @@ def runMetaVelvet(velvetPath, metavelvetPath, name):
 
    # make symlinks
    run_process(_settings, "rm %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.PREFIX), "Assemble")
-   run_process(_settings, "ln %s/Assemble/out/meta-velvetg.asm.afg %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
+   run_process(_settings, "cp %s/Assemble/out/meta-velvetg.asm.afg %s/Assemble/out/%s.afg"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
    run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")
    if _settings.doscaffolding:
       run_process(_settings, "java -cp %s SplitFastaByLetter %s/Assemble/out/meta-velvetg.contigs.fa NNN > %s/Assemble/out/%s.asm.contig"%(_settings.METAMOS_JAVA, _settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
-      run_process(_settings, "ln %s/Assemble/out/meta-velvetg.contigs.fa %s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
+      run_process(_settings, "cp %s/Assemble/out/meta-velvetg.contigs.fa %s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
    else:
-      run_process(_settings, "ln %s/Assemble/out/meta-velvetg.contigs.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
+      run_process(_settings, "cp %s/Assemble/out/meta-velvetg.contigs.fa %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX), "Assemble")
 
 @follows(Preprocess)
 @split("%s/Preprocess/out/preprocess.success"%(_settings.rundir), "%s/Assemble/out/*.run"%(_settings.rundir))
@@ -482,9 +482,9 @@ def Assemble(input,output):
     
       # make symlink for subsequent steps
       run_process(_settings, "rm %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.PREFIX),"Assemble")
-      run_process(_settings, "ln %s/Assemble/out/assembly/454AllContigs.fna %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
+      run_process(_settings, "cp %s/Assemble/out/assembly/454AllContigs.fna %s/Assemble/out/%s.asm.contig"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
       if _settings.doscaffolding and mated == True:
-          run_process(_settings, "ln %s/Assemble/out/assembly/454Scaffolds.fna %s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
+          run_process(_settings, "cp %s/Assemble/out/assembly/454Scaffolds.fna %s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.rundir, _settings.PREFIX),"Assemble")
 
    elif asmName == "amos":
       run_process(_settings, "rm -rf %s/Assemble/in/%s.bnk"%(_settings.rundir, _settings.PREFIX), "Assemble")

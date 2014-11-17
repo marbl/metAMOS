@@ -589,7 +589,8 @@ if not os.path.exists("./FastQC"):
         os.system("curl -L http://www.bioinformatics.babraham.ac.uk/projects/fastqc/%s -o %s" % (archive,archive))
         os.system("unzip %s" % archive)
         os.system("rm %s" % archive)
-        os.system("chmod u+x FastQC/fastqc")
+        os.system("chmod a+rx FastQC/fastqc")
+        os.system("chmod -R a+rX FastQC/")
         
 if not os.path.exists("./Utilities/DB/uniprot_sprot.fasta"):
     if "uniprot" in packagesToInstall:
@@ -1124,7 +1125,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              elif OSTYPE == "Linux":
                 os.system("curl -L ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux.tbl2asn.gz -o tbl2asn.gz")
              os.system("gunzip tbl2asn.gz")
-             os.system("chmod ug+x tbl2asn")
+             os.system("chmod a+rx tbl2asn")
              os.system("mv tbl2asn ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
              os.system("rm tbl2asn.gz")
 
@@ -1351,7 +1352,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              if GCC_VERSION >= 4.8:
                 os.system("mv configure configure.original")
                 os.system("cat configure.original |sed s/\-Werror//g > configure")
-                os.system("chmod ug+x configure")
+                os.system("chmod a+rx configure")
 
              os.system("./configure --enable-maxk=96 --prefix=`pwd`/build")
              os.system("make install")
@@ -1637,7 +1638,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
           testOut.close()
 
           os.system("export CC=`which gcc` && sh install.sh force")
-          os.system("chmod ug+x third_party/smalt_x86_64")
+          os.system("chmod ugo+rx third_party/smalt_x86_64")
           os.chdir("%s"%(METAMOS_ROOT))
 
           if os.path.exists("./Utilities/cpp%s%s-%s%sREAPR/lib"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):

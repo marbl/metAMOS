@@ -1738,7 +1738,7 @@ if "deprecated" in enabledWorkflows or manual:
         else:
            print "Glimmer-MG not found, optional for FindORFS step. Caution, this will take approx. 24 hours to complete, including Phymm download & install. download & install now?"
            dl = raw_input("Enter Y/N: ")
-        if (dl == 'y' or dl == 'Y') or not nodbs:
+        if (dl == 'y' or dl == 'Y') and not nodbs:
             archive = "glimmer-mg-0.3.1.tar.gz"
             os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/%s -o %s" %(archive, archive))
             os.system("tar -C ./Utilities/ -xvf %s" % archive)

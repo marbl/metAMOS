@@ -1742,7 +1742,7 @@ if "deprecated" in enabledWorkflows or manual:
         else:
            print "Glimmer-MG not found, optional for FindORFS step. Caution, this will take approx. 24 hours to complete, including Phymm download & install. download & install now?"
            dl = raw_input("Enter Y/N: ")
-        if (dl == 'y' or dl == 'Y') or not nodbs:
+        if (dl == 'y' or dl == 'Y') and not nodbs:
             print "Glimmer-MG support is deprecated within metAMOS and is no longer supported. You can still run the installation but will have to use Glimmer-MG outside of metAMOS. Are you sure you want to install?"
             dl = raw_input("Enter Y/N: ")
             if (dl == 'y' or dl == 'Y') or not nodbs:

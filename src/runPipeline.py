@@ -788,9 +788,10 @@ asmfiles = []
 
 for lib in readlibs:
     if "Assemble" in forcesteps:
-        utils.run_process(settings, \
-           "touch %s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id),\
-           "RunPipeline")
+        if os.path.exists("%s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id)):
+           utils.run_process(settings, \
+              "touch %s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id),\
+              "RunPipeline")
     asmfiles.append("%s/Preprocess/out/lib%d.seq"%(settings.rundir,lib.id))
 
 if "MapReads" in forcesteps:

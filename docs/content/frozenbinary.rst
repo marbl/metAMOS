@@ -79,5 +79,15 @@ The frozen binary is actually a collection of programs that extracts/runs/cleans
 
 If your system is missing all of the above, does not have sufficient space, or is missing write-premissions, runPipeline will not be able to extract itself and will report: INTERNAL ERROR: cannot create temporary directory!. The extracted runPipeline requires at least 4GB of free temporary disk space. You will get a "No DBs found ERROR!" if you do not download any DBs. The DB dir needs to be placed inside of the frozen binary install dir. 
 
+If you encouter the messages:
+.. code-block:: bash
+
+    Warning: Cannot determine OS, defaulting to Linux
+    Warning: Cannot determine OS version, defaulting to 0.0
+    Warning: Cannot determine system type, defaulting to x86_64
+    sh: /tmp/_MEIdaoUk6/lib/libc.so.6: version GLIBC_2.11' not found (required by sh) 
+
+Then your OS uses a newer version of the compiler than supported by the frozen binary. In this case, you must follow the instructions to install metAMOS from source.
+
 **Note: please use caution! this binaries eat up disk space quickly. Please ensure you have ample free space (100GB+) before download & use.** 
 

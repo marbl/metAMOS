@@ -80,6 +80,7 @@ The frozen binary is actually a collection of programs that extracts/runs/cleans
 If your system is missing all of the above, does not have sufficient space, or is missing write-premissions, runPipeline will not be able to extract itself and will report: INTERNAL ERROR: cannot create temporary directory!. The extracted runPipeline requires at least 4GB of free temporary disk space. You will get a "No DBs found ERROR!" if you do not download any DBs. The DB dir needs to be placed inside of the frozen binary install dir. 
 
 If you encouter the messages:
+
 .. code-block:: bash
 
     Warning: Cannot determine OS, defaulting to Linux

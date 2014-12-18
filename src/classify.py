@@ -230,10 +230,25 @@ def parallelWrapper(params):
       print "Other error in thread %d, quitting\n"%(jobID)
       return result
 
-@follows(FindRepeats)
-@posttask(touch_file("%s/Logs/annotate.ok"%(_settings.rundir)))
-@files("%s/Classify/in/%s.faa"%(_settings.rundir,_settings.PREFIX),"%s/Classify/out/%s.hits"%(_settings.rundir,_settings.PREFIX))
+@follows(Preprocess)
+@split("%s/Preprocess/out/preprocess.success"%(_settings.rundir), "%s/Classify/out/*.run"%(_settings.rundir))
+def SplitClassifiers(input_file_name, output_files):
+   if "Classify" in _skipsteps or "classify" in _skipsteps:
+      run_process(_settings, "touch %s/Logs/classify.skip"%(_settings.rundir), "Classify")
+      return 0
+   classifiers = set(_classifiers.split(","))
+   for classifier in classifiers:
+        if not os.path.exists("%s/Classify/out/%s.failed"%(_settings.rundir, classifier)) and not os.path.exists("%s/Classify/out/%s.annots"%(_settings.rundir, classifier)):
+            run_process(_settings, "touch %s/Classify/out/%s.run"%(_settings.rundir, classifier), "Classify")
+
+
+
+#@follows(FindRepeats)
+#@posttask(touch_file("%s/Logs/annotate.ok"%(_settings.rundir)))
+#@files("%s/Classify/in/%s.faa"%(_settings.rundir,_settings.PREFIX),"%s/Classify/out/%s.hits"%(_settings.rundir,_settings.PREFIX))
+@transform(SplitClassifiers, suffix(".run"), ".annots")
 def Classify(input,output):
+   setFailFast(False)
    if "Classify" in _skipsteps or _cls == None:
       run_process(_settings, "touch %s/Logs/annotate.skip"%(_settings.rundir), "Classify")
       run_process(_settings, "touch %s/Classify/out/%s.hits"%(_settings.rundir, _settings.PREFIX), "Classify")

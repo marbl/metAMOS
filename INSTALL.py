@@ -121,7 +121,7 @@ except:
 OSTYPE="Linux"
 OSVERSION="1"
 MACHINETYPE="x86_64"
-kronaTools = "KronaTools-2.2"
+kronaTools = "KronaTools-2.4"
 
 #identify machine type
 p = subprocess.Popen("echo `uname`", shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -296,9 +296,21 @@ if 1:
        os.system("tar -C ./Utilities/python -xvf psutil.tar.gz")
        os.system("mv ./Utilities/python/psutil-0.6.1 ./Utilities/python/psutil")
        os.chdir("./Utilities/python/psutil")
+       # dont set static building libs on OSX, sseems to cause compile issues for jellyfish
+       os.environ["CFLAGS"] = oldCFlags
+       os.environ["CPPFLAGS"] = oldCPPFlags
+       os.environ["CXXFLAGS"] = oldCXXFlags
+       os.environ["LDFLAGS"] = oldLDFlags
        os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
        os.chdir("%s"%(METAMOS_ROOT))
        os.system("rm -rf psutil.tar.gz")
+       if OSTYPE == "Darwin":
+          # reset env variables again
+          addEnvironmentVar("CFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("CPPFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("CXXFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("LDFLAGS", " %s "%(addedLDFlags))
+
 if 1:
    fail = 0
    try:
@@ -315,7 +327,18 @@ if 1:
        os.system("unzip ./cython.zip")
        os.system("mv ./cython-master ./Utilities/python/cython")
        os.chdir("./Utilities/python/cython")
+       # dont set static building libs on OSX, sseems to cause compile issues for jellyfish
+       os.environ["CFLAGS"] = oldCFlags
+       os.environ["CPPFLAGS"] = oldCPPFlags
+       os.environ["CXXFLAGS"] = oldCXXFlags
+       os.environ["LDFLAGS"] = oldLDFlags
        os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
+       if OSTYPE == "Darwin":
+          # reset env variables again
+          addEnvironmentVar("CFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("CPPFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("CXXFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("LDFLAGS", " %s "%(addedLDFlags))
        os.chdir(METAMOS_ROOT)
        os.system("rm -rf cython.zip")
 
@@ -344,13 +367,27 @@ if 1:
           if utils.getFromPath("llvm-gcc-4.2", "LLVM GCC"):
              os.system("export CC=llvm-gcc-4.2")
              os.system("export CXX=llvm-g++-4.2")
+             os.environ["CC"]="llvm-gcc-4.2"
+             os.environ["CXX"]="llvm-g++-4.2"
           else:
              print "Warning: Cannot install pysam on your system. Please install LLVM compiler first."
              doInstall=False
        if doInstall:
+          # dont set static building libs on OSX, sseems to cause compile issues for jellyfish
+          os.environ["CFLAGS"] = oldCFlags
+          os.environ["CPPFLAGS"] = oldCPPFlags
+          os.environ["CXXFLAGS"] = oldCXXFlags
+          os.environ["LDFLAGS"] = oldLDFlags
           os.system("python setup.py build_ext --inplace")
           os.system("python setup.py build")
           os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
+          if OSTYPE == "Darwin":
+             # reset env variables again
+             addEnvironmentVar("CFLAGS", " %s "%(addedCFlags))
+             addEnvironmentVar("CPPFLAGS", " %s "%(addedCFlags))
+             addEnvironmentVar("CXXFLAGS", " %s "%(addedCFlags))
+             addEnvironmentVar("LDFLAGS", " %s "%(addedLDFlags))
+
        os.chdir(METAMOS_ROOT)
        os.system("rm -rf pysam.tar.gz")
 
@@ -371,7 +408,17 @@ if 1:
        os.system("tar -C ./Utilities/python -xvf numpy.tar.gz")
        os.system("mv ./Utilities/python/numpy-1.7.1 ./Utilities/python/numpy")
        os.chdir("./Utilities/python/numpy")
+       os.environ["CFLAGS"] = oldCFlags
+       os.environ["CPPFLAGS"] = oldCPPFlags
+       os.environ["CXXFLAGS"] = oldCXXFlags
+       os.environ["LDFLAGS"] = oldLDFlags
        os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
+       if OSTYPE == "Darwin":
+          # reset env variables again
+          addEnvironmentVar("CFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("CPPFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("CXXFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("LDFLAGS", " %s "%(addedLDFlags))
        os.chdir(METAMOS_ROOT)
        os.system("rm -rf numpy.tar.gz")
 
@@ -394,7 +441,16 @@ if 1:
        os.system("tar -C ./Utilities/python -xvf matplotlib.tar.gz")
        os.system("mv ./Utilities/python/matplotlib-1.1.0 ./Utilities/python/matplotlib")
        os.chdir("./Utilities/python/matplotlib")
-       os.system("python setup.py install --home=%spython"%(utils.INITIAL_UTILS+os.sep))
+       os.environ["CFLAGS"] = oldCFlags
+       os.environ["CPPFLAGS"] = oldCPPFlags
+       os.environ["CXXFLAGS"] = oldCXXFlags
+       os.environ["LDFLAGS"] = oldLDFlags
+       if OSTYPE == "Darwin":
+          # reset env variables again
+          addEnvironmentVar("CFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("CPPFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("CXXFLAGS", " %s "%(addedCFlags))
+          addEnvironmentVar("LDFLAGS", " %s "%(addedLDFlags))
        os.chdir(METAMOS_ROOT)
        os.system("rm -rf matplotlib.tar.gz")
 
@@ -537,7 +593,8 @@ if not os.path.exists("./FastQC"):
         os.system("curl -L http://www.bioinformatics.babraham.ac.uk/projects/fastqc/%s -o %s" % (archive,archive))
         os.system("unzip %s" % archive)
         os.system("rm %s" % archive)
-        os.system("chmod u+x FastQC/fastqc")
+        os.system("chmod a+rx FastQC/fastqc")
+        os.system("chmod -R a+rX FastQC")
         
 if not os.path.exists("./Utilities/DB/uniprot_sprot.fasta"):
     if "uniprot" in packagesToInstall:
@@ -1072,7 +1129,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              elif OSTYPE == "Linux":
                 os.system("curl -L ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux.tbl2asn.gz -o tbl2asn.gz")
              os.system("gunzip tbl2asn.gz")
-             os.system("chmod ug+x tbl2asn")
+             os.system("chmod a+rx tbl2asn")
              os.system("mv tbl2asn ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
              os.system("rm tbl2asn.gz")
 
@@ -1299,7 +1356,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              if GCC_VERSION >= 4.8:
                 os.system("mv configure configure.original")
                 os.system("cat configure.original |sed s/\-Werror//g > configure")
-                os.system("chmod ug+x configure")
+                os.system("chmod a+rx configure")
 
              os.system("./configure --enable-maxk=96 --prefix=`pwd`/build")
              os.system("make install")
@@ -1585,7 +1642,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
           testOut.close()
 
           os.system("export CC=`which gcc` && sh install.sh force")
-          os.system("chmod ug+x third_party/smalt_x86_64")
+          os.system("chmod a+rx third_party/smalt_x86_64")
           os.chdir("%s"%(METAMOS_ROOT))
 
           if os.path.exists("./Utilities/cpp%s%s-%s%sREAPR/lib"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
@@ -1685,7 +1742,7 @@ if "deprecated" in enabledWorkflows or manual:
         else:
            print "Glimmer-MG not found, optional for FindORFS step. Caution, this will take approx. 24 hours to complete, including Phymm download & install. download & install now?"
            dl = raw_input("Enter Y/N: ")
-        if (dl == 'y' or dl == 'Y') or not nodbs:
+        if (dl == 'y' or dl == 'Y') and not nodbs:
             print "Glimmer-MG support is deprecated within metAMOS and is no longer supported. You can still run the installation but will have to use Glimmer-MG outside of metAMOS. Are you sure you want to install?"
             dl = raw_input("Enter Y/N: ")
             if (dl == 'y' or dl == 'Y') or not nodbs:

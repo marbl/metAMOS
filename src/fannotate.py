@@ -15,7 +15,7 @@ def init(skipsteps):
    global _skipsteps
    _skipsteps = skipsteps
 
-@follows(Classify)
+@follows(FindORFS)
 @posttask(touch_file("%s/Logs/functionalannotation.ok"%(_settings.rundir)))
 @files("%s/FindORFS/out/%s.faa"%(_settings.rundir,_settings.PREFIX),["%s/FunctionalAnnotation/out/blast.out"%(_settings.rundir),"%s/FunctionalAnnotation/out/krona.ec.input"%(_settings.rundir)])
 def FunctionalAnnotation(input,output):

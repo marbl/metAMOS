@@ -130,6 +130,9 @@ def map2contig():
            if "bowtie" not in _skipsteps and not _savebtidx:# and not os.path.exists("%s/Assemble/out/IDX.1.ebwt"%(_settings.rundir)):
                run_process(_settings, "%s/bowtie-build -o 2 %s/Assemble/out/%s.asm.contig %s/Assemble/out/%s.IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX),"MapReads")
         elif _mapper == "bowtie2":
+           if _settings.nopysam != True:
+              import pysam
+
            if not os.path.exists("%s/Assemble/out/%s.IDX.1.bt2"%(_settings.rundir, _settings.PREFIX)):
                run_process(_settings, "%s/bowtie2-build -o 2 %s/Assemble/out/%s.asm.contig %s/Assemble/out/%s.IDX"%(_settings.BOWTIE, _settings.rundir,_settings.PREFIX,_settings.rundir, _settings.PREFIX),"MapReads")
         for lib in _readlibs:
@@ -527,6 +530,7 @@ def MapReads(input,output):
    #check if sucessfully completed   
    _settings.PREFIX = originalPrefix
 
+@follows(Assemble)
 @posttask(touch_file("%s/Logs/mapreads.ok"%(_settings.rundir)))
 @posttask(touch_file("%s/Assemble/out/mapreads.success"%(_settings.rundir)))
 @merge(MapReads, ["%s/Logs/mapreads.ok"%(_settings.rundir)])

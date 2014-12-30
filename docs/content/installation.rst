@@ -14,6 +14,7 @@ MetAMOS has several dependencies/prerequisites, the large majority of which are 
 and installed when running INSTALL.py (see next section). In addition, several dependences/prerequisites 
 are not installed by INSTALL.py and must be available on your system:
 
+    * Java (6+)
     * perl (5.8.8+)
     * python (2.7.3+)
     * R (2.11.1+ with PNG support)

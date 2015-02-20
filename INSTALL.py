@@ -521,6 +521,13 @@ if not os.path.exists("./Utilities/DB/kraken"):
           # first we need jellyfish which is used to build DB
           # kraken needs jellyfish, if we don't find it build it and add to path
           jellyfish = utils.getFromPath("jellyfish", "Jellyfish", False)
+
+          # check jellyfish version, kraken needs version 1
+          version=""
+          if jellyfish != "":
+             version = utils.getCommandOutput("%s --version |awk '{print substr($NF, 1, index($NF, \".\")-1)}'"%(jellyfish), False)
+             if int(version) > 1:
+                jellyfish=""
           if jellyfish == "":
              archive = "jellyfish.tar.gz"
              os.system("curl -L http://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.11.tar.gz -o %s"%(archive))

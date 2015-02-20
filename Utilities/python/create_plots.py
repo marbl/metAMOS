@@ -240,7 +240,7 @@ def create_plots(handlef,TITLE):
                ff2s += "\"%.2f\t%f\\n\" + \n"%(bins[i],n[i])
            except TypeError:
                #incorrect matplotlib version? skip..
-               ff2s += "\"%.2f\t%f\\n\" + \n"%("0.0","0.0")
+               ff2s += "\"%.2f\t%f\\n\" + \n"%(0.0,0.0)
                #continue
            i+=1
        ff2s += "\"\";"

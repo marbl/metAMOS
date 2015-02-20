@@ -1418,7 +1418,7 @@ def translateToSRAURL(settings, name):
       oldDyLD = os.environ["DYLD_FALLBACK_LIBRARY_PATH"]
       del os.environ["DYLD_FALLBACK_LIBRARY_PATH"]
    result = getCommandOutput("%s%ssrapath %s"%(Settings.SRA, os.sep, name), True)
-   if result == name:
+   if result == name or result == "./%s"%(name) or result == os.path.abspath(name):
       result = ""
 
    if oldDyLD != "":

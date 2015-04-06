@@ -78,8 +78,8 @@ def get_classify_stats(ocf,cf,ck,out_dir,outf,outfo,taxa_level):
     for key in origContigsByClass:
        try:
           class_name = id_class[key]
-        except KeyError:
-            continue
+       except KeyError:
+          continue
        summary.tr()
        summary.add("<td align=\"left\">%s</td><td align=\"right\">%d</td><td align=\"right\">%3.2f%%</td>"%(class_name, origContigsByClass[key], origContigsByClass[key]/float(origClassifiedCount)*100))
        summary.tr.close()

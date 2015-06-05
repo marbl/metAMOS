@@ -148,7 +148,7 @@ def create_summary(first,amosbnk,prefix,ref_asm,utils,img,rund,nLibs,taxa_level,
     os.chdir(html_prefix)
 
     if not os.path.exists(html_prefix+"asmstats.out"):
-        libPath = rund.replace("bin", "lib")
+        libPath = rund.rsplit(os.sep,1)[0] + os.sep + rund.rsplit(os.sep,1)[-1].replace("bin", "lib")
         #print "perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,ref_asm,html_prefix)
         run_process(_settings,"perl -I %s %s/perl/statistics.pl %s > %sasmstats.out"%(libPath,utils,ref_asm,html_prefix),"Postprocess")
     report = open(html_prefix+"asmstats.out",'r')

@@ -951,10 +951,10 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
           signalp = utils.getFromPath("signalp", "SignalP", False)
           if signalp == "":
              print "Warning: SignalP is not installed and is required for Prokka's gram option. Please download it and add it to your path."
-          os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/prokka-1.7.tar.gz -o prokka-1.7.tar.gz")
-          os.system("tar xvzf prokka-1.7.tar.gz")
-          os.system("mv prokka-1.7 ./Utilities/cpp%s%s-%s%sprokka"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-          os.system("rm prokka-1.7.tar.gz")
+          os.system("curl -L http://www.vicbioinformatics.com/prokka-1.11.tar.gz -o prokka-1.11.tar.gz")
+          os.system("tar xvzf prokka-1.11.tar.gz")
+          os.system("mv prokka-1.11 ./Utilities/cpp%s%s-%s%sprokka"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+          os.system("rm prokka-1.11.tar.gz")
 
           bioperl = utils.getCommandOutput("perl -MBio::Seq -e 0 && echo $?", True)
           perltime = utils.getCommandOutput("perl -MTime::Piece -e 0 && echo $?", True)
@@ -1018,7 +1018,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
           # for some reason prokka adds its binaries to the end of path, not beginning so if your path has the wrong version of a program, it will crash. Update
           os.chdir("./Utilities/cpp%s%s-%s%sprokka/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
           os.system("cp prokka prokka.original")
-          os.system("cat prokka.original |awk '{if (match($0, \"ENV{PATH}\")) { print \"$ENV{PATH} = $BINDIR . \\\":\\\" . $ENV{PATH};\"; } else { print $0}}' > prokka")
+          os.system("cat prokka.original |awk '{if (match($0, \"ENV{PATH}\")) { print \"$ENV{PATH} = $BINDIR . \\\":$FindBin::RealBin:\\\" . $ENV{PATH};\"; } else { print $0}}' > prokka")
           os.chdir("%s"%(METAMOS_ROOT))
 
           aragorn = utils.getFromPath("aragorn", "aragorn", False)
@@ -1050,16 +1050,16 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
           barrnap = utils.getFromPath("barrnap", "barrnap", False)
           if barrnap == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/barrnap"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
              print "Barrnap missing, will install"
-             os.system("curl -L http://www.vicbioinformatics.com/barrnap-0.1.tar.gz -o barrnap.tar.gz")
+             os.system("curl -L http://www.vicbioinformatics.com/barrnap-0.4.tar.gz -o barrnap.tar.gz")
              os.system("tar xvzf barrnap.tar.gz")
-             os.system("mv barrnap-0.1/barrnap ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
-             os.system("mv barrnap-0.1/db ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
+             os.system("mv barrnap-0.4/bin/barrnap ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
+             os.system("mv barrnap-0.4/db ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
              if os.path.exists("./Utilities/cpp%s%s-%s%sprokka/lib"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
                 os.chdir("./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
                 os.system("cp barrnap barrnap.original")
                 os.system("cat barrnap.original |awk '{if (match($0, \"use strict\")) { print \"use lib \\\"%s/Utilities/cpp%s%s-%s%sprokka/lib\\\";\"; print $0; } else { print $0}}' > barrnap"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep))
                 os.chdir("%s"%(METAMOS_ROOT))
-             os.system("rm -rf barrnap-0.1")
+             os.system("rm -rf barrnap-0.4")
              os.system("rm barrnap.tar.gz")
 
           hmmscan = utils.getFromPath("hmmscan", "HMMER3", False)
@@ -1135,6 +1135,9 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("chmod a+rx tbl2asn")
              os.system("mv tbl2asn ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
              os.system("rm tbl2asn.gz")
+
+          # finally set up prokka DBs
+          os.system("./Utilities/cpp%s%s-%s%s/prokka/bin/prokka --setupdb"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
 
     if not os.path.exists("./Utilities/cpp%s%s-%s%ssoap2"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
        if "soap2" in packagesToInstall:

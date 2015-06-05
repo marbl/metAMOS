@@ -116,7 +116,10 @@ except:
    try:
       GCC_VERSION=float(utils.getCommandOutput("gcc --version|grep gcc|awk '{print $3}' |awk -F \".\" '{print $1\".\"$2}'", False))
    except:
-      print "Warning: cannot determine GCC version"
+      try:
+         GCC_VERSION=float(utils.getCommandOutput("gcc --version|grep gcc|awk '{print $4}' |awk -F \".\" '{print $1\".\"$2}'", False))
+      except:
+         print "Warning: cannot determine GCC version"
 
 OSTYPE="Linux"
 OSVERSION="1"

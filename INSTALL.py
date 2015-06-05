@@ -116,7 +116,10 @@ except:
    try:
       GCC_VERSION=float(utils.getCommandOutput("gcc --version|grep gcc|awk '{print $3}' |awk -F \".\" '{print $1\".\"$2}'", False))
    except:
-      print "Warning: cannot determine GCC version"
+      try:
+         GCC_VERSION=float(utils.getCommandOutput("gcc --version|grep gcc|awk '{print $4}' |awk -F \".\" '{print $1\".\"$2}'", False))
+      except:
+         print "Warning: cannot determine GCC version"
 
 OSTYPE="Linux"
 OSVERSION="1"
@@ -525,7 +528,7 @@ if not os.path.exists("./Utilities/DB/kraken"):
           # check jellyfish version, kraken needs version 1
           version=""
           if jellyfish != "":
-             version = utils.getCommandOutput("%s --version |awk '{print substr($NF, 1, index($NF, \".\")-1)}'"%(jellyfish), False)
+             version = utils.getCommandOutput("%s/jellyfish --version |awk '{print substr($NF, 1, index($NF, \".\")-1)}'"%(jellyfish), False)
              if int(version) > 1:
                 jellyfish=""
           if jellyfish == "":

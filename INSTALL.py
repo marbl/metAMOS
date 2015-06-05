@@ -528,7 +528,7 @@ if not os.path.exists("./Utilities/DB/kraken"):
           # check jellyfish version, kraken needs version 1
           version=""
           if jellyfish != "":
-             version = utils.getCommandOutput("%s --version |awk '{print substr($NF, 1, index($NF, \".\")-1)}'"%(jellyfish), False)
+             version = utils.getCommandOutput("%s/jellyfish --version |awk '{print substr($NF, 1, index($NF, \".\")-1)}'"%(jellyfish), False)
              if int(version) > 1:
                 jellyfish=""
           if jellyfish == "":

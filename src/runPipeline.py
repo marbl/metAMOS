@@ -707,7 +707,6 @@ else:
       settings.doscaffolding = True
       selected_programs["multialign"]
       selected_programs["validate"] = ",".join(supported_programs["validate"])
-      selected_programs["assemble"] = selected_programs["assemble"] + ",velvet"
       selected_programs["findorfs"] = "prokka"
       asmScores = "%d"%(utils.SCORE_TYPE.ALL)
       skipsteps.add("Scaffold")

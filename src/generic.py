@@ -423,20 +423,32 @@ class GenericProgram:
       stepOut = "%s/%s/out/%s%s"%(_settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), _settings.PREFIX, STEP_OUTPUTS.reverse_mapping[self.stepName])
 
       if programOut != stepOut:
-         symlinkCmd = "ln %s %s"%(programOut, stepOut) 
+         if 'linux' in _settings.OSTYPE.lower():
+            symlinkCmd = "ln -L %s %s"%(programOut, stepOut) 
+         else:
+            symlinkCmd = "ln %s %s"%(programOut, stepOut)
          run_process(_settings, "unlink %s"%(stepOut), STEP_NAMES.reverse_mapping[self.stepName])
          if not os.path.exists(programOut) and self.backupOutput != "" and self.stepName == STEP_NAMES.ASSEMBLE:
             unpairedOut = "%s/%s/out/%s"%(_settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), self.backupOutput.replace("[PREFIX]", _settings.PREFIX))
-            symlinkCmd = "ln %s %s"%(unpairedOut, stepOut)
+            if 'linux' in _settings.OSTYPE.lower():
+               symlinkCmd = "ln -L %s %s"%(unpairedOut, stepOut)
+            else:
+               symlinkCmd = "ln %s %s"%(unpairedOut, stepOut)
 
          run_process(_settings, symlinkCmd, STEP_NAMES.reverse_mapping[self.stepName].title())
 
       if _settings.doscaffolding and self.scaffoldOutput != "" and self.stepName == STEP_NAMES.ASSEMBLE:
          scfOut = "%s/%s/out/%s"%(_settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), self.scaffoldOutput.replace("[PREFIX]", _settings.PREFIX))
          if os.path.exists(scfOut):
-            run_process(_settings, "ln %s %s/%s/out/%s%s"%(scfOut, _settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), _settings.PREFIX, STEP_OUTPUTS.reverse_mapping[STEP_NAMES.mapping["SCAFFOLD"]]), STEP_NAMES.reverse_mapping[self.stepName].title()) 
+            if 'linux' in _settings.OSTYPE.lower():
+               run_process(_settings, "ln -L %s %s/%s/out/%s%s"%(scfOut, _settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), _settings.PREFIX, STEP_OUTPUTS.reverse_mapping[STEP_NAMES.mapping["SCAFFOLD"]]), STEP_NAMES.reverse_mapping[self.stepName].title()) 
+            else:
+               run_process(_settings, "ln    %s %s/%s/out/%s%s"%(scfOut, _settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), _settings.PREFIX, STEP_OUTPUTS.reverse_mapping[STEP_NAMES.mapping["SCAFFOLD"]]), STEP_NAMES.reverse_mapping[self.stepName].title())
          else:
-            run_process(_settings, "ln %s %s/%s/out/%s%s"%(programOut, _settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), _settings.PREFIX, STEP_OUTPUTS.reverse_mapping[STEP_NAMES.mapping["SCAFFOLD"]]), STEP_NAMES.reverse_mapping[self.stepName].title())    
+            if 'linux' in _settings.OSTYPE.lower():
+               run_process(_settings, "ln -L %s %s/%s/out/%s%s"%(programOut, _settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), _settings.PREFIX, STEP_OUTPUTS.reverse_mapping[STEP_NAMES.mapping["SCAFFOLD"]]), STEP_NAMES.reverse_mapping[self.stepName].title())    
+            else:
+               run_process(_settings, "ln    %s %s/%s/out/%s%s"%(programOut, _settings.rundir, STEP_NAMES.reverse_mapping[self.stepName].title(), _settings.PREFIX, STEP_OUTPUTS.reverse_mapping[STEP_NAMES.mapping["SCAFFOLD"]]), STEP_NAMES.reverse_mapping[self.stepName].title())
 
       # restore path
       os.environ["PATH"] = oldPath

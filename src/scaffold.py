@@ -86,9 +86,12 @@ def Scaffold(input,output):
    if "Scaffold" in _skipsteps or "scaffold" in _skipsteps or "assemble" in _skipsteps or "Assemble" in _skipsteps:
       run_process(_settings, "%s/bank2fasta -eid -b %s/Scaffold/in/%s.bnk > %s/Scaffold/out/%s.contigs"%(_settings.AMOS, _settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
       if os.path.exists("%s/Assemble/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX)):
+         run_process(_settings, "unlink  %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX), "Scaffold")
          run_process(_settings, "ln %s/Assemble/out/%s.linearize.scaffolds.final %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
       else:
+         run_process(_settings, "unlink  %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX), "Scaffold")
          run_process(_settings, "ln %s/Assemble/out/%s.asm.contig %s/Scaffold/out/%s.linearize.scaffolds.final"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
+      run_process(_settings, "unlink %s/Scaffold/out/%s.scaffolds.final"%(_settings.rundir, _settings.PREFIX), "Scaffold")
       run_process(_settings, "ln %s/Scaffold/out/%s.linearize.scaffolds.final %s/Scaffold/out/%s.scaffolds.final"%(_settings.rundir, _settings.PREFIX, _settings.rundir, _settings.PREFIX), "Scaffold")
       run_process(_settings, "touch %s/Scaffold/out/%s.motifs"%(_settings.rundir, _settings.PREFIX), "Scaffold")
       run_process(_settings, "touch %s/Logs/scaffold.skip"%(_settings.rundir), "Scaffold")

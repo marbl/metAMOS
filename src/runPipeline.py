@@ -894,6 +894,13 @@ if __name__ == "__main__":
        elif utils.SCORE_TYPE.reverse_mapping[int(asmScore)].lower() not in selected_programs["validate"]:
           selected_programs["validate"] = "%s,%s"%(selected_programs["validate"], utils.SCORE_TYPE.reverse_mapping[int(asmScore)].lower())
 
+    # strip gz off contig names
+    for index, contig in enumerate(asmcontigs):
+       if contig.endswith("bz2"):
+          contig=contig.replace(".bz2", "")
+       elif contig.endswith("gz"):
+          asmcontigs[index]=contig.replace(".gz", "")
+
     # intialize weights
     utils.initValidationScores(asmScoreWeights)
 

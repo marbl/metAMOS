@@ -473,7 +473,7 @@ if not os.path.exists("./AMOS") or 0:
         # descriptive perl module
         stat = utils.getCommandOutput("perl -MStatistics::Descriptive -e 0 && echo $?", True)
         if stat == "":
-           os.system("curl -L ftp://cbcb.umd.edu/pub/data/metamos/Statistics-Descriptive-3.0203.tar.gz -o stat.tar.gz")
+           os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/Statistics-Descriptive-3.0203.tar.gz -o stat.tar.gz")
            os.system("tar -xvzf stat.tar.gz")
            os.chdir("Statistics-Descriptive-3.0203")
            os.system("perl Makefile.PL PREFIX=`pwd`/build")
@@ -1571,7 +1571,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
            print "REAPR tool not found, optional for Validate step, download now?"
            dl = raw_input("Enter Y/N: ")
        if dl == 'y' or dl == 'Y':
-          os.system("curl -L ftp://cbcb.umd.edu/pub/data/metamos/Reapr_1.0.16.tar.gz -o reapr.tar.gz")
+          os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/Reapr_1.0.16.tar.gz -o reapr.tar.gz")
           os.system("tar xvzf reapr.tar.gz")
           os.system("mv Reapr_1.0.16 ./Utilities/cpp/%s%s-%s%sREAPR"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
 
@@ -1678,7 +1678,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
            print "FRCbam tool not found, optional for Validate step, download now?"
            dl = raw_input("Enter Y/N: ")
         if dl == 'y' or dl == 'Y':
-            os.system("curl -L ftp://cbcb.umd.edu/pub/data/metamos/FRC_align-master.zip -o frcbam.zip")
+            os.system("curl -L ftp://ftp.cbcb.umd.edu/pub/data/metamos/FRC_align-master.zip -o frcbam.zip")
             os.system("unzip frcbam.zip")
             os.system("mv FRC_align-3398ca469b2077d6672b85317eee6fea171b6a27 ./Utilities/cpp/%s%s-%s%sFRCbam"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
             os.chdir("./Utilities/cpp/%s%s-%s%sFRCbam/src/samtools"%(os.sep, OSTYPE, MACHINETYPE, os.sep))

@@ -295,7 +295,7 @@ if 1:
        print "psutil not found, required for memory usage estimation, download now?"
        dl = raw_input("Enter Y/N: ")
    if fail and (dl == 'y' or dl == "Y"):
-       os.system("curl -L http://psutil.googlecode.com/files/psutil-0.6.1.tar.gz -o ./psutil.tar.gz")
+       os.system("curl -L https://github.com/giampaolo/psutil/archive/release-0.6.1.tar.gz -o ./psutil.tar.gz")
        os.system("tar -C ./Utilities/python -xvf psutil.tar.gz")
        os.system("mv ./Utilities/python/psutil-0.6.1 ./Utilities/python/psutil")
        os.chdir("./Utilities/python/psutil")
@@ -1044,9 +1044,9 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
           if infernal == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/infernal"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
              print "Infernal missing, will install"
              if OSTYPE == "Darwin":
-                os.system("curl -L http://selab.janelia.org/software/infernal/infernal-1.1rc4-macosx-intel.tar.gz -o infernal.tar.gz")
+                os.system("curl -L http://eddylab.org/infernal/infernal-1.1.2-macosx-intel.tar.gz -o infernal.tar.gz")
              else:
-                os.system("curl -L http://selab.janelia.org/software/infernal/infernal-1.1rc4-linux-intel-gcc.tar.gz -o infernal.tar.gz")
+                os.system("curl -L http://eddylab.org/infernal/infernal-1.1.2-linux-intel-gcc.tar.gz -o infernal.tar.gz")
              os.system("tar xvzf infernal.tar.gz")
              os.system("mv infernal*/binaries/* ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
              os.system("rm -rf infernal*")
@@ -1109,13 +1109,10 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
                 prodigal = ""
 
           if prodigal == "":
-             os.system("curl -L https://prodigal.googlecode.com/files/Prodigal-2.60.tar.gz -o prodigal.tar.gz")
+             os.system("curl -L https://github.com/hyattpd/Prodigal/archive/v2.60.tar.gz -o prodigal.tar.gz")
              os.system("tar xvzf prodigal.tar.gz")
              os.system("mv Prodigal-2.60 prodigal.v2_60") 
              os.system("rm -rf prodigal.tar.gz")
-             os.system("curl -L https://prodigal.googlecode.com/files/prodigal_v2.60.bugfix1.tar.gz -o prodigal.tar.gz")
-             os.system("tar xvzf prodigal.tar.gz")
-             os.system("mv prodigal_v2.60.bugfix1/* prodigal.v2_60/")
              os.chdir("prodigal.v2_60")
              updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
              os.system("make")
@@ -1123,10 +1120,9 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("mv prodigal.v2_60/prodigal ./Utilities/cpp%s%s-%s%sprokka/binaries%s%s"%(os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep, OSTYPE.lower()))
              os.system("rm -rf prodigal.tar.gz")
              os.system("rm -rf prodigal.v2_60") 
-             os.system("rm -rf prodigal_v2.60.bugfix1")
 
           tbl2asn = utils.getFromPath("tbl2asn", "NCBI Tbl2Asn", False)
-          if tbl2asn == "" and not os.path.exists("./Utilities/cpp%s%s-%s%sprokka/binaries/%s/tbl2asn"%(os.sep, OSTYPE, MACHINETYPE, os.sep, OSTYPE.lower())):
+          if tbl2asn == "":
              print "NCBI Tbl2Asn is missing, will install"
              if OSTYPE == "Darwin":
                 os.system("curl -L ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/mac.tbl2asn.gz -o tbl2asn.gz")

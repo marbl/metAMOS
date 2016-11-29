@@ -1016,7 +1016,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
           if os.path.exists("./Utilities/cpp%s%s-%s%sprokka/lib"%(os.sep, OSTYPE, MACHINETYPE, os.sep)):
              os.chdir("./Utilities/cpp%s%s-%s%sprokka/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("cp prokka prokka.original")
-             os.system("cat prokka.original |awk '{if (match($0, \"use strict\")) { print \"use lib \\\"%s/Utilities/cpp%s%s-%s%sprokka/lib\\\";\"; print $0; } else { print $0}}' > prokka"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("cat prokka.original |awk '{if (match($0, \"use strict\")) { print \"use lib \\\"%s/Utilities/cpp%s%s-%s%sprokka/lib\\\";\"; print $0; } else { print $0}}' |awk '{if (match($1, \"my\") && match($2, \"MAXCONTIGIDLEN\")) { print \"my $MAXCONTIGIDLEN = 250;\"; } else { print $0; }}' > prokka"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.chdir("%s"%(METAMOS_ROOT))
           # for some reason prokka adds its binaries to the end of path, not beginning so if your path has the wrong version of a program, it will crash. Update
           os.chdir("./Utilities/cpp%s%s-%s%sprokka/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))

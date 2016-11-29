@@ -297,7 +297,7 @@ if 1:
    if fail and (dl == 'y' or dl == "Y"):
        os.system("curl -L https://github.com/giampaolo/psutil/archive/release-0.6.1.tar.gz -o ./psutil.tar.gz")
        os.system("tar -C ./Utilities/python -xvf psutil.tar.gz")
-       os.system("mv ./Utilities/python/psutil-0.6.1 ./Utilities/python/psutil")
+       os.system("mv ./Utilities/python/psutil-release-0.6.1 ./Utilities/python/psutil")
        os.chdir("./Utilities/python/psutil")
        # dont set static building libs on OSX, sseems to cause compile issues for jellyfish
        os.environ["CFLAGS"] = oldCFlags
@@ -359,7 +359,7 @@ if 1:
        dl = raw_input("Enter Y/N: ")
 
    if fail and (dl == 'y' or dl == "Y"):
-       os.system("curl -L http://pysam.googlecode.com/files/pysam-0.6.tar.gz -o ./pysam.tar.gz")
+       os.system("curl -L https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/pysam/pysam-0.6.tar.gz -o ./pysam.tar.gz")
        os.system("tar -C ./Utilities/python -xvf pysam.tar.gz")
        os.system("mv ./Utilities/python/pysam-0.6 ./Utilities/python/pysam")
        doInstall = True
@@ -1162,7 +1162,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
                 os.system("tar xvzf soap2.tar.gz")
                 os.system("mkdir ./Utilities/cpp%s%s-%s%ssoap2"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
                 os.system("mv SOAPdenovo2-bin-LINUX-generic-r240 ./Utilities/cpp%s%s-%s%ssoap2/bin"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-             os.system("curl -L http://sourceforge.net/projects/soapdenovo2/files/GapCloser/src/r6/GapCloser-src-v1.12-r6.tgz -o gapcloser.tar.gz")
+             os.system("curl -L http://downloads.sourceforge.net/project/soapdenovo2/GapCloser/src/r6/GapCloser-src-v1.12-r6.tgz -o gapcloser.tar.gz")
              os.system("tar xvzf gapcloser.tar.gz")
              os.chdir("v1.12-r6")
              updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
@@ -1289,9 +1289,9 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              print "IDBA-UD binaries not found, optional for Assemble step, download now?"
              dl = raw_input("Enter Y/N: ")
           if dl == 'y' or dl == 'Y':
-             os.system("curl -L http://hku-idba.googlecode.com/files/idba-1.1.1.tar.gz -o idba.tar.gz")
+             os.system("curl -L https://github.com/loneknightpy/idba/releases/download/1.1.3/idba-1.1.3.tar.gz -o idba.tar.gz")
              os.system("tar xvzf idba.tar.gz")
-             os.system("mv idba-1.1.1 ./Utilities/cpp%s%s-%s%sidba"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("mv idba-1.1.3 ./Utilities/cpp%s%s-%s%sidba"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.chdir("./Utilities/cpp%s%s-%s%sidba"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("mv src/sequence/short_sequence.h src/sequence/short_sequence.orig")
              os.system("cat src/sequence/short_sequence.orig |awk '{if (match($0, \"kMaxShortSequence = 128\")) print \"static const uint32_t kMaxShortSequence = 32768;\"; else print $0}' > src/sequence/short_sequence.h")
@@ -1311,23 +1311,23 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              print "EA-UTILS binaries not found, optional for Assemble step, download now?"
              dl = raw_input("Enter Y/N: ")
           if dl == 'y' or dl == 'Y':
-             os.system("curl -L https://ea-utils.googlecode.com/files/ea-utils.1.1.2-537.tar.gz -o eautils.tar.gz")
+             os.system("curl -L https://github.com/ExpressionAnalysis/ea-utils/tarball/master -o eautils.tar.gz")
              os.system("curl -L ftp://ftp.gnu.org/gnu/gsl/gsl-1.16.tar.gz -o gsl.tar.gz")
              os.system("tar xvzf eautils.tar.gz")
              os.system("tar xvzf gsl.tar.gz")
-             os.system("mv gsl-1.16 ea-utils.1.1.2-537/gsl")
-             os.system("rm ea-utils.1.1.2-537/tidx/utils.cpp")
-             os.system("mv ea-utils.1.1.2-537 ./Utilities/cpp%s%s-%s%seautils"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-             os.chdir("./Utilities/cpp%s%s-%s%seautils/gsl"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("mv ExpressionAnalysis-ea-utils* ./Utilities/cpp%s%s-%s%seautils"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("mv gsl-1.16 ./Utilities/cpp%s%s-%s%seautils/clipper/gsl"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.chdir("./Utilities/cpp%s%s-%s%seautils/clipper/gsl"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("./configure --prefix=`pwd`/build")
              os.system("make")
              os.system("make install")
              os.chdir("..")
              os.system("mv Makefile Makefile.orig")
              os.system("cat Makefile.orig |sed s/CFLAGS?=/CFLAGS+=/g |sed s/CPPFLAGS?=/CPPFLAGS+=/g > Makefile")
-             addEnvironmentVar("CFLAGS", "-L%s/Utilities/cpp%s%s-%s%seautils/gsl/build/lib/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep))
-             addEnvironmentVar("CPPFLAGS", "-L%s/Utilities/cpp%s%s-%s%seautils/gsl/build/lib/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep))
+             addEnvironmentVar("CFLAGS", "-I. -L%s/Utilities/cpp%s%s-%s%seautils/gsl/build/lib/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep))
+             addEnvironmentVar("CPPFLAGS", "-I. -L%s/Utilities/cpp%s%s-%s%seautils/gsl/build/lib/"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("make")
+             os.system("cp fastq-mcf ../")
              os.chdir("%s"%(METAMOS_ROOT))
              os.system("rm -rf eautils.tar.gz")
              os.system("rm -rf gsl.tar.gz")
@@ -1341,9 +1341,9 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              print "ABySS binaries not found, optional for Assemble step, download now?"
              dl = raw_input("Enter Y/N: ")
           if dl == 'y' or dl == 'Y':
-             os.system("curl -L https://sparsehash.googlecode.com/files/sparsehash-2.0.2.tar.gz -o sparse.tar.gz")
+             os.system("curl -L https://github.com/sparsehash/sparsehash/archive/sparsehash-2.0.2.tar.gz -o sparse.tar.gz")
              os.system("tar xvzf sparse.tar.gz")
-             os.chdir("sparsehash-2.0.2")
+             os.chdir("sparsehash-sparsehash-2.0.2")
              os.system("./configure --prefix=`pwd`")
              os.system("make install")
              os.chdir("%s"%(METAMOS_ROOT))
@@ -1353,9 +1353,9 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("tar xvzf abyss.tar.gz")
              os.chdir("abyss-1.3.6")
              os.system("ln -s %s/boost_1_54_0/boost boost"%(METAMOS_ROOT))
-             addEnvironmentVar("CFLAGS", "-I%s/sparsehash-2.0.2/include"%(METAMOS_ROOT))
-             addEnvironmentVar("CPPFLAGS", "-I%s/sparsehash-2.0.2/include"%(METAMOS_ROOT))
-             addEnvironmentVar("CXXFLAGS", "-I%s/sparsehash-2.0.2/include"%(METAMOS_ROOT))
+             addEnvironmentVar("CFLAGS", "-I%s/sparsehash-sparsehash-2.0.2/include"%(METAMOS_ROOT))
+             addEnvironmentVar("CPPFLAGS", "-I%s/sparsehash-sparsehash-2.0.2/include"%(METAMOS_ROOT))
+             addEnvironmentVar("CXXFLAGS", "-I%s/sparsehash-sparsehash-2.0.2/include"%(METAMOS_ROOT))
 
              # sparse hash library has unused variables which cause warnings with gcc 4.8 so disable -Werror
              if GCC_VERSION >= 4.8:
@@ -1401,7 +1401,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
                 print "Error: cannot find MPI in your path. Disabling ABySS threading."
                 os.system("cat abyss-pe-orig |awk -v found=0 -v skipping=0 '{if (match($0, \"ifdef np\")) {skipping=1; } if (skipping && match($1, \"ABYSS\")) {print $0; skipping=1; found=1} if (found && match($1, \"endif\")) {skipping=0;found = 0;} else if (skipping == 0) { print $0; } }' > abyss-pe")
              os.chdir("%s"%(METAMOS_ROOT))
-             os.system("rm -rf sparsehash-2.0.2")
+             os.system("rm -rf sparsehash-sparsehash-2.0.2")
              os.system("rm -rf sparse.tar.gz")
              os.system("rm -rf abyss-1.3.6")
              os.system("rm -rf abyss.tar.gz")
@@ -1417,9 +1417,9 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              print "SGA binaries not found, optional for Assemble step, download now?"
              dl = raw_input("Enter Y/N: ")
           if dl == 'y' or dl == 'Y':
-             os.system("curl -L https://sparsehash.googlecode.com/files/sparsehash-2.0.2.tar.gz -o sparse.tar.gz")
+             os.system("curl -L https://github.com/sparsehash/sparsehash/archive/sparsehash-2.0.2.tar.gz -o sparse.tar.gz")
              os.system("tar xvzf sparse.tar.gz")
-             os.chdir("sparsehash-2.0.2")
+             os.chdir("sparsehash-sparsehash-2.0.2")
              os.system("./configure --prefix=`pwd`")
              updateMakeFileForDarwin("Makefile", addedCFlags, addedLDFlags)
              os.system("make install")
@@ -1435,7 +1435,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.system("tar xvzf sga.tar.gz")
              os.system("mv sga-0.10.10 ./Utilities/cpp%s%s-%s%ssga"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("mv bamtools-2.3.0 ./Utilities/cpp%s%s-%s%ssga/bamtools"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
-             os.system("mv sparsehash-2.0.2 ./Utilities/cpp%s%s-%s%ssga/sparsehash"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
+             os.system("mv sparsehash-sparsehash-2.0.2 ./Utilities/cpp%s%s-%s%ssga/sparsehash"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.chdir("./Utilities/cpp%s%s-%s%ssga/bamtools"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("mkdir build")
              os.chdir("build")
@@ -1454,7 +1454,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
              os.chdir("%s"%(METAMOS_ROOT))
              os.system("mv bwa-0.7.5a/bwa ./Utilities/cpp%s%s-%s%ssga/bin/"%(os.sep, OSTYPE, MACHINETYPE, os.sep))
              os.system("cp %s/Utilities/cpp%s%s-%s%ssamtools %s/Utilities/cpp%s%s-%s%ssga/bin%ssamtools"%(METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep, METAMOS_ROOT, os.sep, OSTYPE, MACHINETYPE, os.sep, os.sep))
-             os.system("rm -rf sparsehash-2.0.2")
+             os.system("rm -rf sparsehash-sparsehash-2.0.2")
              os.system("rm -rf sparse.tar.gz")
              os.system("rm -rf bamtools-2.3.0")
              os.system("rm -rf bamtools.tar.gz")
@@ -1498,7 +1498,7 @@ if "isolate" in enabledWorkflows or "imetamos" in enabledWorkflows or manual:
             if not os.path.exists("./Utilities/DB/refseq/") and not nodbs:
                 print "Downloading refseq genomes (Bacteria/%s, Viruses/%s)..."%(file,file)
                 print "\tThis file is large and may take time to download"
-                os.system("curl -L %s/Bacteria/%s -o bacteria.tar.gz"%(ftpSite, file))
+                os.system("curl -L %s/archive/old_refseq/Bacteria/%s -o bacteria.tar.gz"%(ftpSite, file))
                 os.system("curl -L %s/Viruses/%s -o viruses.tar.gz"%(ftpSite, file))
                 os.system("mkdir -p ./Utilities/DB/refseq/temp")
                 os.system("mv bacteria.tar.gz ./Utilities/DB/refseq/temp")

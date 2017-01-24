@@ -11,7 +11,7 @@ See below sections for further details.
 Prerequisites
 ==============
 MetAMOS has several dependencies/prerequisites, the large majority of which are automatically downloaded
-and installed when running INSTALL.py (see next section). In addition, several dependences/prerequisites 
+and installed when running INSTALL.py (see next section). In addition, several dependencies/prerequisites
 are not installed by INSTALL.py and must be available on your system:
 
     * Java (6+)
@@ -57,7 +57,7 @@ MetAMOS contains an automated installation script which installs
 MetAMOS along with required Python dependencies, third party software
 and necessary data files. If you encounter issues during installation, you can 
 try installing the required dependencies manually and re-running INSTALL.py. If you 
-continue to encounter issues, plase provide the output from INSTALL.py as a new `issue <https://github.com/marbl/metAMOS/issues?state=open>`_.
+continue to encounter issues, please provide the output from INSTALL.py as a new `issue <https://github.com/marbl/metAMOS/issues?state=open>`_.
 
 To download the software release package:
 

@@ -114,7 +114,7 @@ Also, you can run:
 
 .. code-block:: bash
 
-    $ python INSTALL.py -h
+    $ python INSTALL.py help
 
 to get a listing of available workflows and programs. You can specify either
 workflows or programs as arguments to INSTALL.py. For example, to install the

@@ -32,7 +32,7 @@ To install iMetAMOS without using a frozen binary, run:
 
     $ python INSTALL.py iMetAMOS
 
-To enable iMetAMOS, specify it as an option to initPipelien using the -W flag. Below is a simple example of running of iMetAMOS to assemble an SRA dataset::
+To enable iMetAMOS, specify it as an option to initPipeline using the -W flag. Below is a simple example of running of iMetAMOS to assemble an SRA dataset::
 
     initPipeline -q -1 SRR987657 -d projectDir -W iMetAMOS
     runPipeline -d projectDir -p 16

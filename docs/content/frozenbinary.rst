@@ -21,7 +21,7 @@ In attempt to further simplify the MetAMOS installation process, we are happy to
 - R 2.11.1 (or newer)
 - 64-bit \*nix OS or Mac OSX 10.7+ (you may need to install MacPorts for full functionality)
 
-**Disclaimer: The frozen binary is provided as-is and has limited support and reduced functionality/features compared to installing from source. If you encouter issues with a frozen binary, please try installing the latest release.**
+**Disclaimer: The frozen binary is provided as-is and has limited support and reduced functionality/features compared to installing from source. If you encounter issues with a frozen binary, please try installing the latest release.**
 
 First, select your flavor (DBs below are required but provided separately):
 
@@ -77,9 +77,9 @@ The frozen binary is actually a collection of programs that extracts/runs/cleans
  * The directory named by the TEMP environment variable.
  * The directory named by the TMP environment variable.
 
-If your system is missing all of the above, does not have sufficient space, or is missing write-premissions, runPipeline will not be able to extract itself and will report: INTERNAL ERROR: cannot create temporary directory!. The extracted runPipeline requires at least 4GB of free temporary disk space. You will get a "No DBs found ERROR!" if you do not download any DBs. The DB dir needs to be placed inside of the frozen binary install dir. 
+If your system is missing all of the above, does not have sufficient space, or is missing write-permissions, runPipeline will not be able to extract itself and will report: INTERNAL ERROR: cannot create temporary directory!. The extracted runPipeline requires at least 4GB of free temporary disk space. You will get a "No DBs found ERROR!" if you do not download any DBs. The DB dir needs to be placed inside of the frozen binary install dir. 
 
-If you encouter the messages:
+If you encounter the messages:
 
 .. code-block:: bash
 

@@ -226,7 +226,7 @@ Common use-cases
 
     -a idba_ud
 
-* To use Kraken for read classifcation::
+* To use Kraken for read classification::
 
     -c kraken
 

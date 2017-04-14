@@ -531,9 +531,6 @@ def Preprocess(input,output):
 
                    reads = rf.read().split(">")[1:]
                    quals = rq.read().split(">")[1:]
-                   if len(reads) % 2 != 0:
-                       print "Read file corrupted, please fix and restart!"
-                       sys.exit(1)
 
                    readcnt = 1
                    for currIndex, rd in enumerate(reads):

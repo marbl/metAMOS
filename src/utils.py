@@ -1224,10 +1224,11 @@ def getProgramCitations(settings, programName, comment="#"):
 
 def getProgramParams(configDir, fileName, module="", prefix="", comment="#", separator=""):
     # we process parameters in the following priority:
-    # first: current directory
-    # second: user home directory
-    # third: metAMOS directory
-    # a parameter specifeid in the current directory takes priority over all others, and so on down the line
+    # first: user_config_dir
+    # second: current directory
+    # third: user home directory
+    # fourth: metAMOS directory
+    # a parameter specifeid in user_config_dir takes priority over all others, and so on down the line
     dirs = [configDir + os.sep + "config", os.path.expanduser('~') + os.sep + ".metAMOS", os.getcwd(), user_config_dir]
     optDict = {} 
 
@@ -1427,11 +1428,12 @@ def translateToSRAURL(settings, name):
 
 def getProgramParamsFile(configDir, fileName):
     # we process parameters in the following priority:
-    # first: current directory
-    # second: user home directory
-    # third: metAMOS directory
-    # a parameter specifeid in the current directory takes priority over all others, and so on down the line
-    #dirs = ["/home/chz001/config", configDir + os.sep + "config", os.path.expanduser('~') + os.sep + ".metAMOS", os.getcwd()]
+    # first: user_config_dir
+    # second: current directory
+    # third: user home directory
+    # fourth: metAMOS directory
+    # a parameter specifeid in user_config_dir takes priority over all others, and so on down the line
+   
     dirs = [configDir + os.sep + "config", os.path.expanduser('~') + os.sep + ".metAMOS", os.getcwd(), user_config_dir]
     
     result_path = ''

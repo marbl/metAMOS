@@ -531,6 +531,7 @@ def Preprocess(input,output):
 
                    reads = rf.read().split(">")[1:]
                    quals = rq.read().split(">")[1:]
+          
 
                    readcnt = 1
                    for currIndex, rd in enumerate(reads):
@@ -684,8 +685,8 @@ def Preprocess(input,output):
             
             oldPath = os.environ["PATH"]
             os.environ["PATH"] = _settings.AMOS + os.pathsep + _settings.BLASR + os.pathsep + oldPath
-
-            run_process(_settings, "%s/pacBioToCA -l lib%d -s %s/config/pacbio.blasr.spec -t %d -partitions 100 fastqFile=%s genomeSize=%s longReads=1 ovlThreads=%d merylThreads=%d cnsConcurrency=%d merylMemory=%s ovlStoreMemory=%s"%(_settings.CA, lib.id, _settings.METAMOS_UTILS, _settings.threads, lib.f1.path, genomeSize, _settings.threads, _settings.threads, _settings.threads, availableMem, availableMem), "Preprocess")
+            pacbio_path = getProgramParamsFile(_settings.METAMOS_UTILS, 'pacbio.blasr.spec')
+            run_process(_settings, "%s/pacBioToCA -l lib%d -s %s -t %d -partitions 100 fastqFile=%s genomeSize=%s longReads=1 ovlThreads=%d merylThreads=%d cnsConcurrency=%d merylMemory=%s ovlStoreMemory=%s"%(_settings.CA, lib.id, pacbio_path, _settings.threads, lib.f1.path, genomeSize, _settings.threads, _settings.threads, _settings.threads, availableMem, availableMem), "Preprocess")
             # subset longest 25X?
             # update library format and file names
             lib.f1.path = "%s/Preprocess/out/lib%d.fastq"%(_settings.rundir, lib.id)

@@ -198,7 +198,7 @@ def printConfiguration(fileName=None):
         conf.write(''.join(configurationText))
         conf.close()
 
-shortOptions = "hM:IR:rjwbd:s:e:o:k:c:a:n:p:qt:f:vm:4g:iu1l:x:yz:LBVX:S:"
+shortOptions = "hM:IR:rjwbd:s:e:o:k:c:a:n:p:qt:f:vm:4g:iu1l:x:yz:LBVX:S:U:"
 longOptions = ["help", \
                                         "multialigner",\
                                         "isolate",\
@@ -234,7 +234,7 @@ longOptions = ["help", \
                                         "noblastdb",\
                                         "version",\
                                         "validator",\
-                                        "asmscore"]
+                                        "asmscore", "user_config_dir"]
 try:
     opts, args = getopt.getopt(sys.argv[1:], shortOptions, longOptions)
 except getopt.GetoptError, err:
@@ -252,14 +252,14 @@ supported_preprocessors = ["none", "metamos", "eautils", "pbcr"]
 supported_genecallers = ["fraggenescan","metagenemark","glimmermg"]
 supported_assemblers = ["newbler", "soapdenovo","soapdenovo2","ca","velvet","velvet-sc","metavelvet",\
                             "metaidba","sparseassembler","minimus"]
-supported_assemblers.extend(generic.getSupportedList(utils.INITIAL_UTILS, utils.STEP_NAMES.ASSEMBLE))
+#supported_assemblers.extend(generic.getSupportedList(utils.INITIAL_UTILS, utils.STEP_NAMES.ASSEMBLE))
 
 supported_mappers = ["bowtie","bowtie2"]
 supported_abundance = ["metaphyler"]
 supported_aligners = ["mgcat"]
 supported_classifiers = ["fcp","phylosift","phmmer","blast",\
                              "metaphyler", "phymm"]
-supported_classifiers.extend(generic.getSupportedList(utils.INITIAL_UTILS, utils.STEP_NAMES.ANNOTATE))
+#supported_classifiers.extend(generic.getSupportedList(utils.INITIAL_UTILS, utils.STEP_NAMES.ANNOTATE))
 supported_validators = ["reapr", "orf", "lap", "ale", "quast", "frcbam", "freebayes", "cgal", "n50"]
 supported_fannotate = ["blast"]
 supported_scaffolders = ["bambus2"]
@@ -343,7 +343,10 @@ for o, a in opts:
           print "project dir %s does not exist!"%(settings.rundir)
           usage()
           sys.exit(1)
-
+    elif o in ("-U","--user_config_dir"):
+        utils.user_config_dir = a
+supported_assemblers.extend(generic.getSupportedList(utils.INITIAL_UTILS, utils.STEP_NAMES.ASSEMBLE))
+supported_classifiers.extend(generic.getSupportedList(utils.INITIAL_UTILS, utils.STEP_NAMES.ANNOTATE))
 if not os.path.exists(settings.rundir) or settings.rundir == "":
     print "project dir %s does not exist!"%(settings.rundir)
     usage()
@@ -684,6 +687,8 @@ for o, a in opts:
         savebtidx = True
     elif o in ("-L", "--localKrona"):
         utils.Settings.local_krona = True
+    elif o in ("-U","--user_config_dir"):
+        utils.user_config_dir = a
     else:
         assert False, "unhandled option"
 

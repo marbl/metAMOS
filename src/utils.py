@@ -1438,7 +1438,7 @@ def getProgramParamsFile(configDir, fileName):
     
     result_path = ''
     for curDir in dirs:
-       curFile = curDir + os.sep + filename
+       curFile = curDir + os.sep + fileName
        print curFile
        if os.path.exists(curFile):
            result_path = curFile

@@ -20,7 +20,7 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
 
     return os.path.join(base_path, relative_path)
-
+user_config_dir =""
 application_path = ""
 if getattr(sys, 'frozen', False):
     application_path = os.path.dirname(sys.executable)
@@ -1224,11 +1224,12 @@ def getProgramCitations(settings, programName, comment="#"):
 
 def getProgramParams(configDir, fileName, module="", prefix="", comment="#", separator=""):
     # we process parameters in the following priority:
-    # first: current directory
-    # second: user home directory
-    # third: metAMOS directory
-    # a parameter specifeid in the current directory takes priority over all others, and so on down the line
-    dirs = [configDir + os.sep + "config", os.path.expanduser('~') + os.sep + ".metAMOS", os.getcwd()]
+    # first: user_config_dir
+    # second: current directory
+    # third: user home directory
+    # fourth: metAMOS directory
+    # a parameter specifeid in user_config_dir takes priority over all others, and so on down the line
+    dirs = [configDir + os.sep + "config", os.path.expanduser('~') + os.sep + ".metAMOS", os.getcwd(), user_config_dir]
     optDict = {} 
 
     cmdOptions = ""
@@ -1424,3 +1425,23 @@ def translateToSRAURL(settings, name):
    if oldDyLD != "":
       os.environ["DYLD_FALLBACK_LIBRARY_PATH"] = oldDyLD
    return result
+
+def getProgramParamsFile(configDir, fileName):
+    # we process parameters in the following priority:
+    # first: user_config_dir
+    # second: current directory
+    # third: user home directory
+    # fourth: metAMOS directory
+    # a parameter specifeid in user_config_dir takes priority over all others, and so on down the line
+   
+    dirs = [configDir + os.sep + "config", os.path.expanduser('~') + os.sep + ".metAMOS", os.getcwd(), user_config_dir]
+    
+    result_path = ''
+    for curDir in dirs:
+       curFile = curDir + os.sep + fileName
+       print curFile
+       if os.path.exists(curFile):
+           result_path = curFile
+    
+    return result_path
+
